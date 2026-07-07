@@ -9,24 +9,30 @@ import sqlite3
 
 
 def lookup_article(law, article, db_paths):
-    """DB 우선순위 순회. 정확 일치 → LIKE 포함 폴백."""
+    """DB 우선순위 순회. 각 DB 내 매칭 우선순위:
+    1. law_name 정확 + article_ref 정확
+    2. law_name 정확 + article_ref가 "{article}(" 시작 — 제목 포함 형태.
+       '제3조(%'는 '제3조의2(...)'와 오매칭되지 않음
+    3. law_name LIKE 폴백 + article_ref 정확
+    4. law_name LIKE 폴백 + article_ref가 "{article}(" 시작
+    """
+    queries = [
+        ("law_name = ? AND article_ref = ?", (law, article)),
+        ("law_name = ? AND article_ref LIKE ?", (law, f"{article}(%")),
+        ("law_name LIKE ? AND article_ref = ?", (f"%{law}%", article)),
+        ("law_name LIKE ? AND article_ref LIKE ?", (f"%{law}%", f"{article}(%")),
+    ]
     for db in db_paths:
         conn = sqlite3.connect(db)
         try:
-            row = conn.execute(
-                "SELECT text FROM law_articles WHERE law_name = ? AND article_ref = ?",
-                (law, article),
-            ).fetchone()
-            if not row:
+            for where, params in queries:
                 row = conn.execute(
-                    "SELECT text FROM law_articles WHERE law_name LIKE ? "
-                    "AND article_ref = ? LIMIT 1",
-                    (f"%{law}%", article),
+                    f"SELECT text FROM law_articles WHERE {where} LIMIT 1", params
                 ).fetchone()
+                if row:
+                    return row[0]
         finally:
             conn.close()
-        if row:
-            return row[0]
     return None
 
 

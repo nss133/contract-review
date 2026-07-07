@@ -50,6 +50,28 @@ def test_lookup_missing(law_db):
     assert lookup_article("없는법", "제1조", [law_db]) is None
 
 
+def test_lookup_article_title_suffix(law_db):
+    conn = sqlite3.connect(law_db)
+    conn.execute(
+        "INSERT INTO law_articles (law_name, article_ref, text) "
+        "VALUES ('테스트법2', '제5조(위탁의 범위)', '제5조 내용임')"
+    )
+    conn.commit()
+    conn.close()
+    assert lookup_article("테스트법2", "제5조", [law_db]) == "제5조 내용임"
+
+
+def test_lookup_no_false_prefix(law_db):
+    conn = sqlite3.connect(law_db)
+    conn.execute(
+        "INSERT INTO law_articles (law_name, article_ref, text) "
+        "VALUES ('테스트법3', '제5조의2(기타)', 'X')"
+    )
+    conn.commit()
+    conn.close()
+    assert lookup_article("테스트법3", "제5조", [law_db]) is None
+
+
 def test_enrich_attaches_text_and_status(knowledge_dir, law_db):
     k = load_knowledge(knowledge_dir)
     warnings = enrich(k, [law_db], news_db=None)
