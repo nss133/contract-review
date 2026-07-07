@@ -1,7 +1,0 @@
-{
-  "tool_name": "Bash",
-  "tool_input_preview": "{\"command\":\"CM=\\\"/Users/nsss/Library/Mobile Documents/com~apple~CloudDocs/cursor/comp_matching_auto\\\"; ls \\\"$CM\\\" | head -25; echo \\\"---DB---\\\"; find \\\"$CM\\\" -maxdepth 2 \\\\( -name \\\"*.db\\\" -o -name \\\"...",
-  "error": "Exit code 1\n__pycache__\nai_review_queue.py\nbootstrap_goldset.py\nbuild_delegation_graph.py\nbuild_labeling_candidates.py\nbuild_law_db.py\nbuild_windows.sh\ncalibrate_thresholds.py\ndata\nevaluate_matcher.py\nexternal_pipeline\nfile_config.json\nfsc\nimport_obsidian_law_md.py\nklia\nlaw_db_sync.py\nloader\nmatcher\nmemory\nmerge_law_articles_from_file.py\nonnx_bundle\nonnx_bundle_sroberta\noutput\noutput_formatter.py\npatch_missing_articles.py\n---DB---\n/Users/nsss/Library/Mobile Documents/com~apple~CloudDocs/cursor/c...",
-  "timestamp": "2026-07-07T04:29:03.257Z",
-  "retry_count": 1
-}
