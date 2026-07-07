@@ -1,4 +1,5 @@
 """지식 YAML 로드 및 스키마 검증. knowledge/schema.md가 규격 문서임."""
+import re
 from pathlib import Path
 
 import yaml
@@ -55,3 +56,9 @@ def _validate(common, types):
             for lb in cp.get("legal_basis", []):
                 if not {"law", "article", "verified"} <= set(lb.keys()):
                     raise ValidationError(f"{cid}: legal_basis에 law·article·verified 필요")
+            # Python re로 컴파일 검증 — JS RegExp과 문법이 미세하게 다르나 현재 패턴 수준(\s* 등)에선 동일함
+            for p in (cp.get("triggers") or {}).get("patterns", []):
+                try:
+                    re.compile(p)
+                except re.error:
+                    raise ValidationError(f"{cid}: triggers.patterns 정규식 오류 '{p}'")

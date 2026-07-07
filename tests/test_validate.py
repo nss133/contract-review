@@ -62,3 +62,13 @@ def test_missing_common_yaml_rejected(knowledge_dir):
     (knowledge_dir / "common.yaml").unlink()
     with pytest.raises(ValidationError, match="찾을 수 없음"):
         load_knowledge(knowledge_dir)
+
+
+def test_bad_trigger_pattern_rejected(knowledge_dir):
+    bad = (knowledge_dir / "common.yaml").read_text().replace(
+        "      keywords: [손해배상, 배상]\n",
+        "      keywords: [손해배상, 배상]\n      patterns: [\"(\"]\n",
+    )
+    (knowledge_dir / "common.yaml").write_text(bad)
+    with pytest.raises(ValidationError, match="patterns"):
+        load_knowledge(knowledge_dir)
