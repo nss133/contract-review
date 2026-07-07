@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>계약서 리뷰 가이드 — 법무팀</title>
+<style>/*__STYLE__*/</style>
+</head>
+<body>
+<header class="topbar">
+  <h1>계약서 리뷰 가이드</h1>
+  <nav>
+    <button data-tab="guide" class="tab active">가이드 열람</button>
+    <button data-tab="analyze" class="tab">계약서 분석</button>
+    <button data-tab="report" class="tab" id="report-tab" disabled>종합 리포트</button>
+  </nav>
+</header>
+
+<main>
+  <!-- 가이드 열람 모드 -->
+  <section id="pane-guide" class="pane active">
+    <div class="controls">
+      <label>계약 유형 <select id="guide-type"></select></label>
+      <input id="guide-search" type="search" placeholder="체크리스트·조문 검색">
+    </div>
+    <div id="guide-modules" class="module-bar"></div>
+    <div id="guide-list"></div>
+  </section>
+
+  <!-- 계약서 분석 모드 -->
+  <section id="pane-analyze" class="pane">
+    <div id="analyze-input">
+      <textarea id="contract-text" placeholder="계약서 텍스트를 붙여넣으세요"></textarea>
+      <div class="input-actions">
+        <label class="filebtn">.docx 열기<input id="docx-file" type="file" accept=".docx" hidden></label>
+        <button id="btn-analyze" class="primary">분석 시작</button>
+      </div>
+      <p id="input-error" class="error" hidden></p>
+    </div>
+    <div id="analyze-setup" hidden>
+      <label>계약 유형 <select id="analyze-type"></select></label>
+      <div id="screening"></div>
+      <button id="btn-run" class="primary">이 조건으로 검토</button>
+    </div>
+    <div id="analyze-result" class="split" hidden>
+      <div id="clause-list" class="col"></div>
+      <div id="mapping-detail" class="col"></div>
+    </div>
+  </section>
+
+  <!-- 종합 리포트 -->
+  <section id="pane-report" class="pane">
+    <div id="report-body"></div>
+    <button onclick="window.print()">인쇄</button>
+  </section>
+</main>
+
+<footer class="disclaimer">
+  본 도구는 규칙 기반 스크리닝 참고자료이며 법적 판단을 대체하지 않음.
+  근거 배지: <span class="badge verified">원문확인</span>
+  <span class="badge unverified">원문 미대조</span>
+  <span class="badge missing">원문 미확인</span>
+</footer>
+
+<script id="cr-data" type="application/json">__DATA_JSON__</script>
+<script>/*__VENDOR_JS__*/</script>
+<script>/*__APP_JS__*/</script>
+</body>
+</html>
