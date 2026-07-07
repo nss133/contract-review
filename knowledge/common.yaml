@@ -41,12 +41,21 @@ checks:
     absence_check: true
     sources: []
   - id: CMN-05
-    check: 부가가치세 포함 여부와 지연지급 시 지연이자 약정이 있는가
+    check: 대금·수수료의 부가가치세 포함 여부가 명시되어 있는가
     severity: 참고
     norm_type: 실무
     basis: practice
     triggers:
-      keywords: [부가가치세, 지연이자, 지연손해금]
+      keywords: [부가가치세, 부가세, VAT]
+    absence_check: true
+    sources: []
+  - id: CMN-05-2
+    check: 지연지급 시 지연이자(지연손해금) 약정이 있는가
+    severity: 참고
+    norm_type: 실무
+    basis: practice
+    triggers:
+      keywords: [지연이자, 지연손해금, 지체상금]
     absence_check: true
     sources: []
   - id: CMN-06

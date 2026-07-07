@@ -56,7 +56,7 @@ checks:
     absence_check: false
     sources:
       - law: 금융기관의 업무위탁 등에 관한 규정
-        article: 제3조
+        article: 제3조(업무위탁 등)
         clause: 제1항 제1호
         quote: '인가 등을 받은 금융업 또는 다른 금융업의 본질적 요소를 포함하는 업무를 위탁하는 경우'
         verified: false
@@ -72,7 +72,7 @@ checks:
     absence_check: false
     sources:
       - law: 금융기관의 업무위탁 등에 관한 규정
-        article: 제3조
+        article: 제3조(업무위탁 등)
         clause: 제1항 제1호 단서
         quote: '다만, 다음 각 목의 어느 하나에 해당하는 업무의 경우에는 위탁할 수 있다'
         verified: false
@@ -87,7 +87,7 @@ checks:
     absence_check: false
     sources:
       - law: 금융기관의 업무위탁 등에 관한 규정
-        article: 제3조
+        article: 제3조(업무위탁 등)
         clause: 제1항 제2호
         quote: '관련 법령에서 금융기관이 수행하도록 의무를 부여하고 있는 경우'
         verified: false
@@ -102,7 +102,7 @@ checks:
     absence_check: true
     sources:
       - law: 금융기관의 업무위탁 등에 관한 규정
-        article: 제3조
+        article: 제3조(업무위탁 등)
         clause: 제3항 제3호
         quote: '제3자가 관련 법규(다만, 제3자가 외국인인 경우에는 국제사법 제3조)에 따라 업무수탁이 가능한지의 여부'
         verified: false
@@ -117,7 +117,7 @@ checks:
     absence_check: true
     sources:
       - law: 금융기관의 업무위탁 등에 관한 규정
-        article: 제3조
+        article: 제3조(업무위탁 등)
         clause: 제3항 제5호
         quote: '「금융실명거래 및 비밀보장에 관한 법률」 등 관련 법령에의 저촉 여부'
         verified: false
@@ -132,7 +132,7 @@ checks:
     absence_check: true
     sources:
       - law: 금융기관의 업무위탁 등에 관한 규정
-        article: 제3조
+        article: 제3조(업무위탁 등)
         clause: 제4항
         quote: '제1항에 따라 금융기관의 업무를 위탁받은 자는 위탁자의 동의를 얻어 위탁받은 업무를 제3자에게 재위탁할 수 있다'
         verified: false
@@ -148,7 +148,7 @@ checks:
     absence_check: false
     sources:
       - law: 금융기관의 업무위탁 등에 관한 규정
-        article: 제3조
+        article: 제3조(업무위탁 등)
         clause: 제4항 후문
         quote: '재위탁시 보고의 주체는 원위탁 금융회사로 한다'
         verified: false
@@ -163,7 +163,7 @@ checks:
     absence_check: true
     sources:
       - law: 금융기관의 업무위탁 등에 관한 규정
-        article: 제3조
+        article: 제3조(업무위탁 등)
         clause: 제5항
         quote: '위탁회사는 수탁회사가 이 규정 등 금융관련법령 및 제3조의2에 따른 업무위수탁기준상의 의무를 위반하여 발생하는 손해에 대해서 수탁회사와 연대하여 배상책임을 진다'
         verified: false
@@ -779,7 +779,7 @@ checks:
       - law: 전자금융감독규정
         article: 제60조
         clause: 제4항 제2호
-        quote: '위탁업무와 관련된 이용자의 금융거래정보는 위탁회사의 전산실 내에 두어야 함'
+        quote: '위탁업무와 관련된 이용자의 금융거래정보는 위탁회사의 전산실 내에 두어야 함. 다만, 재수탁업자가 이용자의 이용자 정보를 어떠한 경우에도 알지 못하도록 위탁회사 또는 원수탁업자가 금융거래정보를 처리하여 제공한 경우에는 위탁회사의 관리ㆍ통제 하에 재수탁회사 등 제3의 장소로 이전 가능함'
         verified: false
   # ── M-CLOUD: 전자금융감독규정 제14조의2 ──
   - id: CLOUD-01
@@ -872,6 +872,7 @@ checks:
         clause: 제4항 제2호
         quote: '클라우드컴퓨팅서비스 제공자의 합병, 분할, 계약상 지위의 양도, 재위탁 등 중대한 변경사항이 발생한 경우'
         verified: false
+    note: 법령상 의무는 발생일부터 3개월 내 사후 보고(제14조의2④)이며 계약상 사전 통지는 가중 약정임
   - id: CLOUD-07
     module: M-CLOUD
     check: 고유식별정보·개인신용정보를 클라우드로 처리하는 경우 해당 정보처리시스템의 국내 설치(국내 리전)가 계약상 보장되는가
