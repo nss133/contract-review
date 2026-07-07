@@ -5,7 +5,8 @@ var CR = JSON.parse(document.getElementById("cr-data").textContent);
 var state = { text: "", clauses: [], typeId: null, activeModules: [], result: null };
 
 function esc(s) {
-  return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
 }
 function typeDoc(typeId) {
   for (var i = 0; i < CR.types.length; i++)
@@ -26,23 +27,36 @@ function primarySource(cp) {
 }
 
 /* ---------- 증적 배지 ---------- */
-function evidenceBadgeInfo(cp) {
-  var src = primarySource(cp);
-  if (!src) return { cls: "practice", label: "실무" };
+function sourceBadgeInfo(src) {
+  /* rank: 낮을수록 심각 — 행 배지는 전 source 중 최악을 표시 */
   switch (src.status) {
+    case "quote_mismatch":
+      return { cls: "mismatch", label: "문언 불일치", rank: 0 };
+    case "missing":
+      return { cls: "missing", label: "원문 미확인", rank: 0 };
+    case "no_quote":
+      return { cls: "ref", label: "참조", rank: 1 };
     case "quote_ok":
       return src.verified
-        ? { cls: "verified", label: "원문확인" }
-        : { cls: "unverified", label: "원문 미대조" };
-    case "quote_mismatch":
-      return { cls: "mismatch", label: "문언 불일치" };
-    case "missing":
-      return { cls: "missing", label: "원문 미확인" };
-    case "no_quote":
-      return { cls: "ref", label: "참조" };
+        ? { cls: "verified", label: "원문확인", rank: 3 }
+        : { cls: "unverified", label: "원문 미대조", rank: 2 };
     default:
-      return { cls: "practice", label: "실무" };
+      return { cls: "practice", label: "실무", rank: 4 };
   }
+}
+function evidenceBadgeInfo(cp) {
+  var sources = cp.sources || [];
+  if (!sources.length) return { cls: "practice", label: "실무" };
+  var worst = null;
+  sources.forEach(function (src) {
+    var b = sourceBadgeInfo(src);
+    if (!worst || b.rank < worst.rank) worst = b;
+  });
+  return worst;
+}
+function sourceBadgeHtml(src) {
+  var b = sourceBadgeInfo(src);
+  return '<span class="badge ' + b.cls + '">' + b.label + "</span>";
 }
 function evidenceCell(cp) {
   var src = primarySource(cp);
@@ -67,7 +81,7 @@ function renderCheckCard(cp, hits) {
   h += "<p>" + evidenceCell(cp) + "</p>";
   (cp.sources || []).forEach(function (src) {
     var label = esc(src.law) + " " + esc(src.article) + (src.clause ? " " + esc(src.clause) : "");
-    h += '<details class="law"><summary>' + label + "</summary>";
+    h += '<details class="law"><summary>' + label + " " + sourceBadgeHtml(src) + "</summary>";
     h += src.text ? "<pre>" + esc(src.text) + "</pre>" : "<p>원문 데이터 없음</p>";
     h += "</details>";
   });
@@ -144,7 +158,7 @@ function renderDetail(cp) {
   }
   (cp.sources || []).forEach(function (src) {
     var label = esc(src.law) + " " + esc(src.article) + (src.clause ? " " + esc(src.clause) : "");
-    h += '<details class="law"><summary>' + label + "</summary>";
+    h += '<details class="law"><summary>' + label + " " + sourceBadgeHtml(src) + "</summary>";
     h += src.text ? "<pre>" + esc(src.text) + "</pre>" : "<p>원문 데이터 없음</p>";
     h += "</details>";
   });
@@ -292,7 +306,7 @@ function renderScreening() {
     var on = state.activeModules.indexOf(m.id) !== -1;
     var sug = suggested.indexOf(m.id) !== -1;
     return '<label class="module-chip' + (on ? " on" : "") + (sug ? " suggested" : "") +
-      '" data-mid="' + m.id + '" title="' + esc(m.screening_question || "") + '">' +
+      '" data-mid="' + esc(m.id) + '" title="' + esc(m.screening_question || "") + '">' +
       esc(m.name) + (sug ? " ⚡본문 검출" : "") + "</label>";
   }).join("");
   document.querySelectorAll("#screening .module-chip[data-mid]").forEach(function (chip) {
@@ -378,7 +392,7 @@ function renderReport() {
       if (seen[m.cpId]) return; seen[m.cpId] = true;
       var cp = r.checkpoints.filter(function (c) { return c.id === m.cpId; })[0];
       var ck = saved[cp.id] ? " checked" : "";
-      h += '<li><label><input type="checkbox" data-cp="' + cp.id + '"' + ck + "> " +
+      h += '<li><label><input type="checkbox" data-cp="' + esc(cp.id) + '"' + ck + "> " +
         esc(cp.id) + " " + esc(cp.check) + " — " + evidenceCell(cp) + "</label></li>";
     });
     h += "</ul>";
