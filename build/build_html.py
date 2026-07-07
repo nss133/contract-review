@@ -46,10 +46,10 @@ def _smoke(path):
     m = re.search(r'<script id="cr-data"[^>]*>(.*?)</script>', html, re.S)
     assert m, "cr-data 스크립트 블록 없음"
     data = json.loads(m.group(1))
-    n = len(data["common"]["checkpoints"]) + sum(len(t["checkpoints"]) for t in data["types"])
-    assert n > 0, "체크포인트 0개"
+    n = len(data["common"]["checks"]) + sum(len(t["checks"]) for t in data["types"])
+    assert n > 0, "check 0개"
     kb = len(html) // 1024
-    print(f"스모크 OK: 체크포인트 {n}개, {kb}KB → {path}")
+    print(f"스모크 OK: check {n}개, {kb}KB → {path}")
 
 
 if __name__ == "__main__":

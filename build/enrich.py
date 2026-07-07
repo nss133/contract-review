@@ -1,11 +1,32 @@
-"""체크포인트의 legal_basis·news_refs에 원본 DB의 원문을 첨부함.
+"""checks[].sources[]의 quote를 DB 원문과 대조 검증하고 원문을 첨부함.
 
 status 의미:
-- verified   : 사람이 원문 대조 완료(verified: true) + DB 원문 존재
-- unverified : DB 원문은 찾았으나 사람 검수 전 → HTML에서 [원문 미대조] 배지
-- missing    : DB에서 원문을 찾지 못함 → 빌드 경고 + [원문 미확인] 배지
+- quote_ok       : quote가 DB 원문에서 확인됨 (배지는 verified 병용 — 원문확인/원문 미대조)
+- quote_mismatch : 원문은 찾았으나 quote 문언이 불일치 → 빌드 경고 + [문언 불일치] 배지 (조작·오기 방지)
+- no_quote       : 원문은 찾았으나 source에 quote가 없음 (예: 2번째 이후 source)
+- missing        : DB에서 원문 자체를 찾지 못함 → 빌드 경고 + [원문 미확인] 배지
 """
+import re
 import sqlite3
+
+_WS_RE = re.compile(r"[ \t\r\n]+")
+_MD_PREFIX_RE = re.compile(r"(?m)^#+\s*")
+
+
+def _normalize(s):
+    """quote 대조용 정규화: 공백류(스페이스·개행·탭 연속)를 단일 스페이스로,
+    '#' 문자 제거 후 strip."""
+    if not s:
+        return ""
+    return _WS_RE.sub(" ", s).replace("#", "").strip()
+
+
+def _strip_md(text):
+    """표시용 정리: 줄 시작의 마크다운 헤더 접두(#+)만 제거.
+    _normalize와 달리 개행 등 원문 구조는 보존함."""
+    if not text:
+        return text
+    return _MD_PREFIX_RE.sub("", text)
 
 
 def lookup_article(law, article, db_paths):
@@ -51,19 +72,30 @@ def lookup_news(item_id, news_db):
 
 
 def enrich(knowledge, law_dbs, news_db=None):
-    """knowledge dict를 제자리 수정. 경고 문자열 리스트 반환."""
+    """knowledge dict(v2: checks/sources)를 제자리 수정. 경고 문자열 리스트 반환."""
     warnings = []
     for doc in [knowledge["common"], *knowledge["types"]]:
-        for cp in doc["checkpoints"]:
-            for lb in cp.get("legal_basis", []):
-                text = lookup_article(lb["law"], lb["article"], law_dbs)
-                if text:
-                    lb["text"] = text
-                    lb["status"] = "verified" if lb["verified"] else "unverified"
+        for check in doc["checks"]:
+            cid = check["id"]
+            for src in check.get("sources", []):
+                text = lookup_article(src["law"], src["article"], law_dbs)
+                if not text:
+                    src["status"] = "missing"
+                    warnings.append(f"{cid}: {src['law']} {src['article']} 원문 미발견")
+                    continue
+                src["text"] = _strip_md(text)
+                quote = src.get("quote")
+                if quote:
+                    if _normalize(quote) in _normalize(text):
+                        src["status"] = "quote_ok"
+                    else:
+                        src["status"] = "quote_mismatch"
+                        warnings.append(
+                            f"{cid}: quote 문언이 {src['law']} {src['article']} 원문과 불일치"
+                        )
                 else:
-                    lb["status"] = "missing"
-                    warnings.append(f"{cp['id']}: {lb['law']} {lb['article']} 원문 미발견")
-            refs = cp.get("news_refs") or []
+                    src["status"] = "no_quote"
+            refs = check.get("news_refs") or []
             if news_db and refs:
-                cp["news"] = [n for n in (lookup_news(r, news_db) for r in refs) if n]
+                check["news"] = [n for n in (lookup_news(r, news_db) for r in refs) if n]
     return warnings

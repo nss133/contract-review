@@ -17,6 +17,14 @@ def law_db(tmp_path):
         "INSERT INTO law_articles (law_name, article_ref, text) "
         "VALUES ('테스트법', '제3조', '제3조(재위탁) 사전 동의를 받아야 한다.')"
     )
+    conn.execute(
+        "INSERT INTO law_articles (law_name, article_ref, text) "
+        "VALUES ('테스트법4', '제9조', '###### 제9조(x) 내용')"
+    )
+    conn.execute(
+        "INSERT INTO law_articles (law_name, article_ref, text) "
+        "VALUES ('민법', '제393조', '제393조(손해배상의 범위) 통상의 손해를 그 한도로 한다.')"
+    )
     conn.commit()
     conn.close()
     return path
@@ -98,13 +106,43 @@ def test_lookup_no_false_prefix(law_db):
     assert lookup_article("테스트법3", "제5조", [law_db]) is None
 
 
-def test_enrich_attaches_text_and_status(knowledge_dir, law_db):
+def test_enrich_quote_ok_exact_match(knowledge_dir, law_db):
     k = load_knowledge(knowledge_dir)
     warnings = enrich(k, [law_db], news_db=None)
-    lb = k["types"][0]["checkpoints"][0]["legal_basis"][0]
-    assert lb["status"] == "verified"
-    assert "사전 동의" in lb["text"]
+    src = k["types"][0]["checks"][0]["sources"][0]
+    assert src["status"] == "quote_ok"
+    assert "사전 동의" in src["text"]
     assert warnings == []
+
+
+def test_enrich_quote_ok_normalizes_whitespace(knowledge_dir, law_db):
+    p = knowledge_dir / "types" / "outsourcing.yaml"
+    p.write_text(
+        p.read_text().replace(
+            "quote: 사전 동의를 받아야 한다",
+            'quote: "사전   동의를\\n받아야    한다"',
+        )
+    )
+    k = load_knowledge(knowledge_dir)
+    warnings = enrich(k, [law_db], news_db=None)
+    src = k["types"][0]["checks"][0]["sources"][0]
+    assert src["status"] == "quote_ok"
+    assert warnings == []
+
+
+def test_enrich_quote_mismatch_warns(knowledge_dir, law_db):
+    p = knowledge_dir / "types" / "outsourcing.yaml"
+    p.write_text(
+        p.read_text().replace(
+            "quote: 사전 동의를 받아야 한다", "quote: 완전히 다른 문언임"
+        )
+    )
+    k = load_knowledge(knowledge_dir)
+    warnings = enrich(k, [law_db], news_db=None)
+    src = k["types"][0]["checks"][0]["sources"][0]
+    assert src["status"] == "quote_mismatch"
+    assert len(warnings) == 1
+    assert "OUT-01" in warnings[0] and "불일치" in warnings[0]
 
 
 def test_enrich_warns_on_missing(knowledge_dir, law_db):
@@ -112,16 +150,72 @@ def test_enrich_warns_on_missing(knowledge_dir, law_db):
     p.write_text(p.read_text().replace("테스트법", "없는법"))
     k = load_knowledge(knowledge_dir)
     warnings = enrich(k, [law_db], news_db=None)
-    lb = k["types"][0]["checkpoints"][0]["legal_basis"][0]
-    assert lb["status"] == "missing"
+    src = k["types"][0]["checks"][0]["sources"][0]
+    assert src["status"] == "missing"
     assert len(warnings) == 1
+
+
+def test_enrich_no_quote_for_second_source(law_db):
+    knowledge = {
+        "common": {"checks": []},
+        "types": [
+            {
+                "checks": [
+                    {
+                        "id": "T-01",
+                        "sources": [
+                            {
+                                "law": "테스트법",
+                                "article": "제3조",
+                                "quote": "사전 동의를 받아야 한다",
+                                "verified": True,
+                            },
+                            {"law": "테스트법", "article": "제3조", "verified": False},
+                        ],
+                    }
+                ]
+            }
+        ],
+    }
+    warnings = enrich(knowledge, [law_db])
+    sources = knowledge["types"][0]["checks"][0]["sources"]
+    assert sources[0]["status"] == "quote_ok"
+    assert sources[1]["status"] == "no_quote"
+    assert "text" in sources[1]
+    assert warnings == []
+
+
+def test_enrich_strips_markdown_prefix(law_db):
+    knowledge = {
+        "common": {"checks": []},
+        "types": [
+            {
+                "checks": [
+                    {
+                        "id": "T-02",
+                        "sources": [
+                            {"law": "테스트법4", "article": "제9조", "verified": False}
+                        ],
+                    }
+                ]
+            }
+        ],
+    }
+    enrich(knowledge, [law_db])
+    text = knowledge["types"][0]["checks"][0]["sources"][0]["text"]
+    assert "#" not in text
+    assert "제9조(x) 내용" in text
 
 
 def test_enrich_attaches_news(knowledge_dir, law_db, news_db):
     p = knowledge_dir / "common.yaml"
-    p.write_text(p.read_text().replace("news_refs: []", "").replace(
-        "    legal_basis: []", "    legal_basis: []\n    news_refs: [n1, nope]"))
+    p.write_text(
+        p.read_text().replace(
+            "    sources: []\n    note: \"\"\n",
+            "    sources: []\n    note: \"\"\n    news_refs: [n1, nope]\n",
+        )
+    )
     k = load_knowledge(knowledge_dir)
     enrich(k, [law_db], news_db=news_db)
-    news = k["common"]["checkpoints"][0]["news"]
+    news = k["common"]["checks"][0]["news"]
     assert len(news) == 1 and news[0]["title"] == "위탁 규정 개정 예고"
