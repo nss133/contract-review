@@ -16,7 +16,8 @@ var MatcherConfig = {
   JW_SHORT: 0.35,       // 짧은 조항 jaccard 가중
   SHORT_LEN: 120,       // 짧은 조항 판정 본문 길이(자)
   NORM_BONUS: 3,        // 규범유형 일치 가산
-  TITLE_BONUS_MAX: 5    // 표제 용어 겹침 가산 상한
+  TITLE_BONUS_MAX: 5,   // 표제 용어 겹침 가산 상한
+  ALARM_SEVERITIES: ["필수", "권장"] // 검토 제안(consider) 알람 게이트 — 참고 부재는 조용(quiet)
 };
 
 if (typeof module !== "undefined") module.exports = MatcherConfig;

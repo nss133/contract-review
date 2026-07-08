@@ -100,7 +100,8 @@ function _lawCore(law) {
   b = b.replace(/(등에관한규정|에관한규정|등에관한법률|에관한법률|시행세칙|시행규칙|시행령|감독규정|규정|법률|법)$/, "");
   return b;
 }
-function citationHit(clauseText, check) {
+// 매칭된 근거 source(law/article)를 반환. 없으면 null. (reason 라벨용)
+function citationMatch(clauseText, check) {
   var q = String(clauseText || "").replace(/\s+/g, "");
   var sources = check.sources || [];
   for (var i = 0; i < sources.length; i++) {
@@ -111,9 +112,12 @@ function citationHit(clauseText, check) {
     var core = _lawCore(sources[i].law);
     if (core.length < 2) continue;
     var probe = core.length > 4 ? core.slice(0, 4) : core; // 핵심 2~4글자
-    if (q.indexOf(core) !== -1 || q.indexOf(probe) !== -1) return true;
+    if (q.indexOf(core) !== -1 || q.indexOf(probe) !== -1) return sources[i];
   }
-  return false;
+  return null;
+}
+function citationHit(clauseText, check) {
+  return citationMatch(clauseText, check) !== null;
 }
 
 // ── 표제 보너스 ──────────────────────────────────────────────────
@@ -151,59 +155,73 @@ function scoreClauseCheck(clause, checkEntry, model) {
   };
 }
 
-// ── tier 판정 (comp review_rules.evaluate_review 계단 이식·적응) ───
+// ── tier 판정 (검토 보조 화법: 단일후보/단일신호 강등 없음) ──────────
 // rankedForCheck: 그 check에 대해 REVIEW_FLOOR 이상인 후보 조항 {clause, s} 내림차순.
-//   (전 조항을 넣지 않고 후보로 한정 — "단일 후보"·margin 의미 보존, 근접-0 러너업의 margin 과확정 차단.)
+// 계약서 도메인에선 "체크가 조항 하나에 매칭"이 정상 — 단일 매칭도 근거가 강하면 짚음(confirmed).
+//   짚음 도달: (명시 인용) · (충분한 절대점수 단독) · (뚜렷한 최상위=margin).
+//   weak 역할(목적·정의·전문·계약기간·완전합의) + 인용 없음 → 자동확정 불가(최대 review) — 도메인 유효.
 function decideTier(ranked, check) {
   if (!ranked.length) return "none";
   var best = ranked[0];
   if (best.s.score < MatcherConfig.REVIEW_FLOOR) return "none";
   var role = ClauseRole.clauseRole(best.clause.heading, best.clause.body);
   var citation = best.s.citation === true;
-  // weak 역할(목적·정의·전문·계약기간·완전합의) + 명시 인용 없음 → 자동확정 불가(최대 review)
-  var weakGate = role.weak === true && !citation;
-
-  var confirmed = false;
-  if (!weakGate) {
-    if (citation) confirmed = true;
-    else if (best.s.score >= MatcherConfig.ABS_SCORE && best.s.normMatch) confirmed = true;
-    else if (ranked.length >= 2 &&
-      (best.s.score - ranked[1].s.score) >= MatcherConfig.MARGIN_HIGH &&
-      best.s.score >= MatcherConfig.REVIEW_FLOOR) confirmed = true;
-  }
-
-  if (confirmed) {
-    // 단일 신호 또는 단일 후보 → review 강등. 단, 명시 인용 확정은 유지.
-    if (!citation && (best.s.signals < 2 || ranked.length === 1)) return "review";
-    return "confirmed";
-  }
-  return "review"; // best.s.score >= REVIEW_FLOOR 이미 보장
+  if (role.weak === true && !citation) return "review"; // weak-role 게이트 유지
+  if (citation) return "confirmed";                      // 명시 인용 일치
+  if (best.s.score >= MatcherConfig.ABS_SCORE) return "confirmed"; // 충분한 절대점수 — 단일 매칭도 짚음
+  if (ranked.length >= 2 &&
+    (best.s.score - ranked[1].s.score) >= MatcherConfig.MARGIN_HIGH &&
+    best.s.score >= MatcherConfig.REVIEW_FLOOR) return "confirmed"; // 뚜렷한 최상위
+  return "review"; // 관련 조항은 있으나(≥REVIEW_FLOOR) 확정 근거 부족 → 확인 권장
 }
 
-// ── tier 근거 문자열 ─────────────────────────────────────────────
-var _ROLE_LABEL = {
-  purpose: "목적", definition: "정의", preamble: "전문",
-  term: "계약기간", entire: "전체", general: "일반"
-};
-function _reasons(tier, ranked, check) {
-  if (!ranked.length) return [];
-  var best = ranked[0], s = best.s;
-  if (tier === "none") return ["최고 점수 " + s.score.toFixed(1) + " — 임계 미달"];
-  if (s.citation) return ["명시 인용 일치"];
-  var role = ClauseRole.clauseRole(best.clause.heading, best.clause.body);
+// ── coverage 상태 (검토 관점 표시값) ─────────────────────────────
+//   addressed=짚음 / verify=확인 권장 / consider=검토 제안(알람) / quiet=조용한 기타.
+// 알람 게이트: 확실 부재(absence_check && none)이고 severity가 필수·권장일 때만 consider.
+//   저위험(참고) 부재는 조용(quiet) — 저위험 알람 억제(스펙 B).
+function alarmGate(check) {
+  return MatcherConfig.ALARM_SEVERITIES.indexOf(check && check.severity) !== -1;
+}
+function coverageOf(tier, check) {
+  if (tier === "confirmed") return "addressed";
+  if (tier === "review") return "verify";
+  // tier === "none"
+  if (check && check.absence_check && alarmGate(check)) return "consider";
+  return "quiet";
+}
+
+// ── tier 근거 문자열 (정보형 — 판정 어휘 금지) ───────────────────
+function _articleShort(article) {
+  var m = String(article || "").match(/제\s*\d+\s*조(?:의\s*\d+)?/);
+  return m ? m[0].replace(/\s+/g, "") : "";
+}
+// clause 표제·본문과 check 대표텍스트가 공유하는 2글자+ 한글 핵심어 몇 개.
+function _overlapKeywords(clause, check, limit) {
+  var ck = Sim.keywords(checkText(check));
+  var cl = Sim.keywords(String(clause.heading || "") + " " + String(clause.body || ""));
   var out = [];
-  if (tier === "confirmed") {
-    if (s.score >= MatcherConfig.ABS_SCORE && s.normMatch) out.push("절대점수·규범유형 일치 (" + s.score.toFixed(1) + ")");
-    else if (ranked.length >= 2) out.push("복수 신호 상위 (점수차 " + (s.score - ranked[1].s.score).toFixed(1) + ")");
-    else out.push("상위 매칭 (" + s.score.toFixed(1) + ")");
-    return out;
+  for (var k in cl) {
+    if (ck[k]) { out.push(k); if (out.length >= (limit || 3)) break; }
   }
-  // review 근거
-  if (role.weak) out.push((_ROLE_LABEL[role.role] || role.role) + "·정의 조항 — 인용 없어 검토");
-  if (ranked.length === 1) out.push("단일 후보 — 검토필요");
-  if (s.signals < 2) out.push("단일 신호 — 검토필요");
-  if (!out.length) out.push("검토 필요 (점수 " + s.score.toFixed(1) + ")");
   return out;
+}
+function _reasons(tier, ranked, check) {
+  if (!ranked.length || tier === "none") return [];
+  var best = ranked[0], s = best.s;
+  if (s.citation) {
+    var src = citationMatch(String(best.clause.heading || "") + " " + String(best.clause.body || ""), check);
+    var tag = src ? " (" + [src.law, _articleShort(src.article)].filter(Boolean).join(" ") + ")" : "";
+    return ["명시 인용 일치" + tag];
+  }
+  var role = ClauseRole.clauseRole(best.clause.heading, best.clause.body);
+  if (tier === "confirmed") {
+    if (s.normMatch) return ["본문 문구·규범 일치"];
+    var kws = _overlapKeywords(best.clause, check);
+    return ["본문 문구 일치" + (kws.length ? " (핵심어: " + kws.join(", ") + ")" : "")];
+  }
+  // review
+  if (role.weak) return ["관련 조항 있음 — 목적·정의 조항이라 문구 확인 권장"];
+  return ["관련 조항 있음 — 충분한지 확인 권장"];
 }
 
 // ── 메인 ─────────────────────────────────────────────────────────
@@ -221,6 +239,7 @@ function analyze(clauses, docs, activeModules) {
 
     var candidates = scored.filter(function (r) { return r.s.score >= MatcherConfig.REVIEW_FLOOR; });
     var tier = decideTier(candidates, cp);
+    var coverage = coverageOf(tier, cp);
     var top = scored[0] || null;
     var reasons = _reasons(tier, candidates.length ? candidates : scored, cp);
     var rankedTop = scored.slice(0, 3).map(function (r) {
@@ -230,6 +249,7 @@ function analyze(clauses, docs, activeModules) {
     results.push({
       cpId: cp.id,
       tier: tier,
+      coverage: coverage,
       best: top ? { clauseIndex: top.clause.index, score: top.s.score, reasons: reasons } : null,
       ranked: rankedTop
     });
@@ -239,19 +259,19 @@ function analyze(clauses, docs, activeModules) {
         cpId: cp.id,
         clauseIndex: top.clause.index,
         hits: {
-          tier: tier, score: top.s.score, tfidf: top.s.tfidf, jaccard: top.s.jaccard,
+          tier: tier, coverage: coverage, score: top.s.score, tfidf: top.s.tfidf, jaccard: top.s.jaccard,
           citation: top.s.citation, normMatch: top.s.normMatch, reasons: reasons
         }
       });
     }
-    if (cp.absence_check && tier === "none") missing.push(cp);
+    if (coverage === "consider") missing.push(cp);
   });
 
   return {
     checkpoints: model.checks.map(function (e) { return e.cp; }),
     results: results,
     matches: matches,   // 하위호환: tier!=="none" 인 best (app.js 소비)
-    missing: missing    // 하위호환: absence_check && tier==="none"
+    missing: missing    // 하위호환(재정의): coverage==="consider" — 알람 게이트 통과분만
   };
 }
 
@@ -265,8 +285,11 @@ if (typeof module !== "undefined")
     clauseQuery: clauseQuery,
     buildModel: buildModel,
     citationHit: citationHit,
+    citationMatch: citationMatch,
     titleBonus: titleBonus,
     scoreClauseCheck: scoreClauseCheck,
     decideTier: decideTier,
+    alarmGate: alarmGate,
+    coverageOf: coverageOf,
     analyze: analyze
   };
