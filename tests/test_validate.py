@@ -108,6 +108,7 @@ def test_derive_severity_rule():
     assert derive_severity("임의", "statute") == "권장"
     assert derive_severity("추정", "statute") == "참고"
     assert derive_severity("간주", "statute") == "참고"
+    assert derive_severity("선언", "statute") == "참고"
     assert derive_severity("실무", "practice") == "참고"
     # basis=practice는 norm_type과 무관하게 참고
     assert derive_severity("강행", "practice") == "참고"

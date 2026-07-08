@@ -130,8 +130,9 @@ checks:
   - id: CORE-07
     module: M-CORE
     check: 수탁자가 위탁자의 사전 동의 없이 재위탁하지 못하도록 하는 조항이 있는가
-    severity: 권장
-    severity_basis: "근거 조문이 임의규정임 — 금융기관의 업무위탁 등에 관한 규정 제3조"
+    severity: 필수
+    severity_override: true
+    severity_basis: "임의 서술이나 위탁자 동의는 강행적 전제임 — 금융기관의 업무위탁 등에 관한 규정 제3조 (PRIV-15·IT-09와 정합)"
     norm_type: 임의
     basis: statute
     triggers:
@@ -143,7 +144,7 @@ checks:
         clause: 제4항
         quote: '제1항에 따라 금융기관의 업무를 위탁받은 자는 위탁자의 동의를 얻어 위탁받은 업무를 제3자에게 재위탁할 수 있다'
         verified: false
-    note: 재위탁 자체는 임의이나 위탁자 동의가 필수 전제임
+    note: 임의 서술이나 위탁자 동의는 강행적 전제이며 제2조·제3조·제4항 내지 제6항 준용 — 무단 재위탁은 감독규정 위반. PRIV-15·IT-09와 정합 위해 필수
   - id: CORE-08
     module: M-CORE
     check: 재위탁 시 원위탁 금융회사의 감독원장 보고에 협조하도록 하는 조항이 있는가
@@ -1009,9 +1010,9 @@ checks:
   - id: SOL-05
     module: M-SOLICIT
     check: 선임·감독상 적절한 주의(면책 단서)를 증빙할 수 있는 교육·점검·관리 체계 조항이 있는가
-    severity: 필수
-    severity_basis: "근거 조문이 강행규정(의무)임 — 금융소비자 보호에 관한 법률 제45조"
-    norm_type: 강행
+    severity: 권장
+    severity_basis: "면책요건임(선임·감독 주의 시 책임 배제) — 금융소비자 보호에 관한 법률 제45조"
+    norm_type: 임의
     basis: statute
     triggers:
       keywords: [교육, 점검, 감독, 선임]
@@ -1025,9 +1026,9 @@ checks:
   - id: SOL-06
     module: M-SOLICIT
     check: 회사가 금융소비자에게 배상한 경우 수탁자에 대한 구상 조항이 있는가
-    severity: 필수
-    severity_basis: "근거 조문이 강행규정(의무)임 — 금융소비자 보호에 관한 법률 제45조"
-    norm_type: 강행
+    severity: 참고
+    severity_basis: "구상권 보전 선언규정임 — 금융소비자 보호에 관한 법률 제45조"
+    norm_type: 선언
     basis: statute
     triggers:
       keywords: [구상, 구상권, 배상]

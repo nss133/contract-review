@@ -23,7 +23,7 @@ checks:
     severity: 필수              # 필수 | 권장 | 참고 — norm_type·basis에서 도출 (아래 "심각도 도출 규칙")
     severity_basis: 근거 조문이 강행규정(의무)임 — 개인정보 보호법 제26조   # 심각도 근거 1문장. UI "왜 필수?" 답변용
     severity_override: false   # 선택. true면 도출 규칙과 달라도 경고 억제(의도적 예외). 생략 시 false
-    norm_type: 강행             # 강행 | 임의 | 추정 | 간주 | 실무 — 조문 어미로 판정
+    norm_type: 강행             # 강행 | 임의 | 추정 | 간주 | 선언 | 실무 — 조문 어미로 판정
     basis: statute             # statute(법령 요건) | practice(법령 근거 없는 실무 항목)
     triggers:
       keywords: [재위탁, 재수탁]   # 조항 본문 포함 검사 (OR)
@@ -57,7 +57,7 @@ check 항목에 `guidance` 키가 남아 있으면 `ValidationError("guidance는
 - check 필수 필드: `id`, `check`, `severity`, `basis`, `norm_type`
 - `id` 전역 유일
 - `severity` ∈ {필수, 권장, 참고}
-- `norm_type` ∈ {강행, 임의, 추정, 간주, 실무}
+- `norm_type` ∈ {강행, 임의, 추정, 간주, 선언, 실무}
 - `basis` ∈ {statute, practice}
 - `severity_basis`가 있으면 비어 있지 않은 문자열이어야 함
 - `severity_override`가 있으면 불리언이어야 함
@@ -81,6 +81,7 @@ check 항목에 `guidance` 키가 남아 있으면 `ValidationError("guidance는
 | `norm_type: 임의` (권한) | 권장 | 근거 조문이 임의규정임 — {law} {article} |
 | `norm_type: 추정` | 참고 | 추정규정임 — {law} {article} |
 | `norm_type: 간주` | 참고 | 간주규정임 — {law} {article} |
+| `norm_type: 선언` | 참고 | 선언규정임(권리 보전 등) — {law} {article} |
 
 - `basis: practice`가 `norm_type`보다 우선함(실무 항목은 항상 참고).
 - `severity_basis`의 법령명·조문은 실제 `sources[0]`에서 가져옴(조문 표제 괄호는 생략, 예 "제3조(업무위탁 등)" → "제3조").

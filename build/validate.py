@@ -6,7 +6,7 @@ from pathlib import Path
 import yaml
 
 SEVERITIES = {"필수", "권장", "참고"}
-NORM_TYPES = {"강행", "임의", "추정", "간주", "실무"}
+NORM_TYPES = {"강행", "임의", "추정", "간주", "선언", "실무"}
 BASES = {"statute", "practice"}
 REQUIRED_FIELDS = {"id", "check", "severity", "basis", "norm_type"}
 SOURCE_REQUIRED_FIELDS = {"law", "article", "verified"}
@@ -22,7 +22,7 @@ def derive_severity(norm_type, basis):
     - basis=practice(법령 근거 없는 실무 항목) → 참고
     - 강행(의무·금지) → 필수
     - 임의(권한) → 권장
-    - 추정·간주·실무(정의·절차·간주) → 참고
+    - 추정·간주·선언·실무(정의·절차·선언·간주) → 참고
     """
     if basis == "practice":
         return "참고"
