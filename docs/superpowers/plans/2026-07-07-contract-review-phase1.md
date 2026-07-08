@@ -143,7 +143,7 @@ checkpoints:
 - verified: true인데 DB에 원문이 없으면 빌드 경고 + HTML에 [원문 미확인] 배지
 
 ## 검수 흐름
-Claude 초안(verified: false) → 손남수 원문 대조 → verified: true 승격 → 재빌드
+Claude 초안(verified: false) → 법무팀 검토자 원문 대조 → verified: true 승격 → 재빌드
 ```
 
 - [ ] **Step 2: Commit**
@@ -1325,7 +1325,7 @@ git commit -m "feat: 단일 HTML 빌드 파이프라인"
    sqlite3 "$HOME/Library/Mobile Documents/com~apple~CloudDocs/cursor/comp_matching_auto/data/laws_monitored.sqlite" \
      "SELECT article_ref, substr(text,1,300) FROM law_articles WHERE law_name='금융기관의 업무위탁 등에 관한 규정' ORDER BY id;"
    ```
-2. 조문 원문과 대조해 작성했더라도 `verified: false`로 둔다 (true 승격은 손남수 검수 후).
+2. 조문 원문과 대조해 작성했더라도 `verified: false`로 둔다 (true 승격은 법무팀 검토자 검수 후).
 3. guidance는 ~음/~슴 기술식 문체. 조문 인용 시 강행/임의/추정/간주 규범 유형 병기.
 4. DB에 없는 법령(파견법)은 legal_basis에 적되 빌드 경고를 감수하고 guidance에 `(조문 미확인 — vault 확인 필요)` 표기.
 5. 인벤토리의 조번호는 **후보**임. DB 원문 확인 후 다르면 바로잡는다.

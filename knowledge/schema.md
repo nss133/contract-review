@@ -100,4 +100,4 @@ check 항목에 `guidance` 키가 남아 있으면 `ValidationError("guidance는
 
 ## 검수 흐름
 
-Claude 초안(verified: false, quote는 DB 원문에서 직접 발췌) → 손남수 원문 대조 → verified: true 승격 → 재빌드
+Claude 초안(verified: false, quote는 DB 원문에서 직접 발췌) → 법무팀 검토자 원문 대조 → verified: true 승격 → 재빌드
