@@ -1,5 +1,6 @@
 """지식 YAML 로드 및 스키마 검증. knowledge/schema.md가 규격 문서임."""
 import re
+import sys
 from pathlib import Path
 
 import yaml
@@ -13,6 +14,23 @@ SOURCE_REQUIRED_FIELDS = {"law", "article", "verified"}
 
 class ValidationError(Exception):
     pass
+
+
+def derive_severity(norm_type, basis):
+    """규범 효력 → 심각도 도출 규칙. severity = f(norm_type, basis).
+
+    - basis=practice(법령 근거 없는 실무 항목) → 참고
+    - 강행(의무·금지) → 필수
+    - 임의(권한) → 권장
+    - 추정·간주·실무(정의·절차·간주) → 참고
+    """
+    if basis == "practice":
+        return "참고"
+    if norm_type == "강행":
+        return "필수"
+    if norm_type == "임의":
+        return "권장"
+    return "참고"
 
 
 def load_knowledge(knowledge_dir):
@@ -83,6 +101,23 @@ def _validate(common, types):
             note = cp.get("note")
             if note is not None and not isinstance(note, str):
                 raise ValidationError(f"{cid}: note는 문자열이어야 함")
+
+            sb = cp.get("severity_basis")
+            if sb is not None and (not isinstance(sb, str) or not sb.strip()):
+                raise ValidationError(f"{cid}: severity_basis는 비어 있지 않은 문자열이어야 함")
+
+            override = cp.get("severity_override", False)
+            if not isinstance(override, bool):
+                raise ValidationError(f"{cid}: severity_override는 불리언이어야 함")
+            expected = derive_severity(cp["norm_type"], cp["basis"])
+            if cp["severity"] != expected and not override:
+                # 지식 작성 가드: 규칙 불일치는 에러가 아니라 경고 (의도적 예외는 severity_override 사용)
+                print(
+                    f"[경고] {cid}: severity '{cp['severity']}'가 도출 규칙과 불일치 "
+                    f"(norm_type={cp['norm_type']}, basis={cp['basis']} → 기대 '{expected}'). "
+                    f"의도적 예외면 severity_override: true 부여",
+                    file=sys.stderr,
+                )
 
             # Python re로 컴파일 검증 — JS RegExp과 문법이 미세하게 다르나 현재 패턴 수준(\s* 등)에선 동일함
             for p in (cp.get("triggers") or {}).get("patterns", []):

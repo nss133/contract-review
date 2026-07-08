@@ -14,7 +14,8 @@ meta:
 checks:
   - id: CMN-01
     check: 손해배상 조항이 있는가
-    severity: 필수
+    severity: 참고
+    severity_basis: "실무 관행 항목(법령 강제 아님)"
     norm_type: 실무
     basis: practice
     triggers:
@@ -24,7 +25,8 @@ checks:
     note: ""
   - id: CMN-02
     check: 손해배상 범위를 민법 제393조에 맞게 통상손해로 한정하는가
-    severity: 참고
+    severity: 필수
+    severity_basis: "근거 조문이 강행규정(의무)임 — 민법 제393조"
     norm_type: 강행
     basis: statute
     triggers:
@@ -53,6 +55,7 @@ checks:
   - id: OUT-01
     check: 재위탁 시 사전 동의를 받도록 규정하는가
     severity: 필수
+    severity_basis: "근거 조문이 강행규정(의무)임 — 테스트법 제3조"
     module: M-PRIV
     norm_type: 강행
     basis: statute

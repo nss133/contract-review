@@ -1,5 +1,5 @@
 import pytest
-from validate import load_knowledge, ValidationError
+from validate import load_knowledge, ValidationError, derive_severity
 
 
 def test_load_valid(knowledge_dir):
@@ -100,6 +100,49 @@ def test_null_checks_rejected(knowledge_dir):
 def test_missing_common_yaml_rejected(knowledge_dir):
     (knowledge_dir / "common.yaml").unlink()
     with pytest.raises(ValidationError, match="찾을 수 없음"):
+        load_knowledge(knowledge_dir)
+
+
+def test_derive_severity_rule():
+    assert derive_severity("강행", "statute") == "필수"
+    assert derive_severity("임의", "statute") == "권장"
+    assert derive_severity("추정", "statute") == "참고"
+    assert derive_severity("간주", "statute") == "참고"
+    assert derive_severity("실무", "practice") == "참고"
+    # basis=practice는 norm_type과 무관하게 참고
+    assert derive_severity("강행", "practice") == "참고"
+
+
+def test_severity_mismatch_warns_not_errors(knowledge_dir, capsys):
+    # 규칙 불일치(강행인데 참고)여도 severity_override 없으면 경고만, 에러 아님
+    bad = (knowledge_dir / "common.yaml").read_text().replace(
+        "    severity: 필수\n    severity_basis: \"근거 조문이 강행규정(의무)임 — 민법 제393조\"",
+        "    severity: 참고\n    severity_basis: \"근거 조문이 강행규정(의무)임 — 민법 제393조\"",
+    )
+    (knowledge_dir / "common.yaml").write_text(bad)
+    load_knowledge(knowledge_dir)  # 예외 없이 통과
+    err = capsys.readouterr().err
+    assert "CMN-02" in err and "경고" in err
+
+
+def test_severity_override_suppresses_warning(knowledge_dir, capsys):
+    bad = (knowledge_dir / "common.yaml").read_text().replace(
+        "    severity: 필수\n    severity_basis: \"근거 조문이 강행규정(의무)임 — 민법 제393조\"",
+        "    severity: 참고\n    severity_override: true\n    severity_basis: \"근거 조문이 강행규정(의무)임 — 민법 제393조\"",
+    )
+    (knowledge_dir / "common.yaml").write_text(bad)
+    load_knowledge(knowledge_dir)
+    err = capsys.readouterr().err
+    assert "CMN-02" not in err
+
+
+def test_empty_severity_basis_rejected(knowledge_dir):
+    bad = (knowledge_dir / "types" / "outsourcing.yaml").read_text().replace(
+        '    severity_basis: "근거 조문이 강행규정(의무)임 — 테스트법 제3조"',
+        '    severity_basis: ""',
+    )
+    (knowledge_dir / "types" / "outsourcing.yaml").write_text(bad)
+    with pytest.raises(ValidationError, match="severity_basis"):
         load_knowledge(knowledge_dir)
 
 
