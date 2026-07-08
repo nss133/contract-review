@@ -1,0 +1,603 @@
+meta:
+  type_id: service-purchase
+  type_name: 일반 용역·구매
+  detect_keywords: [용역, 구매, 납품, 물품, 발주, 도급, 공급, 하도급]
+  modules:
+    - id: M-PAY
+      name: 대금·지급(하도급법)
+      always_on: true
+      screening_question: null
+      suggest_keywords: []
+    - id: M-UNFAIR
+      name: 부당특약·불공정약관
+      always_on: false
+      screening_question: 계약조건이 일방(발주자)이 작성한 정형화된 약관이거나 우월적 지위에서 설정되는가?
+      suggest_keywords: [약관, 일반조건, 부당특약, 우월적 지위]
+    - id: M-DELIVERY
+      name: 납품·검수·하자·위험부담
+      always_on: false
+      screening_question: 물품 납품 또는 용역 완성물의 인도·검수가 예정되어 있는가?
+      suggest_keywords: [납품, 검수, 검사, 인수, 하자, 지체상금]
+checks:
+  # ── M-PAY: 하도급거래 공정화에 관한 법률 제13조·제13조의2·제14조·제16조·제4조 ──
+  - id: SP-PAY-01
+    module: M-PAY
+    check: 하도급대금 지급기일이 목적물등의 수령일(용역은 수행 완료일)부터 60일 이내로 정해져 있는가
+    severity: 필수
+    severity_basis: "근거 조문이 강행규정(의무)임 — 하도급거래 공정화에 관한 법률 제13조"
+    norm_type: 강행
+    basis: statute
+    triggers:
+      keywords: [지급기일, 60일, 대금 지급, 하도급대금, 지급 기한]
+    absence_check: true
+    sources:
+      - law: 하도급거래 공정화에 관한 법률
+        article: 제13조
+        clause: 제1항
+        quote: '부터 60일 이내의 가능한 짧은 기한으로 정한 지급기일까지 하도급대금을 지급하여야 한다'
+        verified: false
+    note: 하도급법 적용대상(원사업자→수급사업자 제조·수리·건설·용역위탁, 사업자 규모 요건 충족)에 해당하는 경우 강행. 일반 매매·비적용 거래에는 임의 조정 가능
+  - id: SP-PAY-02
+    module: M-PAY
+    check: 지급기일 미정 또는 60일 초과 약정 시 수령일 기산 간주 규정과의 정합이 확인되는가
+    severity: 참고
+    severity_basis: "간주규정임 — 하도급거래 공정화에 관한 법률 제13조"
+    norm_type: 간주
+    basis: statute
+    triggers:
+      keywords: [지급기일, 수령일, 지급기일로 본다]
+    absence_check: false
+    sources:
+      - law: 하도급거래 공정화에 관한 법률
+        article: 제13조
+        clause: 제2항
+        quote: '하도급대금의 지급기일이 정하여져 있지 아니한 경우에는 목적물등의 수령일을 하도급대금의 지급기일로 보고'
+        verified: false
+    note: 하도급법 적용대상 해당 시. 60일 초과 지급기일 약정은 무효화되고 60일 기산 지급기일로 간주됨
+  - id: SP-PAY-03
+    module: M-PAY
+    check: 발주자로부터 준공금·기성금을 수령한 경우 15일 이내 하도급대금(기성부분 상당액)을 지급하도록 규정되어 있는가
+    severity: 필수
+    severity_basis: "근거 조문이 강행규정(의무)임 — 하도급거래 공정화에 관한 법률 제13조"
+    norm_type: 강행
+    basis: statute
+    triggers:
+      keywords: [준공금, 기성금, 15일, 기성부분]
+    absence_check: false
+    sources:
+      - law: 하도급거래 공정화에 관한 법률
+        article: 제13조
+        clause: 제3항
+        quote: '그 준공금이나 기성금 등을 지급받은 날부터 15일(하도급대금의 지급기일이 그 전에 도래하는 경우에는 그 지급기일) 이내에 수급사업자에게 지급하여야 한다'
+        verified: false
+    note: 하도급법 적용대상 해당 시
+  - id: SP-PAY-04
+    module: M-PAY
+    check: 원사업자가 발주자로부터 받은 현금비율 미만으로 하도급대금을 지급하지 못하도록 하는 조항이 있는가
+    severity: 필수
+    severity_basis: "근거 조문이 강행규정(의무)임 — 하도급거래 공정화에 관한 법률 제13조"
+    norm_type: 강행
+    basis: statute
+    triggers:
+      keywords: [현금비율, 현금 지급, 지급 비율]
+    absence_check: false
+    sources:
+      - law: 하도급거래 공정화에 관한 법률
+        article: 제13조
+        clause: 제4항
+        quote: '원사업자가 수급사업자에게 하도급대금을 지급할 때에는 원사업자가 발주자로부터 해당 제조등의 위탁과 관련하여 받은 현금비율 미만으로 지급하여서는 아니 된다'
+        verified: false
+    note: 하도급법 적용대상 해당 시
+  - id: SP-PAY-05
+    module: M-PAY
+    check: 대금을 어음으로 지급하는 경우 발주자로부터 받은 어음 지급기간을 초과하지 않고 할인료를 교부일에 지급하도록 규정되어 있는가
+    severity: 필수
+    severity_basis: "근거 조문이 강행규정(의무)임 — 하도급거래 공정화에 관한 법률 제13조"
+    norm_type: 강행
+    basis: statute
+    triggers:
+      keywords: [어음, 할인료, 어음대체결제, 만기]
+    absence_check: false
+    sources:
+      - law: 하도급거래 공정화에 관한 법률
+        article: 제13조
+        clause: 제6항
+        quote: '어음을 교부한 날부터 어음의 만기일까지의 기간에 대한 할인료를 어음을 교부하는 날에 수급사업자에게 지급하여야 한다'
+        verified: false
+      - law: 하도급거래 공정화에 관한 법률
+        article: 제13조
+        clause: 제5항
+        quote: '발주자로부터 원사업자가 받은 어음의 지급기간(발행일부터 만기일까지)을 초과하는 어음을 지급하여서는 아니 된다'
+        verified: false
+    note: 하도급법 적용대상 해당 시
+  - id: SP-PAY-06
+    module: M-PAY
+    check: 목적물 수령일부터 60일 초과 지급 시 공정거래위원회 고시 이율에 따른 지연이자를 지급하도록 규정되어 있는가
+    severity: 필수
+    severity_basis: "근거 조문이 강행규정(의무)임 — 하도급거래 공정화에 관한 법률 제13조"
+    norm_type: 강행
+    basis: statute
+    triggers:
+      keywords: [지연이자, 초과기간, 공정거래위원회 고시, 연체]
+    absence_check: false
+    sources:
+      - law: 하도급거래 공정화에 관한 법률
+        article: 제13조
+        clause: 제8항
+        quote: '그 초과기간에 대하여 연 100분의 40 이내에서 「은행법」에 따른 은행이 적용하는 연체금리 등 경제사정을 고려하여 공정거래위원회가 정하여 고시하는 이율에 따른 이자를 지급하여야 한다'
+        verified: false
+    note: 하도급법 적용대상 해당 시. 공통 CMN-05-2(일반 지연이자 약정)와 달리 법정 지연이자율(공정위 고시)이 적용됨
+  - id: SP-PAY-07
+    module: M-PAY
+    check: 일률적 단가인하·부당 할당·차별 등 부당한 하도급대금 결정을 금지하는 취지가 계약에 반영되어 있는가
+    severity: 필수
+    severity_basis: "근거 조문이 강행규정(의무)임 — 하도급거래 공정화에 관한 법률 제4조"
+    norm_type: 강행
+    basis: statute
+    triggers:
+      keywords: [단가 인하, 부당한 대금, 대금 결정, 일률적]
+    absence_check: false
+    sources:
+      - law: 하도급거래 공정화에 관한 법률
+        article: 제4조
+        clause: 제1항
+        quote: '부당하게 목적물등과 같거나 유사한 것에 대하여 일반적으로 지급되는 대가보다 낮은 수준으로 하도급대금을 결정'
+        verified: false
+    note: 하도급법 적용대상 해당 시. 제4조 제2항 각 호(일률 단가인하·부당 할당·차별·기망 등)는 부당대금결정으로 간주됨
+  - id: SP-PAY-08
+    module: M-PAY
+    check: 설계변경·목적물 시기변동·경제상황 변동으로 발주자로부터 증액받은 경우 그 내용·비율에 따라 하도급대금을 증액하도록 규정되어 있는가
+    severity: 필수
+    severity_basis: "근거 조문이 강행규정(의무)임 — 하도급거래 공정화에 관한 법률 제16조"
+    norm_type: 강행
+    basis: statute
+    triggers:
+      keywords: [설계변경, 대금 조정, 증액, 계약금액 변경]
+    absence_check: false
+    sources:
+      - law: 하도급거래 공정화에 관한 법률
+        article: 제16조
+        clause: 제1항
+        quote: '그가 발주자로부터 증액받은 계약금액의 내용과 비율에 따라 하도급대금을 증액하여야 한다'
+        verified: false
+    note: 하도급법 적용대상 해당 시. 감액받은 경우 그 내용·비율에 따라 감액 가능(제16조 제1항 단서)
+  - id: SP-PAY-09
+    module: M-PAY
+    check: 건설위탁의 경우 계약체결일부터 30일 이내 공사대금 지급보증을 하도록 규정되어 있는가(면제사유 해당 시 제외)
+    severity: 필수
+    severity_basis: "근거 조문이 강행규정(의무)임 — 하도급거래 공정화에 관한 법률 제13조의2"
+    norm_type: 강행
+    basis: statute
+    triggers:
+      keywords: [지급보증, 공사대금, 계약이행 보증, 건설위탁]
+    absence_check: false
+    sources:
+      - law: 하도급거래 공정화에 관한 법률
+        article: 제13조의2
+        clause: 제1항
+        quote: '건설위탁의 경우 원사업자는 계약체결일부터 30일 이내에 수급사업자에게 다음 각 호의 구분에 따라 해당 금액의 공사대금 지급을 보증'
+        verified: false
+      - law: 하도급거래 공정화에 관한 법률 시행령
+        article: 제8조
+        clause: 제1항 제1호
+        quote: '원사업자가 수급사업자에게 건설위탁을 하는 경우로서 1건 공사의 공사금액이 1천만원 이하인 경우'
+        verified: false
+    note: 하도급법 적용대상 중 건설위탁에 한함. 보증 면제사유(공사금액 1천만원 이하 등)의 실체는 시행령 제8조에 위임됨
+  - id: SP-PAY-10
+    module: M-PAY
+    check: 원사업자 지급불능·2회분 이상 미지급 등 사유 발생 시 발주자의 하도급대금 직접지급 요건·효과 조항이 있는가
+    severity: 필수
+    severity_basis: "근거 조문이 강행규정(의무)임 — 하도급거래 공정화에 관한 법률 제14조"
+    norm_type: 강행
+    basis: statute
+    triggers:
+      keywords: [직접 지급, 직접지급, 발주자, 지급정지]
+    absence_check: false
+    sources:
+      - law: 하도급거래 공정화에 관한 법률
+        article: 제14조
+        clause: 제1항
+        quote: '수급사업자가 제조ㆍ수리ㆍ시공 또는 용역수행을 한 부분에 상당하는 하도급대금을 그 수급사업자에게 직접 지급하여야 한다'
+        verified: false
+      - law: 하도급거래 공정화에 관한 법률 시행령
+        article: 제9조
+        clause: 제3항
+        quote: '발주자는 원사업자에 대한 대금지급의무의 범위에서 하도급대금 직접 지급 의무를 부담한다'
+        verified: false
+    note: 하도급법 적용대상 해당 시. 직접지급 의무의 범위·절차 실체는 시행령 제9조에 위임됨(원사업자 대금지급채무는 그 범위에서 소멸 — 제14조 제2항)
+  # ── M-UNFAIR: 하도급법 제3조의4(부당특약) + 약관의 규제에 관한 법률 제6조~제14조 ──
+  - id: SP-UNF-01
+    module: M-UNFAIR
+    check: 수급사업자의 이익을 부당하게 침해·제한하는 부당한 특약을 설정하지 않았는가
+    severity: 필수
+    severity_basis: "근거 조문이 강행규정(의무)임 — 하도급거래 공정화에 관한 법률 제3조의4"
+    norm_type: 강행
+    basis: statute
+    triggers:
+      keywords: [부당한 특약, 특약, 비용 부담, 부당 특약]
+    absence_check: false
+    sources:
+      - law: 하도급거래 공정화에 관한 법률
+        article: 제3조의4
+        clause: 제1항
+        quote: '원사업자는 수급사업자의 이익을 부당하게 침해하거나 제한하는 계약조건'
+        verified: false
+    note: 하도급법 적용대상 해당 시
+  - id: SP-UNF-02
+    module: M-UNFAIR
+    check: 서면에 기재되지 않은 사항을 요구하며 그 비용을 수급사업자에게 부담시키는 약정이 없는가
+    severity: 참고
+    severity_basis: "간주규정임 — 하도급거래 공정화에 관한 법률 제3조의4"
+    norm_type: 간주
+    basis: statute
+    triggers:
+      keywords: [서면에 기재되지, 비용을 부담, 추가 비용]
+    absence_check: false
+    sources:
+      - law: 하도급거래 공정화에 관한 법률
+        article: 제3조의4
+        clause: 제2항 제1호
+        quote: '원사업자가 제3조제1항의 서면에 기재되지 아니한 사항을 요구함에 따라 발생된 비용을 수급사업자에게 부담시키는 약정'
+        verified: false
+    note: 하도급법 적용대상 해당 시. 제3조의4 제2항 각 호는 부당한 특약으로 간주되며 해당 부분에 한하여 무효(제3항)
+  - id: SP-UNF-03
+    module: M-UNFAIR
+    check: 원사업자가 부담하여야 할 민원처리·산업재해 등 비용을 수급사업자에게 부담시키는 약정이 없는가
+    severity: 참고
+    severity_basis: "간주규정임 — 하도급거래 공정화에 관한 법률 제3조의4"
+    norm_type: 간주
+    basis: statute
+    triggers:
+      keywords: [민원처리, 산업재해, 비용을 부담]
+    absence_check: false
+    sources:
+      - law: 하도급거래 공정화에 관한 법률
+        article: 제3조의4
+        clause: 제2항 제2호
+        quote: '원사업자가 부담하여야 할 민원처리, 산업재해 등과 관련된 비용을 수급사업자에게 부담시키는 약정'
+        verified: false
+    note: 하도급법 적용대상 해당 시
+  - id: SP-UNF-04
+    module: M-UNFAIR
+    check: 입찰내역에 없는 사항을 요구하며 그 비용을 수급사업자에게 부담시키는 약정이 없는가
+    severity: 참고
+    severity_basis: "간주규정임 — 하도급거래 공정화에 관한 법률 제3조의4"
+    norm_type: 간주
+    basis: statute
+    triggers:
+      keywords: [입찰내역, 비용을 부담, 입찰]
+    absence_check: false
+    sources:
+      - law: 하도급거래 공정화에 관한 법률
+        article: 제3조의4
+        clause: 제2항 제3호
+        quote: '원사업자가 입찰내역에 없는 사항을 요구함에 따라 발생된 비용을 수급사업자에게 부담시키는 약정'
+        verified: false
+    note: 하도급법 적용대상 해당 시
+  - id: SP-UNF-05
+    module: M-UNFAIR
+    check: 신의성실 원칙을 위반하여 공정성을 잃은 약관 조항(무효 사유)이 계약에 포함되어 있지 않은가
+    severity: 필수
+    severity_basis: "공정성 상실 약관 조항은 무효(효력강행규정) — 약관의 규제에 관한 법률 제6조"
+    norm_type: 강행
+    basis: statute
+    triggers:
+      keywords: [신의성실, 공정성, 약관, 무효]
+    absence_check: false
+    sources:
+      - law: 약관의 규제에 관한 법률
+        article: 제6조
+        clause: 제1항
+        quote: '신의성실의 원칙을 위반하여 공정성을 잃은 약관 조항은 무효이다'
+        verified: false
+    note: 약관(정형화된 계약조건)에 해당하는 경우 적용 — 개별 교섭 조항에는 부적용
+  - id: SP-UNF-06
+    module: M-UNFAIR
+    check: 고객에게 부당하게 불리하거나 예상하기 어렵거나 본질적 권리를 제한하는 조항이 없는가(공정성 상실 추정 사유)
+    severity: 참고
+    severity_basis: "추정규정임 — 약관의 규제에 관한 법률 제6조"
+    norm_type: 추정
+    basis: statute
+    triggers:
+      keywords: [부당하게 불리한, 예상하기 어려운, 본질적 권리]
+    absence_check: false
+    sources:
+      - law: 약관의 규제에 관한 법률
+        article: 제6조
+        clause: 제2항
+        quote: '약관의 내용 중 다음 각 호의 어느 하나에 해당하는 내용을 정하고 있는 조항은 공정성을 잃은 것으로 추정된다'
+        verified: false
+    note: 약관에 해당하는 경우 적용. 추정규정이므로 사업자가 공정성을 반증하면 유효
+  - id: SP-UNF-07
+    module: M-UNFAIR
+    check: 사업자·이행보조자의 고의·중과실 책임을 배제하는 등 무효인 면책조항이 없는가
+    severity: 필수
+    severity_basis: "면책조항 무효(효력강행규정) — 약관의 규제에 관한 법률 제7조"
+    norm_type: 강행
+    basis: statute
+    triggers:
+      keywords: [면책, 책임을 배제, 고의 또는 중대한 과실, 담보책임 배제]
+    absence_check: false
+    sources:
+      - law: 약관의 규제에 관한 법률
+        article: 제7조
+        clause: 제1호
+        quote: '사업자, 이행 보조자 또는 피고용자의 고의 또는 중대한 과실로 인한 법률상의 책임을 배제하는 조항'
+        verified: false
+    note: 약관에 해당하는 경우 적용
+  - id: SP-UNF-08
+    module: M-UNFAIR
+    check: 고객에게 부당하게 과중한 지연손해금 등 손해배상 의무를 부담시키는 약관 조항이 없는가
+    severity: 필수
+    severity_basis: "손해배상액 예정 조항 무효(효력강행규정) — 약관의 규제에 관한 법률 제8조"
+    norm_type: 강행
+    basis: statute
+    triggers:
+      keywords: [지연손해금, 손해배상 의무, 위약금, 과중한]
+    absence_check: false
+    sources:
+      - law: 약관의 규제에 관한 법률
+        article: 제8조
+        quote: '고객에게 부당하게 과중한 지연 손해금 등의 손해배상 의무를 부담시키는 약관 조항은 무효로 한다'
+        verified: false
+    note: 약관에 해당하는 경우 적용
+  - id: SP-UNF-09
+    module: M-UNFAIR
+    check: 고객의 법정 해제·해지권을 배제·제한하거나 사업자에게 부당한 해지권을 부여하는 무효 조항이 없는가
+    severity: 필수
+    severity_basis: "해제·해지 관련 부당 약관 조항 무효(효력강행규정) — 약관의 규제에 관한 법률 제9조"
+    norm_type: 강행
+    basis: statute
+    triggers:
+      keywords: [해제권, 해지권, 원상회복, 해지]
+    absence_check: false
+    sources:
+      - law: 약관의 규제에 관한 법률
+        article: 제9조
+        quote: '계약의 해제ㆍ해지에 관하여 정하고 있는 약관의 내용 중 다음 각 호의 어느 하나에 해당되는 내용을 정하고 있는 조항은 무효로 한다'
+        verified: false
+    note: 약관에 해당하는 경우 적용
+  - id: SP-UNF-10
+    module: M-UNFAIR
+    check: 상당한 이유 없이 급부의 내용을 사업자가 일방적으로 결정·변경하거나 급부를 중지할 수 있게 하는 무효 조항이 없는가
+    severity: 필수
+    severity_basis: "채무이행 관련 부당 약관 조항 무효(효력강행규정) — 약관의 규제에 관한 법률 제10조"
+    norm_type: 강행
+    basis: statute
+    triggers:
+      keywords: [일방적으로 결정, 급부, 일방적으로 변경, 중지]
+    absence_check: false
+    sources:
+      - law: 약관의 규제에 관한 법률
+        article: 제10조
+        clause: 제1호
+        quote: '상당한 이유 없이 급부(給付)의 내용을 사업자가 일방적으로 결정하거나 변경할 수 있도록 권한을 부여하는 조항'
+        verified: false
+    note: 약관에 해당하는 경우 적용
+  - id: SP-UNF-11
+    module: M-UNFAIR
+    check: 고객의 항변권·상계권 등 권리를 상당한 이유 없이 배제·제한하거나 기한의 이익을 박탈하는 무효 조항이 없는가
+    severity: 필수
+    severity_basis: "고객 권익 관련 부당 약관 조항 무효(효력강행규정) — 약관의 규제에 관한 법률 제11조"
+    norm_type: 강행
+    basis: statute
+    triggers:
+      keywords: [항변권, 상계권, 기한의 이익, 권익]
+    absence_check: false
+    sources:
+      - law: 약관의 규제에 관한 법률
+        article: 제11조
+        clause: 제1호
+        quote: '법률에 따른 고객의 항변권(抗辯權), 상계권(相計權) 등의 권리를 상당한 이유 없이 배제하거나 제한하는 조항'
+        verified: false
+    note: 약관에 해당하는 경우 적용
+  - id: SP-UNF-12
+    module: M-UNFAIR
+    check: 고객의 작위·부작위를 의사표시로 의제하거나 의사표시 형식에 부당한 제한을 두는 무효 조항이 없는가
+    severity: 필수
+    severity_basis: "의사표시 의제 관련 부당 약관 조항 무효(효력강행규정) — 약관의 규제에 관한 법률 제12조"
+    norm_type: 강행
+    basis: statute
+    triggers:
+      keywords: [의사표시, 의제, 도달된 것으로 본다, 표명]
+    absence_check: false
+    sources:
+      - law: 약관의 규제에 관한 법률
+        article: 제12조
+        quote: '의사표시에 관하여 정하고 있는 약관의 내용 중 다음 각 호의 어느 하나에 해당하는 내용을 정하고 있는 조항은 무효로 한다'
+        verified: false
+    note: 약관에 해당하는 경우 적용
+  - id: SP-UNF-13
+    module: M-UNFAIR
+    check: 고객에게 부당하게 불리한 재판관할 합의 또는 입증책임을 전가하는 무효 조항이 없는가
+    severity: 필수
+    severity_basis: "소 제기·관할 관련 부당 약관 조항 무효(효력강행규정) — 약관의 규제에 관한 법률 제14조"
+    norm_type: 강행
+    basis: statute
+    triggers:
+      keywords: [재판관할, 소송 제기, 입증책임, 관할의 합의]
+    absence_check: false
+    sources:
+      - law: 약관의 규제에 관한 법률
+        article: 제14조
+        clause: 제1호
+        quote: '고객에게 부당하게 불리한 소송 제기 금지 조항 또는 재판관할의 합의 조항'
+        verified: false
+    note: 약관에 해당하는 경우 적용. 공통 CMN-19(관할 지정)와 달리 부당 관할합의의 무효 여부를 점검
+  # ── M-DELIVERY: 검수 + 민법 제398조·제537조·제538조·제667조~제670조·제580조~제582조 ──
+  - id: SP-DEL-01
+    module: M-DELIVERY
+    check: 검사·검수의 기준·방법·기한과 합격/불합격 시 처리(보완·재납품) 절차가 규정되어 있는가
+    severity: 참고
+    severity_basis: "실무 관행 항목(법령 강제 아님)"
+    norm_type: 실무
+    basis: practice
+    triggers:
+      keywords: [검사, 검수, 인수, 합격, 불합격]
+    absence_check: true
+    sources: []
+  - id: SP-DEL-02
+    module: M-DELIVERY
+    check: 납품·용역 이행지체에 대한 지체상금(손해배상액의 예정) 약정이 있는가
+    severity: 권장
+    severity_basis: "근거 조문이 임의규정임 — 민법 제398조"
+    norm_type: 임의
+    basis: statute
+    triggers:
+      keywords: [지체상금, 손해배상액의 예정, 위약금, 지연배상]
+    absence_check: true
+    sources:
+      - law: 민법
+        article: 제398조
+        clause: 제1항
+        quote: '당사자는 채무불이행에 관한 손해배상액을 예정할 수 있다'
+        verified: false
+    note: 임의규정 — 예정액이 부당히 과다하면 법원이 감액 가능(제398조 제2항)
+  - id: SP-DEL-03
+    module: M-DELIVERY
+    check: 목적물 인도 전 당사자 쌍방 무책 멸실·훼손 시 위험부담(대금청구 가부) 처리 조항이 있는가
+    severity: 권장
+    severity_basis: "근거 조문이 임의규정임 — 민법 제537조"
+    norm_type: 임의
+    basis: statute
+    triggers:
+      keywords: [위험부담, 멸실, 훼손, 위험의 이전]
+    absence_check: false
+    sources:
+      - law: 민법
+        article: 제537조
+        quote: '쌍무계약의 당사자 일방의 채무가 당사자쌍방의 책임없는 사유로 이행할 수 없게 된 때에는 채무자는 상대방의 이행을 청구하지 못한다'
+        verified: false
+    note: 채무자위험부담주의는 임의규정 — 특약으로 위험이전 시기를 달리 정할 수 있음
+  - id: SP-DEL-04
+    module: M-DELIVERY
+    check: 발주자(채권자) 귀책 또는 수령지체 중 이행불능 시 수급인의 대금청구권 유지 조항이 있는가
+    severity: 권장
+    severity_basis: "근거 조문이 임의규정임 — 민법 제538조"
+    norm_type: 임의
+    basis: statute
+    triggers:
+      keywords: [수령지체, 채권자의 책임, 대금 청구, 귀책]
+    absence_check: false
+    sources:
+      - law: 민법
+        article: 제538조
+        clause: 제1항
+        quote: '쌍무계약의 당사자 일방의 채무가 채권자의 책임있는 사유로 이행할 수 없게 된 때에는 채무자는 상대방의 이행을 청구할 수 있다'
+        verified: false
+    note: 임의규정 — 채무자는 자기 채무를 면함으로써 얻은 이익을 상환(제538조 제2항)
+  - id: SP-DEL-05
+    module: M-DELIVERY
+    check: 용역(도급) 완성물에 하자가 있는 경우 상당한 기간을 정한 하자보수 청구권 조항이 있는가
+    severity: 권장
+    severity_basis: "근거 조문이 임의규정임 — 민법 제667조"
+    norm_type: 임의
+    basis: statute
+    triggers:
+      keywords: [하자보수, 하자의 보수, 하자 담보, 보수 청구]
+    absence_check: true
+    sources:
+      - law: 민법
+        article: 제667조
+        clause: 제1항
+        quote: '완성된 목적물 또는 완성전의 성취된 부분에 하자가 있는 때에는 도급인은 수급인에 대하여 상당한 기간을 정하여 그 하자의 보수를 청구할 수 있다'
+        verified: false
+    note: 하자담보책임은 임의규정 — 특약으로 조정 가능(단 제672조 면책특약 제한 유의)
+  - id: SP-DEL-06
+    module: M-DELIVERY
+    check: 하자보수에 갈음하거나 보수와 함께 손해배상을 청구할 수 있는 조항이 있는가
+    severity: 권장
+    severity_basis: "근거 조문이 임의규정임 — 민법 제667조"
+    norm_type: 임의
+    basis: statute
+    triggers:
+      keywords: [하자 손해배상, 보수에 갈음, 손해배상 청구]
+    absence_check: false
+    sources:
+      - law: 민법
+        article: 제667조
+        clause: 제2항
+        quote: '도급인은 하자의 보수에 갈음하여 또는 보수와 함께 손해배상을 청구할 수 있다'
+        verified: false
+  - id: SP-DEL-07
+    module: M-DELIVERY
+    check: 완성물의 하자로 계약 목적을 달성할 수 없는 경우의 해제권 조항이 있는가
+    severity: 권장
+    severity_basis: "근거 조문이 임의규정임 — 민법 제668조"
+    norm_type: 임의
+    basis: statute
+    triggers:
+      keywords: [계약의 목적을 달성, 하자로 인하여, 해제]
+    absence_check: false
+    sources:
+      - law: 민법
+        article: 제668조
+        quote: '도급인이 완성된 목적물의 하자로 인하여 계약의 목적을 달성할 수 없는 때에는 계약을 해제할 수 있다'
+        verified: false
+    note: 임의규정 — 건물 기타 토지의 공작물에 대하여는 해제권 제한(제668조 단서)
+  - id: SP-DEL-08
+    module: M-DELIVERY
+    check: 도급(용역) 하자담보책임의 존속기간(인도일부터 1년 등)이 규정되어 있는가
+    severity: 권장
+    severity_basis: "하자담보 존속기간 임의규정(특약으로 조정 가능) — 민법 제670조"
+    norm_type: 임의
+    basis: statute
+    triggers:
+      keywords: [담보책임 기간, 존속기간, 하자담보 기간, 1년내]
+    absence_check: false
+    sources:
+      - law: 민법
+        article: 제670조
+        clause: 제1항
+        quote: '전3조의 규정에 의한 하자의 보수, 손해배상의 청구 및 계약의 해제는 목적물의 인도를 받은 날로부터 1년내에 하여야 한다'
+        verified: false
+    note: 하자담보 제척기간은 임의규정 — 특약으로 연장·단축 가능
+  - id: SP-DEL-09
+    module: M-DELIVERY
+    check: 구매(매매) 목적물의 하자에 대한 매도인의 하자담보책임 조항이 있는가
+    severity: 권장
+    severity_basis: "근거 조문이 임의규정임 — 민법 제580조"
+    norm_type: 임의
+    basis: statute
+    triggers:
+      keywords: [매도인, 하자담보, 물품 하자, 담보책임]
+    absence_check: true
+    sources:
+      - law: 민법
+        article: 제580조
+        clause: 제1항
+        quote: '매매의 목적물에 하자가 있는 때에는 제575조제1항의 규정을 준용한다'
+        verified: false
+    note: 임의규정 — 매수인이 하자를 알았거나 과실로 알지 못한 때에는 담보책임 배제(제580조 제1항 단서)
+  - id: SP-DEL-10
+    module: M-DELIVERY
+    check: 종류물(불특정물) 구매의 경우 하자 있는 물건 대신 완전물 급부를 청구할 수 있는 조항이 있는가
+    severity: 권장
+    severity_basis: "근거 조문이 임의규정임 — 민법 제581조"
+    norm_type: 임의
+    basis: statute
+    triggers:
+      keywords: [종류, 완전물, 하자없는 물건, 대체물]
+    absence_check: false
+    sources:
+      - law: 민법
+        article: 제581조
+        clause: 제2항
+        quote: '매수인은 계약의 해제 또는 손해배상의 청구를 하지 아니하고 하자없는 물건을 청구할 수 있다'
+        verified: false
+  - id: SP-DEL-11
+    module: M-DELIVERY
+    check: 구매(매매) 하자담보에 따른 권리행사기간(하자를 안 날부터 6월 등)이 규정되어 있는가
+    severity: 권장
+    severity_basis: "하자담보 권리행사기간 임의규정(특약으로 조정 가능) — 민법 제582조"
+    norm_type: 임의
+    basis: statute
+    triggers:
+      keywords: [안 날로부터, 권리행사기간, 6월내, 담보책임 기간]
+    absence_check: false
+    sources:
+      - law: 민법
+        article: 제582조
+        quote: '전2조에 의한 권리는 매수인이 그 사실을 안 날로부터 6월내에 행사하여야 한다'
+        verified: false
+    note: 제척기간은 임의규정 — 특약으로 조정 가능
