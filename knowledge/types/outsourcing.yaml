@@ -45,7 +45,14 @@ checks:
     triggers:
       keywords: [위탁업무, 업무의 범위, 위탁의 범위, 위탁 대상]
     absence_check: true
-    sources: []
+    sources:
+      - law: 손해사정 업무위탁 및 손해사정사 선임 등에 관한 모범규준
+        article: 제5조
+        clause: 제5항 제1호
+        quote: '보험회사는 손해사정 위수탁 당사자 간 합의한 업무범위 등 계약조건을 반드시 반영하여 손해사정업무 위탁계약서를 작성하고 교부하여야 한다'
+        verified: false
+        source_type: self_regulation
+    note: 자율규제(손해사정 업무위탁 모범규준)는 손해사정 위탁에 한해 업무범위 계약서 반영 의무를 부과 — 일반 위탁의 참고 근거
   - id: CORE-02
     module: M-CORE
     check: 위탁 업무가 인가받은 금융업 또는 다른 금융업의 본질적 요소를 포함하지 않는가
@@ -111,6 +118,13 @@ checks:
         clause: 제3항 제3호
         quote: '제3자가 관련 법규(다만, 제3자가 외국인인 경우에는 국제사법 제3조)에 따라 업무수탁이 가능한지의 여부'
         verified: false
+        source_type: law
+      - law: 손해사정 업무위탁 및 손해사정사 선임 등에 관한 모범규준
+        article: 제4조
+        clause: 제1항
+        quote: '보험회사는 손해사정 업무 위탁을 위한 평가기준을 마련하고, 이를 준수하여 업무를 위탁할 손해사정사 또는 손해사정업자를 선정하여야 한다'
+        verified: false
+        source_type: self_regulation
   - id: CORE-06
     module: M-CORE
     check: 위탁업무 처리가 금융실명법 등 관련 법령에 저촉되지 않도록 하는 법령 준수 조항이 있는가
@@ -177,6 +191,13 @@ checks:
         clause: 제5항
         quote: '위탁회사는 수탁회사가 이 규정 등 금융관련법령 및 제3조의2에 따른 업무위수탁기준상의 의무를 위반하여 발생하는 손해에 대해서 수탁회사와 연대하여 배상책임을 진다'
         verified: false
+        source_type: law
+      - law: 의료자문 표준내부통제기준
+        article: 제4조
+        clause: 제4항
+        quote: '수탁자가 제2항에 따른 업무위수탁기준에서 정하는 의무를 위반하여 발생하는 손해에 대해서 업무위탁 규정 제3조 제5항에 따라 배상책임을 진다'
+        verified: false
+        source_type: self_regulation
   - id: CORE-10
     module: M-CORE
     check: 위탁자의 업무 처리 현황 점검·자료 요구·감사권 등 수탁자 관리·감독 조항이 있는가
@@ -192,7 +213,14 @@ checks:
         article: 제3조의2
         quote: '<별표 3>에서 정하는 업무위수탁기준에 따라 금융권역 및 위탁대상자의 특성 등을 감안하여 자체 업무위수탁 운영기준을 마련하고 이를 준수하여야 한다'
         verified: false
-    note: 별표 3 업무위수탁기준 세부 문언은 DB 미수록 — 원문 미확인
+        source_type: law
+      - law: 의료자문 표준내부통제기준
+        article: 제4조
+        clause: 제2항
+        quote: '보험회사는 제1항에 따른 수탁자를 관리하기 위하여 업무위탁 규정 제3조의2에 따른 업무위수탁운영기준을 마련하고 이를 준수하여야 한다'
+        verified: false
+        source_type: self_regulation
+    note: 별표 3 업무위수탁기준 세부 문언은 DB 미수록 — 원문 미확인. 자율규제(의료자문 표준내부통제기준 제4조)는 수탁자 준수 점검·관리·보고·조치를 업무위수탁운영기준에 포함하도록 요구
   - id: CORE-11
     module: M-CORE
     check: 감독원장 사전보고(수탁자의 업무 개시 7영업일 이전) 일정·자료 협조가 계약 발효와 연동되어 있는가
@@ -963,6 +991,13 @@ checks:
         clause: 제1항
         quote: '모집을 할 수 있는 자는 다음 각 호의 어느 하나에 해당하는 자이어야 한다'
         verified: false
+        source_type: law
+      - law: 보험권 표준내부통제기준
+        article: 제37조
+        clause: 제3항
+        quote: '회사는 모집종사자와의 위탁계약 체결 전에 모집종사자의 보험업법 상 등록요건 및 재무상태 등을 심사‧평가하여 위탁계약 체결 여부 등에 반영하는 절차를 마련하여야 한다'
+        verified: false
+        source_type: self_regulation
   - id: SOL-02
     module: M-SOLICIT
     check: 모집 자격·등록의 유지 의무와 등록 취소·말소 시 통지·해지 조항이 있는가
@@ -973,7 +1008,14 @@ checks:
     triggers:
       keywords: [등록, 말소, 취소, 자격]
     absence_check: true
-    sources: []
+    sources:
+      - law: 보험권 표준내부통제기준
+        article: 제37조
+        clause: 제8항
+        quote: '회사는 보험업법 등에 따른 위탁계약 해지 절차를 마련해야 하며, 그 해지 절차와 사유를 위탁계약서에 반영하고 모집종사자에게 설명하여야 한다'
+        verified: false
+        source_type: self_regulation
+    note: 자율규제(보험권 표준내부통제기준 제37조)는 위탁계약 해지 절차·사유의 계약서 반영을 요구
   - id: SOL-03
     module: M-SOLICIT
     check: 수탁자의 금융소비자보호법 위반으로 발생한 손해에 대한 책임 분담 조항이 있는가
@@ -1023,6 +1065,13 @@ checks:
         clause: 제1항 단서
         quote: '다만, 금융상품직접판매업자가 금융상품판매대리ㆍ중개업자등의 선임과 그 업무 감독에 대하여 적절한 주의를 하였고 손해를 방지하기 위하여 노력한 경우에는 그러하지 아니하다'
         verified: false
+        source_type: law
+      - law: 보험권 표준내부통제기준
+        article: 제38조
+        clause: 제1항
+        quote: '회사는 모집종사자의 위탁업무 수행에 관한 평가기준을 수립·운영하도록 해야 한다'
+        verified: false
+        source_type: self_regulation
   - id: SOL-06
     module: M-SOLICIT
     check: 회사가 금융소비자에게 배상한 경우 수탁자에 대한 구상 조항이 있는가

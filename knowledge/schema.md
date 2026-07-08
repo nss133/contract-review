@@ -35,6 +35,7 @@ checks:
         clause: 제1항 제1호      # 표시용 (선택)
         quote: 위탁업무 수행 목적 외 개인정보의 처리 금지에 관한 사항   # 조문 원문에서 그대로 발췌 (basis=statute 첫 항목 필수)
         verified: false        # 사람이 원문 대조 후에만 true로 승격
+        source_type: law       # law | self_regulation (선택, 생략 시 "law"). UI 근거 배지 구분용
     note: ""                  # 선택, 1줄 이하 보충 메모. 서술형 지침 작성 금지(폐지된 guidance 대체 아님)
     jid_refs: []              # 사내 판단 선례 라벨 (예: J-2026-0496)
     news_refs: []             # briefing.sqlite3 items.id
@@ -63,7 +64,8 @@ check 항목에 `guidance` 키가 남아 있으면 `ValidationError("guidance는
 - `severity_override`가 있으면 불리언이어야 함
 - `severity`가 아래 도출 규칙과 불일치하고 `severity_override`가 없거나 false면 **경고 출력**(stderr, ValidationError 아님 — 지식 작성 가드). 의도적 예외는 `severity_override: true` + `note`에 사유 기재
 - `module`이 있으면 해당 파일 `meta.modules`에 선언된 id여야 함
-- `sources` 각 항목 필수 키: `law`, `article`, `verified` / 선택 키: `clause`, `quote`
+- `sources` 각 항목 필수 키: `law`, `article`, `verified` / 선택 키: `clause`, `quote`, `source_type`
+- `source_type` ∈ {`law`, `self_regulation`} (선택 필드 — validate가 필수화하지 않음). 생략 시 `law`로 간주. `self_regulation`은 협회 자율규제·모범규준(klia_regulations.sqlite 수록)에만 명시. UI가 법령 근거와 자율규제 근거의 배지를 구분하는 데 사용
 - `basis: statute` → `sources`가 1개 이상 필요, `sources[0].quote`가 비어있지 않은 문자열이어야 함 (없으면 빌드 실패)
 - `basis: practice` → `sources`는 빈 리스트 허용 (법령 근거 없는 실무 항목)
 - `note`가 있으면 문자열이어야 함
@@ -94,6 +96,7 @@ check 항목에 `guidance` 키가 남아 있으면 `ValidationError("guidance는
 - `quote_mismatch` → **문언 불일치** (적): 조문은 찾았으나 quote 문언이 원문과 불일치 (조작·오기 방지 경고)
 - `missing` → **원문 미확인** (적): 조문 자체를 DB에서 찾지 못함
 - `basis: practice` → **실무** (회): 법령 근거 없는 실무 항목, quote 대조 대상 아님
+- `source_type: self_regulation` → **자율규제** 톤: 협회 모범규준·표준내부통제기준 등 자율규제 근거. quote 검증은 법령 source와 동일(klia DB 대조). 법령(강제)과 달리 자율규제임을 배지로 구분
 
 ## 검수 흐름
 
