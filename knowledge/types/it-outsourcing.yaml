@@ -1,0 +1,635 @@
+meta:
+  type_id: it-outsourcing
+  type_name: IT외주·전산용역
+  detect_keywords: [전산, 시스템 개발, 소프트웨어, 유지보수, 외주, 용역, SI, 정보시스템]
+  modules:
+    - id: M-ITSEC
+      name: 전산외주 보안·외주인력 통제
+      always_on: true
+      screening_question: null
+      suggest_keywords: []
+    - id: M-DELIV
+      name: 산출물·지식재산권·검수·하자
+      always_on: true
+      screening_question: null
+      suggest_keywords: []
+    - id: M-PRIV
+      name: 개인(신용)정보 처리위탁
+      always_on: false
+      screening_question: 전산시스템이 고객·임직원 등 개인(신용)정보를 처리·보관하는가?
+      suggest_keywords: [개인정보, 신용정보, 고객정보, 정보주체]
+    - id: M-CLOUD
+      name: 클라우드·국외 처리
+      always_on: false
+      screening_question: 클라우드컴퓨팅서비스 이용 또는 국외 정보처리 요소가 있는가?
+      suggest_keywords: [클라우드, 국외, 해외 이전, AWS, Azure, 리전]
+checks:
+  # ── M-ITSEC: 전자금융감독규정 제60조(외부주문등에 대한 기준) ──
+  - id: ITSEC-01
+    module: M-ITSEC
+    check: 외부주문 개발업무에 사용되는 업무장소·전산설비를 내부 업무용과 분리하여 설치·운영하는 조항이 있는가
+    severity: 필수
+    severity_basis: "근거 조문이 강행규정(의무)임 — 전자금융감독규정 제60조"
+    norm_type: 강행
+    basis: statute
+    triggers:
+      keywords: [분리, 업무장소, 전산설비, 개발 장소, 개발망]
+    absence_check: true
+    sources:
+      - law: 전자금융감독규정
+        article: 제60조
+        clause: 제1항 제1호
+        quote: '외부주문등에 의한 정보처리시스템의 개발업무에 사용되는 업무장소 및 전산설비는 내부 업무용과 분리하여 설치ㆍ운영'
+        verified: false
+  - id: ITSEC-02
+    module: M-ITSEC
+    check: 금융회사와 이용자 간 암호화정보 해독 및 원장 등 중요 데이터 변경을 금지하는 조항이 있는가
+    severity: 필수
+    severity_basis: "근거 조문이 강행규정(의무)임 — 전자금융감독규정 제60조"
+    norm_type: 강행
+    basis: statute
+    triggers:
+      keywords: [암호화정보, 해독, 원장, 데이터 변경 금지]
+    absence_check: true
+    sources:
+      - law: 전자금융감독규정
+        article: 제60조
+        clause: 제1항 제2호
+        quote: '금융회사와 이용자 간 암호화정보 해독 및 원장 등 중요 데이터 변경 금지'
+        verified: false
+  - id: ITSEC-03
+    module: M-ITSEC
+    check: 계좌번호·비밀번호 등 이용자 금융정보의 무단보관·유출 금지 조항이 있는가
+    severity: 필수
+    severity_basis: "근거 조문이 강행규정(의무)임 — 전자금융감독규정 제60조"
+    norm_type: 강행
+    basis: statute
+    triggers:
+      keywords: [계좌번호, 비밀번호, 금융정보, 무단보관, 유출 금지]
+    absence_check: true
+    sources:
+      - law: 전자금융감독규정
+        article: 제60조
+        clause: 제1항 제3호
+        quote: '계좌번호, 비밀번호 등 이용자 금융정보 무단보관 및 유출 금지'
+        verified: false
+  - id: ITSEC-04
+    module: M-ITSEC
+    check: 접근매체 위·변조, 해킹, 개인정보유출 등에 대비한 보안대책 수립 조항이 있는가
+    severity: 필수
+    severity_basis: "근거 조문이 강행규정(의무)임 — 전자금융감독규정 제60조"
+    norm_type: 강행
+    basis: statute
+    triggers:
+      keywords: [보안대책, 해킹, 접근매체, 위변조, 정보유출]
+    absence_check: true
+    sources:
+      - law: 전자금융감독규정
+        article: 제60조
+        clause: 제1항 제4호
+        quote: '접근매체 위ㆍ변조, 해킹, 개인정보유출 등에 대비한 보안대책 수립'
+        verified: false
+  - id: ITSEC-05
+    module: M-ITSEC
+    check: 금융회사와 전자금융보조업자 간 접속에 전용회선(동등 보안수준의 가상 전용회선 포함)을 사용하는 조항이 있는가
+    severity: 필수
+    severity_basis: "근거 조문이 강행규정(의무)임 — 전자금융감독규정 제60조"
+    norm_type: 강행
+    basis: statute
+    triggers:
+      keywords: [전용회선, 회선, 망 분리, 접속, VPN]
+    absence_check: true
+    sources:
+      - law: 전자금융감독규정
+        article: 제60조
+        clause: 제1항 제5호
+        quote: '금융회사와 전자금융보조업자 간의 접속은 전용회선(전용회선과 동등한 보안수준을 갖춘 가상의 전용회선을 포함한다)을 사용'
+        verified: false
+  - id: ITSEC-06
+    module: M-ITSEC
+    check: 정보처리시스템 장애 등 서비스 중단에 대비한 비상대책 수립 조항이 있는가
+    severity: 필수
+    severity_basis: "근거 조문이 강행규정(의무)임 — 전자금융감독규정 제60조"
+    norm_type: 강행
+    basis: statute
+    triggers:
+      keywords: [비상대책, 장애, 서비스 중단, 복구]
+    absence_check: true
+    sources:
+      - law: 전자금융감독규정
+        article: 제60조
+        clause: 제1항 제6호
+        quote: '정보처리시스템 장애 등 서비스 중단에 대비한 비상대책 수립'
+        verified: false
+  - id: ITSEC-07
+    module: M-ITSEC
+    check: 외부주문의 입찰·계약·수행·완료 등 각 단계별 보안관리방안(금융감독원장이 정하는 방안)을 따르도록 하는 조항이 있는가
+    severity: 필수
+    severity_basis: "근거 조문이 강행규정(의무)임 — 전자금융감독규정 제60조"
+    norm_type: 강행
+    basis: statute
+    triggers:
+      keywords: [단계별, 보안관리방안, 입찰, 계약, 수행]
+    absence_check: true
+    sources:
+      - law: 전자금융감독규정
+        article: 제60조
+        clause: 제1항 제7호
+        quote: '외부주문등의 입찰ㆍ계약ㆍ수행ㆍ완료 등 각 단계별로 금융감독원장이 정하는 보안관리방안을 따를 것'
+        verified: false
+  - id: ITSEC-08
+    module: M-ITSEC
+    check: 중요 전산자료의 백업자료 보존·백업설비 확보 등 백업대책 수립 조항이 있는가
+    severity: 필수
+    severity_basis: "근거 조문이 강행규정(의무)임 — 전자금융감독규정 제60조"
+    norm_type: 강행
+    basis: statute
+    triggers:
+      keywords: [백업, 백업설비, 전산자료, 업무지속성]
+    absence_check: true
+    sources:
+      - law: 전자금융감독규정
+        article: 제60조
+        clause: 제1항 제8호
+        quote: '업무지속성을 위한 중요 전산자료의 백업(backup)자료 보존 및 백업설비 확보 등 백업대책 수립'
+        verified: false
+  - id: ITSEC-09
+    module: M-ITSEC
+    check: 수탁자(전자금융보조업자)의 재무건전성 연 1회 이상 평가·상시 모니터링에 필요한 자료 제공 협조 조항이 있는가
+    severity: 필수
+    severity_basis: "근거 조문이 강행규정(의무)임 — 전자금융감독규정 제60조"
+    norm_type: 강행
+    basis: statute
+    triggers:
+      keywords: [재무건전성, 평가, 모니터링, 도산]
+    absence_check: true
+    sources:
+      - law: 전자금융감독규정
+        article: 제60조
+        clause: 제1항 제10호
+        quote: '전자금융보조업자에 대한 재무건전성을 연1회 이상 평가하여 재무상태 악화에 따른 도산에 대비하고 전자금융보조업자의 주요 경영활동에 대해 상시 모니터링을 실시'
+        verified: false
+  - id: ITSEC-10
+    module: M-ITSEC
+    check: 수탁자가 제공하는 서비스의 품질수준 연 1회 이상 평가에 협조하는 조항이 있는가
+    severity: 필수
+    severity_basis: "근거 조문이 강행규정(의무)임 — 전자금융감독규정 제60조"
+    norm_type: 강행
+    basis: statute
+    triggers:
+      keywords: [품질수준, 서비스 수준, 평가, SLA]
+    absence_check: true
+    sources:
+      - law: 전자금융감독규정
+        article: 제60조
+        clause: 제1항 제11호
+        quote: '전자금융보조업자가 제공하는 서비스의 품질수준을 연1회 이상 평가할 것'
+        verified: false
+  - id: ITSEC-11
+    module: M-ITSEC
+    check: 수탁자가 사전 동의 없이 재외부주문 계약 체결·계약업체 변경을 하지 못하도록 통제하는 조항이 있는가
+    severity: 필수
+    severity_basis: "근거 조문이 강행규정(의무)임 — 전자금융감독규정 제60조"
+    norm_type: 강행
+    basis: statute
+    triggers:
+      keywords: [재위탁, 외부주문, 사전 동의, 계약업체 변경, 재하도급]
+    absence_check: true
+    sources:
+      - law: 전자금융감독규정
+        article: 제60조
+        clause: 제1항 제12호
+        quote: '전자금융보조업자가 사전 동의 없이 다시 외부주문등 계약을 체결하거나 계약업체를 변경하지 못하도록 하고, 사전 동의시 해당 계약서에 제7호의 사항을 기재하도록 통제'
+        verified: false
+  - id: ITSEC-12
+    module: M-ITSEC
+    check: 업무수행인력의 사전 신원조회(또는 신원보증) 및 인력변경 시 인수인계 등 외주인력 관리방안 조항이 있는가
+    severity: 필수
+    severity_basis: "근거 조문이 강행규정(의무)임 — 전자금융감독규정 제60조"
+    norm_type: 강행
+    basis: statute
+    triggers:
+      keywords: [신원조회, 신원보증, 인수인계, 외주인력, 투입인력]
+    absence_check: true
+    sources:
+      - law: 전자금융감독규정
+        article: 제60조
+        clause: 제1항 제13호
+        quote: '업무수행인력에 대하여 사전 신원조회 실시(이 경우 신원보증보험 증권 징구로 갈음할 수 있다) 또는 대표자의 신원보증서 징구, 인력변경시 인수인계에 관한 사항 등을 포함한 업무수행인력 관리방안 수립'
+        verified: false
+  - id: ITSEC-13
+    module: M-ITSEC
+    check: 외부주문에 대한 자체 보안성검토와 정기 보안점검 실시(수탁자 협조) 조항이 있는가
+    severity: 필수
+    severity_basis: "근거 조문이 강행규정(의무)임 — 전자금융감독규정 제60조"
+    norm_type: 강행
+    basis: statute
+    triggers:
+      keywords: [보안성검토, 보안점검, 취약점, 점검]
+    absence_check: true
+    sources:
+      - law: 전자금융감독규정
+        article: 제60조
+        clause: 제1항 제14호
+        quote: '외부주문등은 자체 보안성검토 및 정기(금융감독원장이 정하는 중요 점검사항에 대해서는 매일) 보안점검 실시'
+        verified: false
+  - id: ITSEC-14
+    module: M-ITSEC
+    check: 재위탁 구조라면 재수탁업자의 금융거래정보 변경이 위탁회사·원수탁업자의 개별 지시에 따르도록 하는 조항이 있는가
+    severity: 필수
+    severity_basis: "근거 조문이 강행규정(의무)임 — 전자금융감독규정 제60조"
+    norm_type: 강행
+    basis: statute
+    triggers:
+      keywords: [재위탁, 개별 지시, 금융거래정보, 재수탁]
+    absence_check: false
+    sources:
+      - law: 전자금융감독규정
+        article: 제60조
+        clause: 제4항 제1호
+        quote: '재수탁업자가 재위탁된 업무를 처리함에 있어 금융거래 정보의 변경이 필요한 경우에는 위탁회사 또는 원수탁업자의 개별적 지시에 따라야 하며, 위탁회사 또는 원수탁업자는 변경된 정보가 지시 내용에 부합하는지 여부를 확인하여야 함'
+        verified: false
+  - id: ITSEC-15
+    module: M-ITSEC
+    check: 재위탁 구조라면 이용자 금융거래정보를 위탁회사 전산실 내에 두도록 하는 조항이 있는가
+    severity: 필수
+    severity_basis: "근거 조문이 강행규정(의무)임 — 전자금융감독규정 제60조"
+    norm_type: 강행
+    basis: statute
+    triggers:
+      keywords: [전산실, 금융거래정보, 보관, 재수탁]
+    absence_check: false
+    sources:
+      - law: 전자금융감독규정
+        article: 제60조
+        clause: 제4항 제2호
+        quote: '위탁업무와 관련된 이용자의 금융거래정보는 위탁회사의 전산실 내에 두어야 함. 다만, 재수탁업자가 이용자의 이용자 정보를 어떠한 경우에도 알지 못하도록 위탁회사 또는 원수탁업자가 금융거래정보를 처리하여 제공한 경우에는 위탁회사의 관리ㆍ통제 하에 재수탁회사 등 제3의 장소로 이전 가능함'
+        verified: false
+  # ── M-DELIV: 산출물·지식재산권·검수·하자 (저작권법·SW진흥법 DB 미수록 — practice) ──
+  - id: ITDL-01
+    module: M-DELIV
+    check: 개발 산출물(소스코드·프로그램)의 저작재산권 귀속과 2차적저작물작성권 포함 여부가 명시되어 있는가
+    severity: 참고
+    severity_basis: "실무 관행 항목(법령 강제 아님)"
+    norm_type: 실무
+    basis: practice
+    triggers:
+      keywords: [저작재산권, 소스코드, 2차적저작물, 권리 귀속, 업무상저작물]
+    absence_check: true
+    sources: []
+    note: (저작권법 제45조·제5조 근거 — 로컬 DB 미수록, 원문 미확인. 저작재산권 양도 시 2차적저작물작성권은 별도 명시 없으면 미양도 추정)
+  - id: ITDL-02
+    module: M-DELIV
+    check: 소스코드·산출물·형상관리 자료의 인도 범위·시점 또는 소스코드 에스크로(임치) 조항이 있는가
+    severity: 참고
+    severity_basis: "실무 관행 항목(법령 강제 아님)"
+    norm_type: 실무
+    basis: practice
+    triggers:
+      keywords: [소스코드, 에스크로, 임치, 형상관리, 산출물 인도]
+    absence_check: true
+    sources: []
+  - id: ITDL-03
+    module: M-DELIV
+    check: 산출물의 검수·인수 기준(검사 항목·합격 기준)과 검수 기한·재검수 절차가 규정되어 있는가
+    severity: 참고
+    severity_basis: "실무 관행 항목(법령 강제 아님)"
+    norm_type: 실무
+    basis: practice
+    triggers:
+      keywords: [검수, 인수, 검사, 합격 기준, 검수 기한]
+    absence_check: true
+    sources: []
+  - id: ITDL-04
+    module: M-DELIV
+    check: 검수 완료·인도 후 하자담보(무상 하자보수) 기간과 하자 대응 절차가 규정되어 있는가
+    severity: 참고
+    severity_basis: "실무 관행 항목(법령 강제 아님)"
+    norm_type: 실무
+    basis: practice
+    triggers:
+      keywords: [하자보수, 하자담보, 무상, 하자 보증, 결함]
+    absence_check: true
+    sources: []
+    note: (수급인 하자담보책임 민법 제667조 근거 — 로컬 DB 미수록, 원문 미확인)
+  - id: ITDL-05
+    module: M-DELIV
+    check: 유지보수의 대상·범위·대가와 별도계약 여부(무상 하자보수와의 구분)가 규정되어 있는가
+    severity: 참고
+    severity_basis: "실무 관행 항목(법령 강제 아님)"
+    norm_type: 실무
+    basis: practice
+    triggers:
+      keywords: [유지보수, 유지관리, 운영, 유상, 별도계약]
+    absence_check: true
+    sources: []
+  - id: ITDL-06
+    module: M-DELIV
+    check: 서비스수준(SLA)·가동률 기준과 장애 발생 시 대응·보상·손해배상 조항이 있는가
+    severity: 참고
+    severity_basis: "실무 관행 항목(법령 강제 아님)"
+    norm_type: 실무
+    basis: practice
+    triggers:
+      keywords: [SLA, 서비스수준, 가동률, 장애, 서비스 지연]
+    absence_check: true
+    sources: []
+    note: 전자금융감독규정 제60조 제1항 제11호는 품질수준 연1회 평가 의무만 규정 — SLA 배상 수준은 계약 재량
+  - id: ITDL-07
+    module: M-DELIV
+    check: 산출물에 사용된 제3자 소프트웨어·오픈소스의 라이선스 목록 고지와 라이선스 준수·책임 조항이 있는가
+    severity: 참고
+    severity_basis: "실무 관행 항목(법령 강제 아님)"
+    norm_type: 실무
+    basis: practice
+    triggers:
+      keywords: [오픈소스, 라이선스, 제3자 소프트웨어, GPL, 상용 소프트웨어]
+    absence_check: true
+    sources: []
+  - id: ITDL-08
+    module: M-DELIV
+    check: 산출물에 악성코드·백도어·무단 기능이 없음을 보증하고 위반 시 조치하는 조항이 있는가
+    severity: 참고
+    severity_basis: "실무 관행 항목(법령 강제 아님)"
+    norm_type: 실무
+    basis: practice
+    triggers:
+      keywords: [악성코드, 백도어, 무결성, 유해 프로그램, 논리폭탄]
+    absence_check: true
+    sources: []
+  # ── M-PRIV: 개인정보 보호법 제26조·시행령 제28조 ──
+  - id: ITPV-01
+    module: M-PRIV
+    check: 개인정보 처리 업무 위탁이 법정 사항을 포함한 문서(계약서 본문 또는 처리위탁 특약)로 되어 있는가
+    severity: 필수
+    severity_basis: "근거 조문이 강행규정(의무)임 — 개인정보 보호법 제26조"
+    norm_type: 강행
+    basis: statute
+    triggers:
+      keywords: [개인정보, 처리위탁, 개인정보 처리, 특약]
+    absence_check: true
+    sources:
+      - law: 개인정보 보호법
+        article: 제26조
+        clause: 제1항
+        quote: '개인정보처리자가 제3자에게 개인정보의 처리 업무를 위탁하는 경우에는 다음 각 호의 내용이 포함된 문서로 하여야 한다'
+        verified: false
+  - id: ITPV-02
+    module: M-PRIV
+    check: 위탁 문서에 위탁업무 수행 목적 외 개인정보의 처리 금지에 관한 사항이 포함되어 있는가
+    severity: 필수
+    severity_basis: "근거 조문이 강행규정(의무)임 — 개인정보 보호법 제26조"
+    norm_type: 강행
+    basis: statute
+    triggers:
+      keywords: [목적 외, 목적외, 처리 금지]
+    absence_check: true
+    sources:
+      - law: 개인정보 보호법
+        article: 제26조
+        clause: 제1항 제1호
+        quote: '위탁업무 수행 목적 외 개인정보의 처리 금지에 관한 사항'
+        verified: false
+  - id: ITPV-03
+    module: M-PRIV
+    check: 위탁 문서에 개인정보의 기술적·관리적 보호조치에 관한 사항이 포함되어 있는가
+    severity: 필수
+    severity_basis: "근거 조문이 강행규정(의무)임 — 개인정보 보호법 제26조"
+    norm_type: 강행
+    basis: statute
+    triggers:
+      keywords: [기술적, 관리적, 보호조치, 안전성 확보]
+    absence_check: true
+    sources:
+      - law: 개인정보 보호법
+        article: 제26조
+        clause: 제1항 제2호
+        quote: '개인정보의 기술적ㆍ관리적 보호조치에 관한 사항'
+        verified: false
+  - id: ITPV-04
+    module: M-PRIV
+    check: 위탁 문서에 위탁업무의 목적 및 범위가 기재되어 있는가
+    severity: 필수
+    severity_basis: "근거 조문이 강행규정(의무)임 — 개인정보 보호법 시행령 제28조"
+    norm_type: 강행
+    basis: statute
+    triggers:
+      keywords: [위탁업무의 목적, 위탁업무의 범위, 처리 목적]
+    absence_check: true
+    sources:
+      - law: 개인정보 보호법 시행령
+        article: 제28조
+        clause: 제1항 제1호
+        quote: '위탁업무의 목적 및 범위'
+        verified: false
+  - id: ITPV-05
+    module: M-PRIV
+    check: 위탁 문서에 재위탁 제한에 관한 사항이 포함되어 있는가
+    severity: 필수
+    severity_basis: "근거 조문이 강행규정(의무)임 — 개인정보 보호법 시행령 제28조"
+    norm_type: 강행
+    basis: statute
+    triggers:
+      keywords: [재위탁, 재위탁 제한, 다시 위탁]
+    absence_check: true
+    sources:
+      - law: 개인정보 보호법 시행령
+        article: 제28조
+        clause: 제1항 제2호
+        quote: '재위탁 제한에 관한 사항'
+        verified: false
+  - id: ITPV-06
+    module: M-PRIV
+    check: 위탁 문서에 개인정보에 대한 접근 제한 등 안전성 확보 조치에 관한 사항이 포함되어 있는가
+    severity: 필수
+    severity_basis: "근거 조문이 강행규정(의무)임 — 개인정보 보호법 시행령 제28조"
+    norm_type: 강행
+    basis: statute
+    triggers:
+      keywords: [접근 제한, 접근권한, 접근통제, 안전성 확보]
+    absence_check: true
+    sources:
+      - law: 개인정보 보호법 시행령
+        article: 제28조
+        clause: 제1항 제3호
+        quote: '개인정보에 대한 접근 제한 등 안전성 확보 조치에 관한 사항'
+        verified: false
+  - id: ITPV-07
+    module: M-PRIV
+    check: 위탁 문서에 개인정보 관리 현황 점검 등 감독에 관한 사항이 포함되어 있는가
+    severity: 필수
+    severity_basis: "근거 조문이 강행규정(의무)임 — 개인정보 보호법 시행령 제28조"
+    norm_type: 강행
+    basis: statute
+    triggers:
+      keywords: [현황 점검, 감독, 점검, 관리 현황]
+    absence_check: true
+    sources:
+      - law: 개인정보 보호법 시행령
+        article: 제28조
+        clause: 제1항 제4호
+        quote: '위탁업무와 관련하여 보유하고 있는 개인정보의 관리 현황 점검 등 감독에 관한 사항'
+        verified: false
+  - id: ITPV-08
+    module: M-PRIV
+    check: 위탁 문서에 수탁자의 의무 위반 시 손해배상 등 책임에 관한 사항이 포함되어 있는가
+    severity: 필수
+    severity_basis: "근거 조문이 강행규정(의무)임 — 개인정보 보호법 시행령 제28조"
+    norm_type: 강행
+    basis: statute
+    triggers:
+      keywords: [손해배상, 배상, 의무 위반, 책임]
+    absence_check: true
+    sources:
+      - law: 개인정보 보호법 시행령
+        article: 제28조
+        clause: 제1항 제5호
+        quote: '법 제26조제2항에 따른 수탁자(이하 "수탁자"라 한다)가 준수하여야 할 의무를 위반한 경우의 손해배상 등 책임에 관한 사항'
+        verified: false
+  - id: ITPV-09
+    module: M-PRIV
+    check: 수탁자의 위탁받은 업무 범위 초과 이용·제3자 제공 금지 조항이 있는가
+    severity: 필수
+    severity_basis: "근거 조문이 강행규정(의무)임 — 개인정보 보호법 제26조"
+    norm_type: 강행
+    basis: statute
+    triggers:
+      keywords: [범위를 초과, 제3자 제공, 제3자에게 제공, 목적 외]
+    absence_check: true
+    sources:
+      - law: 개인정보 보호법
+        article: 제26조
+        clause: 제5항
+        quote: '수탁자는 개인정보처리자로부터 위탁받은 해당 업무 범위를 초과하여 개인정보를 이용하거나 제3자에게 제공하여서는 아니 된다'
+        verified: false
+  - id: ITPV-10
+    module: M-PRIV
+    check: 수탁자가 개인정보 처리 업무를 재위탁하는 경우 위탁자의 동의를 받도록 하는 조항이 있는가
+    severity: 필수
+    severity_basis: "근거 조문이 강행규정(의무)임 — 개인정보 보호법 제26조"
+    norm_type: 강행
+    basis: statute
+    triggers:
+      keywords: [재위탁, 다시 위탁, 동의]
+    absence_check: true
+    sources:
+      - law: 개인정보 보호법
+        article: 제26조
+        clause: 제6항
+        quote: '수탁자는 위탁받은 개인정보의 처리 업무를 제3자에게 다시 위탁하려는 경우에는 위탁자의 동의를 받아야 한다'
+        verified: false
+    note: 2023. 3. 14. 신설 조항
+  # ── M-CLOUD: 전자금융감독규정 제14조의2 ──
+  - id: ITCL-01
+    module: M-CLOUD
+    check: 클라우드 이용업무의 중요도 평가에 필요한 자료 제공 협조 조항이 있는가
+    severity: 필수
+    severity_basis: "근거 조문이 강행규정(의무)임 — 전자금융감독규정 제14조의2"
+    norm_type: 강행
+    basis: statute
+    triggers:
+      keywords: [클라우드, 중요도 평가, 중요업무]
+    absence_check: true
+    sources:
+      - law: 전자금융감독규정
+        article: 제14조의2
+        clause: 제1항 제1호
+        quote: '다음 각 목의 기준에 따른 이용업무의 중요도 평가'
+        verified: false
+  - id: ITCL-02
+    module: M-CLOUD
+    check: 클라우드컴퓨팅서비스 제공자의 건전성·안전성 평가에 필요한 자료 제공 협조 조항이 있는가
+    severity: 필수
+    severity_basis: "근거 조문이 강행규정(의무)임 — 전자금융감독규정 제14조의2"
+    norm_type: 강행
+    basis: statute
+    triggers:
+      keywords: [클라우드, 건전성, 안전성, 평가]
+    absence_check: true
+    sources:
+      - law: 전자금융감독규정
+        article: 제14조의2
+        clause: 제1항 제2호
+        quote: '클라우드컴퓨팅서비스 제공자의 건전성 및 안전성 등에 대한 평가'
+        verified: false
+  - id: ITCL-03
+    module: M-CLOUD
+    check: 클라우드 이용 관련 업무연속성 계획·안전성 확보조치의 수립·시행이 계약상 뒷받침되는가
+    severity: 필수
+    severity_basis: "근거 조문이 강행규정(의무)임 — 전자금융감독규정 제14조의2"
+    norm_type: 강행
+    basis: statute
+    triggers:
+      keywords: [업무연속성, 안전성 확보조치, 클라우드, 재해복구]
+    absence_check: true
+    sources:
+      - law: 전자금융감독규정
+        article: 제14조의2
+        clause: 제1항 제3호
+        quote: '클라우드컴퓨팅서비스 이용과 관련한 업무 연속성 계획 및 안전성 확보조치의 수립ㆍ시행'
+        verified: false
+  - id: ITCL-04
+    module: M-CLOUD
+    check: 평가결과·업무연속성 계획·안전성 확보조치에 대한 정보보호위원회 심의·의결 절차가 확인되는가
+    severity: 필수
+    severity_basis: "근거 조문이 강행규정(의무)임 — 전자금융감독규정 제14조의2"
+    norm_type: 강행
+    basis: statute
+    triggers:
+      keywords: [정보보호위원회, 심의, 의결]
+    absence_check: false
+    sources:
+      - law: 전자금융감독규정
+        article: 제14조의2
+        clause: 제2항
+        quote: '제1항 각 호에 따른 평가결과, 업무연속성 계획 및 안전성 확보조치에 대하여 제8조의2에 따른 정보보호위원회의 심의ㆍ의결을 거쳐야 한다'
+        verified: false
+  - id: ITCL-05
+    module: M-CLOUD
+    check: 신규 이용계약 등 보고 사유 발생일부터 3개월 이내 감독원장 보고에 필요한 자료·통지 협조 조항이 있는가
+    severity: 필수
+    severity_basis: "근거 조문이 강행규정(의무)임 — 전자금융감독규정 제14조의2"
+    norm_type: 강행
+    basis: statute
+    triggers:
+      keywords: [보고, 금융감독원, 클라우드, 3개월]
+    absence_check: true
+    sources:
+      - law: 전자금융감독규정
+        article: 제14조의2
+        clause: 제4항
+        quote: '다음 각 호의 어느 하나에 해당하는 사유가 발생한 날로부터 3개월 이내에 금융감독원장에게 보고하여야 하고, 관련 서류를 최신상태로 유지하여야 한다'
+        verified: false
+  - id: ITCL-06
+    module: M-CLOUD
+    check: 제공자의 합병·분할·계약상 지위 양도·재위탁 등 중대한 변경사항 발생 시 사전 통지 조항이 있는가
+    severity: 필수
+    severity_basis: "근거 조문이 강행규정(의무)임 — 전자금융감독규정 제14조의2"
+    norm_type: 강행
+    basis: statute
+    triggers:
+      keywords: [합병, 분할, 양도, 재위탁, 중대한 변경]
+    absence_check: true
+    sources:
+      - law: 전자금융감독규정
+        article: 제14조의2
+        clause: 제4항 제2호
+        quote: '클라우드컴퓨팅서비스 제공자의 합병, 분할, 계약상 지위의 양도, 재위탁 등 중대한 변경사항이 발생한 경우'
+        verified: false
+    note: 법령상 의무는 발생일부터 3개월 내 사후 보고(제14조의2④)이며 계약상 사전 통지는 가중 약정임
+  - id: ITCL-07
+    module: M-CLOUD
+    check: 고유식별정보·개인신용정보를 클라우드로 처리하는 경우 해당 정보처리시스템의 국내 설치(국내 리전)가 계약상 보장되는가
+    severity: 필수
+    severity_basis: "근거 조문이 강행규정(의무)임 — 전자금융감독규정 제14조의2"
+    norm_type: 강행
+    basis: statute
+    triggers:
+      keywords: [국내, 국외, 리전, 고유식별정보]
+    absence_check: true
+    sources:
+      - law: 전자금융감독규정
+        article: 제14조의2
+        clause: 제7항 단서
+        quote: '고유식별정보 또는 개인신용정보를 클라우드컴퓨팅서비스를 통하여 처리하는 경우에는 제11조제2호를 적용하고, 해당 정보처리시스템을 국내에 설치하여야 한다'
+        verified: false
