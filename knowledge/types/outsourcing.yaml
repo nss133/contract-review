@@ -38,6 +38,7 @@ checks:
   - id: CORE-01
     module: M-CORE
     check: 위탁 대상 업무의 범위가 열거 방식으로 구체적으로 특정되어 있는가("기타 갑이 지정하는 업무" 등 포괄 기재 아님)
+    label: "위탁업무 범위 특정"
     severity: 참고
     severity_basis: "실무 관행 항목(법령 강제 아님)"
     norm_type: 실무
@@ -56,6 +57,7 @@ checks:
   - id: CORE-02
     module: M-CORE
     check: 위탁 업무가 인가받은 금융업 또는 다른 금융업의 본질적 요소를 포함하지 않는가
+    label: "본질적 요소 불포함"
     severity: 필수
     severity_basis: "근거 조문이 강행규정(의무)임 — 금융기관의 업무위탁 등에 관한 규정 제3조"
     norm_type: 강행
@@ -73,6 +75,7 @@ checks:
   - id: CORE-03
     module: M-CORE
     check: 본질적 요소를 포함하는 업무라면 제3조 제1항 제1호 가목·나목의 예외에 해당하는 근거가 확인되는가
+    label: "본질적 요소 예외 근거"
     severity: 권장
     severity_basis: "근거 조문이 임의규정임 — 금융기관의 업무위탁 등에 관한 규정 제3조"
     norm_type: 임의
@@ -89,6 +92,7 @@ checks:
   - id: CORE-04
     module: M-CORE
     check: 위탁 업무가 관련 법령에서 금융기관이 직접 수행하도록 의무를 부여한 업무에 해당하지 않는가
+    label: "직접수행 의무 업무 배제"
     severity: 필수
     severity_basis: "근거 조문이 강행규정(의무)임 — 금융기관의 업무위탁 등에 관한 규정 제3조"
     norm_type: 강행
@@ -105,6 +109,7 @@ checks:
   - id: CORE-05
     module: M-CORE
     check: 수탁자가 관련 법규상 업무수탁이 가능한 자임을 확인·확약하는 조항이 있는가
+    label: "수탁자 자격 확약"
     severity: 필수
     severity_basis: "근거 조문이 강행규정(의무)임 — 금융기관의 업무위탁 등에 관한 규정 제3조"
     norm_type: 강행
@@ -128,6 +133,7 @@ checks:
   - id: CORE-06
     module: M-CORE
     check: 위탁업무 처리가 금융실명법 등 관련 법령에 저촉되지 않도록 하는 법령 준수 조항이 있는가
+    label: "금융실명법 등 법령준수"
     severity: 필수
     severity_basis: "근거 조문이 강행규정(의무)임 — 금융기관의 업무위탁 등에 관한 규정 제3조"
     norm_type: 강행
@@ -144,6 +150,7 @@ checks:
   - id: CORE-07
     module: M-CORE
     check: 수탁자가 위탁자의 사전 동의 없이 재위탁하지 못하도록 하는 조항이 있는가
+    label: "재위탁 사전동의"
     severity: 필수
     severity_override: true
     severity_basis: "임의 서술이나 위탁자 동의는 강행적 전제임 — 금융기관의 업무위탁 등에 관한 규정 제3조 (PRIV-15·IT-09와 정합)"
@@ -162,6 +169,7 @@ checks:
   - id: CORE-08
     module: M-CORE
     check: 재위탁 시 원위탁 금융회사의 감독원장 보고에 협조하도록 하는 조항이 있는가
+    label: "재위탁 감독원장보고 협조"
     severity: 필수
     severity_basis: "근거 조문이 강행규정(의무)임 — 금융기관의 업무위탁 등에 관한 규정 제3조"
     norm_type: 강행
@@ -178,6 +186,7 @@ checks:
   - id: CORE-09
     module: M-CORE
     check: 수탁자의 금융관련법령·업무위수탁기준 위반으로 발생한 손해에 대한 배상·구상 조항이 있는가
+    label: "법규위반 손해 배상·구상"
     severity: 필수
     severity_basis: "근거 조문이 강행규정(의무)임 — 금융기관의 업무위탁 등에 관한 규정 제3조"
     norm_type: 강행
@@ -201,6 +210,7 @@ checks:
   - id: CORE-10
     module: M-CORE
     check: 위탁자의 업무 처리 현황 점검·자료 요구·감사권 등 수탁자 관리·감독 조항이 있는가
+    label: "수탁자 관리·감독권"
     severity: 필수
     severity_basis: "근거 조문이 강행규정(의무)임 — 금융기관의 업무위탁 등에 관한 규정 제3조의2"
     norm_type: 강행
@@ -224,6 +234,7 @@ checks:
   - id: CORE-11
     module: M-CORE
     check: 감독원장 사전보고(수탁자의 업무 개시 7영업일 이전) 일정·자료 협조가 계약 발효와 연동되어 있는가
+    label: "업무개시 사전보고 연동"
     severity: 필수
     severity_basis: "근거 조문이 강행규정(의무)임 — 금융기관의 업무위탁 등에 관한 규정 제4조"
     norm_type: 강행
@@ -240,6 +251,7 @@ checks:
   - id: CORE-12
     module: M-CORE
     check: 본 위탁이 사전보고 생략(반기별 사후보고) 사유에 해당하는지 확인되는가
+    label: "사전보고 생략 사유"
     severity: 권장
     severity_basis: "근거 조문이 임의규정임 — 금융기관의 업무위탁 등에 관한 규정 제4조"
     norm_type: 임의
@@ -256,6 +268,7 @@ checks:
   - id: CORE-13
     module: M-CORE
     check: 감독당국의 변경권고 등 조치가 있는 경우 계약 변경·시정에 협조하는 조항이 있는가
+    label: "변경권고 시정 협조"
     severity: 권장
     severity_basis: "근거 조문이 임의규정임 — 금융기관의 업무위탁 등에 관한 규정 제5조"
     norm_type: 임의
@@ -271,6 +284,7 @@ checks:
   - id: CORE-14
     module: M-CORE
     check: 수탁자가 위탁업무와 관련한 금융감독원장의 검사·자료제출 요구에 응하도록 하는 조항이 있는가
+    label: "감독원 검사·자료제출 응함"
     severity: 참고
     severity_basis: "실무 관행 항목(법령 강제 아님)"
     norm_type: 실무
@@ -283,6 +297,7 @@ checks:
   - id: CORE-15
     module: M-CORE
     check: 계약 종료·해지 시 업무·자료의 이관(인수인계, 데이터 반환·파기, 전환 지원) 조항이 있는가
+    label: "종료 시 업무·자료 이관"
     severity: 참고
     severity_basis: "실무 관행 항목(법령 강제 아님)"
     norm_type: 실무
@@ -294,6 +309,7 @@ checks:
   - id: CORE-16
     module: M-CORE
     check: 수탁자의 서비스 중단·도산에 대비한 비상계획(BCP) 조항이 있는가
+    label: "비상계획(BCP)"
     severity: 참고
     severity_basis: "실무 관행 항목(법령 강제 아님)"
     norm_type: 실무
@@ -306,6 +322,7 @@ checks:
   - id: PRIV-01
     module: M-PRIV
     check: 개인정보 처리 업무 위탁이 법정 사항을 포함한 문서(계약서 본문 또는 처리위탁 특약)로 되어 있는가
+    label: "개인정보 위탁 문서화"
     severity: 필수
     severity_basis: "근거 조문이 강행규정(의무)임 — 개인정보 보호법 제26조"
     norm_type: 강행
@@ -322,6 +339,7 @@ checks:
   - id: PRIV-02
     module: M-PRIV
     check: 위탁 문서에 위탁업무 수행 목적 외 개인정보의 처리 금지에 관한 사항이 포함되어 있는가
+    label: "목적 외 처리 금지"
     severity: 필수
     severity_basis: "근거 조문이 강행규정(의무)임 — 개인정보 보호법 제26조"
     norm_type: 강행
@@ -338,6 +356,7 @@ checks:
   - id: PRIV-03
     module: M-PRIV
     check: 위탁 문서에 개인정보의 기술적·관리적 보호조치에 관한 사항이 포함되어 있는가
+    label: "기술적·관리적 보호조치"
     severity: 필수
     severity_basis: "근거 조문이 강행규정(의무)임 — 개인정보 보호법 제26조"
     norm_type: 강행
@@ -354,6 +373,7 @@ checks:
   - id: PRIV-04
     module: M-PRIV
     check: 위탁 문서에 위탁업무의 목적 및 범위가 기재되어 있는가
+    label: "위탁 목적·범위 기재"
     severity: 필수
     severity_basis: "근거 조문이 강행규정(의무)임 — 개인정보 보호법 시행령 제28조"
     norm_type: 강행
@@ -370,6 +390,7 @@ checks:
   - id: PRIV-05
     module: M-PRIV
     check: 위탁 문서에 재위탁 제한에 관한 사항이 포함되어 있는가
+    label: "재위탁 제한 명시"
     severity: 필수
     severity_basis: "근거 조문이 강행규정(의무)임 — 개인정보 보호법 시행령 제28조"
     norm_type: 강행
@@ -386,6 +407,7 @@ checks:
   - id: PRIV-06
     module: M-PRIV
     check: 위탁 문서에 개인정보에 대한 접근 제한 등 안전성 확보 조치에 관한 사항이 포함되어 있는가
+    label: "접근 제한 안전성 조치"
     severity: 필수
     severity_basis: "근거 조문이 강행규정(의무)임 — 개인정보 보호법 시행령 제28조"
     norm_type: 강행
@@ -402,6 +424,7 @@ checks:
   - id: PRIV-07
     module: M-PRIV
     check: 위탁 문서에 개인정보 관리 현황 점검 등 감독에 관한 사항이 포함되어 있는가
+    label: "개인정보 관리 감독"
     severity: 필수
     severity_basis: "근거 조문이 강행규정(의무)임 — 개인정보 보호법 시행령 제28조"
     norm_type: 강행
@@ -418,6 +441,7 @@ checks:
   - id: PRIV-08
     module: M-PRIV
     check: 위탁 문서에 수탁자의 의무 위반 시 손해배상 등 책임에 관한 사항이 포함되어 있는가
+    label: "위반 시 손해배상 책임"
     severity: 필수
     severity_basis: "근거 조문이 강행규정(의무)임 — 개인정보 보호법 시행령 제28조"
     norm_type: 강행
@@ -434,6 +458,7 @@ checks:
   - id: PRIV-09
     module: M-PRIV
     check: 위탁하는 업무의 내용과 수탁자가 정보주체에게 공개되도록 조치(홈페이지 공개 목록 반영 등)되어 있는가
+    label: "위탁 내용·수탁자 공개"
     severity: 필수
     severity_basis: "근거 조문이 강행규정(의무)임 — 개인정보 보호법 제26조"
     norm_type: 강행
@@ -450,6 +475,7 @@ checks:
   - id: PRIV-10
     module: M-PRIV
     check: 공개 방법이 위탁자의 인터넷 홈페이지 지속 게재 방식으로 이행되는가
+    label: "홈페이지 지속 게재"
     severity: 필수
     severity_basis: "근거 조문이 강행규정(의무)임 — 개인정보 보호법 시행령 제28조"
     norm_type: 강행
@@ -466,6 +492,7 @@ checks:
   - id: PRIV-11
     module: M-PRIV
     check: 홈페이지 게재가 불가능한 경우 사업장 게시·간행물 게재 등 대체 공개 방법이 이행되는가
+    label: "대체 공개 방법"
     severity: 필수
     severity_basis: "근거 조문이 강행규정(의무)임 — 개인정보 보호법 시행령 제28조"
     norm_type: 강행
@@ -482,6 +509,7 @@ checks:
   - id: PRIV-12
     module: M-PRIV
     check: 재화·서비스의 홍보 또는 판매 권유 업무 위탁이라면 위탁 업무 내용과 수탁자를 정보주체에게 서면등으로 알리는 절차가 있는가
+    label: "홍보·판매 위탁 통지"
     severity: 필수
     severity_basis: "근거 조문이 강행규정(의무)임 — 개인정보 보호법 제26조"
     norm_type: 강행
@@ -503,6 +531,7 @@ checks:
   - id: PRIV-13
     module: M-PRIV
     check: 위탁자의 수탁자 교육 실시와 처리 현황 점검 등 감독 수인 의무 조항이 있는가
+    label: "수탁자 교육·점검 감독"
     severity: 필수
     severity_basis: "근거 조문이 강행규정(의무)임 — 개인정보 보호법 제26조"
     norm_type: 강행
@@ -524,6 +553,7 @@ checks:
   - id: PRIV-14
     module: M-PRIV
     check: 수탁자의 위탁받은 업무 범위 초과 이용·제3자 제공 금지 조항이 있는가
+    label: "범위초과 이용·제공 금지"
     severity: 필수
     severity_basis: "근거 조문이 강행규정(의무)임 — 개인정보 보호법 제26조"
     norm_type: 강행
@@ -540,6 +570,7 @@ checks:
   - id: PRIV-15
     module: M-PRIV
     check: 수탁자가 개인정보 처리 업무를 재위탁하는 경우 위탁자의 동의를 받도록 하는 조항이 있는가
+    label: "개인정보 재위탁 동의"
     severity: 필수
     severity_basis: "근거 조문이 강행규정(의무)임 — 개인정보 보호법 제26조"
     norm_type: 강행
@@ -557,6 +588,7 @@ checks:
   - id: PRIV-16
     module: M-PRIV
     check: 수탁자 귀책의 개인정보 침해로 위탁자가 배상한 경우의 구상 조항이 있는가
+    label: "개인정보 침해 구상"
     severity: 참고
     severity_basis: "간주규정임 — 개인정보 보호법 제26조"
     norm_type: 간주
@@ -573,6 +605,7 @@ checks:
   - id: PRIV-17
     module: M-PRIV
     check: 개인신용정보 처리위탁에 개인정보 보호법 제26조 제1항부터 제3항까지의 문서화·공개·통지 요건이 반영되어 있는가
+    label: "개인신용정보 위탁 요건"
     severity: 필수
     severity_basis: "근거 조문이 강행규정(의무)임 — 신용정보의 이용 및 보호에 관한 법률 제17조"
     norm_type: 강행
@@ -589,6 +622,7 @@ checks:
   - id: PRIV-18
     module: M-PRIV
     check: 신용정보 처리위탁 시 제공하는 신용정보의 범위 등의 금융위원회 통지 절차가 확인되는가
+    label: "신용정보 금융위 통지"
     severity: 필수
     severity_basis: "근거 조문이 강행규정(의무)임 — 신용정보의 이용 및 보호에 관한 법률 제17조"
     norm_type: 강행
@@ -606,6 +640,7 @@ checks:
   - id: PRIV-19
     module: M-PRIV
     check: 수탁자에게 개인신용정보 제공 시 식별정보의 암호화 등 보호조치 조항이 있는가
+    label: "식별정보 암호화 조치"
     severity: 필수
     severity_basis: "근거 조문이 강행규정(의무)임 — 신용정보의 이용 및 보호에 관한 법률 제17조"
     norm_type: 강행
@@ -622,6 +657,7 @@ checks:
   - id: PRIV-20
     module: M-PRIV
     check: 수탁자 교육 의무와 수탁자의 안전한 신용정보 처리에 관한 사항이 위탁계약에 반영되어 있는가
+    label: "신용정보 교육·안전처리"
     severity: 필수
     severity_basis: "근거 조문이 강행규정(의무)임 — 신용정보의 이용 및 보호에 관한 법률 제17조"
     norm_type: 강행
@@ -638,6 +674,7 @@ checks:
   - id: PRIV-21
     module: M-PRIV
     check: 신용정보 처리 업무의 재위탁 금지(금융위원회 인정 시 예외) 조항이 있는가
+    label: "신용정보 재위탁 금지"
     severity: 필수
     severity_basis: "근거 조문이 강행규정(의무)임 — 신용정보의 이용 및 보호에 관한 법률 제17조"
     norm_type: 강행
@@ -655,6 +692,7 @@ checks:
   - id: IT-01
     module: M-IT
     check: 외부주문에 의한 개발 업무장소·전산설비를 내부 업무용과 분리하여 설치·운영하는 조항이 있는가
+    label: "개발 설비 분리 운영"
     severity: 필수
     severity_basis: "근거 조문이 강행규정(의무)임 — 전자금융감독규정 제60조"
     norm_type: 강행
@@ -671,6 +709,7 @@ checks:
   - id: IT-02
     module: M-IT
     check: 계좌번호·비밀번호 등 이용자 금융정보의 무단보관·유출 금지 조항이 있는가
+    label: "금융정보 무단보관 금지"
     severity: 필수
     severity_basis: "근거 조문이 강행규정(의무)임 — 전자금융감독규정 제60조"
     norm_type: 강행
@@ -687,6 +726,7 @@ checks:
   - id: IT-03
     module: M-IT
     check: 접근매체 위·변조, 해킹, 개인정보유출 등에 대비한 보안대책 수립 조항이 있는가
+    label: "위·변조·해킹 보안대책"
     severity: 필수
     severity_basis: "근거 조문이 강행규정(의무)임 — 전자금융감독규정 제60조"
     norm_type: 강행
@@ -703,6 +743,7 @@ checks:
   - id: IT-04
     module: M-IT
     check: 금융회사와 전자금융보조업자 간 접속에 전용회선(동등 보안수준의 가상 전용회선 포함)을 사용하는 조항이 있는가
+    label: "전용회선 사용"
     severity: 필수
     severity_basis: "근거 조문이 강행규정(의무)임 — 전자금융감독규정 제60조"
     norm_type: 강행
@@ -719,6 +760,7 @@ checks:
   - id: IT-05
     module: M-IT
     check: 정보처리시스템 장애 등 서비스 중단에 대비한 비상대책 수립 조항이 있는가
+    label: "시스템 장애 비상대책"
     severity: 필수
     severity_basis: "근거 조문이 강행규정(의무)임 — 전자금융감독규정 제60조"
     norm_type: 강행
@@ -735,6 +777,7 @@ checks:
   - id: IT-06
     module: M-IT
     check: 중요 전산자료의 백업자료 보존·백업설비 확보 등 백업대책 수립 조항이 있는가
+    label: "전산자료 백업대책"
     severity: 필수
     severity_basis: "근거 조문이 강행규정(의무)임 — 전자금융감독규정 제60조"
     norm_type: 강행
@@ -751,6 +794,7 @@ checks:
   - id: IT-07
     module: M-IT
     check: 수탁자(전자금융보조업자)의 재무건전성 연 1회 이상 평가·상시 모니터링에 필요한 자료 제공 협조 조항이 있는가
+    label: "수탁자 재무건전성 평가"
     severity: 필수
     severity_basis: "근거 조문이 강행규정(의무)임 — 전자금융감독규정 제60조"
     norm_type: 강행
@@ -767,6 +811,7 @@ checks:
   - id: IT-08
     module: M-IT
     check: 수탁자가 제공하는 서비스의 품질수준 연 1회 이상 평가에 협조하는 조항이 있는가
+    label: "서비스 품질수준 평가"
     severity: 필수
     severity_basis: "근거 조문이 강행규정(의무)임 — 전자금융감독규정 제60조"
     norm_type: 강행
@@ -783,6 +828,7 @@ checks:
   - id: IT-09
     module: M-IT
     check: 수탁자가 사전 동의 없이 재외부주문 계약 체결·계약업체 변경을 하지 못하도록 통제하는 조항이 있는가
+    label: "재외부주문 사전동의 통제"
     severity: 필수
     severity_basis: "근거 조문이 강행규정(의무)임 — 전자금융감독규정 제60조"
     norm_type: 강행
@@ -799,6 +845,7 @@ checks:
   - id: IT-10
     module: M-IT
     check: 업무수행인력의 사전 신원조회(또는 신원보증) 및 인력변경 시 인수인계 등 인력 관리방안 조항이 있는가
+    label: "업무인력 신원·관리방안"
     severity: 필수
     severity_basis: "근거 조문이 강행규정(의무)임 — 전자금융감독규정 제60조"
     norm_type: 강행
@@ -815,6 +862,7 @@ checks:
   - id: IT-11
     module: M-IT
     check: 외부주문에 대한 자체 보안성검토와 정기 보안점검 실시(수탁자 협조) 조항이 있는가
+    label: "보안성검토·정기점검"
     severity: 필수
     severity_basis: "근거 조문이 강행규정(의무)임 — 전자금융감독규정 제60조"
     norm_type: 강행
@@ -831,6 +879,7 @@ checks:
   - id: IT-12
     module: M-IT
     check: 재위탁 구조라면 재수탁업자의 금융거래정보 변경이 위탁회사·원수탁업자의 개별 지시에 따르도록 하는 조항이 있는가
+    label: "재수탁 정보변경 지시통제"
     severity: 필수
     severity_basis: "근거 조문이 강행규정(의무)임 — 전자금융감독규정 제60조"
     norm_type: 강행
@@ -847,6 +896,7 @@ checks:
   - id: IT-13
     module: M-IT
     check: 재위탁 구조라면 이용자 금융거래정보를 위탁회사 전산실 내에 두도록 하는 조항이 있는가
+    label: "금융정보 전산실 내 보관"
     severity: 필수
     severity_basis: "근거 조문이 강행규정(의무)임 — 전자금융감독규정 제60조"
     norm_type: 강행
@@ -864,6 +914,7 @@ checks:
   - id: CLOUD-01
     module: M-CLOUD
     check: 클라우드 이용업무의 중요도 평가에 필요한 자료 제공 협조 조항이 있는가
+    label: "클라우드 중요도 평가 협조"
     severity: 필수
     severity_basis: "근거 조문이 강행규정(의무)임 — 전자금융감독규정 제14조의2"
     norm_type: 강행
@@ -880,6 +931,7 @@ checks:
   - id: CLOUD-02
     module: M-CLOUD
     check: 클라우드컴퓨팅서비스 제공자의 건전성·안전성 평가에 필요한 자료 제공 협조 조항이 있는가
+    label: "제공자 건전성·안전성 평가"
     severity: 필수
     severity_basis: "근거 조문이 강행규정(의무)임 — 전자금융감독규정 제14조의2"
     norm_type: 강행
@@ -896,6 +948,7 @@ checks:
   - id: CLOUD-03
     module: M-CLOUD
     check: 클라우드 이용 관련 업무연속성 계획·안전성 확보조치의 수립·시행이 계약상 뒷받침되는가
+    label: "업무연속성·안전성 확보"
     severity: 필수
     severity_basis: "근거 조문이 강행규정(의무)임 — 전자금융감독규정 제14조의2"
     norm_type: 강행
@@ -912,6 +965,7 @@ checks:
   - id: CLOUD-04
     module: M-CLOUD
     check: 평가결과·업무연속성 계획·안전성 확보조치에 대한 정보보호위원회 심의·의결 절차가 확인되는가
+    label: "정보보호위 심의·의결"
     severity: 필수
     severity_basis: "근거 조문이 강행규정(의무)임 — 전자금융감독규정 제14조의2"
     norm_type: 강행
@@ -928,6 +982,7 @@ checks:
   - id: CLOUD-05
     module: M-CLOUD
     check: 신규 이용계약 등 보고 사유 발생일부터 3개월 이내 감독원장 보고에 필요한 자료·통지 협조 조항이 있는가
+    label: "이용계약 감독원장 보고"
     severity: 필수
     severity_basis: "근거 조문이 강행규정(의무)임 — 전자금융감독규정 제14조의2"
     norm_type: 강행
@@ -944,6 +999,7 @@ checks:
   - id: CLOUD-06
     module: M-CLOUD
     check: 제공자의 합병·분할·계약상 지위 양도·재위탁 등 중대한 변경사항 발생 시 사전 통지 조항이 있는가
+    label: "중대 변경사항 사전통지"
     severity: 필수
     severity_basis: "근거 조문이 강행규정(의무)임 — 전자금융감독규정 제14조의2"
     norm_type: 강행
@@ -961,6 +1017,7 @@ checks:
   - id: CLOUD-07
     module: M-CLOUD
     check: 고유식별정보·개인신용정보를 클라우드로 처리하는 경우 해당 정보처리시스템의 국내 설치(국내 리전)가 계약상 보장되는가
+    label: "국내 리전 설치 보장"
     severity: 필수
     severity_basis: "근거 조문이 강행규정(의무)임 — 전자금융감독규정 제14조의2"
     norm_type: 강행
@@ -978,6 +1035,7 @@ checks:
   - id: SOL-01
     module: M-SOLICIT
     check: 위탁 상대방이 보험설계사·보험대리점·보험중개사 등 모집 자격자로서 유효하게 등록되어 있는가
+    label: "모집 자격자 등록 확인"
     severity: 필수
     severity_basis: "근거 조문이 강행규정(의무)임 — 보험업법 제83조"
     norm_type: 강행
@@ -1001,6 +1059,7 @@ checks:
   - id: SOL-02
     module: M-SOLICIT
     check: 모집 자격·등록의 유지 의무와 등록 취소·말소 시 통지·해지 조항이 있는가
+    label: "등록 유지·취소 시 해지"
     severity: 참고
     severity_basis: "실무 관행 항목(법령 강제 아님)"
     norm_type: 실무
@@ -1019,6 +1078,7 @@ checks:
   - id: SOL-03
     module: M-SOLICIT
     check: 수탁자의 금융소비자보호법 위반으로 발생한 손해에 대한 책임 분담 조항이 있는가
+    label: "금소법 위반 책임 분담"
     severity: 필수
     severity_basis: "근거 조문이 강행규정(의무)임 — 금융소비자 보호에 관한 법률 제44조"
     norm_type: 강행
@@ -1035,6 +1095,7 @@ checks:
   - id: SOL-04
     module: M-SOLICIT
     check: 수탁자의 대리·중개 행위로 금융소비자에게 발생한 손해에 대해 회사가 배상책임을 지는 구조를 전제로 한 책임 조항이 있는가
+    label: "대리·중개 배상책임 구조"
     severity: 필수
     severity_basis: "근거 조문이 강행규정(의무)임 — 금융소비자 보호에 관한 법률 제45조"
     norm_type: 강행
@@ -1052,6 +1113,7 @@ checks:
   - id: SOL-05
     module: M-SOLICIT
     check: 선임·감독상 적절한 주의(면책 단서)를 증빙할 수 있는 교육·점검·관리 체계 조항이 있는가
+    label: "선임·감독 주의 면책증빙"
     severity: 권장
     severity_basis: "면책요건임(선임·감독 주의 시 책임 배제) — 금융소비자 보호에 관한 법률 제45조"
     norm_type: 임의
@@ -1075,6 +1137,7 @@ checks:
   - id: SOL-06
     module: M-SOLICIT
     check: 회사가 금융소비자에게 배상한 경우 수탁자에 대한 구상 조항이 있는가
+    label: "소비자 배상 구상권"
     severity: 참고
     severity_basis: "구상권 보전 선언규정임 — 금융소비자 보호에 관한 법률 제45조"
     norm_type: 선언
@@ -1092,6 +1155,7 @@ checks:
   - id: DIS-01
     module: M-DISPATCH
     check: 업무 수행 방법을 수탁자가 독립적으로 결정하고 위탁자의 직접 지휘·명령을 배제하는 문언이 있는가
+    label: "직접 지휘·명령 배제"
     severity: 참고
     severity_basis: "실무 관행 항목(법령 강제 아님)"
     norm_type: 실무
@@ -1104,6 +1168,7 @@ checks:
   - id: DIS-02
     module: M-DISPATCH
     check: 위탁자의 업무 요청이 수탁자의 현장 책임자를 통해서만 전달되도록 하는 창구 단일화 조항이 있는가
+    label: "지시 창구 단일화"
     severity: 참고
     severity_basis: "실무 관행 항목(법령 강제 아님)"
     norm_type: 실무
@@ -1116,6 +1181,7 @@ checks:
   - id: DIS-03
     module: M-DISPATCH
     check: 인력 배치·근태·노무 관리를 수탁자가 독립적으로 수행한다는 조항이 있는가
+    label: "인력·노무 독립 관리"
     severity: 참고
     severity_basis: "실무 관행 항목(법령 강제 아님)"
     norm_type: 실무

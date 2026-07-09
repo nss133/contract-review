@@ -6,6 +6,7 @@ meta:
 checks:
   - id: CMN-01
     check: 계약 당사자가 법인 명의로 정확히 특정되어 있는가(영업점·부서 명의 아님)
+    label: "계약당사자 법인 특정"
     severity: 참고
     severity_basis: "실무 관행 항목(법령 강제 아님)"
     norm_type: 실무
@@ -16,6 +17,7 @@ checks:
     sources: []
   - id: CMN-02
     check: 계약의 목적 조항이 수행 업무의 실질(위탁·매매·용역 등 법적 성격)과 일치하게 기재되어 있는가
+    label: "목적조항 실질 부합"
     severity: 참고
     severity_basis: "실무 관행 항목(법령 강제 아님)"
     norm_type: 실무
@@ -26,6 +28,7 @@ checks:
     sources: []
   - id: CMN-03
     check: 대금·수수료의 금액 또는 산정 방식(산식·단가)이 특정되어 있는가
+    label: "대금·수수료 산정 특정"
     severity: 참고
     severity_basis: "실무 관행 항목(법령 강제 아님)"
     norm_type: 실무
@@ -36,6 +39,7 @@ checks:
     sources: []
   - id: CMN-04
     check: 대금의 지급 시기·방법과 정산 절차가 규정되어 있는가
+    label: "대금 지급·정산 절차"
     severity: 참고
     severity_basis: "실무 관행 항목(법령 강제 아님)"
     norm_type: 실무
@@ -46,6 +50,7 @@ checks:
     sources: []
   - id: CMN-05
     check: 대금·수수료의 부가가치세 포함 여부가 명시되어 있는가
+    label: "부가가치세 포함 여부"
     severity: 참고
     severity_basis: "실무 관행 항목(법령 강제 아님)"
     norm_type: 실무
@@ -56,6 +61,7 @@ checks:
     sources: []
   - id: CMN-05-2
     check: 지연지급 시 지연이자(지연손해금) 약정이 있는가
+    label: "지연이자 약정"
     severity: 참고
     severity_basis: "실무 관행 항목(법령 강제 아님)"
     norm_type: 실무
@@ -66,6 +72,7 @@ checks:
     sources: []
   - id: CMN-06
     check: 계약기간의 시기·종기가 명시되어 있는가
+    label: "계약기간 시기·종기"
     severity: 참고
     severity_basis: "실무 관행 항목(법령 강제 아님)"
     norm_type: 실무
@@ -76,6 +83,7 @@ checks:
     sources: []
   - id: CMN-07
     check: 갱신 방식(자동갱신·합의갱신)과 갱신 거절 통지 기한이 규정되어 있는가
+    label: "갱신·갱신거절 통지"
     severity: 참고
     severity_basis: "실무 관행 항목(법령 강제 아님)"
     norm_type: 실무
@@ -86,6 +94,7 @@ checks:
     sources: []
   - id: CMN-08
     check: 해지·해제 사유(중대한 위반, 도산 등)가 규정되어 있는가
+    label: "해지·해제 사유"
     severity: 참고
     severity_basis: "실무 관행 항목(법령 강제 아님)"
     norm_type: 실무
@@ -96,6 +105,7 @@ checks:
     sources: []
   - id: CMN-09
     check: 해지 절차(시정 최고 기간·서면 통지)가 규정되어 있는가
+    label: "해지 절차·통지"
     severity: 참고
     severity_basis: "실무 관행 항목(법령 강제 아님)"
     norm_type: 실무
@@ -106,6 +116,7 @@ checks:
     sources: []
   - id: CMN-10
     check: 계약 종료 시 기지급 대금 정산·자료 반환·잔존 조항의 처리가 규정되어 있는가
+    label: "종료 시 정산·반환"
     severity: 참고
     severity_basis: "실무 관행 항목(법령 강제 아님)"
     norm_type: 실무
@@ -116,6 +127,7 @@ checks:
     sources: []
   - id: CMN-11
     check: 손해배상 책임의 귀책사유와 배상 범위 조항이 있는가
+    label: "손해배상 책임·범위"
     severity: 참고
     severity_basis: "실무 관행 항목(법령 강제 아님)"
     norm_type: 실무
@@ -126,6 +138,7 @@ checks:
     sources: []
   - id: CMN-12
     check: 손해배상 범위 조항이 통상손해 한도 원칙을 확장·제한하는 특약인지 확인되는가
+    label: "통상손해 확장·제한 특약"
     severity: 권장
     severity_basis: "근거 조문이 임의규정임 — 민법 제393조"
     norm_type: 임의
@@ -142,6 +155,7 @@ checks:
     note: 임의규정 — 계약상 확장·제한 특약이 우선함
   - id: CMN-13
     check: 특별손해(간접손해·일실이익 등)의 배상 여부와 예견가능성 요건에 관한 문언이 있는가
+    label: "특별손해 예견가능성"
     severity: 권장
     severity_basis: "근거 조문이 임의규정임 — 민법 제393조"
     norm_type: 임의
@@ -158,6 +172,7 @@ checks:
     note: 임의규정 — 계약상 확장·제한 특약이 우선함
   - id: CMN-14
     check: 책임 상한(cap)·면책 조항이 고의·중과실을 상한 예외로 명시하고 있는가
+    label: "책임상한·중과실 예외"
     severity: 참고
     severity_basis: "실무 관행 항목(법령 강제 아님)"
     norm_type: 실무
@@ -168,6 +183,7 @@ checks:
     sources: []
   - id: CMN-15
     check: 비밀정보의 정의·범위 조항이 있는가
+    label: "비밀정보 정의·범위"
     severity: 참고
     severity_basis: "실무 관행 항목(법령 강제 아님)"
     norm_type: 실무
@@ -178,6 +194,7 @@ checks:
     sources: []
   - id: CMN-16
     check: 비밀유지 의무의 존속기간(계약 종료 후 잔존 여부·기간)이 명시되어 있는가
+    label: "비밀유지 존속기간"
     severity: 참고
     severity_basis: "실무 관행 항목(법령 강제 아님)"
     norm_type: 실무
@@ -188,6 +205,7 @@ checks:
     sources: []
   - id: CMN-17
     check: 계약 이행 과정에서 발생하는 산출물·저작물의 권리 귀속 조항이 있는가
+    label: "산출물 권리 귀속"
     severity: 참고
     severity_basis: "실무 관행 항목(법령 강제 아님)"
     norm_type: 실무
@@ -198,6 +216,7 @@ checks:
     sources: []
   - id: CMN-18
     check: 제3자 지식재산권 침해 주장 시 수탁자의 방어·면책 의무 조항이 있는가
+    label: "제3자 IP 침해 면책"
     severity: 참고
     severity_basis: "실무 관행 항목(법령 강제 아님)"
     norm_type: 실무
@@ -208,6 +227,7 @@ checks:
     sources: []
   - id: CMN-19
     check: 분쟁해결 방식(소송·중재)과 관할 법원 지정 조항이 있는가
+    label: "분쟁해결·관할"
     severity: 참고
     severity_basis: "실무 관행 항목(법령 강제 아님)"
     norm_type: 실무
@@ -219,6 +239,7 @@ checks:
     note: (관할 합의 관련 민사소송법 조문은 로컬 DB 미수록 — 조문 미확인)
   - id: CMN-20
     check: 계약상 지위·권리의무의 사전 서면 동의 없는 양도·이전·담보 제공을 금지하는 조항이 있는가
+    label: "양도·이전 제한"
     severity: 참고
     severity_basis: "실무 관행 항목(법령 강제 아님)"
     norm_type: 실무
@@ -229,6 +250,7 @@ checks:
     sources: []
   - id: CMN-21
     check: 완전합의 조항과 서면에 의한 변경 방식 조항이 있는가
+    label: "완전합의·서면변경"
     severity: 참고
     severity_basis: "실무 관행 항목(법령 강제 아님)"
     norm_type: 실무

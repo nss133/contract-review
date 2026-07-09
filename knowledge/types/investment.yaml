@@ -28,6 +28,7 @@ checks:
   # ── M-FUND 집합투자·펀드 ─────────────────────────────────────
   - id: INV-FUND-01
     check: 투자 대상 집합투자기구(펀드)의 형태·집합투자규약(신탁계약·정관·조합계약)이 특정되어 있는가
+    label: "펀드 형태·규약 특정"
     module: M-FUND
     severity: 참고
     severity_basis: 선언규정 — 자본시장법 제9조 제18항·제22항(집합투자기구 형태·집합투자규약 정의)
@@ -45,6 +46,7 @@ checks:
         source_type: law
   - id: INV-FUND-02
     check: 사모집합투자기구인 경우 사모 요건(투자자 총수 제한 등)에 부합하는가
+    label: "사모 요건 부합"
     module: M-FUND
     severity: 권장
     severity_basis: 선언규정이나 위반 시 규제 — 자본시장법 제9조 제19항(사모집합투자기구 투자자 100인 이하)
@@ -63,6 +65,7 @@ checks:
         source_type: law
   - id: INV-FUND-03
     check: 운용사(집합투자업자·사모운용사)가 적법하게 등록·인가된 자인가
+    label: "운용사 등록·인가"
     module: M-FUND
     severity: 필수
     severity_basis: 강행규정(금지) — 자본시장법 제249조(미등록 사모집합투자업 영위 금지)
@@ -82,6 +85,7 @@ checks:
   # ── M-MANDATE 투자일임 ───────────────────────────────────────
   - id: INV-MAN-01
     check: 투자일임업자가 선량한 관리자의 주의로 일임재산을 운용하도록(선관·충실의무) 규정되어 있는가
+    label: "투자일임 선관·충실의무"
     module: M-MANDATE
     severity: 필수
     severity_basis: 강행규정(의무) — 자본시장법 제96조(투자일임업자 선관·충실의무)
@@ -99,6 +103,7 @@ checks:
         source_type: law
   - id: INV-MAN-02
     check: 이해상충(고유재산 거래·자기이익 도모 등) 불건전 영업행위 금지가 반영되어 있는가
+    label: "이해상충 영업행위 금지"
     module: M-MANDATE
     severity: 필수
     severity_basis: 강행규정(금지) — 자본시장법 제98조(투자일임 불건전 영업행위 금지)
@@ -124,6 +129,7 @@ checks:
   # ── M-PARTNER 출자·조합 ──────────────────────────────────────
   - id: INV-PART-01
     check: 조합(합자조합) 출자 시 유한책임사원(LP)의 책임이 출자가액 한도로 제한되는가
+    label: "LP 유한책임 제한"
     module: M-PARTNER
     severity: 필수
     severity_basis: 선언규정(책임 한정) — 상법 제86조의2(유한책임조합원은 출자가액 한도 책임)
@@ -142,6 +148,7 @@ checks:
         source_type: law
   - id: INV-PART-02
     check: 추가출자(Capital Call) 요구의 요건·한도·불이행 효과가 명확한가
+    label: "추가출자 요건·효과"
     module: M-PARTNER
     severity: 권장
     severity_basis: 실무 항목이나 출자자 리스크 큼 — 법령 근거 없음, 디폴트 조항 미비 시 손실 직결
@@ -156,6 +163,7 @@ checks:
   # ── M-SPECIAL 보험 특별계정 ──────────────────────────────────
   - id: INV-SP-01
     check: 변액보험 등 특별계정 자산의 투자인 경우 특별계정 구분·구분회계가 전제되어 있는가
+    label: "특별계정 구분회계"
     module: M-SPECIAL
     severity: 필수
     severity_basis: 강행규정 — 보험업법 제108조(특별계정 자산 구분 회계처리)

@@ -23,6 +23,7 @@ checks:
   - id: SP-PAY-01
     module: M-PAY
     check: 하도급대금 지급기일이 목적물등의 수령일(용역은 수행 완료일)부터 60일 이내로 정해져 있는가
+    label: "지급기일 60일 이내"
     severity: 필수
     severity_basis: "근거 조문이 강행규정(의무)임 — 하도급거래 공정화에 관한 법률 제13조"
     norm_type: 강행
@@ -40,6 +41,7 @@ checks:
   - id: SP-PAY-02
     module: M-PAY
     check: 지급기일 미정 또는 60일 초과 약정 시 수령일 기산 간주 규정과의 정합이 확인되는가
+    label: "지급기일 미정·초과 간주"
     severity: 참고
     severity_basis: "간주규정임 — 하도급거래 공정화에 관한 법률 제13조"
     norm_type: 간주
@@ -57,6 +59,7 @@ checks:
   - id: SP-PAY-03
     module: M-PAY
     check: 발주자로부터 준공금·기성금을 수령한 경우 15일 이내 하도급대금(기성부분 상당액)을 지급하도록 규정되어 있는가
+    label: "준공·기성금 15일 지급"
     severity: 필수
     severity_basis: "근거 조문이 강행규정(의무)임 — 하도급거래 공정화에 관한 법률 제13조"
     norm_type: 강행
@@ -74,6 +77,7 @@ checks:
   - id: SP-PAY-04
     module: M-PAY
     check: 원사업자가 발주자로부터 받은 현금비율 미만으로 하도급대금을 지급하지 못하도록 하는 조항이 있는가
+    label: "현금비율 하회 금지"
     severity: 필수
     severity_basis: "근거 조문이 강행규정(의무)임 — 하도급거래 공정화에 관한 법률 제13조"
     norm_type: 강행
@@ -91,6 +95,7 @@ checks:
   - id: SP-PAY-05
     module: M-PAY
     check: 대금을 어음으로 지급하는 경우 발주자로부터 받은 어음 지급기간을 초과하지 않고 할인료를 교부일에 지급하도록 규정되어 있는가
+    label: "어음지급 할인료"
     severity: 필수
     severity_basis: "근거 조문이 강행규정(의무)임 — 하도급거래 공정화에 관한 법률 제13조"
     norm_type: 강행
@@ -113,6 +118,7 @@ checks:
   - id: SP-PAY-06
     module: M-PAY
     check: 목적물 수령일부터 60일 초과 지급 시 공정거래위원회 고시 이율에 따른 지연이자를 지급하도록 규정되어 있는가
+    label: "60일 초과 지연이자"
     severity: 필수
     severity_basis: "근거 조문이 강행규정(의무)임 — 하도급거래 공정화에 관한 법률 제13조"
     norm_type: 강행
@@ -130,6 +136,7 @@ checks:
   - id: SP-PAY-07
     module: M-PAY
     check: 일률적 단가인하·부당 할당·차별 등 부당한 하도급대금 결정을 금지하는 취지가 계약에 반영되어 있는가
+    label: "부당한 대금결정 금지"
     severity: 필수
     severity_basis: "근거 조문이 강행규정(의무)임 — 하도급거래 공정화에 관한 법률 제4조"
     norm_type: 강행
@@ -147,6 +154,7 @@ checks:
   - id: SP-PAY-08
     module: M-PAY
     check: 설계변경·목적물 시기변동·경제상황 변동으로 발주자로부터 증액받은 경우 그 내용·비율에 따라 하도급대금을 증액하도록 규정되어 있는가
+    label: "설계변경 대금증액"
     severity: 필수
     severity_basis: "근거 조문이 강행규정(의무)임 — 하도급거래 공정화에 관한 법률 제16조"
     norm_type: 강행
@@ -164,6 +172,7 @@ checks:
   - id: SP-PAY-09
     module: M-PAY
     check: 건설위탁의 경우 계약체결일부터 30일 이내 공사대금 지급보증을 하도록 규정되어 있는가(면제사유 해당 시 제외)
+    label: "공사대금 지급보증"
     severity: 필수
     severity_basis: "근거 조문이 강행규정(의무)임 — 하도급거래 공정화에 관한 법률 제13조의2"
     norm_type: 강행
@@ -186,6 +195,7 @@ checks:
   - id: SP-PAY-10
     module: M-PAY
     check: 원사업자 지급불능·2회분 이상 미지급 등 사유 발생 시 발주자의 하도급대금 직접지급 요건·효과 조항이 있는가
+    label: "발주자 직접지급"
     severity: 필수
     severity_basis: "근거 조문이 강행규정(의무)임 — 하도급거래 공정화에 관한 법률 제14조"
     norm_type: 강행
@@ -209,6 +219,7 @@ checks:
   - id: SP-UNF-01
     module: M-UNFAIR
     check: 수급사업자의 이익을 부당하게 침해·제한하는 부당한 특약을 설정하지 않았는가
+    label: "부당특약 금지"
     severity: 필수
     severity_basis: "근거 조문이 강행규정(의무)임 — 하도급거래 공정화에 관한 법률 제3조의4"
     norm_type: 강행
@@ -226,6 +237,7 @@ checks:
   - id: SP-UNF-02
     module: M-UNFAIR
     check: 서면에 기재되지 않은 사항을 요구하며 그 비용을 수급사업자에게 부담시키는 약정이 없는가
+    label: "서면 외 비용전가"
     severity: 참고
     severity_basis: "간주규정임 — 하도급거래 공정화에 관한 법률 제3조의4"
     norm_type: 간주
@@ -243,6 +255,7 @@ checks:
   - id: SP-UNF-03
     module: M-UNFAIR
     check: 원사업자가 부담하여야 할 민원처리·산업재해 등 비용을 수급사업자에게 부담시키는 약정이 없는가
+    label: "원사업자 비용 전가"
     severity: 참고
     severity_basis: "간주규정임 — 하도급거래 공정화에 관한 법률 제3조의4"
     norm_type: 간주
@@ -260,6 +273,7 @@ checks:
   - id: SP-UNF-04
     module: M-UNFAIR
     check: 입찰내역에 없는 사항을 요구하며 그 비용을 수급사업자에게 부담시키는 약정이 없는가
+    label: "입찰내역 외 비용전가"
     severity: 참고
     severity_basis: "간주규정임 — 하도급거래 공정화에 관한 법률 제3조의4"
     norm_type: 간주
@@ -277,6 +291,7 @@ checks:
   - id: SP-UNF-05
     module: M-UNFAIR
     check: 신의성실 원칙을 위반하여 공정성을 잃은 약관 조항(무효 사유)이 계약에 포함되어 있지 않은가
+    label: "신의칙 위반 약관"
     severity: 필수
     severity_basis: "공정성 상실 약관 조항은 무효(효력강행규정) — 약관의 규제에 관한 법률 제6조"
     norm_type: 강행
@@ -294,6 +309,7 @@ checks:
   - id: SP-UNF-06
     module: M-UNFAIR
     check: 고객에게 부당하게 불리하거나 예상하기 어렵거나 본질적 권리를 제한하는 조항이 없는가(공정성 상실 추정 사유)
+    label: "부당불리·불의타 조항"
     severity: 참고
     severity_basis: "추정규정임 — 약관의 규제에 관한 법률 제6조"
     norm_type: 추정
@@ -311,6 +327,7 @@ checks:
   - id: SP-UNF-07
     module: M-UNFAIR
     check: 사업자·이행보조자의 고의·중과실 책임을 배제하는 등 무효인 면책조항이 없는가
+    label: "무효 면책조항"
     severity: 필수
     severity_basis: "면책조항 무효(효력강행규정) — 약관의 규제에 관한 법률 제7조"
     norm_type: 강행
@@ -328,6 +345,7 @@ checks:
   - id: SP-UNF-08
     module: M-UNFAIR
     check: 고객에게 부당하게 과중한 지연손해금 등 손해배상 의무를 부담시키는 약관 조항이 없는가
+    label: "과중한 손해배상 예정"
     severity: 필수
     severity_basis: "손해배상액 예정 조항 무효(효력강행규정) — 약관의 규제에 관한 법률 제8조"
     norm_type: 강행
@@ -344,6 +362,7 @@ checks:
   - id: SP-UNF-09
     module: M-UNFAIR
     check: 고객의 법정 해제·해지권을 배제·제한하거나 사업자에게 부당한 해지권을 부여하는 무효 조항이 없는가
+    label: "해제·해지권 제한"
     severity: 필수
     severity_basis: "해제·해지 관련 부당 약관 조항 무효(효력강행규정) — 약관의 규제에 관한 법률 제9조"
     norm_type: 강행
@@ -360,6 +379,7 @@ checks:
   - id: SP-UNF-10
     module: M-UNFAIR
     check: 상당한 이유 없이 급부의 내용을 사업자가 일방적으로 결정·변경하거나 급부를 중지할 수 있게 하는 무효 조항이 없는가
+    label: "급부 일방결정·중지"
     severity: 필수
     severity_basis: "채무이행 관련 부당 약관 조항 무효(효력강행규정) — 약관의 규제에 관한 법률 제10조"
     norm_type: 강행
@@ -377,6 +397,7 @@ checks:
   - id: SP-UNF-11
     module: M-UNFAIR
     check: 고객의 항변권·상계권 등 권리를 상당한 이유 없이 배제·제한하거나 기한의 이익을 박탈하는 무효 조항이 없는가
+    label: "항변·상계권 배제"
     severity: 필수
     severity_basis: "고객 권익 관련 부당 약관 조항 무효(효력강행규정) — 약관의 규제에 관한 법률 제11조"
     norm_type: 강행
@@ -394,6 +415,7 @@ checks:
   - id: SP-UNF-12
     module: M-UNFAIR
     check: 고객의 작위·부작위를 의사표시로 의제하거나 의사표시 형식에 부당한 제한을 두는 무효 조항이 없는가
+    label: "의사표시 의제·제한"
     severity: 필수
     severity_basis: "의사표시 의제 관련 부당 약관 조항 무효(효력강행규정) — 약관의 규제에 관한 법률 제12조"
     norm_type: 강행
@@ -410,6 +432,7 @@ checks:
   - id: SP-UNF-13
     module: M-UNFAIR
     check: 고객에게 부당하게 불리한 재판관할 합의 또는 입증책임을 전가하는 무효 조항이 없는가
+    label: "관할·입증책임 전가"
     severity: 필수
     severity_basis: "소 제기·관할 관련 부당 약관 조항 무효(효력강행규정) — 약관의 규제에 관한 법률 제14조"
     norm_type: 강행
@@ -428,6 +451,7 @@ checks:
   - id: SP-DEL-01
     module: M-DELIVERY
     check: 검사·검수의 기준·방법·기한과 합격/불합격 시 처리(보완·재납품) 절차가 규정되어 있는가
+    label: "검사·검수 절차"
     severity: 참고
     severity_basis: "실무 관행 항목(법령 강제 아님)"
     norm_type: 실무
@@ -439,6 +463,7 @@ checks:
   - id: SP-DEL-02
     module: M-DELIVERY
     check: 납품·용역 이행지체에 대한 지체상금(손해배상액의 예정) 약정이 있는가
+    label: "지체상금 예정"
     severity: 권장
     severity_basis: "근거 조문이 임의규정임 — 민법 제398조"
     norm_type: 임의
@@ -456,6 +481,7 @@ checks:
   - id: SP-DEL-03
     module: M-DELIVERY
     check: 목적물 인도 전 당사자 쌍방 무책 멸실·훼손 시 위험부담(대금청구 가부) 처리 조항이 있는가
+    label: "위험부담 처리"
     severity: 권장
     severity_basis: "근거 조문이 임의규정임 — 민법 제537조"
     norm_type: 임의
@@ -472,6 +498,7 @@ checks:
   - id: SP-DEL-04
     module: M-DELIVERY
     check: 발주자(채권자) 귀책 또는 수령지체 중 이행불능 시 수급인의 대금청구권 유지 조항이 있는가
+    label: "채권자귀책 대금청구"
     severity: 권장
     severity_basis: "근거 조문이 임의규정임 — 민법 제538조"
     norm_type: 임의
@@ -489,6 +516,7 @@ checks:
   - id: SP-DEL-05
     module: M-DELIVERY
     check: 용역(도급) 완성물에 하자가 있는 경우 상당한 기간을 정한 하자보수 청구권 조항이 있는가
+    label: "하자보수 청구권"
     severity: 권장
     severity_basis: "근거 조문이 임의규정임 — 민법 제667조"
     norm_type: 임의
@@ -506,6 +534,7 @@ checks:
   - id: SP-DEL-06
     module: M-DELIVERY
     check: 하자보수에 갈음하거나 보수와 함께 손해배상을 청구할 수 있는 조항이 있는가
+    label: "하자 손해배상 청구"
     severity: 권장
     severity_basis: "근거 조문이 임의규정임 — 민법 제667조"
     norm_type: 임의
@@ -522,6 +551,7 @@ checks:
   - id: SP-DEL-07
     module: M-DELIVERY
     check: 완성물의 하자로 계약 목적을 달성할 수 없는 경우의 해제권 조항이 있는가
+    label: "하자 계약해제권"
     severity: 권장
     severity_basis: "근거 조문이 임의규정임 — 민법 제668조"
     norm_type: 임의
@@ -538,6 +568,7 @@ checks:
   - id: SP-DEL-08
     module: M-DELIVERY
     check: 도급(용역) 하자담보책임의 존속기간(인도일부터 1년 등)이 규정되어 있는가
+    label: "하자담보 존속기간"
     severity: 권장
     severity_basis: "하자담보 존속기간 임의규정(특약으로 조정 가능) — 민법 제670조"
     norm_type: 임의
@@ -555,6 +586,7 @@ checks:
   - id: SP-DEL-09
     module: M-DELIVERY
     check: 구매(매매) 목적물의 하자에 대한 매도인의 하자담보책임 조항이 있는가
+    label: "매도인 하자담보책임"
     severity: 권장
     severity_basis: "근거 조문이 임의규정임 — 민법 제580조"
     norm_type: 임의
@@ -572,6 +604,7 @@ checks:
   - id: SP-DEL-10
     module: M-DELIVERY
     check: 종류물(불특정물) 구매의 경우 하자 있는 물건 대신 완전물 급부를 청구할 수 있는 조항이 있는가
+    label: "완전물 급부청구"
     severity: 권장
     severity_basis: "근거 조문이 임의규정임 — 민법 제581조"
     norm_type: 임의
@@ -588,6 +621,7 @@ checks:
   - id: SP-DEL-11
     module: M-DELIVERY
     check: 구매(매매) 하자담보에 따른 권리행사기간(하자를 안 날부터 6월 등)이 규정되어 있는가
+    label: "매매 하자 행사기간"
     severity: 권장
     severity_basis: "하자담보 권리행사기간 임의규정(특약으로 조정 가능) — 민법 제582조"
     norm_type: 임의

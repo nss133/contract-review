@@ -28,6 +28,7 @@ checks:
   # ── M-LOAN 여신·대출 ─────────────────────────────────────────
   - id: FIN-LOAN-01
     check: 대출원금(대여금액)과 인도(실행) 방법이 특정되어 있는가
+    label: "대출원금·실행방법"
     module: M-LOAN
     severity: 참고
     severity_basis: 소비대차의 성립요건 — 민법 제598조(요물성 아님, 낙성계약이나 원금 특정은 계약 본질)
@@ -45,6 +46,7 @@ checks:
         source_type: law
   - id: FIN-LOAN-02
     check: 이자율과 이자 기산일(인도일 기준)이 명시되어 있는가
+    label: "이자율·기산일"
     module: M-LOAN
     severity: 권장
     severity_basis: 이자약정은 임의규정 — 민법 제600조(이자있는 소비대차의 기산)
@@ -62,6 +64,7 @@ checks:
         source_type: law
   - id: FIN-LOAN-03
     check: 약정이자율이 이자제한법상 최고이자율(연 25% 이내 대통령령)을 초과하지 않는가
+    label: "최고이자율 준수"
     module: M-LOAN
     severity: 필수
     severity_basis: 강행규정 — 이자제한법 제2조(최고이자율 초과분 무효). 단 법인 여신 등 적용제외 확인 필요
@@ -80,6 +83,7 @@ checks:
     note: 대차원금 10만원 미만·법인 대상 여신 등 적용범위 확인 필요(이자제한법 제2조 제5항·대부업법 등)
   - id: FIN-LOAN-04
     check: 지연손해금(연체이자)의 이율 또는 산정방법이 정해져 있는가
+    label: "지연손해금 이율"
     module: M-LOAN
     severity: 권장
     severity_basis: 금전채무 지연손해는 약정이율 우선 적용 — 민법 제397조(약정 없으면 법정이율)
@@ -99,6 +103,7 @@ checks:
   # ── M-SEC 담보 ────────────────────────────────────────────────
   - id: FIN-SEC-01
     check: 동산질권 설정 시 목적물 점유 이전(질물 인도)이 규정되어 있는가
+    label: "동산질권 점유이전"
     module: M-SEC
     severity: 필수
     severity_basis: 강행규정(효력요건) — 민법 제330조(질권설정은 목적물 인도로 효력 발생, 요물성)
@@ -117,6 +122,7 @@ checks:
         source_type: law
   - id: FIN-SEC-02
     check: 지명채권(예금 등) 질권 설정 시 제3채무자 통지·승낙(대항요건)이 규정되어 있는가
+    label: "채권질권 대항요건"
     module: M-SEC
     severity: 필수
     severity_basis: 강행규정(대항요건) — 민법 제349조(질권설정 통지·승낙 없으면 제3채무자·제3자 대항 불가)
@@ -134,6 +140,7 @@ checks:
         source_type: law
   - id: FIN-SEC-03
     check: 저당권(근저당) 설정 시 피담보채권과 채권최고액이 특정되어 있는가
+    label: "근저당 채권최고액"
     module: M-SEC
     severity: 필수
     severity_basis: 강행규정 — 민법 제357조(근저당은 채무 최고액 확정 필요)
@@ -158,6 +165,7 @@ checks:
         source_type: law
   - id: FIN-SEC-04
     check: 저당권 피담보채권 범위(원본·이자·지연배상 1년분 한정)가 반영되어 있는가
+    label: "저당 피담보채권 범위"
     module: M-SEC
     severity: 참고
     severity_basis: 강행규정이나 계약 임의조정 여지 낮음 — 민법 제360조(지연배상은 1년분 한정)
@@ -176,6 +184,7 @@ checks:
         source_type: law
   - id: FIN-SEC-05
     check: 채권양도담보 설정 시 채무자 통지·승낙(확정일자)으로 대항요건을 갖추는가
+    label: "채권양도담보 대항요건"
     module: M-SEC
     severity: 필수
     severity_basis: 강행규정(대항요건) — 민법 제450조(채권양도 통지·승낙, 제3자 대항은 확정일자 요)
@@ -195,6 +204,7 @@ checks:
   # ── M-GUAR 보증 ──────────────────────────────────────────────
   - id: FIN-GUAR-01
     check: 보증(연대보증)이 보증인의 기명날인·서명 있는 서면으로 표시되어 있는가
+    label: "보증 서면방식"
     module: M-GUAR
     severity: 필수
     severity_basis: 강행규정(효력요건) — 민법 제428조의2(서면 아닌 보증은 무효, 전자적 형태 무효)
@@ -212,6 +222,7 @@ checks:
         source_type: law
   - id: FIN-GUAR-02
     check: 연대보증인 경우 최고·검색의 항변권 배제가 명확히 규정되어 있는가
+    label: "연대보증 항변권 배제"
     module: M-GUAR
     severity: 권장
     severity_basis: 임의규정 — 민법 제437조(연대보증은 최고·검색 항변 배제, 단서). 계약상 연대 여부 명확화 필요
@@ -229,6 +240,7 @@ checks:
         source_type: law
   - id: FIN-GUAR-03
     check: 보증인의 구상권(수탁보증인·공동보증인) 관련 사항이 정리되어 있는가
+    label: "보증인 구상권"
     module: M-GUAR
     severity: 참고
     severity_basis: 임의규정 — 민법 제441조(수탁보증인 구상권). 채권자 관점에선 확인 정도
@@ -249,6 +261,7 @@ checks:
   # ── M-ASSET 보험업 자산운용 규제 ──────────────────────────────
   - id: FIN-ASSET-01
     check: 여신(신용공여)이 보험업법 자산운용 원칙(안정성·유동성·수익성·공익성)에 부합하는가
+    label: "자산운용 원칙 부합"
     module: M-ASSET
     severity: 필수
     severity_basis: 강행규정 — 보험업법 제104조(자산운용 원칙·선관주의)
@@ -266,6 +279,7 @@ checks:
         source_type: law
   - id: FIN-ASSET-02
     check: 금지되는 자산운용(투기목적 대출·자기주식 취득 목적 대출·임직원 대출 등)에 해당하지 않는가
+    label: "금지 자산운용 해당"
     module: M-ASSET
     severity: 필수
     severity_basis: 강행규정(금지) — 보험업법 제105조(금지되는 자산운용)
@@ -283,6 +297,7 @@ checks:
         source_type: law
   - id: FIN-ASSET-03
     check: 대주주·동일차주 신용공여가 자산운용 한도(보험업법 제106조)를 초과하지 않는가
+    label: "대주주 신용공여 한도"
     module: M-ASSET
     severity: 필수
     severity_basis: 강행규정(한도) — 보험업법 제106조(신용공여 비율 한도)
@@ -300,6 +315,7 @@ checks:
         source_type: law
   - id: FIN-ASSET-04
     check: 대주주에 대한 신용공여 시 이사회 의결·공시 등 절차를 준수하는가
+    label: "대주주 신용공여 절차"
     module: M-ASSET
     severity: 필수
     severity_basis: 강행규정 — 보험업법 제111조(대주주 거래제한, 이사회 의결·보고·공시)

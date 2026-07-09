@@ -38,6 +38,7 @@ checks:
   - id: SH-SHARE-01
     module: M-SHARE
     check: 계약상 주식양도 제한이 정관에 근거한 이사회 승인 방식으로 뒷받침되는가(정관 근거 없는 순수 채권적 제한인지 확인)
+    label: "양도제한 정관근거"
     severity: 권장
     severity_basis: "근거 조문이 임의규정임 — 상법 제335조"
     norm_type: 임의
@@ -55,6 +56,7 @@ checks:
   - id: SH-SHARE-02
     module: M-SHARE
     check: 정관상 이사회 승인 대상 주식을 승인 없이 양도하면 회사에 대해 효력이 없음을 전제로 양도 절차가 규정되어 있는가
+    label: "이사회 미승인 양도무효"
     severity: 필수
     severity_basis: "근거 조문이 강행규정(의무)임 — 상법 제335조"
     norm_type: 강행
@@ -71,6 +73,7 @@ checks:
   - id: SH-SHARE-03
     module: M-SHARE
     check: 주권 미발행 회사에서 회사성립·납입기일 후 6월 경과 전 주식양도의 대(對)회사 효력 제한을 양도 시점 설계에 반영했는가
+    label: "주권미발행 6월 양도제한"
     severity: 필수
     severity_basis: "근거 조문이 강행규정(의무)임 — 상법 제335조"
     norm_type: 강행
@@ -87,6 +90,7 @@ checks:
   - id: SH-SHARE-04
     module: M-SHARE
     check: 정관상 양도승인 대상인 경우 상법상 양도승인청구·매수청구 절차와 계약상 우선매수 절차의 선후관계가 정리되어 있는가
+    label: "승인·우선매수 선후"
     severity: 권장
     severity_basis: "근거 조문이 임의규정임 — 상법 제335조의2"
     norm_type: 임의
@@ -103,6 +107,7 @@ checks:
   - id: SH-SHARE-05
     module: M-SHARE
     check: 우선매수권(ROFR) 행사의 통지 절차·행사기간·가격결정 방법이 특정되어 있는가
+    label: "우선매수권(ROFR)"
     severity: 참고
     severity_basis: "실무 관행 항목(법령 강제 아님)"
     norm_type: 실무
@@ -115,6 +120,7 @@ checks:
   - id: SH-SHARE-06
     module: M-SHARE
     check: 동반매도참여권(tag-along) 행사 시 매수인이 소수주주 지분을 동일 조건으로 인수하도록 하는 의무가 규정되어 있는가
+    label: "동반매도참여권(tag-along)"
     severity: 참고
     severity_basis: "실무 관행 항목(법령 강제 아님)"
     norm_type: 실무
@@ -126,6 +132,7 @@ checks:
   - id: SH-SHARE-07
     module: M-SHARE
     check: 동반매도청구권(drag-along) 행사요건·소수주주 매도의무·공정가격 보장이 규정되어 있는가
+    label: "동반매도청구권(drag-along)"
     severity: 참고
     severity_basis: "실무 관행 항목(법령 강제 아님)"
     norm_type: 실무
@@ -138,6 +145,7 @@ checks:
   - id: SH-SHARE-08
     module: M-SHARE
     check: 주식양도의 이행방법(주권 교부)과 명의개서 협력의무가 규정되어 있는가
+    label: "주권교부·명의개서"
     severity: 필수
     severity_basis: "근거 조문이 강행규정(의무)임 — 상법 제336조"
     norm_type: 강행
@@ -162,6 +170,7 @@ checks:
   - id: SH-GOV-01
     module: M-GOV
     check: 이사 지명권이 주주총회 선임 절차를 통해 실현되도록 규정되어 있는가(주총 결의 없이 이사 지위를 직접 부여하지 않음)
+    label: "이사 지명권 주총선임"
     severity: 필수
     severity_basis: "근거 조문이 강행규정(의무)임 — 상법 제382조"
     norm_type: 강행
@@ -179,6 +188,7 @@ checks:
   - id: SH-GOV-02
     module: M-GOV
     check: 의결권 구속약정(voting agreement)이 1주 1의결권 원칙 범위 내에서 채권적 약정 형태로 규정되어 있는가
+    label: "의결권 구속약정"
     severity: 필수
     severity_basis: "근거 조문이 강행규정(의무)임 — 상법 제369조"
     norm_type: 강행
@@ -196,6 +206,7 @@ checks:
   - id: SH-GOV-03
     module: M-GOV
     check: 주요경영사항에 대한 사전 동의권(veto)의 대상 항목이 열거되어 있는가
+    label: "사전동의권(veto) 열거"
     severity: 참고
     severity_basis: "실무 관행 항목(법령 강제 아님)"
     norm_type: 실무
@@ -208,6 +219,7 @@ checks:
   - id: SH-GOV-04
     module: M-GOV
     check: 계약상 정보접근권이 상법상 소수주주 회계장부열람권·이사회의사록 열람권을 보완하도록 규정되어 있는가
+    label: "정보접근권 보완"
     severity: 권장
     severity_basis: "근거 조문이 임의규정임 — 상법 제466조"
     norm_type: 임의
@@ -232,6 +244,7 @@ checks:
   - id: SH-GOV-05
     module: M-GOV
     check: 교착상태(deadlock) 해소 절차(콜·풋옵션, 러시안룰렛, 제3자 결정, 해산 등)가 규정되어 있는가
+    label: "교착상태(deadlock) 해소"
     severity: 참고
     severity_basis: "실무 관행 항목(법령 강제 아님)"
     norm_type: 실무
@@ -243,6 +256,7 @@ checks:
   - id: SH-GOV-06
     module: M-GOV
     check: 지명이사도 지명주주가 아닌 회사에 대한 충실의무를 부담함을 전제로 이사 행위 지시 조항이 구성되어 있는가
+    label: "지명이사 충실의무"
     severity: 필수
     severity_basis: "근거 조문이 강행규정(의무)임 — 상법 제382조의3"
     norm_type: 강행
@@ -260,6 +274,7 @@ checks:
   - id: SH-GOV-07
     module: M-GOV
     check: 주요주주·지명이사와 회사 간 거래가 이사회 승인(이사 3분의 2) 및 공정성 요건을 거치도록 규정되어 있는가
+    label: "이해관계자 거래승인"
     severity: 필수
     severity_basis: "근거 조문이 강행규정(의무)임 — 상법 제398조"
     norm_type: 강행
@@ -276,6 +291,7 @@ checks:
   - id: SH-FIN-01
     module: M-FIN
     check: 주주의 지분비율에 따른 신주인수권(pre-emptive right)이 보장되도록 규정되어 있는가
+    label: "신주인수권 보장"
     severity: 필수
     severity_basis: "근거 조문이 강행규정(의무)임 — 상법 제418조"
     norm_type: 강행
@@ -292,6 +308,7 @@ checks:
   - id: SH-FIN-02
     module: M-FIN
     check: 제3자 신주배정이 정관 근거와 경영상 목적 요건을 충족하는 범위로 제한되어 있는가
+    label: "제3자 신주배정 제한"
     severity: 필수
     severity_basis: "근거 조문이 강행규정(의무)임 — 상법 제418조"
     norm_type: 강행
@@ -308,6 +325,7 @@ checks:
   - id: SH-FIN-03
     module: M-FIN
     check: 후속 라운드 저가 발행 시 지분희석 방지(anti-dilution) 조정 방식(전환가·추가배정 등)이 규정되어 있는가
+    label: "지분희석 방지(anti-dilution)"
     severity: 참고
     severity_basis: "실무 관행 항목(법령 강제 아님)"
     norm_type: 실무
@@ -320,6 +338,7 @@ checks:
   - id: SH-FIN-04
     module: M-FIN
     check: 우선주·전환주·상환주 등 종류주식에 결부된 권리가 정관상 종류주식 규정에 근거하는가
+    label: "종류주식 정관근거"
     severity: 필수
     severity_basis: "근거 조문이 강행규정(의무)임 — 상법 제344조"
     norm_type: 강행
@@ -336,6 +355,7 @@ checks:
   - id: SH-FIN-05
     module: M-FIN
     check: 배당정책 합의가 상법상 배당가능이익 한도와 주주총회 결의 요건 내에서 규정되어 있는가
+    label: "배당정책 합의"
     severity: 필수
     severity_basis: "근거 조문이 강행규정(의무)임 — 상법 제462조"
     norm_type: 강행
@@ -360,6 +380,7 @@ checks:
   - id: SH-FIN-06
     module: M-FIN
     check: 추가 자본조달 시 주주의 참여 의무·비율(후속 출자 약정)이 규정되어 있는가
+    label: "후속 출자 약정"
     severity: 참고
     severity_basis: "실무 관행 항목(법령 강제 아님)"
     norm_type: 실무
@@ -372,6 +393,7 @@ checks:
   - id: SH-EXIT-01
     module: M-EXIT
     check: 주요주주(및 특수관계인)의 경업·겸직 금지 의무가 규정되어 있는가
+    label: "경업·겸직 금지"
     severity: 참고
     severity_basis: "실무 관행 항목(법령 강제 아님)"
     norm_type: 실무
@@ -384,6 +406,7 @@ checks:
   - id: SH-EXIT-02
     module: M-EXIT
     check: 핵심 주주의 전업(full-time commitment) 의무 및 위반 시 효과가 규정되어 있는가
+    label: "핵심주주 전업의무"
     severity: 참고
     severity_basis: "실무 관행 항목(법령 강제 아님)"
     norm_type: 실무
@@ -395,6 +418,7 @@ checks:
   - id: SH-EXIT-03
     module: M-EXIT
     check: 이탈(퇴사·중대한 위반) 시 지분 정산 방식(콜·풋옵션, 매도의무, 정산가격)이 규정되어 있는가
+    label: "이탈 시 지분정산"
     severity: 참고
     severity_basis: "실무 관행 항목(법령 강제 아님)"
     norm_type: 실무
@@ -406,6 +430,7 @@ checks:
   - id: SH-EXIT-04
     module: M-EXIT
     check: 회사가 이탈주주 주식을 자기주식으로 취득해 정산하는 구조라면 배당가능이익 한도·취득 절차 요건을 충족하는가
+    label: "자기주식 취득정산"
     severity: 필수
     severity_basis: "근거 조문이 강행규정(의무)임 — 상법 제341조"
     norm_type: 강행
@@ -423,6 +448,7 @@ checks:
   - id: SH-EXIT-05
     module: M-EXIT
     check: 주식·회사 관련 진술 및 보장과 그 위반 시 손해전보(면책·정산) 조항이 규정되어 있는가
+    label: "진술·보장 손해전보"
     severity: 참고
     severity_basis: "실무 관행 항목(법령 강제 아님)"
     norm_type: 실무
@@ -435,6 +461,7 @@ checks:
   - id: SH-SET-01
     module: M-SETTLE
     check: 화해(정산합의)의 상호양보와 분쟁 종결 의사가 명확히 기재되어 있는가
+    label: "화해 상호양보·종결"
     severity: 참고
     severity_basis: "선언규정임(화해의 성립요건) — 민법 제731조"
     norm_type: 선언
@@ -450,6 +477,7 @@ checks:
   - id: SH-SET-02
     module: M-SETTLE
     check: 화해의 창설적 효력(종전 권리관계 소멸·재구성)을 전제로 정산 범위가 특정되어 있는가
+    label: "화해 창설적 효력"
     severity: 참고
     severity_basis: "선언규정임(화해의 창설적 효력) — 민법 제732조"
     norm_type: 선언
@@ -465,6 +493,7 @@ checks:
   - id: SH-SET-03
     module: M-SETTLE
     check: 화해 목적인 분쟁 자체는 착오 취소가 제한되고 자격·분쟁 외 사항 착오만 취소 가능함을 고려하여 합의 대상을 특정했는가
+    label: "화해 착오취소 제한"
     severity: 필수
     severity_basis: "근거 조문이 강행규정(의무)임 — 민법 제733조"
     norm_type: 강행
@@ -481,6 +510,7 @@ checks:
   - id: SH-SET-04
     module: M-SETTLE
     check: 부제소 특약(청구권 포기)의 대상 범위가 특정되어 있는가
+    label: "부제소 특약 범위"
     severity: 참고
     severity_basis: "실무 관행 항목(법령 강제 아님)"
     norm_type: 실무
@@ -494,6 +524,7 @@ checks:
   - id: SH-ANT-01
     module: M-ANTITRUST
     check: 지분취득·임원겸임 등이 기업결합 신고 대상 규모에 해당하는지 검토하고 신고 협조 조항이 있는가
+    label: "기업결합 신고 협조"
     severity: 필수
     severity_basis: "근거 조문이 강행규정(의무)임 — 독점규제 및 공정거래에 관한 법률 제11조"
     norm_type: 강행
@@ -518,6 +549,7 @@ checks:
   - id: SH-ANT-02
     module: M-ANTITRUST
     check: 본 지분거래가 경쟁을 실질적으로 제한하는 기업결합에 해당하지 않음이 검토되었는가
+    label: "경쟁제한성 검토"
     severity: 필수
     severity_basis: "근거 조문이 강행규정(의무)임 — 독점규제 및 공정거래에 관한 법률 제9조"
     norm_type: 강행

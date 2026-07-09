@@ -33,6 +33,7 @@ checks:
   # ── M-CORE 제휴 공통 ─────────────────────────────────────────
   - id: ALL-CORE-01
     check: 제휴 당사자의 역할·분담과 협력 범위가 구체적으로 특정되어 있는가
+    label: "제휴 역할·범위 특정"
     module: M-CORE
     severity: 참고
     severity_basis: 실무 항목 — 법령상 강제 아님, 제휴 실효성·분쟁예방 차원
@@ -44,6 +45,7 @@ checks:
     sources: []
   - id: ALL-CORE-02
     check: 협약(MOU)의 법적 구속력 유무(구속력 있는 조항과 없는 조항)가 명확한가
+    label: "MOU 법적 구속력"
     module: M-CORE
     severity: 참고
     severity_basis: 실무 항목 — MOU는 구속력 배제 특약 가능, 의사 명확화가 분쟁예방 핵심
@@ -57,6 +59,7 @@ checks:
   # ── M-PII 개인정보 제공·공동이용 ─────────────────────────────
   - id: ALL-PII-01
     check: 고객 개인정보를 제휴사에 제공하는 경우 정보주체 동의 근거가 확보되는가
+    label: "개인정보 제공 동의"
     module: M-PII
     severity: 필수
     severity_basis: 강행규정 — 개인정보 보호법 제17조 제1항(제3자 제공은 동의 등 법적근거 필요)
@@ -74,6 +77,7 @@ checks:
         source_type: law
   - id: ALL-PII-02
     check: 개인정보 제공 동의 시 정보주체에게 법정 고지사항(제공받는 자·이용목적·항목·보유기간 등)을 알리도록 하는가
+    label: "개인정보 법정 고지"
     module: M-PII
     severity: 필수
     severity_basis: 강행규정 — 개인정보 보호법 제17조 제2항(동의 시 각 호 사항 고지 의무)
@@ -91,6 +95,7 @@ checks:
         source_type: law
   - id: ALL-PII-03
     check: 제공한 개인정보를 당초 목적 범위를 초과해 이용·제공하지 않도록 제한하는가
+    label: "목적 외 이용 제한"
     module: M-PII
     severity: 필수
     severity_basis: 강행규정(금지) — 개인정보 보호법 제18조 제1항(목적 외 이용·제공 제한)
@@ -110,6 +115,7 @@ checks:
   # ── M-COMP 공정거래 ──────────────────────────────────────────
   - id: ALL-COMP-01
     check: 경쟁사업자 간 협력이 가격·거래조건·거래상대방을 공동으로 정하는 부당한 공동행위에 해당하지 않는가
+    label: "부당 공동행위"
     module: M-COMP
     severity: 필수
     severity_basis: 강행규정(금지) — 공정거래법 제40조 제1항(부당한 공동행위 금지, 합의 자체 무효)
@@ -133,6 +139,7 @@ checks:
         source_type: law
   - id: ALL-COMP-02
     check: 우월적 지위를 이용해 상대방에게 불리한 조건을 강제하거나 사업활동을 부당 구속하지 않는가
+    label: "우월적 지위 남용"
     module: M-COMP
     severity: 권장
     severity_basis: 강행규정(금지)이나 부당성 판단 필요 — 공정거래법 제45조 제1항(불공정거래행위·거래상지위남용)
@@ -159,6 +166,7 @@ checks:
   # ── M-INSMOD 보험모집·상품제공 ───────────────────────────────
   - id: ALL-INS-01
     check: 보험 모집을 위탁하는 경우 모집 위탁 상대방이 법정 모집자격자(설계사·대리점·중개사 등)인가
+    label: "모집위탁 자격자"
     module: M-INSMOD
     severity: 필수
     severity_basis: 강행규정 — 보험업법 제83조 제1항(모집할 수 있는 자 한정)
@@ -178,6 +186,7 @@ checks:
   # ── M-REINS 재보험 ───────────────────────────────────────────
   - id: ALL-REINS-01
     check: 재보험 출재 시 원보험계약의 효력과 분리(원계약 무영향)가 전제되어 있는가
+    label: "재보험 원계약 분리"
     module: M-REINS
     severity: 참고
     severity_basis: 선언규정 — 상법 제661조(재보험은 원보험계약 효력에 무영향)

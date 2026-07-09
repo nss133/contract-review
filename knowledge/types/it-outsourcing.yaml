@@ -28,6 +28,7 @@ checks:
   - id: ITSEC-01
     module: M-ITSEC
     check: 외부주문 개발업무에 사용되는 업무장소·전산설비를 내부 업무용과 분리하여 설치·운영하는 조항이 있는가
+    label: "업무장소·전산설비 분리"
     severity: 필수
     severity_basis: "근거 조문이 강행규정(의무)임 — 전자금융감독규정 제60조"
     norm_type: 강행
@@ -44,6 +45,7 @@ checks:
   - id: ITSEC-02
     module: M-ITSEC
     check: 금융회사와 이용자 간 암호화정보 해독 및 원장 등 중요 데이터 변경을 금지하는 조항이 있는가
+    label: "암호해독·원장변경 금지"
     severity: 필수
     severity_basis: "근거 조문이 강행규정(의무)임 — 전자금융감독규정 제60조"
     norm_type: 강행
@@ -60,6 +62,7 @@ checks:
   - id: ITSEC-03
     module: M-ITSEC
     check: 계좌번호·비밀번호 등 이용자 금융정보의 무단보관·유출 금지 조항이 있는가
+    label: "금융정보 무단보관·유출 금지"
     severity: 필수
     severity_basis: "근거 조문이 강행규정(의무)임 — 전자금융감독규정 제60조"
     norm_type: 강행
@@ -76,6 +79,7 @@ checks:
   - id: ITSEC-04
     module: M-ITSEC
     check: 접근매체 위·변조, 해킹, 개인정보유출 등에 대비한 보안대책 수립 조항이 있는가
+    label: "접근매체·해킹 보안대책"
     severity: 필수
     severity_basis: "근거 조문이 강행규정(의무)임 — 전자금융감독규정 제60조"
     norm_type: 강행
@@ -92,6 +96,7 @@ checks:
   - id: ITSEC-05
     module: M-ITSEC
     check: 금융회사와 전자금융보조업자 간 접속에 전용회선(동등 보안수준의 가상 전용회선 포함)을 사용하는 조항이 있는가
+    label: "전용회선 사용"
     severity: 필수
     severity_basis: "근거 조문이 강행규정(의무)임 — 전자금융감독규정 제60조"
     norm_type: 강행
@@ -108,6 +113,7 @@ checks:
   - id: ITSEC-06
     module: M-ITSEC
     check: 정보처리시스템 장애 등 서비스 중단에 대비한 비상대책 수립 조항이 있는가
+    label: "서비스중단 비상대책"
     severity: 필수
     severity_basis: "근거 조문이 강행규정(의무)임 — 전자금융감독규정 제60조"
     norm_type: 강행
@@ -124,6 +130,7 @@ checks:
   - id: ITSEC-07
     module: M-ITSEC
     check: 외부주문의 입찰·계약·수행·완료 등 각 단계별 보안관리방안(금융감독원장이 정하는 방안)을 따르도록 하는 조항이 있는가
+    label: "단계별 보안관리방안"
     severity: 필수
     severity_basis: "근거 조문이 강행규정(의무)임 — 전자금융감독규정 제60조"
     norm_type: 강행
@@ -140,6 +147,7 @@ checks:
   - id: ITSEC-08
     module: M-ITSEC
     check: 중요 전산자료의 백업자료 보존·백업설비 확보 등 백업대책 수립 조항이 있는가
+    label: "백업대책 수립"
     severity: 필수
     severity_basis: "근거 조문이 강행규정(의무)임 — 전자금융감독규정 제60조"
     norm_type: 강행
@@ -156,6 +164,7 @@ checks:
   - id: ITSEC-09
     module: M-ITSEC
     check: 수탁자(전자금융보조업자)의 재무건전성 연 1회 이상 평가·상시 모니터링에 필요한 자료 제공 협조 조항이 있는가
+    label: "수탁자 재무건전성 평가"
     severity: 필수
     severity_basis: "근거 조문이 강행규정(의무)임 — 전자금융감독규정 제60조"
     norm_type: 강행
@@ -172,6 +181,7 @@ checks:
   - id: ITSEC-10
     module: M-ITSEC
     check: 수탁자가 제공하는 서비스의 품질수준 연 1회 이상 평가에 협조하는 조항이 있는가
+    label: "서비스 품질수준 평가"
     severity: 필수
     severity_basis: "근거 조문이 강행규정(의무)임 — 전자금융감독규정 제60조"
     norm_type: 강행
@@ -188,6 +198,7 @@ checks:
   - id: ITSEC-11
     module: M-ITSEC
     check: 수탁자가 사전 동의 없이 재외부주문 계약 체결·계약업체 변경을 하지 못하도록 통제하는 조항이 있는가
+    label: "재외부주문 사전통제"
     severity: 필수
     severity_basis: "근거 조문이 강행규정(의무)임 — 전자금융감독규정 제60조"
     norm_type: 강행
@@ -204,6 +215,7 @@ checks:
   - id: ITSEC-12
     module: M-ITSEC
     check: 업무수행인력의 사전 신원조회(또는 신원보증) 및 인력변경 시 인수인계 등 외주인력 관리방안 조항이 있는가
+    label: "외주인력 관리방안"
     severity: 필수
     severity_basis: "근거 조문이 강행규정(의무)임 — 전자금융감독규정 제60조"
     norm_type: 강행
@@ -220,6 +232,7 @@ checks:
   - id: ITSEC-13
     module: M-ITSEC
     check: 외부주문에 대한 자체 보안성검토와 정기 보안점검 실시(수탁자 협조) 조항이 있는가
+    label: "보안성검토·정기점검"
     severity: 필수
     severity_basis: "근거 조문이 강행규정(의무)임 — 전자금융감독규정 제60조"
     norm_type: 강행
@@ -236,6 +249,7 @@ checks:
   - id: ITSEC-14
     module: M-ITSEC
     check: 재위탁 구조라면 재수탁업자의 금융거래정보 변경이 위탁회사·원수탁업자의 개별 지시에 따르도록 하는 조항이 있는가
+    label: "재수탁자 정보변경 지시"
     severity: 필수
     severity_basis: "근거 조문이 강행규정(의무)임 — 전자금융감독규정 제60조"
     norm_type: 강행
@@ -252,6 +266,7 @@ checks:
   - id: ITSEC-15
     module: M-ITSEC
     check: 재위탁 구조라면 이용자 금융거래정보를 위탁회사 전산실 내에 두도록 하는 조항이 있는가
+    label: "금융정보 전산실내 보관"
     severity: 필수
     severity_basis: "근거 조문이 강행규정(의무)임 — 전자금융감독규정 제60조"
     norm_type: 강행
@@ -269,6 +284,7 @@ checks:
   - id: ITDL-01
     module: M-DELIV
     check: 개발 산출물(소스코드·프로그램)의 저작재산권 귀속과 2차적저작물작성권 포함 여부가 명시되어 있는가
+    label: "저작권 귀속·2차저작물"
     severity: 참고
     severity_basis: "추정규정임 — 저작권법 제45조"
     norm_type: 추정
@@ -293,6 +309,7 @@ checks:
   - id: ITDL-02
     module: M-DELIV
     check: 소스코드·산출물·형상관리 자료의 인도 범위·시점 또는 소스코드 에스크로(임치) 조항이 있는가
+    label: "소스코드 인도·에스크로"
     severity: 참고
     severity_basis: "실무 관행 항목(법령 강제 아님)"
     norm_type: 실무
@@ -304,6 +321,7 @@ checks:
   - id: ITDL-03
     module: M-DELIV
     check: 산출물의 검수·인수 기준(검사 항목·합격 기준)과 검수 기한·재검수 절차가 규정되어 있는가
+    label: "검수·인수 기준"
     severity: 참고
     severity_basis: "실무 관행 항목(법령 강제 아님)"
     norm_type: 실무
@@ -315,6 +333,7 @@ checks:
   - id: ITDL-04
     module: M-DELIV
     check: 검수 완료·인도 후 하자담보(무상 하자보수) 기간과 하자 대응 절차가 규정되어 있는가
+    label: "하자담보 기간·절차"
     severity: 참고
     severity_basis: "실무 관행 항목(법령 강제 아님)"
     norm_type: 실무
@@ -327,6 +346,7 @@ checks:
   - id: ITDL-05
     module: M-DELIV
     check: 유지보수의 대상·범위·대가와 별도계약 여부(무상 하자보수와의 구분)가 규정되어 있는가
+    label: "유지보수 범위·대가"
     severity: 참고
     severity_basis: "실무 관행 항목(법령 강제 아님)"
     norm_type: 실무
@@ -338,6 +358,7 @@ checks:
   - id: ITDL-06
     module: M-DELIV
     check: 서비스수준(SLA)·가동률 기준과 장애 발생 시 대응·보상·손해배상 조항이 있는가
+    label: "SLA·장애 손해배상"
     severity: 참고
     severity_basis: "실무 관행 항목(법령 강제 아님)"
     norm_type: 실무
@@ -350,6 +371,7 @@ checks:
   - id: ITDL-07
     module: M-DELIV
     check: 산출물에 사용된 제3자 소프트웨어·오픈소스의 라이선스 목록 고지와 라이선스 준수·책임 조항이 있는가
+    label: "오픈소스 라이선스 준수"
     severity: 참고
     severity_basis: "실무 관행 항목(법령 강제 아님)"
     norm_type: 실무
@@ -361,6 +383,7 @@ checks:
   - id: ITDL-08
     module: M-DELIV
     check: 산출물에 악성코드·백도어·무단 기능이 없음을 보증하고 위반 시 조치하는 조항이 있는가
+    label: "악성코드·백도어 보증"
     severity: 참고
     severity_basis: "실무 관행 항목(법령 강제 아님)"
     norm_type: 실무
@@ -373,6 +396,7 @@ checks:
   - id: ITPV-01
     module: M-PRIV
     check: 개인정보 처리 업무 위탁이 법정 사항을 포함한 문서(계약서 본문 또는 처리위탁 특약)로 되어 있는가
+    label: "위탁 문서화 요건"
     severity: 필수
     severity_basis: "근거 조문이 강행규정(의무)임 — 개인정보 보호법 제26조"
     norm_type: 강행
@@ -389,6 +413,7 @@ checks:
   - id: ITPV-02
     module: M-PRIV
     check: 위탁 문서에 위탁업무 수행 목적 외 개인정보의 처리 금지에 관한 사항이 포함되어 있는가
+    label: "목적외 처리 금지"
     severity: 필수
     severity_basis: "근거 조문이 강행규정(의무)임 — 개인정보 보호법 제26조"
     norm_type: 강행
@@ -405,6 +430,7 @@ checks:
   - id: ITPV-03
     module: M-PRIV
     check: 위탁 문서에 개인정보의 기술적·관리적 보호조치에 관한 사항이 포함되어 있는가
+    label: "기술적·관리적 보호조치"
     severity: 필수
     severity_basis: "근거 조문이 강행규정(의무)임 — 개인정보 보호법 제26조"
     norm_type: 강행
@@ -421,6 +447,7 @@ checks:
   - id: ITPV-04
     module: M-PRIV
     check: 위탁 문서에 위탁업무의 목적 및 범위가 기재되어 있는가
+    label: "위탁 목적·범위 기재"
     severity: 필수
     severity_basis: "근거 조문이 강행규정(의무)임 — 개인정보 보호법 시행령 제28조"
     norm_type: 강행
@@ -437,6 +464,7 @@ checks:
   - id: ITPV-05
     module: M-PRIV
     check: 위탁 문서에 재위탁 제한에 관한 사항이 포함되어 있는가
+    label: "재위탁 제한"
     severity: 필수
     severity_basis: "근거 조문이 강행규정(의무)임 — 개인정보 보호법 시행령 제28조"
     norm_type: 강행
@@ -453,6 +481,7 @@ checks:
   - id: ITPV-06
     module: M-PRIV
     check: 위탁 문서에 개인정보에 대한 접근 제한 등 안전성 확보 조치에 관한 사항이 포함되어 있는가
+    label: "접근제한 안전성 조치"
     severity: 필수
     severity_basis: "근거 조문이 강행규정(의무)임 — 개인정보 보호법 시행령 제28조"
     norm_type: 강행
@@ -469,6 +498,7 @@ checks:
   - id: ITPV-07
     module: M-PRIV
     check: 위탁 문서에 개인정보 관리 현황 점검 등 감독에 관한 사항이 포함되어 있는가
+    label: "관리현황 점검·감독"
     severity: 필수
     severity_basis: "근거 조문이 강행규정(의무)임 — 개인정보 보호법 시행령 제28조"
     norm_type: 강행
@@ -485,6 +515,7 @@ checks:
   - id: ITPV-08
     module: M-PRIV
     check: 위탁 문서에 수탁자의 의무 위반 시 손해배상 등 책임에 관한 사항이 포함되어 있는가
+    label: "수탁자 손해배상 책임"
     severity: 필수
     severity_basis: "근거 조문이 강행규정(의무)임 — 개인정보 보호법 시행령 제28조"
     norm_type: 강행
@@ -501,6 +532,7 @@ checks:
   - id: ITPV-09
     module: M-PRIV
     check: 수탁자의 위탁받은 업무 범위 초과 이용·제3자 제공 금지 조항이 있는가
+    label: "범위초과 이용·제공 금지"
     severity: 필수
     severity_basis: "근거 조문이 강행규정(의무)임 — 개인정보 보호법 제26조"
     norm_type: 강행
@@ -517,6 +549,7 @@ checks:
   - id: ITPV-10
     module: M-PRIV
     check: 수탁자가 개인정보 처리 업무를 재위탁하는 경우 위탁자의 동의를 받도록 하는 조항이 있는가
+    label: "재위탁 동의"
     severity: 필수
     severity_basis: "근거 조문이 강행규정(의무)임 — 개인정보 보호법 제26조"
     norm_type: 강행
@@ -535,6 +568,7 @@ checks:
   - id: ITCL-01
     module: M-CLOUD
     check: 클라우드 이용업무의 중요도 평가에 필요한 자료 제공 협조 조항이 있는가
+    label: "이용업무 중요도 평가"
     severity: 필수
     severity_basis: "근거 조문이 강행규정(의무)임 — 전자금융감독규정 제14조의2"
     norm_type: 강행
@@ -551,6 +585,7 @@ checks:
   - id: ITCL-02
     module: M-CLOUD
     check: 클라우드컴퓨팅서비스 제공자의 건전성·안전성 평가에 필요한 자료 제공 협조 조항이 있는가
+    label: "제공자 건전성·안전성 평가"
     severity: 필수
     severity_basis: "근거 조문이 강행규정(의무)임 — 전자금융감독규정 제14조의2"
     norm_type: 강행
@@ -567,6 +602,7 @@ checks:
   - id: ITCL-03
     module: M-CLOUD
     check: 클라우드 이용 관련 업무연속성 계획·안전성 확보조치의 수립·시행이 계약상 뒷받침되는가
+    label: "업무연속성·안전성 확보"
     severity: 필수
     severity_basis: "근거 조문이 강행규정(의무)임 — 전자금융감독규정 제14조의2"
     norm_type: 강행
@@ -583,6 +619,7 @@ checks:
   - id: ITCL-04
     module: M-CLOUD
     check: 평가결과·업무연속성 계획·안전성 확보조치에 대한 정보보호위원회 심의·의결 절차가 확인되는가
+    label: "정보보호위원회 심의"
     severity: 필수
     severity_basis: "근거 조문이 강행규정(의무)임 — 전자금융감독규정 제14조의2"
     norm_type: 강행
@@ -599,6 +636,7 @@ checks:
   - id: ITCL-05
     module: M-CLOUD
     check: 신규 이용계약 등 보고 사유 발생일부터 3개월 이내 감독원장 보고에 필요한 자료·통지 협조 조항이 있는가
+    label: "감독원장 보고 협조"
     severity: 필수
     severity_basis: "근거 조문이 강행규정(의무)임 — 전자금융감독규정 제14조의2"
     norm_type: 강행
@@ -615,6 +653,7 @@ checks:
   - id: ITCL-06
     module: M-CLOUD
     check: 제공자의 합병·분할·계약상 지위 양도·재위탁 등 중대한 변경사항 발생 시 사전 통지 조항이 있는가
+    label: "중대변경 사전통지"
     severity: 필수
     severity_basis: "근거 조문이 강행규정(의무)임 — 전자금융감독규정 제14조의2"
     norm_type: 강행
@@ -632,6 +671,7 @@ checks:
   - id: ITCL-07
     module: M-CLOUD
     check: 고유식별정보·개인신용정보를 클라우드로 처리하는 경우 해당 정보처리시스템의 국내 설치(국내 리전)가 계약상 보장되는가
+    label: "국내 리전 설치 보장"
     severity: 필수
     severity_basis: "근거 조문이 강행규정(의무)임 — 전자금융감독규정 제14조의2"
     norm_type: 강행
