@@ -236,3 +236,10 @@ td.empty { text-align: center; color: #889; padding: 24px; }
 .tile-consider.tile-must { border-top-color: #c0392b; }
 .tile-consider.tile-must .tile-n { color: #c0392b; }
 .tile-consider.tile-must .tile-sub { color: #c0392b; font-weight: 600; }
+
+/* 조항별 보기 — 검토 제안 전용 진입·패널 */
+.clause-consider { border-left: 4px solid #e0a83e; background: #fffdf7; }
+.clause-consider strong { color: #9a6a10; }
+.consider-panel { background: #fff; border: 1px solid #e0e2ee; border-radius: 8px; padding: 12px 14px; border-top: 3px solid #e0a83e; }
+.consider-panel h3 { margin: 0 0 8px; font-size: 13px; display: flex; align-items: center; gap: 6px; }
+.consider-hint { font-size: 12px; color: #778; margin: 0 0 12px; }

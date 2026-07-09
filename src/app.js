@@ -526,29 +526,72 @@ function renderCompareItem(r) {
     verdictControlHtml(cp.id) +
     "</div>";
 }
+// 검토 제안 항목 1건 — 부재 알람이라 조항 매핑 없음. 왜 봐야 하는지 + 판정·코멘트.
+function renderConsiderItem(r) {
+  var cp = _cpById(r.cpId);
+  if (!cp) return "";
+  return '<div class="compare-item consider-item">' +
+    '<div class="ci-head"><span class="sev sev-' + cp.severity + '" title="' + esc(cp.severity_basis || "") + '">' +
+    esc(cp.severity) + "</span><span class=\"ci-id\">" + esc(cp.id) + "</span></div>" +
+    '<p class="ci-q">' + esc(cp.check) + "</p>" +
+    (cp.severity_basis ? '<p class="ci-basis">왜 봐야 하는지: ' + esc(cp.severity_basis) + "</p>" : "") +
+    '<p class="ci-src">근거 ' + evidenceCell(cp) + "</p>" +
+    verdictControlHtml(cp.id) +
+    "</div>";
+}
 function renderClauses() {
   // ci -> { addressed:[r...], verify:[r...] }
   var byClause = {};
+  var considerList = [];
   state.result.results.forEach(function (r) {
-    if (!r.best || r.coverage === "quiet" || r.coverage === "consider") return;
+    if (r.coverage === "consider") { considerList.push(r); return; }
+    if (!r.best || r.coverage === "quiet") return;
     var ci = r.best.clauseIndex;
     var g = byClause[ci] || (byClause[ci] = { addressed: [], verify: [] });
     if (r.coverage === "addressed") g.addressed.push(r);
     else if (r.coverage === "verify") g.verify.push(r);
   });
-  document.getElementById("clause-list").innerHTML = state.clauses.map(function (c) {
+  // 심각도순(필수 먼저)
+  considerList.sort(function (a, b) {
+    var ca = _cpById(a.cpId), cb = _cpById(b.cpId);
+    var sa = SEV_RANK[ca && ca.severity]; if (sa === undefined) sa = 3;
+    var sb = SEV_RANK[cb && cb.severity]; if (sb === undefined) sb = 3;
+    return sa - sb;
+  });
+  var listHtml = state.clauses.map(function (c) {
     var g = byClause[c.index] || { addressed: [], verify: [] };
     return '<div class="clause" data-ci="' + c.index + '"><strong>' + esc(c.heading) +
       '</strong><span class="cnt">' + esc(clauseCountText(c.index, g)) + "</span><pre>" +
       esc(c.body) + "</pre></div>";
   }).join("");
+  // 검토 제안(계약서에서 확인 안 됨) — 특정 조항에 없는 부재 알람. 별도 진입 항목.
+  if (considerList.length) {
+    var mustN = considerList.filter(function (r) { var c = _cpById(r.cpId); return c && c.severity === "필수"; }).length;
+    var opinN = considerList.filter(function (r) { var v = verdictStore[r.cpId]; return v && v.verdict === "검토의견"; }).length;
+    var sub = (mustN ? "필수 " + mustN : "") + (opinN ? (mustN ? " · " : "") + "의견 " + opinN : "");
+    listHtml += '<div class="clause clause-consider" data-ci="consider"><strong>⚠ 검토 제안 (계약서에서 확인 안 됨)</strong>' +
+      '<span class="cnt">' + esc(sub) + "</span>" +
+      '<pre>필수·권장 항목 중 계약서에서 매칭 조항을 찾지 못한 것들. 빠졌다는 뜻이 아니라 검토가 필요한 사항.</pre></div>';
+  }
+  document.getElementById("clause-list").innerHTML = listHtml;
   function showClause(ci) {
+    var detail = document.getElementById("mapping-detail");
+    if (ci === "consider") {
+      // 검토 제안 전용 — 조항 매핑 없음. 각 항목에 판정·코멘트(오류 여부 검토).
+      var items = considerList.map(renderConsiderItem).join("") ||
+        '<p class="compare-empty">검토 제안 항목 없음</p>';
+      detail.innerHTML =
+        '<div class="consider-panel"><h3><span class="badge cov-consider">! 검토 제안</span> 계약서에서 확인되지 않은 항목</h3>' +
+        '<p class="consider-hint">각 항목이 실제로 빠진 것인지(오류) 아니면 해당 없는지 검토하고 의견을 남기세요.</p>' +
+        items + "</div>";
+      bindVerdictControls(detail, function () { showClause("consider"); refreshClauseCounts(); renderReport(); });
+      return;
+    }
     var g = byClause[ci] || { addressed: [], verify: [] };
     var left = g.addressed.map(renderCompareItem).join("") ||
       '<p class="compare-empty">이 조항에서 반영으로 짚인 항목 없음</p>';
     var right = g.verify.map(renderCompareItem).join("") ||
       '<p class="compare-empty">추가 확인 제안 없음</p>';
-    var detail = document.getElementById("mapping-detail");
     detail.innerHTML =
       '<div class="clause-compare">' +
       '<div class="compare-col addressed-col"><h3><span class="badge cov-addressed">✓ 반영</span> 이 조항에서 반영된 검토항목</h3>' + left + "</div>" +
@@ -561,13 +604,22 @@ function renderClauses() {
     el.addEventListener("click", function () {
       document.querySelectorAll(".clause").forEach(function (x) { x.classList.remove("sel"); });
       el.classList.add("sel");
-      showClause(Number(el.dataset.ci));
+      var ci = el.dataset.ci;
+      showClause(ci === "consider" ? "consider" : Number(ci));
     });
   });
   // 조항 목록의 판정 카운트(의견 n) 갱신 — 판정 변경 후 호출.
   refreshClauseCounts = function () {
     document.querySelectorAll(".clause").forEach(function (el) {
-      var ci = Number(el.dataset.ci);
+      var raw = el.dataset.ci;
+      if (raw === "consider") { // 검토 제안 항목 카운트(필수·의견)
+        var mustN = considerList.filter(function (r) { var c = _cpById(r.cpId); return c && c.severity === "필수"; }).length;
+        var opinN = considerList.filter(function (r) { var v = verdictStore[r.cpId]; return v && v.verdict === "검토의견"; }).length;
+        var cntC = el.querySelector(".cnt");
+        if (cntC) cntC.textContent = (mustN ? "필수 " + mustN : "") + (opinN ? (mustN ? " · " : "") + "의견 " + opinN : "");
+        return;
+      }
+      var ci = Number(raw);
       var g = byClause[ci] || { addressed: [], verify: [] };
       var cntEl = el.querySelector(".cnt");
       if (cntEl) cntEl.textContent = clauseCountText(ci, g);
