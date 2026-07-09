@@ -1,0 +1,317 @@
+meta:
+  type_id: finance
+  type_name: 금융·여신
+  detect_keywords: [대출, 대출약정, 여신, 융자, 담보, 근질권, 질권, 저당, 근저당, 채권양수도, ABL, 리파이낸싱, PF, 이행보증, 보증보험, 대주, 소비대차, 신용공여]
+  modules:
+    - id: M-LOAN
+      name: 여신·대출
+      always_on: true
+      screening_question: 금전 대여(대출·여신)를 내용으로 하는가?
+      suggest_keywords: [대출, 여신, 융자, 대주, 소비대차]
+    - id: M-SEC
+      name: 담보(질권·저당·양도담보)
+      always_on: false
+      screening_question: 채권 담보로 질권·저당·양도담보를 설정하는가?
+      suggest_keywords: [담보, 질권, 근질권, 저당, 근저당, 채권양도, 양도담보]
+    - id: M-GUAR
+      name: 보증·이행보증
+      always_on: false
+      screening_question: 보증(연대보증·이행보증)이 포함되는가?
+      suggest_keywords: [보증, 연대보증, 이행보증, 보증보험]
+    - id: M-ASSET
+      name: 보험업 자산운용 규제
+      always_on: false
+      screening_question: 보험회사가 대주(貸主)로서 자기자산을 운용하는 여신인가?
+      suggest_keywords: [보험회사, 신용공여, 자산운용, 대주주]
+
+checks:
+  # ── M-LOAN 여신·대출 ─────────────────────────────────────────
+  - id: FIN-LOAN-01
+    check: 대출원금(대여금액)과 인도(실행) 방법이 특정되어 있는가
+    module: M-LOAN
+    severity: 참고
+    severity_basis: 소비대차의 성립요건 — 민법 제598조(요물성 아님, 낙성계약이나 원금 특정은 계약 본질)
+    norm_type: 선언
+    basis: statute
+    triggers:
+      keywords: [대출금, 대여금, 대출원금, 실행]
+    absence_check: false
+    sources:
+      - law: 민법
+        article: 제598조
+        clause: ""
+        quote: 금전 기타 대체물의 소유권을 상대방에게 이전할 것을 약정하고 상대방은 그와 같은 종류, 품질 및 수량으로 반환할 것을 약정
+        verified: true
+        source_type: law
+  - id: FIN-LOAN-02
+    check: 이자율과 이자 기산일(인도일 기준)이 명시되어 있는가
+    module: M-LOAN
+    severity: 권장
+    severity_basis: 이자약정은 임의규정 — 민법 제600조(이자있는 소비대차의 기산)
+    norm_type: 임의
+    basis: statute
+    triggers:
+      keywords: [이자, 이자율, 이율]
+    absence_check: true
+    sources:
+      - law: 민법
+        article: 제600조
+        clause: ""
+        quote: 이자있는 소비대차는 차주가 목적물의 인도를 받은 때로부터 이자를 계산하여야 하며
+        verified: true
+        source_type: law
+  - id: FIN-LOAN-03
+    check: 약정이자율이 이자제한법상 최고이자율(연 25% 이내 대통령령)을 초과하지 않는가
+    module: M-LOAN
+    severity: 필수
+    severity_basis: 강행규정 — 이자제한법 제2조(최고이자율 초과분 무효). 단 법인 여신 등 적용제외 확인 필요
+    norm_type: 강행
+    basis: statute
+    triggers:
+      keywords: [이자율, 이율, 연체이자, 지연손해금]
+    absence_check: false
+    sources:
+      - law: 이자제한법
+        article: 제2조
+        clause: 제1항·제3항
+        quote: 최고이자율은 연 25퍼센트를 초과하지 아니하는 범위 안에서 대통령령으로 정한다
+        verified: true
+        source_type: law
+    note: 대차원금 10만원 미만·법인 대상 여신 등 적용범위 확인 필요(이자제한법 제2조 제5항·대부업법 등)
+  - id: FIN-LOAN-04
+    check: 지연손해금(연체이자)의 이율 또는 산정방법이 정해져 있는가
+    module: M-LOAN
+    severity: 권장
+    severity_basis: 금전채무 지연손해는 약정이율 우선 적용 — 민법 제397조(약정 없으면 법정이율)
+    norm_type: 임의
+    basis: statute
+    triggers:
+      keywords: [지연손해금, 연체이자, 지연배상, 연체료]
+    absence_check: true
+    sources:
+      - law: 민법
+        article: 제397조
+        clause: 제1항
+        quote: 금전채무불이행의 손해배상액은 법정이율에 의한다. 그러나 법령의 제한에 위반하지 아니한 약정이율이 있으면 그 이율에 의한다
+        verified: true
+        source_type: law
+
+  # ── M-SEC 담보 ────────────────────────────────────────────────
+  - id: FIN-SEC-01
+    check: 동산질권 설정 시 목적물 점유 이전(질물 인도)이 규정되어 있는가
+    module: M-SEC
+    severity: 필수
+    severity_basis: 강행규정(효력요건) — 민법 제330조(질권설정은 목적물 인도로 효력 발생, 요물성)
+    norm_type: 선언
+    severity_override: true
+    basis: statute
+    triggers:
+      keywords: [동산질권, 질권, 질물, 점유, 인도]
+    absence_check: false
+    sources:
+      - law: 민법
+        article: 제330조
+        clause: ""
+        quote: 질권의 설정은 질권자에게 목적물을 인도함으로써 그 효력이 생긴다
+        verified: true
+        source_type: law
+  - id: FIN-SEC-02
+    check: 지명채권(예금 등) 질권 설정 시 제3채무자 통지·승낙(대항요건)이 규정되어 있는가
+    module: M-SEC
+    severity: 필수
+    severity_basis: 강행규정(대항요건) — 민법 제349조(질권설정 통지·승낙 없으면 제3채무자·제3자 대항 불가)
+    norm_type: 강행
+    basis: statute
+    triggers:
+      keywords: [예금질권, 근질권, 채권질권, 제3채무자, 통지, 승낙]
+    absence_check: true
+    sources:
+      - law: 민법
+        article: 제349조
+        clause: 제1항
+        quote: 제삼채무자에게 질권설정의 사실을 통지하거나 제삼채무자가 이를 승낙함이 아니면 이로써 제삼채무자 기타 제삼자에게 대항하지 못한다
+        verified: true
+        source_type: law
+  - id: FIN-SEC-03
+    check: 저당권(근저당) 설정 시 피담보채권과 채권최고액이 특정되어 있는가
+    module: M-SEC
+    severity: 필수
+    severity_basis: 강행규정 — 민법 제357조(근저당은 채무 최고액 확정 필요)
+    norm_type: 선언
+    severity_override: true
+    basis: statute
+    triggers:
+      keywords: [저당권, 근저당, 채권최고액, 피담보채권]
+    absence_check: true
+    sources:
+      - law: 민법
+        article: 제357조
+        clause: 제1항
+        quote: 저당권은 그 담보할 채무의 최고액만을 정하고 채무의 확정을 장래에 보류하여 이를 설정할 수 있다
+        verified: true
+        source_type: law
+      - law: 민법
+        article: 제356조
+        clause: ""
+        quote: 채무의 담보로 제공한 부동산에 대하여 다른 채권자보다 자기채권의 우선변제를 받을 권리
+        verified: true
+        source_type: law
+  - id: FIN-SEC-04
+    check: 저당권 피담보채권 범위(원본·이자·지연배상 1년분 한정)가 반영되어 있는가
+    module: M-SEC
+    severity: 참고
+    severity_basis: 강행규정이나 계약 임의조정 여지 낮음 — 민법 제360조(지연배상은 1년분 한정)
+    norm_type: 강행
+    severity_override: true
+    basis: statute
+    triggers:
+      keywords: [피담보채권, 지연배상, 실행비용]
+    absence_check: false
+    sources:
+      - law: 민법
+        article: 제360조
+        clause: ""
+        quote: 그러나 지연배상에 대하여는 원본의 이행기일을 경과한 후의 1년분에 한하여 저당권을 행사할 수 있다
+        verified: true
+        source_type: law
+  - id: FIN-SEC-05
+    check: 채권양도담보 설정 시 채무자 통지·승낙(확정일자)으로 대항요건을 갖추는가
+    module: M-SEC
+    severity: 필수
+    severity_basis: 강행규정(대항요건) — 민법 제450조(채권양도 통지·승낙, 제3자 대항은 확정일자 요)
+    norm_type: 강행
+    basis: statute
+    triggers:
+      keywords: [채권양도, 양도담보, 채권양수도, 확정일자]
+    absence_check: true
+    sources:
+      - law: 민법
+        article: 제450조
+        clause: ""
+        quote: 전항의 통지나 승낙은 확정일자있는 증서에 의하지 아니하면 채무자 이외의 제삼자에게 대항하지 못한다
+        verified: true
+        source_type: law
+
+  # ── M-GUAR 보증 ──────────────────────────────────────────────
+  - id: FIN-GUAR-01
+    check: 보증(연대보증)이 보증인의 기명날인·서명 있는 서면으로 표시되어 있는가
+    module: M-GUAR
+    severity: 필수
+    severity_basis: 강행규정(효력요건) — 민법 제428조의2(서면 아닌 보증은 무효, 전자적 형태 무효)
+    norm_type: 강행
+    basis: statute
+    triggers:
+      keywords: [보증, 연대보증, 보증인, 보증서]
+    absence_check: true
+    sources:
+      - law: 민법
+        article: 제428조의2
+        clause: 제1항
+        quote: 보증은 그 의사가 보증인의 기명날인 또는 서명이 있는 서면으로 표시되어야 효력이 발생한다
+        verified: true
+        source_type: law
+  - id: FIN-GUAR-02
+    check: 연대보증인 경우 최고·검색의 항변권 배제가 명확히 규정되어 있는가
+    module: M-GUAR
+    severity: 권장
+    severity_basis: 임의규정 — 민법 제437조(연대보증은 최고·검색 항변 배제, 단서). 계약상 연대 여부 명확화 필요
+    norm_type: 임의
+    basis: statute
+    triggers:
+      keywords: [연대보증, 최고, 검색, 항변]
+    absence_check: false
+    sources:
+      - law: 민법
+        article: 제437조
+        clause: ""
+        quote: 보증인이 주채무자와 연대하여 채무를 부담한 때에는 그러하지 아니하다
+        verified: true
+        source_type: law
+  - id: FIN-GUAR-03
+    check: 보증인의 구상권(수탁보증인·공동보증인) 관련 사항이 정리되어 있는가
+    module: M-GUAR
+    severity: 참고
+    severity_basis: 임의규정 — 민법 제441조(수탁보증인 구상권). 채권자 관점에선 확인 정도
+    norm_type: 임의
+    severity_override: true
+    basis: statute
+    triggers:
+      keywords: [구상권, 구상, 수탁보증]
+    absence_check: false
+    sources:
+      - law: 민법
+        article: 제441조
+        clause: 제1항
+        quote: 보증인이 된 자가 과실없이 변제 기타의 출재로 주채무를 소멸하게 한 때에는 주채무자에 대하여 구상권이 있다
+        verified: true
+        source_type: law
+
+  # ── M-ASSET 보험업 자산운용 규제 ──────────────────────────────
+  - id: FIN-ASSET-01
+    check: 여신(신용공여)이 보험업법 자산운용 원칙(안정성·유동성·수익성·공익성)에 부합하는가
+    module: M-ASSET
+    severity: 필수
+    severity_basis: 강행규정 — 보험업법 제104조(자산운용 원칙·선관주의)
+    norm_type: 강행
+    basis: statute
+    triggers:
+      keywords: [자산운용, 신용공여, 선량한 관리자]
+    absence_check: false
+    sources:
+      - law: 보험업법
+        article: 제104조
+        clause: ""
+        quote: 보험회사는 그 자산을 운용할 때 안정성ㆍ유동성ㆍ수익성 및 공익성이 확보되도록 하여야 한다
+        verified: true
+        source_type: law
+  - id: FIN-ASSET-02
+    check: 금지되는 자산운용(투기목적 대출·자기주식 취득 목적 대출·임직원 대출 등)에 해당하지 않는가
+    module: M-ASSET
+    severity: 필수
+    severity_basis: 강행규정(금지) — 보험업법 제105조(금지되는 자산운용)
+    norm_type: 강행
+    basis: statute
+    triggers:
+      keywords: [투기, 자기주식, 임직원 대출, 정치자금]
+    absence_check: false
+    sources:
+      - law: 보험업법
+        article: 제105조
+        clause: ""
+        quote: 상품이나 유가증권에 대한 투기를 목적으로 하는 자금의 대출
+        verified: true
+        source_type: law
+  - id: FIN-ASSET-03
+    check: 대주주·동일차주 신용공여가 자산운용 한도(보험업법 제106조)를 초과하지 않는가
+    module: M-ASSET
+    severity: 필수
+    severity_basis: 강행규정(한도) — 보험업법 제106조(신용공여 비율 한도)
+    norm_type: 강행
+    basis: statute
+    triggers:
+      keywords: [신용공여, 동일차주, 한도, 대주주]
+    absence_check: false
+    sources:
+      - law: 보험업법
+        article: 제106조
+        clause: 제1항
+        quote: "동일차주에 대한 신용공여 또는 그 동일차주가 발행한 채권 및 주식 소유의 합계액 가. 일반계정: 총자산의 100분의 12"
+        verified: true
+        source_type: law
+  - id: FIN-ASSET-04
+    check: 대주주에 대한 신용공여 시 이사회 의결·공시 등 절차를 준수하는가
+    module: M-ASSET
+    severity: 필수
+    severity_basis: 강행규정 — 보험업법 제111조(대주주 거래제한, 이사회 의결·보고·공시)
+    norm_type: 강행
+    basis: statute
+    triggers:
+      keywords: [대주주, 신용공여, 이사회, 공시]
+    absence_check: false
+    sources:
+      - law: 보험업법
+        article: 제111조
+        clause: 제2항
+        quote: 대통령령으로 정하는 금액 이상의 신용공여를 하거나 그 보험회사의 대주주가 발행한 채권 또는 주식을 대통령령으로 정하는 금액 이상으로 취득하려는 경우에는 미리 이사회의 의결을 거쳐야 한다
+        verified: true
+        source_type: law
