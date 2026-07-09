@@ -10,7 +10,7 @@ from validate import load_knowledge
 
 ROOT = Path(__file__).parent.parent
 SRC = ROOT / "src"
-JS_ORDER = ["sim.js", "clause_role.js", "matcher_config.js", "segmenter.js", "matcher.js", "docx.js", "verify.js", "app.js"]
+JS_ORDER = ["sim.js", "clause_role.js", "matcher_config.js", "segmenter.js", "matcher.js", "docx.js", "verify.js", "verdict.js", "app.js"]
 
 
 def build(knowledge_dir, out_path, law_dbs=None, news_db=None):

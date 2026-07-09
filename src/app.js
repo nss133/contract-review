@@ -374,7 +374,9 @@ document.getElementById("btn-run").addEventListener("click", function () {
     { checkpoints: doc ? doc.checks : [] },
   ];
   state.result = analyze(state.clauses, docs, state.activeModules);
+  loadVerdicts();
   renderClauses();
+  bindVerdictIO();
   renderChecklist();
   renderReport();
   document.getElementById("analyze-result").hidden = false;
@@ -383,6 +385,92 @@ document.getElementById("btn-run").addEventListener("click", function () {
   document.getElementById("input-panel").open = false;
   document.querySelector('.tab[data-tab="checklist"]').click();
 });
+
+/* ---------- 조항별 검토의견(verdict) — 계약서 건별 판정 축 ----------
+   '검수'(verified: 지식 정확성)와 별개. 이 계약서의 이 항목이 이상없음/검토의견/해당없음.
+   저장키 cr-verdict-<계약서해시>. */
+var verdictStore = {};
+var verdictHash = "";
+function loadVerdicts() {
+  verdictHash = hashText(state.text || "");
+  try { verdictStore = JSON.parse(localStorage.getItem(Verdict.verdictKey(verdictHash)) || "{}"); }
+  catch (e) { verdictStore = {}; }
+}
+function saveVerdicts() {
+  localStorage.setItem(Verdict.verdictKey(verdictHash), JSON.stringify(verdictStore));
+}
+function applyVerdict(cpId, verdict, comment) {
+  verdictStore = Verdict.setVerdict(verdictStore, cpId, verdict, comment, verdictToday());
+  saveVerdicts();
+}
+function verdictToday() {
+  var d = new Date();
+  return d.getFullYear() + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + "-" + ("0" + d.getDate()).slice(-2);
+}
+var VERDICT_CLS = { "이상없음": "vd-ok", "검토의견": "vd-comment", "해당없음": "vd-na" };
+// cpId에 대한 판정 버튼 + 코멘트 입력 HTML. 현재 판정 활성 표시.
+function verdictControlHtml(cpId) {
+  var cur = verdictStore[cpId] || {};
+  var btns = Verdict.VERDICTS.map(function (v) {
+    var on = cur.verdict === v ? " active " + VERDICT_CLS[v] : "";
+    return '<button class="vd-btn' + on + '" data-vcp="' + esc(cpId) + '" data-vd="' + esc(v) + '">' + esc(v) + "</button>";
+  }).join("");
+  var showComment = cur.verdict === "검토의견";
+  var comment = '<input class="vd-note' + (showComment ? " show" : "") + '" data-vcp="' + esc(cpId) +
+    '" placeholder="검토의견 메모" value="' + esc(cur.comment || "") + '">';
+  return '<div class="verdict-ctl">' + btns + comment + "</div>";
+}
+// 조항별 보기·리포트 공용 — 판정 버튼 클릭·코멘트 저장 바인딩. reRender: 저장 후 호출.
+function bindVerdictControls(root, reRender) {
+  root.querySelectorAll(".vd-btn").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var cp = btn.getAttribute("data-vcp"), v = btn.getAttribute("data-vd");
+      var cur = verdictStore[cp] || {};
+      // 같은 판정 다시 누르면 취소(토글)
+      var next = cur.verdict === v ? "" : v;
+      applyVerdict(cp, next, cur.comment || "");
+      if (reRender) reRender();
+    });
+  });
+  root.querySelectorAll(".vd-note").forEach(function (inp) {
+    inp.addEventListener("change", function () {
+      var cp = inp.getAttribute("data-vcp");
+      var cur = verdictStore[cp] || {};
+      // 코멘트만 입력하면 검토의견으로 자동 설정
+      var v = cur.verdict || "검토의견";
+      applyVerdict(cp, v, inp.value);
+      if (reRender) reRender();
+    });
+  });
+}
+
+// 검토의견 내보내기/불러오기 (계약서 건별 JSON)
+function exportVerdicts() {
+  var meta = { type_id: state.typeId, date: verdictToday(), contract_hash: verdictHash };
+  var blob = new Blob([JSON.stringify(Verdict.exportVerdicts(verdictStore, meta), null, 2)], { type: "application/json" });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement("a");
+  a.href = url; a.download = "contract-review-verdicts.json";
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+function bindVerdictIO() {
+  var exp = document.getElementById("verdict-export");
+  if (exp) exp.addEventListener("click", exportVerdicts);
+  var imp = document.getElementById("verdict-import");
+  if (imp) imp.addEventListener("change", function (e) {
+    var f = e.target.files[0];
+    if (!f) return;
+    f.text().then(function (t) {
+      var obj = JSON.parse(t);
+      verdictStore = Verdict.importVerdicts(obj);
+      saveVerdicts();
+      renderClauses();
+      renderReport();
+    }).catch(function () { /* 파싱 실패 무시 */ });
+    e.target.value = "";
+  });
+}
 
 /* ---------- 조항별 보기 (보조 탭) — 좌우대비 ---------- */
 // 조항 하나에 대해: 좌 "반영된 검토항목"(그 조항이 best인 addressed) / 우 "추가 확인 제안"(verify).
@@ -404,6 +492,7 @@ function renderCompareItem(r) {
     (reasons.length ? '<p class="ci-reason">' + esc(reasons.join("; ")) + "</p>" : "") +
     (cp.severity_basis ? '<p class="ci-basis">' + esc(cp.severity_basis) + "</p>" : "") +
     '<p class="ci-src">' + evidenceCell(cp) + "</p>" +
+    verdictControlHtml(cp.id) +
     "</div>";
 }
 function renderClauses() {
@@ -418,30 +507,55 @@ function renderClauses() {
   });
   document.getElementById("clause-list").innerHTML = state.clauses.map(function (c) {
     var g = byClause[c.index] || { addressed: [], verify: [] };
-    var parts = [];
-    if (g.addressed.length) parts.push("반영 " + g.addressed.length);
-    if (g.verify.length) parts.push("확인 " + g.verify.length);
     return '<div class="clause" data-ci="' + c.index + '"><strong>' + esc(c.heading) +
-      '</strong><span class="cnt">' + esc(parts.join(" · ")) + "</span><pre>" +
+      '</strong><span class="cnt">' + esc(clauseCountText(c.index, g)) + "</span><pre>" +
       esc(c.body) + "</pre></div>";
   }).join("");
+  function showClause(ci) {
+    var g = byClause[ci] || { addressed: [], verify: [] };
+    var left = g.addressed.map(renderCompareItem).join("") ||
+      '<p class="compare-empty">이 조항에서 반영으로 짚인 항목 없음</p>';
+    var right = g.verify.map(renderCompareItem).join("") ||
+      '<p class="compare-empty">추가 확인 제안 없음</p>';
+    var detail = document.getElementById("mapping-detail");
+    detail.innerHTML =
+      '<div class="clause-compare">' +
+      '<div class="compare-col addressed-col"><h3><span class="badge cov-addressed">✓ 반영</span> 이 조항에서 반영된 검토항목</h3>' + left + "</div>" +
+      '<div class="compare-col verify-col"><h3><span class="badge cov-verify">◑ 확인 권장</span> 추가 확인 제안</h3>' + right + "</div>" +
+      "</div>";
+    // 판정 변경 시 이 조항만 다시 그림(활성 상태·코멘트 표시 갱신) + 조항 목록 카운트 갱신.
+    bindVerdictControls(detail, function () { showClause(ci); refreshClauseCounts(); renderReport(); });
+  }
   document.querySelectorAll(".clause").forEach(function (el) {
     el.addEventListener("click", function () {
       document.querySelectorAll(".clause").forEach(function (x) { x.classList.remove("sel"); });
       el.classList.add("sel");
-      var ci = Number(el.dataset.ci);
-      var g = byClause[ci] || { addressed: [], verify: [] };
-      var left = g.addressed.map(renderCompareItem).join("") ||
-        '<p class="compare-empty">이 조항에서 반영으로 짚인 항목 없음</p>';
-      var right = g.verify.map(renderCompareItem).join("") ||
-        '<p class="compare-empty">추가 확인 제안 없음</p>';
-      document.getElementById("mapping-detail").innerHTML =
-        '<div class="clause-compare">' +
-        '<div class="compare-col addressed-col"><h3><span class="badge cov-addressed">✓ 반영</span> 이 조항에서 반영된 검토항목</h3>' + left + "</div>" +
-        '<div class="compare-col verify-col"><h3><span class="badge cov-verify">◑ 확인 권장</span> 추가 확인 제안</h3>' + right + "</div>" +
-        "</div>";
+      showClause(Number(el.dataset.ci));
     });
   });
+  // 조항 목록의 판정 카운트(의견 n) 갱신 — 판정 변경 후 호출.
+  refreshClauseCounts = function () {
+    document.querySelectorAll(".clause").forEach(function (el) {
+      var ci = Number(el.dataset.ci);
+      var g = byClause[ci] || { addressed: [], verify: [] };
+      var cntEl = el.querySelector(".cnt");
+      if (cntEl) cntEl.textContent = clauseCountText(ci, g);
+    });
+  };
+}
+var refreshClauseCounts = function () {};
+// 조항의 반영·확인 건수 + 검토의견 건수 텍스트.
+function clauseCountText(ci, g) {
+  var parts = [];
+  if (g.addressed.length) parts.push("반영 " + g.addressed.length);
+  if (g.verify.length) parts.push("확인 " + g.verify.length);
+  var opinions = 0;
+  g.addressed.concat(g.verify).forEach(function (r) {
+    var v = verdictStore[r.cpId];
+    if (v && v.verdict === "검토의견") opinions++;
+  });
+  if (opinions) parts.push("의견 " + opinions);
+  return parts.join(" · ");
 }
 
 /* ---------- 종합 리포트 (긍정-먼저 검토 워크시트) ----------
@@ -467,6 +581,12 @@ function _signoff(cp, saved) {
   return '<label class="signoff"><input type="checkbox" data-cp="' + esc(cp.id) + '"' + ck +
     "> 검토 완료 표시</label>";
 }
+// 리포트에서 각 항목의 검토의견 배지(있으면).
+function _verdictBadge(cpId) {
+  var v = verdictStore[cpId];
+  if (!v || !v.verdict) return "";
+  return ' <span class="vd-badge ' + VERDICT_CLS[v.verdict] + '">' + esc(v.verdict) + "</span>";
+}
 function _reportTile(cov, n, label, sub) {
   return '<div class="tile tile-' + cov + '"><span class="tile-n">' + n + "</span>" +
     '<span class="tile-label">' + esc(label) + "</span>" +
@@ -478,7 +598,7 @@ function _considerItem(it, saved) {
   return '<div class="report-item consider-item">' +
     '<div class="ri-head"><span class="sev sev-' + cp.severity + '" title="' +
     esc(cp.severity_basis || "") + '">' + esc(cp.severity) + "</span>" +
-    '<span class="ri-q">' + esc(cp.check) + "</span></div>" +
+    '<span class="ri-q">' + esc(cp.check) + "</span>" + _verdictBadge(cp.id) + "</div>" +
     (cp.severity_basis ? '<p class="ri-why">왜 봐야 하는지: ' + esc(cp.severity_basis) + "</p>" : "") +
     '<p class="ri-src">근거 ' + evidenceCell(cp) + "</p>" +
     _signoff(cp, saved) + "</div>";
@@ -491,7 +611,7 @@ function _verifyItem(it, saved) {
   return '<div class="report-item verify-item">' +
     '<div class="ri-head"><span class="sev sev-' + cp.severity + '" title="' +
     esc(cp.severity_basis || "") + '">' + esc(cp.severity) + "</span>" +
-    '<span class="ri-q">' + esc(cp.check) + "</span></div>" +
+    '<span class="ri-q">' + esc(cp.check) + "</span>" + _verdictBadge(cp.id) + "</div>" +
     (loc ? '<p class="ri-loc">관련 조항: ' + esc(loc) + "</p>" : "") +
     (reasons.length ? '<p class="ri-reason">' + esc(reasons.join("; ")) + "</p>" : "") +
     _signoff(cp, saved) + "</div>";
@@ -503,7 +623,7 @@ function _addressedItem(it) {
   var reasons = (res.best && res.best.reasons) || [];
   return '<div class="report-item addressed-item">' +
     '<div class="ri-head"><span class="badge cov-addressed">✓ 반영</span>' +
-    '<span class="ri-q">' + esc(cp.check) + "</span></div>" +
+    '<span class="ri-q">' + esc(cp.check) + "</span>" + _verdictBadge(cp.id) + "</div>" +
     (loc ? '<p class="ri-loc">' + esc(loc) + "에서 반영</p>" : "") +
     (reasons.length ? '<p class="ri-reason">' + esc(reasons.join("; ")) + "</p>" : "") +
     "</div>";
@@ -556,6 +676,33 @@ function renderReport() {
     _reportTile("verify", verify.length, "확인 권장", "관련 조항 있음 · 문구 확인") +
     _reportTile("consider", consider.length, "검토 제안", "필요한 계약인지 검토") +
     "</div>";
+
+  // 1-b) 검토의견 요약 + 개진 항목(코멘트 있는 것) — 결론성 정보
+  var vsum = Verdict.verdictSummary(verdictStore);
+  if (vsum.total) {
+    h += '<div class="report-verdict-summary">검토의견: ' +
+      '<span class="vd-badge vd-ok">이상없음 ' + vsum["이상없음"] + "</span>" +
+      '<span class="vd-badge vd-comment">검토의견 ' + vsum["검토의견"] + "</span>" +
+      '<span class="vd-badge vd-na">해당없음 ' + vsum["해당없음"] + "</span></div>";
+  }
+  var opinions = [];
+  r.results.forEach(function (res) {
+    var v = verdictStore[res.cpId];
+    if (v && v.verdict === "검토의견") {
+      var cp = _cpById(res.cpId);
+      if (cp) opinions.push({ cp: cp, comment: v.comment, loc: res.best ? _clauseHeading(res.best.clauseIndex) : "" });
+    }
+  });
+  if (opinions.length) {
+    h += '<section class="report-sec-block"><h3>검토의견 개진 항목 (' + opinions.length + ")</h3>";
+    h += opinions.map(function (o) {
+      return '<div class="opinion-item"><div class="ri-head"><span class="sev sev-' + o.cp.severity + '">' +
+        esc(o.cp.severity) + '</span><span class="ri-q">' + esc(o.cp.check) + "</span></div>" +
+        (o.loc ? '<p class="ri-loc">관련 조항: ' + esc(o.loc) + "</p>" : "") +
+        (o.comment ? '<p class="oi-comment">의견: ' + esc(o.comment) + "</p>" : "") + "</div>";
+    }).join("");
+    h += "</section>";
+  }
 
   // 2) 검토 제안 — 심각도순 · 접힘(필수 표면, 권장 접힘)
   h += '<section class="report-sec-block">';

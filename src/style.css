@@ -196,3 +196,25 @@ td.empty { text-align: center; color: #889; padding: 24px; }
 .dec-note { flex: 1; min-width: 160px; padding: 5px 8px; border: 1px solid #ccd; border-radius: 6px; font-size: 13px; }
 .src-decided.verified { margin-top: 8px; color: #1f9d55; font-weight: 600; font-size: 13px; }
 @media (max-width: 720px) { .compare { grid-template-columns: 1fr; } }
+
+/* ---------- 조항별 검토의견(verdict) ---------- */
+.verdict-ctl { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin-top: 8px; }
+.vd-btn { border: 1px solid #ccd; background: #fff; border-radius: 6px; padding: 4px 10px; cursor: pointer; font-size: 12px; }
+.vd-btn:hover { background: #f3f5f9; }
+.vd-btn.active.vd-ok { background: #1f9d55; color: #fff; border-color: #1f9d55; }
+.vd-btn.active.vd-comment { background: #d98a1f; color: #fff; border-color: #d98a1f; }
+.vd-btn.active.vd-na { background: #8a94a6; color: #fff; border-color: #8a94a6; }
+.vd-note { display: none; flex: 1; min-width: 140px; padding: 4px 8px; border: 1px solid #ccd; border-radius: 6px; font-size: 12px; }
+.vd-note.show { display: inline-block; }
+/* 리포트 판정 배지 */
+.vd-badge { display: inline-block; font-size: 11px; padding: 1px 7px; border-radius: 10px; font-weight: 600; }
+.vd-badge.vd-ok { background: #e3f5ea; color: #1f7a44; }
+.vd-badge.vd-comment { background: #fdf0dc; color: #a8660f; }
+.vd-badge.vd-na { background: #eef0f3; color: #667; }
+.report-verdict-summary { display: flex; gap: 10px; margin: 8px 0; font-size: 13px; }
+.opinion-item { border-left: 3px solid #d98a1f; padding: 6px 10px; margin: 6px 0; background: #fffaf2; }
+.opinion-item .oi-comment { font-size: 13px; color: #7a4d0a; margin: 3px 0 0; }
+.verdict-bar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 10px; padding: 8px 0; border-bottom: 1px solid #eef0f5; }
+.verdict-bar-label { font-size: 12px; color: #667; margin-right: auto; }
+.ghost { border: 1px solid #ccd; background: #fff; border-radius: 6px; padding: 5px 10px; cursor: pointer; font-size: 12px; }
+.ghost:hover { background: #f3f5f9; }

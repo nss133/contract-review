@@ -65,9 +65,16 @@
   <!-- 조항별 보기 (보조 탭) -->
   <section id="pane-clauses" class="pane">
     <p id="clauses-empty" class="empty-note">먼저 체크리스트 탭에서 계약서를 분석하세요.</p>
-    <div id="analyze-result" class="split" hidden>
-      <div id="clause-list" class="col"></div>
-      <div id="mapping-detail" class="col"></div>
+    <div id="analyze-result" hidden>
+      <div class="verdict-bar">
+        <span class="verdict-bar-label">조항을 눌러 검토항목에 이상없음/검토의견/해당없음을 표시</span>
+        <button id="verdict-export" class="ghost">검토의견 내보내기</button>
+        <label class="filebtn ghost">불러오기<input id="verdict-import" type="file" accept=".json" hidden></label>
+      </div>
+      <div class="split">
+        <div id="clause-list" class="col"></div>
+        <div id="mapping-detail" class="col"></div>
+      </div>
     </div>
   </section>
 
