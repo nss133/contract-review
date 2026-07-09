@@ -1,0 +1,173 @@
+meta:
+  type_id: investment
+  type_name: 투자
+  detect_keywords: [투자, 펀드, 사모펀드, 집합투자, 수익증권, 출자, 조합, 투자신탁, 투자일임, 신탁계약, capital call, 캐피탈콜, 변액펀드, 블라인드, PEF, 메자닌, 리츠]
+  modules:
+    - id: M-FUND
+      name: 집합투자·펀드
+      always_on: true
+      screening_question: 펀드(집합투자기구)에 대한 투자·출자를 내용으로 하는가?
+      suggest_keywords: [펀드, 집합투자, 수익증권, 사모, 투자신탁]
+    - id: M-MANDATE
+      name: 투자일임·자산운용위탁
+      always_on: false
+      screening_question: 자산운용사에 투자일임(운용 위탁)을 맡기는가?
+      suggest_keywords: [투자일임, 일임, 운용 위탁, 변액펀드]
+    - id: M-PARTNER
+      name: 출자·조합(LP/GP)
+      always_on: false
+      screening_question: 조합(합자조합 등)에 유한책임사원(LP)으로 출자하는가?
+      suggest_keywords: [출자, 조합, LP, 업무집행조합원, capital call, 캐피탈콜]
+    - id: M-SPECIAL
+      name: 보험 특별계정(변액)
+      always_on: false
+      screening_question: 변액보험·퇴직연금 등 특별계정 자산의 운용 투자인가?
+      suggest_keywords: [변액, 특별계정, 퇴직연금]
+
+checks:
+  # ── M-FUND 집합투자·펀드 ─────────────────────────────────────
+  - id: INV-FUND-01
+    check: 투자 대상 집합투자기구(펀드)의 형태·집합투자규약(신탁계약·정관·조합계약)이 특정되어 있는가
+    module: M-FUND
+    severity: 참고
+    severity_basis: 선언규정 — 자본시장법 제9조 제18항·제22항(집합투자기구 형태·집합투자규약 정의)
+    norm_type: 선언
+    basis: statute
+    triggers:
+      keywords: [집합투자기구, 펀드, 투자신탁, 집합투자규약, 신탁계약]
+    absence_check: false
+    sources:
+      - law: 자본시장과 금융투자업에 관한 법률
+        article: 제9조
+        clause: 제18항
+        quote: 집합투자를 수행하기 위한 기구로서 다음 각 호의 것을 말한다
+        verified: true
+        source_type: law
+  - id: INV-FUND-02
+    check: 사모집합투자기구인 경우 사모 요건(투자자 총수 제한 등)에 부합하는가
+    module: M-FUND
+    severity: 권장
+    severity_basis: 선언규정이나 위반 시 규제 — 자본시장법 제9조 제19항(사모집합투자기구 투자자 100인 이하)
+    norm_type: 선언
+    severity_override: true
+    basis: statute
+    triggers:
+      keywords: [사모, 사모펀드, 사모집합투자]
+    absence_check: false
+    sources:
+      - law: 자본시장과 금융투자업에 관한 법률
+        article: 제9조
+        clause: 제19항
+        quote: 집합투자증권을 사모로만 발행하는 집합투자기구
+        verified: true
+        source_type: law
+  - id: INV-FUND-03
+    check: 운용사(집합투자업자·사모운용사)가 적법하게 등록·인가된 자인가
+    module: M-FUND
+    severity: 필수
+    severity_basis: 강행규정(금지) — 자본시장법 제249조(미등록 사모집합투자업 영위 금지)
+    norm_type: 강행
+    basis: statute
+    triggers:
+      keywords: [운용사, 집합투자업자, 사모운용, 등록, 인가]
+    absence_check: false
+    sources:
+      - law: 자본시장과 금융투자업에 관한 법률
+        article: 제249조
+        clause: ""
+        quote: 일반 사모집합투자업 등록을 하지 아니하고는 일반 사모집합투자업을 영위해서는 아니 된다
+        verified: true
+        source_type: law
+
+  # ── M-MANDATE 투자일임 ───────────────────────────────────────
+  - id: INV-MAN-01
+    check: 투자일임업자가 선량한 관리자의 주의로 일임재산을 운용하도록(선관·충실의무) 규정되어 있는가
+    module: M-MANDATE
+    severity: 필수
+    severity_basis: 강행규정(의무) — 자본시장법 제96조(투자일임업자 선관·충실의무)
+    norm_type: 강행
+    basis: statute
+    triggers:
+      keywords: [투자일임, 선관, 충실의무, 운용]
+    absence_check: true
+    sources:
+      - law: 자본시장과 금융투자업에 관한 법률
+        article: 제96조
+        clause: 제1항
+        quote: 투자일임업자는 투자자에 대하여 선량한 관리자의 주의로써 투자일임재산을 운용하여야 한다
+        verified: true
+        source_type: law
+  - id: INV-MAN-02
+    check: 이해상충(고유재산 거래·자기이익 도모 등) 불건전 영업행위 금지가 반영되어 있는가
+    module: M-MANDATE
+    severity: 필수
+    severity_basis: 강행규정(금지) — 자본시장법 제98조(투자일임 불건전 영업행위 금지)
+    norm_type: 강행
+    basis: statute
+    triggers:
+      keywords: [이해상충, 고유재산, 불건전, 자기거래]
+    absence_check: false
+    sources:
+      - law: 자본시장과 금융투자업에 관한 법률
+        article: 제98조
+        clause: 제2항 제6호
+        quote: 투자일임재산으로 투자일임업자 또는 그 이해관계인의 고유재산과 거래하는 행위
+        verified: true
+        source_type: law
+      - law: 자본시장과 금융투자업에 관한 법률
+        article: 제98조
+        clause: 제2항 제4호
+        quote: 특정 투자자의 이익을 해하면서 자기 또는 제삼자의 이익을 도모하는 행위
+        verified: true
+        source_type: law
+
+  # ── M-PARTNER 출자·조합 ──────────────────────────────────────
+  - id: INV-PART-01
+    check: 조합(합자조합) 출자 시 유한책임사원(LP)의 책임이 출자가액 한도로 제한되는가
+    module: M-PARTNER
+    severity: 필수
+    severity_basis: 선언규정(책임 한정) — 상법 제86조의2(유한책임조합원은 출자가액 한도 책임)
+    norm_type: 선언
+    severity_override: true
+    basis: statute
+    triggers:
+      keywords: [합자조합, 유한책임, 출자가액, LP, 조합원]
+    absence_check: false
+    sources:
+      - law: 상법
+        article: 제86조의2
+        clause: ""
+        quote: 출자가액을 한도로 하여 유한책임을 지는 조합원이 상호출자하여 공동사업을 경영할 것을 약정
+        verified: true
+        source_type: law
+  - id: INV-PART-02
+    check: 추가출자(Capital Call) 요구의 요건·한도·불이행 효과가 명확한가
+    module: M-PARTNER
+    severity: 권장
+    severity_basis: 실무 항목이나 출자자 리스크 큼 — 법령 근거 없음, 디폴트 조항 미비 시 손실 직결
+    norm_type: 실무
+    severity_override: true
+    basis: practice
+    triggers:
+      keywords: [capital call, 캐피탈콜, 추가출자, 출자요청, 디폴트]
+    absence_check: false
+    sources: []
+
+  # ── M-SPECIAL 보험 특별계정 ──────────────────────────────────
+  - id: INV-SP-01
+    check: 변액보험 등 특별계정 자산의 투자인 경우 특별계정 구분·구분회계가 전제되어 있는가
+    module: M-SPECIAL
+    severity: 필수
+    severity_basis: 강행규정 — 보험업법 제108조(특별계정 자산 구분 회계처리)
+    norm_type: 강행
+    basis: statute
+    triggers:
+      keywords: [특별계정, 변액, 구분 회계, 준비금]
+    absence_check: false
+    sources:
+      - law: 보험업법
+        article: 제108조
+        clause: 제2항
+        quote: 특별계정에 속하는 자산은 다른 특별계정에 속하는 자산 및 그 밖의 자산과 구분하여 회계처리하여야 한다
+        verified: true
+        source_type: law
