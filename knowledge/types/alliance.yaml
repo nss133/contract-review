@@ -1,0 +1,195 @@
+meta:
+  type_id: alliance
+  type_name: 제휴·업무협약
+  detect_keywords: [제휴, 업무협약, 협약서, MOU, 양해각서, 공동개발, 공동사업, 공동마케팅, 상품제공, 위탁판매, 멤버십, 파트너십, 재보험, 출재]
+  modules:
+    - id: M-CORE
+      name: 제휴 공통
+      always_on: true
+      screening_question: 둘 이상의 사업자 간 제휴·협력을 내용으로 하는가?
+      suggest_keywords: [제휴, 협약, 공동]
+    - id: M-PII
+      name: 개인정보 제공·공동이용
+      always_on: false
+      screening_question: 제휴 과정에서 고객(개인)정보를 상대방에 제공·공유하는가?
+      suggest_keywords: [개인정보, 고객정보, 정보제공, 마케팅, 고객]
+    - id: M-COMP
+      name: 공정거래(경쟁제한·거래상지위)
+      always_on: false
+      screening_question: 경쟁사업자 간 협력이거나 거래조건을 공동으로 정하는가?
+      suggest_keywords: [공동, 경쟁, 가격, 거래조건, 거래상]
+    - id: M-INSMOD
+      name: 보험모집·상품제공
+      always_on: false
+      screening_question: 보험 모집·판매 또는 금융상품 제공 제휴인가?
+      suggest_keywords: [모집, 위탁판매, 상품제공, 퇴직연금, 방카]
+    - id: M-REINS
+      name: 재보험
+      always_on: false
+      screening_question: 재보험 출재·수재 또는 공동재보험 협약인가?
+      suggest_keywords: [재보험, 출재, 수재, 특약]
+
+checks:
+  # ── M-CORE 제휴 공통 ─────────────────────────────────────────
+  - id: ALL-CORE-01
+    check: 제휴 당사자의 역할·분담과 협력 범위가 구체적으로 특정되어 있는가
+    module: M-CORE
+    severity: 참고
+    severity_basis: 실무 항목 — 법령상 강제 아님, 제휴 실효성·분쟁예방 차원
+    norm_type: 실무
+    basis: practice
+    triggers:
+      keywords: [역할, 분담, 협력 범위, 상호]
+    absence_check: false
+    sources: []
+  - id: ALL-CORE-02
+    check: 협약(MOU)의 법적 구속력 유무(구속력 있는 조항과 없는 조항)가 명확한가
+    module: M-CORE
+    severity: 참고
+    severity_basis: 실무 항목 — MOU는 구속력 배제 특약 가능, 의사 명확화가 분쟁예방 핵심
+    norm_type: 실무
+    basis: practice
+    triggers:
+      keywords: [구속력, MOU, 양해각서, 법적 효력]
+    absence_check: false
+    sources: []
+
+  # ── M-PII 개인정보 제공·공동이용 ─────────────────────────────
+  - id: ALL-PII-01
+    check: 고객 개인정보를 제휴사에 제공하는 경우 정보주체 동의 근거가 확보되는가
+    module: M-PII
+    severity: 필수
+    severity_basis: 강행규정 — 개인정보 보호법 제17조 제1항(제3자 제공은 동의 등 법적근거 필요)
+    norm_type: 강행
+    basis: statute
+    triggers:
+      keywords: [개인정보, 제3자 제공, 정보제공, 동의]
+    absence_check: true
+    sources:
+      - law: 개인정보 보호법
+        article: 제17조
+        clause: 제1항
+        quote: 정보주체의 개인정보를 제3자에게 제공(공유를 포함한다. 이하 같다)할 수 있다
+        verified: true
+        source_type: law
+  - id: ALL-PII-02
+    check: 개인정보 제공 동의 시 정보주체에게 법정 고지사항(제공받는 자·이용목적·항목·보유기간 등)을 알리도록 하는가
+    module: M-PII
+    severity: 필수
+    severity_basis: 강행규정 — 개인정보 보호법 제17조 제2항(동의 시 각 호 사항 고지 의무)
+    norm_type: 강행
+    basis: statute
+    triggers:
+      keywords: [이용목적, 제공 항목, 보유기간, 고지]
+    absence_check: true
+    sources:
+      - law: 개인정보 보호법
+        article: 제17조
+        clause: 제2항
+        quote: 다음 각 호의 사항을 정보주체에게 알려야 한다
+        verified: true
+        source_type: law
+  - id: ALL-PII-03
+    check: 제공한 개인정보를 당초 목적 범위를 초과해 이용·제공하지 않도록 제한하는가
+    module: M-PII
+    severity: 필수
+    severity_basis: 강행규정(금지) — 개인정보 보호법 제18조 제1항(목적 외 이용·제공 제한)
+    norm_type: 강행
+    basis: statute
+    triggers:
+      keywords: [목적 외, 이용 제한, 제공 제한]
+    absence_check: true
+    sources:
+      - law: 개인정보 보호법
+        article: 제18조
+        clause: 제1항
+        quote: 제17조제1항 및 제28조의8제1항에 따른 범위를 초과하여 제3자에게 제공하여서는 아니 된다
+        verified: true
+        source_type: law
+
+  # ── M-COMP 공정거래 ──────────────────────────────────────────
+  - id: ALL-COMP-01
+    check: 경쟁사업자 간 협력이 가격·거래조건·거래상대방을 공동으로 정하는 부당한 공동행위에 해당하지 않는가
+    module: M-COMP
+    severity: 필수
+    severity_basis: 강행규정(금지) — 공정거래법 제40조 제1항(부당한 공동행위 금지, 합의 자체 무효)
+    norm_type: 강행
+    basis: statute
+    triggers:
+      keywords: [공동, 가격, 거래조건, 거래상대방, 경쟁]
+    absence_check: false
+    sources:
+      - law: 독점규제 및 공정거래에 관한 법률
+        article: 제40조
+        clause: 제1항
+        quote: 다른 사업자와 공동으로 부당하게 경쟁을 제한하는 다음 각 호의 어느 하나에 해당하는 행위를 할 것을 합의
+        verified: true
+        source_type: law
+      - law: 독점규제 및 공정거래에 관한 법률
+        article: 제40조
+        clause: 제4항
+        quote: 부당한 공동행위를 할 것을 약정하는 계약 등은 해당 사업자 간에는 그 효력을 무효로 한다
+        verified: true
+        source_type: law
+  - id: ALL-COMP-02
+    check: 우월적 지위를 이용해 상대방에게 불리한 조건을 강제하거나 사업활동을 부당 구속하지 않는가
+    module: M-COMP
+    severity: 권장
+    severity_basis: 강행규정(금지)이나 부당성 판단 필요 — 공정거래법 제45조 제1항(불공정거래행위·거래상지위남용)
+    norm_type: 강행
+    severity_override: true
+    basis: statute
+    triggers:
+      keywords: [거래상 지위, 구속, 불이익, 강제]
+    absence_check: false
+    sources:
+      - law: 독점규제 및 공정거래에 관한 법률
+        article: 제45조
+        clause: 제1항 제6호
+        quote: 자기의 거래상의 지위를 부당하게 이용하여 상대방과 거래하는 행위
+        verified: true
+        source_type: law
+      - law: 독점규제 및 공정거래에 관한 법률
+        article: 제45조
+        clause: 제1항 제7호
+        quote: 거래의 상대방의 사업활동을 부당하게 구속하는 조건으로 거래하는 행위
+        verified: true
+        source_type: law
+
+  # ── M-INSMOD 보험모집·상품제공 ───────────────────────────────
+  - id: ALL-INS-01
+    check: 보험 모집을 위탁하는 경우 모집 위탁 상대방이 법정 모집자격자(설계사·대리점·중개사 등)인가
+    module: M-INSMOD
+    severity: 필수
+    severity_basis: 강행규정 — 보험업법 제83조 제1항(모집할 수 있는 자 한정)
+    norm_type: 강행
+    basis: statute
+    triggers:
+      keywords: [모집, 위탁, 보험대리점, 설계사]
+    absence_check: false
+    sources:
+      - law: 보험업법
+        article: 제83조
+        clause: 제1항
+        quote: 모집을 할 수 있는 자는 다음 각 호의 어느 하나에 해당하는 자이어야 한다
+        verified: true
+        source_type: law
+
+  # ── M-REINS 재보험 ───────────────────────────────────────────
+  - id: ALL-REINS-01
+    check: 재보험 출재 시 원보험계약의 효력과 분리(원계약 무영향)가 전제되어 있는가
+    module: M-REINS
+    severity: 참고
+    severity_basis: 선언규정 — 상법 제661조(재보험은 원보험계약 효력에 무영향)
+    norm_type: 선언
+    basis: statute
+    triggers:
+      keywords: [재보험, 출재, 원보험]
+    absence_check: false
+    sources:
+      - law: 상법
+        article: 제661조
+        clause: ""
+        quote: 이 재보험계약은 원보험계약의 효력에 영향을 미치지 아니한다
+        verified: true
+        source_type: law
