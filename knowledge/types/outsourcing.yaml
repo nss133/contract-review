@@ -68,7 +68,7 @@ checks:
         article: 제3조(업무위탁 등)
         clause: 제1항 제1호
         quote: '인가 등을 받은 금융업 또는 다른 금융업의 본질적 요소를 포함하는 업무를 위탁하는 경우'
-        verified: false
+        verified: true
     note: 본질적 요소의 범위는 제3조 제2항 별표 2 — 별표는 DB 미수록(원문 미확인)
   - id: CORE-03
     module: M-CORE
@@ -85,7 +85,7 @@ checks:
         article: 제3조(업무위탁 등)
         clause: 제1항 제1호 단서
         quote: '다만, 다음 각 목의 어느 하나에 해당하는 업무의 경우에는 위탁할 수 있다'
-        verified: false
+        verified: true
   - id: CORE-04
     module: M-CORE
     check: 위탁 업무가 관련 법령에서 금융기관이 직접 수행하도록 의무를 부여한 업무에 해당하지 않는가
@@ -101,7 +101,7 @@ checks:
         article: 제3조(업무위탁 등)
         clause: 제1항 제2호
         quote: '관련 법령에서 금융기관이 수행하도록 의무를 부여하고 있는 경우'
-        verified: false
+        verified: true
   - id: CORE-05
     module: M-CORE
     check: 수탁자가 관련 법규상 업무수탁이 가능한 자임을 확인·확약하는 조항이 있는가
@@ -117,7 +117,7 @@ checks:
         article: 제3조(업무위탁 등)
         clause: 제3항 제3호
         quote: '제3자가 관련 법규(다만, 제3자가 외국인인 경우에는 국제사법 제3조)에 따라 업무수탁이 가능한지의 여부'
-        verified: false
+        verified: true
         source_type: law
       - law: 손해사정 업무위탁 및 손해사정사 선임 등에 관한 모범규준
         article: 제4조
@@ -140,7 +140,7 @@ checks:
         article: 제3조(업무위탁 등)
         clause: 제3항 제5호
         quote: '「금융실명거래 및 비밀보장에 관한 법률」 등 관련 법령에의 저촉 여부'
-        verified: false
+        verified: true
   - id: CORE-07
     module: M-CORE
     check: 수탁자가 위탁자의 사전 동의 없이 재위탁하지 못하도록 하는 조항이 있는가
@@ -157,7 +157,7 @@ checks:
         article: 제3조(업무위탁 등)
         clause: 제4항
         quote: '제1항에 따라 금융기관의 업무를 위탁받은 자는 위탁자의 동의를 얻어 위탁받은 업무를 제3자에게 재위탁할 수 있다'
-        verified: false
+        verified: true
     note: 임의 서술이나 위탁자 동의는 강행적 전제이며 제2조·제3조·제4항 내지 제6항 준용 — 무단 재위탁은 감독규정 위반. PRIV-15·IT-09와 정합 위해 필수
   - id: CORE-08
     module: M-CORE
@@ -190,13 +190,13 @@ checks:
         article: 제3조(업무위탁 등)
         clause: 제5항
         quote: '위탁회사는 수탁회사가 이 규정 등 금융관련법령 및 제3조의2에 따른 업무위수탁기준상의 의무를 위반하여 발생하는 손해에 대해서 수탁회사와 연대하여 배상책임을 진다'
-        verified: false
+        verified: true
         source_type: law
       - law: 의료자문 표준내부통제기준
         article: 제4조
         clause: 제4항
         quote: '수탁자가 제2항에 따른 업무위수탁기준에서 정하는 의무를 위반하여 발생하는 손해에 대해서 업무위탁 규정 제3조 제5항에 따라 배상책임을 진다'
-        verified: false
+        verified: true
         source_type: self_regulation
   - id: CORE-10
     module: M-CORE
@@ -212,13 +212,13 @@ checks:
       - law: 금융기관의 업무위탁 등에 관한 규정
         article: 제3조의2
         quote: '<별표 3>에서 정하는 업무위수탁기준에 따라 금융권역 및 위탁대상자의 특성 등을 감안하여 자체 업무위수탁 운영기준을 마련하고 이를 준수하여야 한다'
-        verified: false
+        verified: true
         source_type: law
       - law: 의료자문 표준내부통제기준
         article: 제4조
         clause: 제2항
         quote: '보험회사는 제1항에 따른 수탁자를 관리하기 위하여 업무위탁 규정 제3조의2에 따른 업무위수탁운영기준을 마련하고 이를 준수하여야 한다'
-        verified: false
+        verified: true
         source_type: self_regulation
     note: 별표 3 업무위수탁기준 세부 문언은 DB 미수록 — 원문 미확인. 자율규제(의료자문 표준내부통제기준 제4조)는 수탁자 준수 점검·관리·보고·조치를 업무위수탁운영기준에 포함하도록 요구
   - id: CORE-11
@@ -236,7 +236,7 @@ checks:
         article: 제4조(보고)
         clause: 제1항
         quote: '그 사실을 업무를 위탁받은 자가 그 위탁받은 업무를 실제로 수행하려는 날의 7영업일 이전에 <별지 제1호 서식>에 따라 다음 각호의 서류를 첨부하여 감독원장에게 보고하여야 한다'
-        verified: false
+        verified: true
   - id: CORE-12
     module: M-CORE
     check: 본 위탁이 사전보고 생략(반기별 사후보고) 사유에 해당하는지 확인되는가
@@ -252,7 +252,7 @@ checks:
         article: 제4조(보고)
         clause: 제2항
         quote: '제1항에 의한 사전보고를 생략하고, <별지 제2호 서식>에 따라 업무위수탁현황을 그 금융기관의 설립근거가 되는 법률 등에 따른 업무보고서에 포함하여 감독원장에게 반기별로 사후보고할 수 있다'
-        verified: false
+        verified: true
   - id: CORE-13
     module: M-CORE
     check: 감독당국의 변경권고 등 조치가 있는 경우 계약 변경·시정에 협조하는 조항이 있는가
@@ -267,7 +267,7 @@ checks:
       - law: 금융기관의 업무위탁 등에 관한 규정
         article: 제5조
         quote: '감독원장은 업무위탁 또는 수탁이 제3조의 규정에 적합하지 아니하다고 판단하는 경우에는 당해 금융기관에 대하여 그 내용의 변경권고 등 필요한 조치를 할 수 있다'
-        verified: false
+        verified: true
   - id: CORE-14
     module: M-CORE
     check: 수탁자가 위탁업무와 관련한 금융감독원장의 검사·자료제출 요구에 응하도록 하는 조항이 있는가
@@ -318,7 +318,7 @@ checks:
         article: 제26조
         clause: 제1항
         quote: '개인정보처리자가 제3자에게 개인정보의 처리 업무를 위탁하는 경우에는 다음 각 호의 내용이 포함된 문서로 하여야 한다'
-        verified: false
+        verified: true
   - id: PRIV-02
     module: M-PRIV
     check: 위탁 문서에 위탁업무 수행 목적 외 개인정보의 처리 금지에 관한 사항이 포함되어 있는가
@@ -334,7 +334,7 @@ checks:
         article: 제26조
         clause: 제1항 제1호
         quote: '위탁업무 수행 목적 외 개인정보의 처리 금지에 관한 사항'
-        verified: false
+        verified: true
   - id: PRIV-03
     module: M-PRIV
     check: 위탁 문서에 개인정보의 기술적·관리적 보호조치에 관한 사항이 포함되어 있는가
@@ -350,7 +350,7 @@ checks:
         article: 제26조
         clause: 제1항 제2호
         quote: '개인정보의 기술적ㆍ관리적 보호조치에 관한 사항'
-        verified: false
+        verified: true
   - id: PRIV-04
     module: M-PRIV
     check: 위탁 문서에 위탁업무의 목적 및 범위가 기재되어 있는가
@@ -366,7 +366,7 @@ checks:
         article: 제28조
         clause: 제1항 제1호
         quote: '위탁업무의 목적 및 범위'
-        verified: false
+        verified: true
   - id: PRIV-05
     module: M-PRIV
     check: 위탁 문서에 재위탁 제한에 관한 사항이 포함되어 있는가
@@ -382,7 +382,7 @@ checks:
         article: 제28조
         clause: 제1항 제2호
         quote: '재위탁 제한에 관한 사항'
-        verified: false
+        verified: true
   - id: PRIV-06
     module: M-PRIV
     check: 위탁 문서에 개인정보에 대한 접근 제한 등 안전성 확보 조치에 관한 사항이 포함되어 있는가
@@ -398,7 +398,7 @@ checks:
         article: 제28조
         clause: 제1항 제3호
         quote: '개인정보에 대한 접근 제한 등 안전성 확보 조치에 관한 사항'
-        verified: false
+        verified: true
   - id: PRIV-07
     module: M-PRIV
     check: 위탁 문서에 개인정보 관리 현황 점검 등 감독에 관한 사항이 포함되어 있는가
@@ -414,7 +414,7 @@ checks:
         article: 제28조
         clause: 제1항 제4호
         quote: '위탁업무와 관련하여 보유하고 있는 개인정보의 관리 현황 점검 등 감독에 관한 사항'
-        verified: false
+        verified: true
   - id: PRIV-08
     module: M-PRIV
     check: 위탁 문서에 수탁자의 의무 위반 시 손해배상 등 책임에 관한 사항이 포함되어 있는가
@@ -430,7 +430,7 @@ checks:
         article: 제28조
         clause: 제1항 제5호
         quote: '법 제26조제2항에 따른 수탁자(이하 "수탁자"라 한다)가 준수하여야 할 의무를 위반한 경우의 손해배상 등 책임에 관한 사항'
-        verified: false
+        verified: true
   - id: PRIV-09
     module: M-PRIV
     check: 위탁하는 업무의 내용과 수탁자가 정보주체에게 공개되도록 조치(홈페이지 공개 목록 반영 등)되어 있는가
@@ -446,7 +446,7 @@ checks:
         article: 제26조
         clause: 제2항
         quote: '정보주체가 언제든지 쉽게 확인할 수 있도록 대통령령으로 정하는 방법에 따라 공개하여야 한다'
-        verified: false
+        verified: true
   - id: PRIV-10
     module: M-PRIV
     check: 공개 방법이 위탁자의 인터넷 홈페이지 지속 게재 방식으로 이행되는가
@@ -462,7 +462,7 @@ checks:
         article: 제28조
         clause: 제2항
         quote: '위탁자의 인터넷 홈페이지에 위탁하는 업무의 내용과 수탁자를 지속적으로 게재하는 방법'
-        verified: false
+        verified: true
   - id: PRIV-11
     module: M-PRIV
     check: 홈페이지 게재가 불가능한 경우 사업장 게시·간행물 게재 등 대체 공개 방법이 이행되는가
@@ -478,7 +478,7 @@ checks:
         article: 제28조
         clause: 제3항
         quote: '인터넷 홈페이지에 게재할 수 없는 경우에는 다음 각 호의 어느 하나 이상의 방법으로 위탁하는 업무의 내용과 수탁자를 공개하여야 한다'
-        verified: false
+        verified: true
   - id: PRIV-12
     module: M-PRIV
     check: 재화·서비스의 홍보 또는 판매 권유 업무 위탁이라면 위탁 업무 내용과 수탁자를 정보주체에게 서면등으로 알리는 절차가 있는가
@@ -494,12 +494,12 @@ checks:
         article: 제26조
         clause: 제3항
         quote: '위탁자가 재화 또는 서비스를 홍보하거나 판매를 권유하는 업무를 위탁하는 경우에는 대통령령으로 정하는 방법에 따라 위탁하는 업무의 내용과 수탁자를 정보주체에게 알려야 한다'
-        verified: false
+        verified: true
       - law: 개인정보 보호법 시행령
         article: 제28조
         clause: 제4항
         quote: '법 제26조제3항 전단에서 "대통령령으로 정하는 방법"이란 서면등의 방법을 말한다'
-        verified: false
+        verified: true
   - id: PRIV-13
     module: M-PRIV
     check: 위탁자의 수탁자 교육 실시와 처리 현황 점검 등 감독 수인 의무 조항이 있는가
@@ -515,12 +515,12 @@ checks:
         article: 제26조
         clause: 제4항
         quote: '수탁자를 교육하고, 처리 현황 점검 등 대통령령으로 정하는 바에 따라 수탁자가 개인정보를 안전하게 처리하는지를 감독하여야 한다'
-        verified: false
+        verified: true
       - law: 개인정보 보호법 시행령
         article: 제28조
         clause: 제6항
         quote: '위탁자는 수탁자가 개인정보 처리 업무를 수행하는 경우에 법 또는 이 영에 따라 개인정보처리자가 준수하여야 할 사항과 법 제26조제1항 각 호의 사항을 준수하는지를 같은 조 제4항에 따라 감독하여야 한다'
-        verified: false
+        verified: true
   - id: PRIV-14
     module: M-PRIV
     check: 수탁자의 위탁받은 업무 범위 초과 이용·제3자 제공 금지 조항이 있는가
@@ -536,7 +536,7 @@ checks:
         article: 제26조
         clause: 제5항
         quote: '수탁자는 개인정보처리자로부터 위탁받은 해당 업무 범위를 초과하여 개인정보를 이용하거나 제3자에게 제공하여서는 아니 된다'
-        verified: false
+        verified: true
   - id: PRIV-15
     module: M-PRIV
     check: 수탁자가 개인정보 처리 업무를 재위탁하는 경우 위탁자의 동의를 받도록 하는 조항이 있는가
@@ -552,7 +552,7 @@ checks:
         article: 제26조
         clause: 제6항
         quote: '수탁자는 위탁받은 개인정보의 처리 업무를 제3자에게 다시 위탁하려는 경우에는 위탁자의 동의를 받아야 한다'
-        verified: false
+        verified: true
     note: 2023. 3. 14. 신설 조항
   - id: PRIV-16
     module: M-PRIV
@@ -585,7 +585,7 @@ checks:
         article: 제17조
         clause: 제1항
         quote: '개인신용정보의 처리 위탁에 대해서는 「개인정보 보호법」 제26조제1항부터 제3항까지의 규정을 준용한다'
-        verified: false
+        verified: true
   - id: PRIV-18
     module: M-PRIV
     check: 신용정보 처리위탁 시 제공하는 신용정보의 범위 등의 금융위원회 통지 절차가 확인되는가
@@ -601,7 +601,7 @@ checks:
         article: 제17조
         clause: 제3항
         quote: '제공하는 신용정보의 범위 등을 대통령령으로 정하는 바에 따라 금융위원회에 알려야 한다'
-        verified: false
+        verified: true
     note: 대통령령으로 정하는 자에 해당하는 경우에 적용
   - id: PRIV-19
     module: M-PRIV
@@ -618,7 +618,7 @@ checks:
         article: 제17조
         clause: 제4항
         quote: '특정 신용정보주체를 식별할 수 있는 정보는 대통령령으로 정하는 바에 따라 암호화 등의 보호 조치를 하여야 한다'
-        verified: false
+        verified: true
   - id: PRIV-20
     module: M-PRIV
     check: 수탁자 교육 의무와 수탁자의 안전한 신용정보 처리에 관한 사항이 위탁계약에 반영되어 있는가
@@ -634,7 +634,7 @@ checks:
         article: 제17조
         clause: 제5항
         quote: '수탁자를 교육하여야 하고 수탁자의 안전한 신용정보 처리에 관한 사항을 위탁계약에 반영하여야 한다'
-        verified: false
+        verified: true
   - id: PRIV-21
     module: M-PRIV
     check: 신용정보 처리 업무의 재위탁 금지(금융위원회 인정 시 예외) 조항이 있는가
@@ -650,7 +650,7 @@ checks:
         article: 제17조
         clause: 제7항
         quote: '수탁자는 제2항에 따라 위탁받은 업무를 제3자에게 재위탁하여서는 아니 된다. 다만, 신용정보의 보호 및 안전한 처리를 저해하지 아니하는 범위에서 금융위원회가 인정하는 경우에는 그러하지 아니하다'
-        verified: false
+        verified: true
   # ── M-IT: 전자금융감독규정 제60조 ──
   - id: IT-01
     module: M-IT
@@ -667,7 +667,7 @@ checks:
         article: 제60조
         clause: 제1항 제1호
         quote: '외부주문등에 의한 정보처리시스템의 개발업무에 사용되는 업무장소 및 전산설비는 내부 업무용과 분리하여 설치ㆍ운영'
-        verified: false
+        verified: true
   - id: IT-02
     module: M-IT
     check: 계좌번호·비밀번호 등 이용자 금융정보의 무단보관·유출 금지 조항이 있는가
@@ -683,7 +683,7 @@ checks:
         article: 제60조
         clause: 제1항 제3호
         quote: '계좌번호, 비밀번호 등 이용자 금융정보 무단보관 및 유출 금지'
-        verified: false
+        verified: true
   - id: IT-03
     module: M-IT
     check: 접근매체 위·변조, 해킹, 개인정보유출 등에 대비한 보안대책 수립 조항이 있는가
@@ -699,7 +699,7 @@ checks:
         article: 제60조
         clause: 제1항 제4호
         quote: '접근매체 위ㆍ변조, 해킹, 개인정보유출 등에 대비한 보안대책 수립'
-        verified: false
+        verified: true
   - id: IT-04
     module: M-IT
     check: 금융회사와 전자금융보조업자 간 접속에 전용회선(동등 보안수준의 가상 전용회선 포함)을 사용하는 조항이 있는가
@@ -715,7 +715,7 @@ checks:
         article: 제60조
         clause: 제1항 제5호
         quote: '금융회사와 전자금융보조업자 간의 접속은 전용회선(전용회선과 동등한 보안수준을 갖춘 가상의 전용회선을 포함한다)을 사용'
-        verified: false
+        verified: true
   - id: IT-05
     module: M-IT
     check: 정보처리시스템 장애 등 서비스 중단에 대비한 비상대책 수립 조항이 있는가
@@ -731,7 +731,7 @@ checks:
         article: 제60조
         clause: 제1항 제6호
         quote: '정보처리시스템 장애 등 서비스 중단에 대비한 비상대책 수립'
-        verified: false
+        verified: true
   - id: IT-06
     module: M-IT
     check: 중요 전산자료의 백업자료 보존·백업설비 확보 등 백업대책 수립 조항이 있는가
@@ -747,7 +747,7 @@ checks:
         article: 제60조
         clause: 제1항 제8호
         quote: '업무지속성을 위한 중요 전산자료의 백업(backup)자료 보존 및 백업설비 확보 등 백업대책 수립'
-        verified: false
+        verified: true
   - id: IT-07
     module: M-IT
     check: 수탁자(전자금융보조업자)의 재무건전성 연 1회 이상 평가·상시 모니터링에 필요한 자료 제공 협조 조항이 있는가
@@ -763,7 +763,7 @@ checks:
         article: 제60조
         clause: 제1항 제10호
         quote: '전자금융보조업자에 대한 재무건전성을 연1회 이상 평가하여 재무상태 악화에 따른 도산에 대비하고 전자금융보조업자의 주요 경영활동에 대해 상시 모니터링을 실시'
-        verified: false
+        verified: true
   - id: IT-08
     module: M-IT
     check: 수탁자가 제공하는 서비스의 품질수준 연 1회 이상 평가에 협조하는 조항이 있는가
@@ -779,7 +779,7 @@ checks:
         article: 제60조
         clause: 제1항 제11호
         quote: '전자금융보조업자가 제공하는 서비스의 품질수준을 연1회 이상 평가할 것'
-        verified: false
+        verified: true
   - id: IT-09
     module: M-IT
     check: 수탁자가 사전 동의 없이 재외부주문 계약 체결·계약업체 변경을 하지 못하도록 통제하는 조항이 있는가
@@ -795,7 +795,7 @@ checks:
         article: 제60조
         clause: 제1항 제12호
         quote: '전자금융보조업자가 사전 동의 없이 다시 외부주문등 계약을 체결하거나 계약업체를 변경하지 못하도록 하고, 사전 동의시 해당 계약서에 제7호의 사항을 기재하도록 통제'
-        verified: false
+        verified: true
   - id: IT-10
     module: M-IT
     check: 업무수행인력의 사전 신원조회(또는 신원보증) 및 인력변경 시 인수인계 등 인력 관리방안 조항이 있는가
@@ -811,7 +811,7 @@ checks:
         article: 제60조
         clause: 제1항 제13호
         quote: '업무수행인력에 대하여 사전 신원조회 실시(이 경우 신원보증보험 증권 징구로 갈음할 수 있다) 또는 대표자의 신원보증서 징구, 인력변경시 인수인계에 관한 사항 등을 포함한 업무수행인력 관리방안 수립'
-        verified: false
+        verified: true
   - id: IT-11
     module: M-IT
     check: 외부주문에 대한 자체 보안성검토와 정기 보안점검 실시(수탁자 협조) 조항이 있는가
@@ -827,7 +827,7 @@ checks:
         article: 제60조
         clause: 제1항 제14호
         quote: '외부주문등은 자체 보안성검토 및 정기(금융감독원장이 정하는 중요 점검사항에 대해서는 매일) 보안점검 실시'
-        verified: false
+        verified: true
   - id: IT-12
     module: M-IT
     check: 재위탁 구조라면 재수탁업자의 금융거래정보 변경이 위탁회사·원수탁업자의 개별 지시에 따르도록 하는 조항이 있는가
@@ -843,7 +843,7 @@ checks:
         article: 제60조
         clause: 제4항 제1호
         quote: '재수탁업자가 재위탁된 업무를 처리함에 있어 금융거래 정보의 변경이 필요한 경우에는 위탁회사 또는 원수탁업자의 개별적 지시에 따라야 하며, 위탁회사 또는 원수탁업자는 변경된 정보가 지시 내용에 부합하는지 여부를 확인하여야 함'
-        verified: false
+        verified: true
   - id: IT-13
     module: M-IT
     check: 재위탁 구조라면 이용자 금융거래정보를 위탁회사 전산실 내에 두도록 하는 조항이 있는가
@@ -859,7 +859,7 @@ checks:
         article: 제60조
         clause: 제4항 제2호
         quote: '위탁업무와 관련된 이용자의 금융거래정보는 위탁회사의 전산실 내에 두어야 함. 다만, 재수탁업자가 이용자의 이용자 정보를 어떠한 경우에도 알지 못하도록 위탁회사 또는 원수탁업자가 금융거래정보를 처리하여 제공한 경우에는 위탁회사의 관리ㆍ통제 하에 재수탁회사 등 제3의 장소로 이전 가능함'
-        verified: false
+        verified: true
   # ── M-CLOUD: 전자금융감독규정 제14조의2 ──
   - id: CLOUD-01
     module: M-CLOUD
@@ -876,7 +876,7 @@ checks:
         article: 제14조의2
         clause: 제1항 제1호
         quote: '다음 각 목의 기준에 따른 이용업무의 중요도 평가'
-        verified: false
+        verified: true
   - id: CLOUD-02
     module: M-CLOUD
     check: 클라우드컴퓨팅서비스 제공자의 건전성·안전성 평가에 필요한 자료 제공 협조 조항이 있는가
@@ -892,7 +892,7 @@ checks:
         article: 제14조의2
         clause: 제1항 제2호
         quote: '클라우드컴퓨팅서비스 제공자의 건전성 및 안전성 등에 대한 평가'
-        verified: false
+        verified: true
   - id: CLOUD-03
     module: M-CLOUD
     check: 클라우드 이용 관련 업무연속성 계획·안전성 확보조치의 수립·시행이 계약상 뒷받침되는가
@@ -908,7 +908,7 @@ checks:
         article: 제14조의2
         clause: 제1항 제3호
         quote: '클라우드컴퓨팅서비스 이용과 관련한 업무 연속성 계획 및 안전성 확보조치의 수립ㆍ시행'
-        verified: false
+        verified: true
   - id: CLOUD-04
     module: M-CLOUD
     check: 평가결과·업무연속성 계획·안전성 확보조치에 대한 정보보호위원회 심의·의결 절차가 확인되는가
@@ -924,7 +924,7 @@ checks:
         article: 제14조의2
         clause: 제2항
         quote: '제1항 각 호에 따른 평가결과, 업무연속성 계획 및 안전성 확보조치에 대하여 제8조의2에 따른 정보보호위원회의 심의ㆍ의결을 거쳐야 한다'
-        verified: false
+        verified: true
   - id: CLOUD-05
     module: M-CLOUD
     check: 신규 이용계약 등 보고 사유 발생일부터 3개월 이내 감독원장 보고에 필요한 자료·통지 협조 조항이 있는가
@@ -940,7 +940,7 @@ checks:
         article: 제14조의2
         clause: 제4항
         quote: '다음 각 호의 어느 하나에 해당하는 사유가 발생한 날로부터 3개월 이내에 금융감독원장에게 보고하여야 하고, 관련 서류를 최신상태로 유지하여야 한다'
-        verified: false
+        verified: true
   - id: CLOUD-06
     module: M-CLOUD
     check: 제공자의 합병·분할·계약상 지위 양도·재위탁 등 중대한 변경사항 발생 시 사전 통지 조항이 있는가
@@ -956,7 +956,7 @@ checks:
         article: 제14조의2
         clause: 제4항 제2호
         quote: '클라우드컴퓨팅서비스 제공자의 합병, 분할, 계약상 지위의 양도, 재위탁 등 중대한 변경사항이 발생한 경우'
-        verified: false
+        verified: true
     note: 법령상 의무는 발생일부터 3개월 내 사후 보고(제14조의2④)이며 계약상 사전 통지는 가중 약정임
   - id: CLOUD-07
     module: M-CLOUD
@@ -973,7 +973,7 @@ checks:
         article: 제14조의2
         clause: 제7항 단서
         quote: '고유식별정보 또는 개인신용정보를 클라우드컴퓨팅서비스를 통하여 처리하는 경우에는 제11조제2호를 적용하고, 해당 정보처리시스템을 국내에 설치하여야 한다'
-        verified: false
+        verified: true
   # ── M-SOLICIT: 보험업법 제83조·금융소비자보호법 제44조·제45조 ──
   - id: SOL-01
     module: M-SOLICIT
@@ -990,13 +990,13 @@ checks:
         article: 제83조
         clause: 제1항
         quote: '모집을 할 수 있는 자는 다음 각 호의 어느 하나에 해당하는 자이어야 한다'
-        verified: false
+        verified: true
         source_type: law
       - law: 보험권 표준내부통제기준
         article: 제37조
         clause: 제3항
         quote: '회사는 모집종사자와의 위탁계약 체결 전에 모집종사자의 보험업법 상 등록요건 및 재무상태 등을 심사‧평가하여 위탁계약 체결 여부 등에 반영하는 절차를 마련하여야 한다'
-        verified: false
+        verified: true
         source_type: self_regulation
   - id: SOL-02
     module: M-SOLICIT
@@ -1031,7 +1031,7 @@ checks:
         article: 제44조
         clause: 제1항
         quote: '금융상품판매업자등이 고의 또는 과실로 이 법을 위반하여 금융소비자에게 손해를 발생시킨 경우에는 그 손해를 배상할 책임이 있다'
-        verified: false
+        verified: true
   - id: SOL-04
     module: M-SOLICIT
     check: 수탁자의 대리·중개 행위로 금융소비자에게 발생한 손해에 대해 회사가 배상책임을 지는 구조를 전제로 한 책임 조항이 있는가
@@ -1047,7 +1047,7 @@ checks:
         article: 제45조
         clause: 제1항 본문
         quote: '대리ㆍ중개 업무를 할 때 금융소비자에게 손해를 발생시킨 경우에는 그 손해를 배상할 책임이 있다'
-        verified: false
+        verified: true
     note: 구 보험업법 제102조는 2020. 3. 24. 삭제 — 금소법 제45조로 이관(보험중개사는 적용 제외)
   - id: SOL-05
     module: M-SOLICIT
@@ -1064,13 +1064,13 @@ checks:
         article: 제45조
         clause: 제1항 단서
         quote: '다만, 금융상품직접판매업자가 금융상품판매대리ㆍ중개업자등의 선임과 그 업무 감독에 대하여 적절한 주의를 하였고 손해를 방지하기 위하여 노력한 경우에는 그러하지 아니하다'
-        verified: false
+        verified: true
         source_type: law
       - law: 보험권 표준내부통제기준
         article: 제38조
         clause: 제1항
         quote: '회사는 모집종사자의 위탁업무 수행에 관한 평가기준을 수립·운영하도록 해야 한다'
-        verified: false
+        verified: true
         source_type: self_regulation
   - id: SOL-06
     module: M-SOLICIT
@@ -1087,7 +1087,7 @@ checks:
         article: 제45조
         clause: 제2항
         quote: '제1항 본문에 따른 금융상품직접판매업자의 손해배상책임은 금융상품판매대리ㆍ중개업자등에 대한 금융상품직접판매업자의 구상권 행사를 방해하지 아니한다'
-        verified: false
+        verified: true
   # ── M-DISPATCH: 도급·파견 경계 (파견법 DB 미수록 — practice) ──
   - id: DIS-01
     module: M-DISPATCH

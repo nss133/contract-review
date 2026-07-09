@@ -37,9 +37,11 @@ function sourceBadgeInfo(src) {
     case "no_quote":
       return { cls: "ref", label: "참조", rank: 1 };
     case "quote_ok":
+      // quote가 DB 원문에 문자적으로 일치함(빌드 시 기계 대조 통과). verified는 사람의 최종 사인오프.
+      // 미사인오프를 "미대조"로 경고하던 것은 오해 소지 — 이미 원문 일치이므로 중립 표기.
       return src.verified
         ? { cls: "verified", label: "원문확인", rank: 3 }
-        : { cls: "unverified", label: "원문 미대조", rank: 2 };
+        : { cls: "quote-ok", label: "원문 일치", rank: 3 };
     default:
       return { cls: "practice", label: "실무", rank: 4 };
   }
@@ -296,7 +298,10 @@ function initChecklistType() {
   }).join("");
   sel.addEventListener("change", function () {
     state.typeId = sel.value;
-    if (!document.getElementById("analyze-setup").hidden) renderScreening();
+    if (!document.getElementById("analyze-setup").hidden) {
+      renderScreening();
+      if (_analyzedOnce) { runAnalysis(); return; } // 유형 변경 시 즉시 재검토
+    }
     renderChecklist();
   });
   state.typeId = sel.value;
@@ -321,6 +326,8 @@ document.getElementById("docx-file").addEventListener("change", function (e) {
   });
 });
 
+// 한 번의 "분석 시작"으로 유형 감지 → 모듈 스크리닝 → 검토까지 실행(군더더기 제거).
+// 이후 유형·모듈을 조정하면 즉시 재검토됨(btn-run 없음).
 document.getElementById("btn-analyze").addEventListener("click", function () {
   state.text = document.getElementById("contract-text").value;
   if (!state.text.trim()) return;
@@ -330,8 +337,8 @@ document.getElementById("btn-analyze").addEventListener("click", function () {
   if (ranked[0] && ranked[0].score > 0) sel.value = ranked[0].typeId;
   state.typeId = sel.value;
   renderScreening();
-  renderChecklist();
   document.getElementById("analyze-setup").hidden = false;
+  runAnalysis();
 });
 
 /* ---------- 분석 모드: 모듈 스크리닝 ---------- */
@@ -361,12 +368,16 @@ function renderScreening() {
       var i = state.activeModules.indexOf(mid);
       if (i === -1) state.activeModules.push(mid); else state.activeModules.splice(i, 1);
       chip.classList.toggle("on");
+      if (_analyzedOnce) runAnalysis(); // 모듈 조정 시 즉시 재검토
     });
   });
 }
 
 /* ---------- 분석 실행 ---------- */
-document.getElementById("btn-run").addEventListener("click", function () {
+// 유형·모듈 조건으로 검토 실행. 최초 분석 시작·유형변경·모듈토글 모두 이 함수를 호출(즉시 재검토).
+var _analyzedOnce = false;
+function runAnalysis() {
+  if (!state.clauses.length) return;
   state.typeId = document.getElementById("checklist-type").value;
   var doc = typeDoc(state.typeId);
   var docs = [
@@ -382,9 +393,13 @@ document.getElementById("btn-run").addEventListener("click", function () {
   document.getElementById("analyze-result").hidden = false;
   document.getElementById("clauses-empty").hidden = true;
   document.getElementById("report-tab").disabled = false;
-  document.getElementById("input-panel").open = false;
-  document.querySelector('.tab[data-tab="checklist"]').click();
-});
+  if (!_analyzedOnce) {
+    // 최초 분석에서만 탭 이동·입력패널 접기(재검토 시 현재 탭 유지)
+    document.getElementById("input-panel").open = false;
+    document.querySelector('.tab[data-tab="checklist"]').click();
+    _analyzedOnce = true;
+  }
+}
 
 /* ---------- 조항별 검토의견(verdict) — 계약서 건별 판정 축 ----------
    '검수'(verified: 지식 정확성)와 별개. 이 계약서의 이 항목이 이상없음/검토의견/해당없음.

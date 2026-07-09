@@ -50,7 +50,7 @@ checks:
         article: 제335조
         clause: 제1항 단서
         quote: '회사는 정관으로 정하는 바에 따라 그 발행하는 주식의 양도에 관하여 이사회의 승인을 받도록 할 수 있다'
-        verified: false
+        verified: true
     note: 정관 근거 없는 계약상 양도제한은 당사자 간 채권적 효력에 그쳐 회사·제3자에 대항 불가
   - id: SH-SHARE-02
     module: M-SHARE
@@ -67,7 +67,7 @@ checks:
         article: 제335조
         clause: 제2항
         quote: '제1항 단서의 규정에 위반하여 이사회의 승인을 얻지 아니한 주식의 양도는 회사에 대하여 효력이 없다'
-        verified: false
+        verified: true
   - id: SH-SHARE-03
     module: M-SHARE
     check: 주권 미발행 회사에서 회사성립·납입기일 후 6월 경과 전 주식양도의 대(對)회사 효력 제한을 양도 시점 설계에 반영했는가
@@ -83,7 +83,7 @@ checks:
         article: 제335조
         clause: 제3항
         quote: '주권발행전에 한 주식의 양도는 회사에 대하여 효력이 없다. 그러나 회사성립후 또는 신주의 납입기일후 6월이 경과한 때에는 그러하지 아니하다'
-        verified: false
+        verified: true
   - id: SH-SHARE-04
     module: M-SHARE
     check: 정관상 양도승인 대상인 경우 상법상 양도승인청구·매수청구 절차와 계약상 우선매수 절차의 선후관계가 정리되어 있는가
@@ -99,7 +99,7 @@ checks:
         article: 제335조의2
         clause: 제1항
         quote: '주식을 양도하고자 하는 주주는 회사에 대하여 양도의 상대방 및 양도하고자 하는 주식의 종류와 수를 기재한 서면으로 양도의 승인을 청구할 수 있다'
-        verified: false
+        verified: true
   - id: SH-SHARE-05
     module: M-SHARE
     check: 우선매수권(ROFR) 행사의 통지 절차·행사기간·가격결정 방법이 특정되어 있는가
@@ -150,13 +150,13 @@ checks:
         article: 제336조
         clause: 제1항
         quote: '주식의 양도에 있어서는 주권을 교부하여야 한다'
-        verified: false
+        verified: true
         source_type: law
       - law: 상법
         article: 제337조
         clause: 제1항
         quote: '주식의 이전은 취득자의 성명과 주소를 주주명부에 기재하지 아니하면 회사에 대항하지 못한다'
-        verified: false
+        verified: true
         source_type: law
   # ── M-GOV: 지배구조·경영 (상법 제382조·제369조·제466조·제391조의3·제382조의3·제398조) ──
   - id: SH-GOV-01
@@ -174,7 +174,7 @@ checks:
         article: 제382조
         clause: 제1항
         quote: '이사는 주주총회에서 선임한다'
-        verified: false
+        verified: true
     note: 이사 선임은 주주총회 전속권한(강행) — 계약상 지명권은 지명주주가 주총에서 찬성의결할 의무로 구성해야 함
   - id: SH-GOV-02
     module: M-GOV
@@ -191,7 +191,7 @@ checks:
         article: 제369조
         clause: 제1항
         quote: '의결권은 1주마다 1개로 한다'
-        verified: false
+        verified: true
     note: 1주 1의결권은 강행 — 의결권 구속약정은 당사자 간 채권적 효력에 그쳐 회사·제3자 구속·직접 이행강제가 곤란(판례)
   - id: SH-GOV-03
     module: M-GOV
@@ -220,13 +220,13 @@ checks:
         article: 제466조
         clause: 제1항
         quote: '발행주식의 총수의 100분의 3 이상에 해당하는 주식을 가진 주주는 이유를 붙인 서면으로 회계의 장부와 서류의 열람 또는 등사를 청구할 수 있다'
-        verified: false
+        verified: true
         source_type: law
       - law: 상법
         article: 제391조의3
         clause: 제3항
         quote: '주주는 영업시간내에 이사회의사록의 열람 또는 등사를 청구할 수 있다'
-        verified: false
+        verified: true
         source_type: law
     note: 상법상 회계장부열람권은 3% 이상 지분 요건 — 계약상 정보권으로 지분 미달 주주의 접근을 보완
   - id: SH-GOV-05
@@ -255,7 +255,7 @@ checks:
         article: 제382조의3
         clause: 제1항
         quote: '이사는 법령과 정관의 규정에 따라 회사 및 주주를 위하여 그 직무를 충실하게 수행하여야 한다'
-        verified: false
+        verified: true
     note: 지명이사에게 지명주주 지시에 무조건 따를 의무를 지우는 조항은 충실의무(강행)와 충돌 소지 — 개정 상법은 충실의무 대상에 '주주'를 포함하고 전체 주주 공평대우를 요구(제2항)
   - id: SH-GOV-07
     module: M-GOV
@@ -271,7 +271,7 @@ checks:
       - law: 상법
         article: 제398조
         quote: '미리 이사회에서 해당 거래에 관한 중요사실을 밝히고 이사회의 승인을 받아야 한다'
-        verified: false
+        verified: true
   # ── M-FIN: 자본·지분 (상법 제418조·제344조·제462조) ──
   - id: SH-FIN-01
     module: M-FIN
@@ -288,7 +288,7 @@ checks:
         article: 제418조
         clause: 제1항
         quote: '주주는 그가 가진 주식 수에 따라서 신주의 배정을 받을 권리가 있다'
-        verified: false
+        verified: true
   - id: SH-FIN-02
     module: M-FIN
     check: 제3자 신주배정이 정관 근거와 경영상 목적 요건을 충족하는 범위로 제한되어 있는가
@@ -304,7 +304,7 @@ checks:
         article: 제418조
         clause: 제2항 단서
         quote: '신기술의 도입, 재무구조의 개선 등 회사의 경영상 목적을 달성하기 위하여 필요한 경우에 한한다'
-        verified: false
+        verified: true
   - id: SH-FIN-03
     module: M-FIN
     check: 후속 라운드 저가 발행 시 지분희석 방지(anti-dilution) 조정 방식(전환가·추가배정 등)이 규정되어 있는가
@@ -332,7 +332,7 @@ checks:
         article: 제344조
         clause: 제2항
         quote: '제1항의 경우에는 정관으로 각 종류주식의 내용과 수를 정하여야 한다'
-        verified: false
+        verified: true
   - id: SH-FIN-05
     module: M-FIN
     check: 배당정책 합의가 상법상 배당가능이익 한도와 주주총회 결의 요건 내에서 규정되어 있는가
@@ -348,13 +348,13 @@ checks:
         article: 제462조
         clause: 제1항
         quote: '회사는 대차대조표의 순자산액으로부터 다음의 금액을 공제한 액을 한도로 하여 이익배당을 할 수 있다'
-        verified: false
+        verified: true
         source_type: law
       - law: 상법
         article: 제462조
         clause: 제2항
         quote: '이익배당은 주주총회의 결의로 정한다'
-        verified: false
+        verified: true
         source_type: law
     note: 최소배당 약정 등도 배당가능이익 한도(강행) 초과 시 이행 불가 — 한도 초과 배당은 반환 대상
   - id: SH-FIN-06
@@ -418,7 +418,7 @@ checks:
         article: 제341조
         clause: 제1항 단서
         quote: '그 취득가액의 총액은 직전 결산기의 대차대조표상의 순자산액에서 제462조제1항 각 호의 금액을 뺀 금액을 초과하지 못한다'
-        verified: false
+        verified: true
     note: 회사에 의한 지분 매입 정산은 자기주식 취득 규제(배당가능이익 한도·주총 또는 이사회 결의) 적용 — 한도 초과 시 무효 소지
   - id: SH-EXIT-05
     module: M-EXIT
@@ -446,7 +446,7 @@ checks:
       - law: 민법
         article: 제731조
         quote: '화해는 당사자가 상호양보하여 당사자간의 분쟁을 종지할 것을 약정함으로써 그 효력이 생긴다'
-        verified: false
+        verified: true
   - id: SH-SET-02
     module: M-SETTLE
     check: 화해의 창설적 효력(종전 권리관계 소멸·재구성)을 전제로 정산 범위가 특정되어 있는가
@@ -461,7 +461,7 @@ checks:
       - law: 민법
         article: 제732조
         quote: '화해계약은 당사자 일방이 양보한 권리가 소멸되고 상대방이 화해로 인하여 그 권리를 취득하는 효력이 있다'
-        verified: false
+        verified: true
   - id: SH-SET-03
     module: M-SETTLE
     check: 화해 목적인 분쟁 자체는 착오 취소가 제한되고 자격·분쟁 외 사항 착오만 취소 가능함을 고려하여 합의 대상을 특정했는가
@@ -476,7 +476,7 @@ checks:
       - law: 민법
         article: 제733조
         quote: '화해계약은 착오를 이유로 하여 취소하지 못한다'
-        verified: false
+        verified: true
     note: 화해의 목적인 분쟁 외 사항(당사자 자격 등)의 착오는 취소 가능 — 합의 대상·전제사실을 명확히 특정할 것
   - id: SH-SET-04
     module: M-SETTLE
@@ -506,13 +506,13 @@ checks:
         article: 제11조
         clause: 제1항 제1호
         quote: '다른 회사의 발행주식총수(「상법」 제344조의3제1항 및 제369조제2항ㆍ제3항의 의결권 없는 주식의 수는 제외한다. 이하 이 장에서 같다)의 100분의 20[「자본시장과 금융투자업에 관한 법률」에 따른 주권상장법인(이하 "상장법인"이라 한다)의 경우에는 100분의 15를 말한다] 이상을 소유하게 되는 경우'
-        verified: false
+        verified: true
         source_type: law
       - law: 독점규제 및 공정거래에 관한 법률
         article: 제11조
         clause: 제1항
         quote: '대통령령으로 정하는 바에 따라 공정거래위원회에 신고하여야 한다'
-        verified: false
+        verified: true
         source_type: law
     note: 지분율 기준(20%, 상장법인 15%)은 법률 제11조 제1항 제1호 본문 — 자산총액·매출액 규모기준만 대통령령 위임
   - id: SH-ANT-02
@@ -530,4 +530,4 @@ checks:
         article: 제9조
         clause: 제1항
         quote: '일정한 거래분야에서 경쟁을 실질적으로 제한하는 행위를 하여서는 아니 된다'
-        verified: false
+        verified: true

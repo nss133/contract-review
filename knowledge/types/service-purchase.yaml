@@ -35,7 +35,7 @@ checks:
         article: 제13조
         clause: 제1항
         quote: '부터 60일 이내의 가능한 짧은 기한으로 정한 지급기일까지 하도급대금을 지급하여야 한다'
-        verified: false
+        verified: true
     note: 하도급법 적용대상(원사업자→수급사업자 제조·수리·건설·용역위탁, 사업자 규모 요건 충족)에 해당하는 경우 강행. 일반 매매·비적용 거래에는 임의 조정 가능
   - id: SP-PAY-02
     module: M-PAY
@@ -52,7 +52,7 @@ checks:
         article: 제13조
         clause: 제2항
         quote: '하도급대금의 지급기일이 정하여져 있지 아니한 경우에는 목적물등의 수령일을 하도급대금의 지급기일로 보고'
-        verified: false
+        verified: true
     note: 하도급법 적용대상 해당 시. 60일 초과 지급기일 약정은 무효화되고 60일 기산 지급기일로 간주됨
   - id: SP-PAY-03
     module: M-PAY
@@ -69,7 +69,7 @@ checks:
         article: 제13조
         clause: 제3항
         quote: '그 준공금이나 기성금 등을 지급받은 날부터 15일(하도급대금의 지급기일이 그 전에 도래하는 경우에는 그 지급기일) 이내에 수급사업자에게 지급하여야 한다'
-        verified: false
+        verified: true
     note: 하도급법 적용대상 해당 시
   - id: SP-PAY-04
     module: M-PAY
@@ -86,7 +86,7 @@ checks:
         article: 제13조
         clause: 제4항
         quote: '원사업자가 수급사업자에게 하도급대금을 지급할 때에는 원사업자가 발주자로부터 해당 제조등의 위탁과 관련하여 받은 현금비율 미만으로 지급하여서는 아니 된다'
-        verified: false
+        verified: true
     note: 하도급법 적용대상 해당 시
   - id: SP-PAY-05
     module: M-PAY
@@ -103,12 +103,12 @@ checks:
         article: 제13조
         clause: 제6항
         quote: '어음을 교부한 날부터 어음의 만기일까지의 기간에 대한 할인료를 어음을 교부하는 날에 수급사업자에게 지급하여야 한다'
-        verified: false
+        verified: true
       - law: 하도급거래 공정화에 관한 법률
         article: 제13조
         clause: 제5항
         quote: '발주자로부터 원사업자가 받은 어음의 지급기간(발행일부터 만기일까지)을 초과하는 어음을 지급하여서는 아니 된다'
-        verified: false
+        verified: true
     note: 하도급법 적용대상 해당 시
   - id: SP-PAY-06
     module: M-PAY
@@ -125,7 +125,7 @@ checks:
         article: 제13조
         clause: 제8항
         quote: '그 초과기간에 대하여 연 100분의 40 이내에서 「은행법」에 따른 은행이 적용하는 연체금리 등 경제사정을 고려하여 공정거래위원회가 정하여 고시하는 이율에 따른 이자를 지급하여야 한다'
-        verified: false
+        verified: true
     note: 하도급법 적용대상 해당 시. 공통 CMN-05-2(일반 지연이자 약정)와 달리 법정 지연이자율(공정위 고시)이 적용됨
   - id: SP-PAY-07
     module: M-PAY
@@ -142,7 +142,7 @@ checks:
         article: 제4조
         clause: 제1항
         quote: '부당하게 목적물등과 같거나 유사한 것에 대하여 일반적으로 지급되는 대가보다 낮은 수준으로 하도급대금을 결정'
-        verified: false
+        verified: true
     note: 하도급법 적용대상 해당 시. 제4조 제2항 각 호(일률 단가인하·부당 할당·차별·기망 등)는 부당대금결정으로 간주됨
   - id: SP-PAY-08
     module: M-PAY
@@ -159,7 +159,7 @@ checks:
         article: 제16조
         clause: 제1항
         quote: '그가 발주자로부터 증액받은 계약금액의 내용과 비율에 따라 하도급대금을 증액하여야 한다'
-        verified: false
+        verified: true
     note: 하도급법 적용대상 해당 시. 감액받은 경우 그 내용·비율에 따라 감액 가능(제16조 제1항 단서)
   - id: SP-PAY-09
     module: M-PAY
@@ -176,12 +176,12 @@ checks:
         article: 제13조의2
         clause: 제1항
         quote: '건설위탁의 경우 원사업자는 계약체결일부터 30일 이내에 수급사업자에게 다음 각 호의 구분에 따라 해당 금액의 공사대금 지급을 보증'
-        verified: false
+        verified: true
       - law: 하도급거래 공정화에 관한 법률 시행령
         article: 제8조
         clause: 제1항 제1호
         quote: '원사업자가 수급사업자에게 건설위탁을 하는 경우로서 1건 공사의 공사금액이 1천만원 이하인 경우'
-        verified: false
+        verified: true
     note: 하도급법 적용대상 중 건설위탁에 한함. 보증 면제사유(공사금액 1천만원 이하 등)의 실체는 시행령 제8조에 위임됨
   - id: SP-PAY-10
     module: M-PAY
@@ -198,12 +198,12 @@ checks:
         article: 제14조
         clause: 제1항
         quote: '수급사업자가 제조ㆍ수리ㆍ시공 또는 용역수행을 한 부분에 상당하는 하도급대금을 그 수급사업자에게 직접 지급하여야 한다'
-        verified: false
+        verified: true
       - law: 하도급거래 공정화에 관한 법률 시행령
         article: 제9조
         clause: 제3항
         quote: '발주자는 원사업자에 대한 대금지급의무의 범위에서 하도급대금 직접 지급 의무를 부담한다'
-        verified: false
+        verified: true
     note: 하도급법 적용대상 해당 시. 직접지급 의무의 범위·절차 실체는 시행령 제9조에 위임됨(원사업자 대금지급채무는 그 범위에서 소멸 — 제14조 제2항)
   # ── M-UNFAIR: 하도급법 제3조의4(부당특약) + 약관의 규제에 관한 법률 제6조~제14조 ──
   - id: SP-UNF-01
@@ -221,7 +221,7 @@ checks:
         article: 제3조의4
         clause: 제1항
         quote: '원사업자는 수급사업자의 이익을 부당하게 침해하거나 제한하는 계약조건'
-        verified: false
+        verified: true
     note: 하도급법 적용대상 해당 시
   - id: SP-UNF-02
     module: M-UNFAIR
@@ -238,7 +238,7 @@ checks:
         article: 제3조의4
         clause: 제2항 제1호
         quote: '원사업자가 제3조제1항의 서면에 기재되지 아니한 사항을 요구함에 따라 발생된 비용을 수급사업자에게 부담시키는 약정'
-        verified: false
+        verified: true
     note: 하도급법 적용대상 해당 시. 제3조의4 제2항 각 호는 부당한 특약으로 간주되며 해당 부분에 한하여 무효(제3항)
   - id: SP-UNF-03
     module: M-UNFAIR
@@ -255,7 +255,7 @@ checks:
         article: 제3조의4
         clause: 제2항 제2호
         quote: '원사업자가 부담하여야 할 민원처리, 산업재해 등과 관련된 비용을 수급사업자에게 부담시키는 약정'
-        verified: false
+        verified: true
     note: 하도급법 적용대상 해당 시
   - id: SP-UNF-04
     module: M-UNFAIR
@@ -272,7 +272,7 @@ checks:
         article: 제3조의4
         clause: 제2항 제3호
         quote: '원사업자가 입찰내역에 없는 사항을 요구함에 따라 발생된 비용을 수급사업자에게 부담시키는 약정'
-        verified: false
+        verified: true
     note: 하도급법 적용대상 해당 시
   - id: SP-UNF-05
     module: M-UNFAIR
@@ -289,7 +289,7 @@ checks:
         article: 제6조
         clause: 제1항
         quote: '신의성실의 원칙을 위반하여 공정성을 잃은 약관 조항은 무효이다'
-        verified: false
+        verified: true
     note: 약관(정형화된 계약조건)에 해당하는 경우 적용 — 개별 교섭 조항에는 부적용
   - id: SP-UNF-06
     module: M-UNFAIR
@@ -306,7 +306,7 @@ checks:
         article: 제6조
         clause: 제2항
         quote: '약관의 내용 중 다음 각 호의 어느 하나에 해당하는 내용을 정하고 있는 조항은 공정성을 잃은 것으로 추정된다'
-        verified: false
+        verified: true
     note: 약관에 해당하는 경우 적용. 추정규정이므로 사업자가 공정성을 반증하면 유효
   - id: SP-UNF-07
     module: M-UNFAIR
@@ -323,7 +323,7 @@ checks:
         article: 제7조
         clause: 제1호
         quote: '사업자, 이행 보조자 또는 피고용자의 고의 또는 중대한 과실로 인한 법률상의 책임을 배제하는 조항'
-        verified: false
+        verified: true
     note: 약관에 해당하는 경우 적용
   - id: SP-UNF-08
     module: M-UNFAIR
@@ -339,7 +339,7 @@ checks:
       - law: 약관의 규제에 관한 법률
         article: 제8조
         quote: '고객에게 부당하게 과중한 지연 손해금 등의 손해배상 의무를 부담시키는 약관 조항은 무효로 한다'
-        verified: false
+        verified: true
     note: 약관에 해당하는 경우 적용
   - id: SP-UNF-09
     module: M-UNFAIR
@@ -355,7 +355,7 @@ checks:
       - law: 약관의 규제에 관한 법률
         article: 제9조
         quote: '계약의 해제ㆍ해지에 관하여 정하고 있는 약관의 내용 중 다음 각 호의 어느 하나에 해당되는 내용을 정하고 있는 조항은 무효로 한다'
-        verified: false
+        verified: true
     note: 약관에 해당하는 경우 적용
   - id: SP-UNF-10
     module: M-UNFAIR
@@ -372,7 +372,7 @@ checks:
         article: 제10조
         clause: 제1호
         quote: '상당한 이유 없이 급부(給付)의 내용을 사업자가 일방적으로 결정하거나 변경할 수 있도록 권한을 부여하는 조항'
-        verified: false
+        verified: true
     note: 약관에 해당하는 경우 적용
   - id: SP-UNF-11
     module: M-UNFAIR
@@ -389,7 +389,7 @@ checks:
         article: 제11조
         clause: 제1호
         quote: '법률에 따른 고객의 항변권(抗辯權), 상계권(相計權) 등의 권리를 상당한 이유 없이 배제하거나 제한하는 조항'
-        verified: false
+        verified: true
     note: 약관에 해당하는 경우 적용
   - id: SP-UNF-12
     module: M-UNFAIR
@@ -405,7 +405,7 @@ checks:
       - law: 약관의 규제에 관한 법률
         article: 제12조
         quote: '의사표시에 관하여 정하고 있는 약관의 내용 중 다음 각 호의 어느 하나에 해당하는 내용을 정하고 있는 조항은 무효로 한다'
-        verified: false
+        verified: true
     note: 약관에 해당하는 경우 적용
   - id: SP-UNF-13
     module: M-UNFAIR
@@ -422,7 +422,7 @@ checks:
         article: 제14조
         clause: 제1호
         quote: '고객에게 부당하게 불리한 소송 제기 금지 조항 또는 재판관할의 합의 조항'
-        verified: false
+        verified: true
     note: 약관에 해당하는 경우 적용. 공통 CMN-19(관할 지정)와 달리 부당 관할합의의 무효 여부를 점검
   # ── M-DELIVERY: 검수 + 민법 제398조·제537조·제538조·제667조~제670조·제580조~제582조 ──
   - id: SP-DEL-01
@@ -451,7 +451,7 @@ checks:
         article: 제398조
         clause: 제1항
         quote: '당사자는 채무불이행에 관한 손해배상액을 예정할 수 있다'
-        verified: false
+        verified: true
     note: 임의규정 — 예정액이 부당히 과다하면 법원이 감액 가능(제398조 제2항)
   - id: SP-DEL-03
     module: M-DELIVERY
@@ -467,7 +467,7 @@ checks:
       - law: 민법
         article: 제537조
         quote: '쌍무계약의 당사자 일방의 채무가 당사자쌍방의 책임없는 사유로 이행할 수 없게 된 때에는 채무자는 상대방의 이행을 청구하지 못한다'
-        verified: false
+        verified: true
     note: 채무자위험부담주의는 임의규정 — 특약으로 위험이전 시기를 달리 정할 수 있음
   - id: SP-DEL-04
     module: M-DELIVERY
@@ -484,7 +484,7 @@ checks:
         article: 제538조
         clause: 제1항
         quote: '쌍무계약의 당사자 일방의 채무가 채권자의 책임있는 사유로 이행할 수 없게 된 때에는 채무자는 상대방의 이행을 청구할 수 있다'
-        verified: false
+        verified: true
     note: 임의규정 — 채무자는 자기 채무를 면함으로써 얻은 이익을 상환(제538조 제2항)
   - id: SP-DEL-05
     module: M-DELIVERY
@@ -501,7 +501,7 @@ checks:
         article: 제667조
         clause: 제1항
         quote: '완성된 목적물 또는 완성전의 성취된 부분에 하자가 있는 때에는 도급인은 수급인에 대하여 상당한 기간을 정하여 그 하자의 보수를 청구할 수 있다'
-        verified: false
+        verified: true
     note: 하자담보책임은 임의규정 — 특약으로 조정 가능(단 제672조 면책특약 제한 유의)
   - id: SP-DEL-06
     module: M-DELIVERY
@@ -518,7 +518,7 @@ checks:
         article: 제667조
         clause: 제2항
         quote: '도급인은 하자의 보수에 갈음하여 또는 보수와 함께 손해배상을 청구할 수 있다'
-        verified: false
+        verified: true
   - id: SP-DEL-07
     module: M-DELIVERY
     check: 완성물의 하자로 계약 목적을 달성할 수 없는 경우의 해제권 조항이 있는가
@@ -550,7 +550,7 @@ checks:
         article: 제670조
         clause: 제1항
         quote: '전3조의 규정에 의한 하자의 보수, 손해배상의 청구 및 계약의 해제는 목적물의 인도를 받은 날로부터 1년내에 하여야 한다'
-        verified: false
+        verified: true
     note: 하자담보 제척기간은 임의규정 — 특약으로 연장·단축 가능
   - id: SP-DEL-09
     module: M-DELIVERY
@@ -567,7 +567,7 @@ checks:
         article: 제580조
         clause: 제1항
         quote: '매매의 목적물에 하자가 있는 때에는 제575조제1항의 규정을 준용한다'
-        verified: false
+        verified: true
     note: 임의규정 — 매수인이 하자를 알았거나 과실로 알지 못한 때에는 담보책임 배제(제580조 제1항 단서)
   - id: SP-DEL-10
     module: M-DELIVERY
@@ -584,7 +584,7 @@ checks:
         article: 제581조
         clause: 제2항
         quote: '매수인은 계약의 해제 또는 손해배상의 청구를 하지 아니하고 하자없는 물건을 청구할 수 있다'
-        verified: false
+        verified: true
   - id: SP-DEL-11
     module: M-DELIVERY
     check: 구매(매매) 하자담보에 따른 권리행사기간(하자를 안 날부터 6월 등)이 규정되어 있는가
@@ -599,5 +599,5 @@ checks:
       - law: 민법
         article: 제582조
         quote: '전2조에 의한 권리는 매수인이 그 사실을 안 날로부터 6월내에 행사하여야 한다'
-        verified: false
+        verified: true
     note: 제척기간은 임의규정 — 특약으로 조정 가능

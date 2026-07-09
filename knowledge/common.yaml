@@ -138,7 +138,7 @@ checks:
         article: 제393조
         clause: 제1항
         quote: '채무불이행으로 인한 손해배상은 통상의 손해를 그 한도로 한다'
-        verified: false
+        verified: true
     note: 임의규정 — 계약상 확장·제한 특약이 우선함
   - id: CMN-13
     check: 특별손해(간접손해·일실이익 등)의 배상 여부와 예견가능성 요건에 관한 문언이 있는가
@@ -154,7 +154,7 @@ checks:
         article: 제393조
         clause: 제2항
         quote: '특별한 사정으로 인한 손해는 채무자가 그 사정을 알았거나 알 수 있었을 때에 한하여 배상의 책임이 있다'
-        verified: false
+        verified: true
     note: 임의규정 — 계약상 확장·제한 특약이 우선함
   - id: CMN-14
     check: 책임 상한(cap)·면책 조항이 고의·중과실을 상한 예외로 명시하고 있는가
