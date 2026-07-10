@@ -292,3 +292,18 @@ td.empty { text-align: center; color: #889; padding: 24px; }
 .report-summary .report-item { padding: 7px 0; border-bottom: 1px solid #f0f2f6; font-size: 13.5px; line-height: 1.5; }
 .report-summary .ri-loc-inline { color: #778; font-size: 12.5px; }
 @media (max-width: 900px) { .report-split { grid-template-columns: 1fr; } }
+
+/* 부속 서류(#3) */
+.subdoc-area { margin-top: 12px; padding-top: 12px; border-top: 1px dashed #d5deec; }
+.subdoc-add { border-style: solid; border-color: #bcd; font-size: 12.5px; }
+.subdoc-hint { font-size: 12px; color: #778; margin-left: 8px; }
+.subdoc-list { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 6px; }
+.subdoc-chip { background: #eef2f8; border: 1px solid #d5deec; border-radius: 14px;
+  padding: 3px 6px 3px 12px; font-size: 12.5px; color: #46618c; display: inline-flex; align-items: center; gap: 4px; }
+.subdoc-x { border: none; background: #d5deec; color: #46618c; border-radius: 50%;
+  width: 18px; height: 18px; cursor: pointer; line-height: 1; font-size: 13px; }
+.subdoc-x:hover { background: #c0392b; color: #fff; }
+/* 리포트 — 부속서류 커버 */
+.report-summary h4.h4-covered { color: #1c7a44; }
+.covered-item { border-left: 3px solid #1f9d55; padding-left: 8px; }
+.covered-src { font-size: 12px; color: #1c7a44; margin-left: 8px; }

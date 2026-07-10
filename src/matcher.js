@@ -254,6 +254,37 @@ function _reasons(tier, ranked, check) {
 }
 
 // ── 메인 ─────────────────────────────────────────────────────────
+// 서브 서류 커버리지(#3): 주 계약서에서 consider(필수 부재)로 뜬 check가
+// 부속 서류(보안관리약정서 등)에서 다뤄지는지 매칭엔진으로 확인.
+// considerCps: consider 판정된 checkpoint 배열. subDocs: [{name, clauses}]. model: buildModel 결과(IDF 재사용).
+// 반환: { cpId: {docName, score} } — 부속서류에서 커버된 항목만.
+function subDocCoverage(considerCps, subDocs, model) {
+  var out = {};
+  if (!considerCps || !considerCps.length || !subDocs || !subDocs.length) return out;
+  considerCps.forEach(function (cp) {
+    var entry = { cp: cp, text: checkText(cp), doc: null };
+    for (var d = 0; d < subDocs.length; d++) {
+      var doc = subDocs[d];
+      var clauses = doc.clauses || [];
+      if (!clauses.length) continue;
+      var scored = clauses.map(function (cl) {
+        return { clause: cl, s: scoreClauseCheck(cl, entry, model) };
+      }).sort(function (a, b) { return b.s.score - a.s.score; });
+      var candidates = scored.filter(function (r) { return r.s.score >= MatcherConfig.REVIEW_FLOOR; });
+      var tier = decideTier(candidates, cp);
+      // 부속서류에서 addressed/verify로 닿고 노출 게이트 통과하면 커버로 인정.
+      if ((tier === "confirmed" || tier === "review") && candidates.length) {
+        var best = candidates[0];
+        if (passesOverlapGate(best.clause, cp, best.s.citation === true)) {
+          out[cp.id] = { docName: doc.name, score: best.s.score };
+          break; // 첫 커버 서류에서 확정
+        }
+      }
+    }
+  });
+  return out;
+}
+
 function analyze(clauses, docs, activeModules) {
   var model = buildModel(docs, activeModules);
   var results = [];
@@ -337,5 +368,6 @@ if (typeof module !== "undefined")
     decideTier: decideTier,
     alarmGate: alarmGate,
     coverageOf: coverageOf,
+    subDocCoverage: subDocCoverage,
     analyze: analyze
   };

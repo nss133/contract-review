@@ -32,6 +32,11 @@
           <button id="btn-analyze" class="primary">분석 시작</button>
         </div>
         <p id="input-error" class="error" hidden></p>
+        <div class="subdoc-area">
+          <label class="filebtn subdoc-add">＋ 부속 서류 추가<input id="subdoc-file" type="file" accept=".docx,.pdf,.doc,.hwp,.hwpx,.txt" multiple hidden></label>
+          <span class="subdoc-hint">검토 대상 아님 — 보안관리약정서 등 별도 서류를 넣으면 “필수 항목이 부속서류에서 커버되는지” 확인해 오탐을 줄입니다.</span>
+          <div id="subdoc-list" class="subdoc-list"></div>
+        </div>
       </div>
       <div id="analyze-setup" hidden>
         <div id="tag-bar" class="tag-bar"></div>

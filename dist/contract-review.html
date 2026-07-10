@@ -298,6 +298,21 @@ td.empty { text-align: center; color: #889; padding: 24px; }
 .report-summary .report-item { padding: 7px 0; border-bottom: 1px solid #f0f2f6; font-size: 13.5px; line-height: 1.5; }
 .report-summary .ri-loc-inline { color: #778; font-size: 12.5px; }
 @media (max-width: 900px) { .report-split { grid-template-columns: 1fr; } }
+
+/* 부속 서류(#3) */
+.subdoc-area { margin-top: 12px; padding-top: 12px; border-top: 1px dashed #d5deec; }
+.subdoc-add { border-style: solid; border-color: #bcd; font-size: 12.5px; }
+.subdoc-hint { font-size: 12px; color: #778; margin-left: 8px; }
+.subdoc-list { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 6px; }
+.subdoc-chip { background: #eef2f8; border: 1px solid #d5deec; border-radius: 14px;
+  padding: 3px 6px 3px 12px; font-size: 12.5px; color: #46618c; display: inline-flex; align-items: center; gap: 4px; }
+.subdoc-x { border: none; background: #d5deec; color: #46618c; border-radius: 50%;
+  width: 18px; height: 18px; cursor: pointer; line-height: 1; font-size: 13px; }
+.subdoc-x:hover { background: #c0392b; color: #fff; }
+/* 리포트 — 부속서류 커버 */
+.report-summary h4.h4-covered { color: #1c7a44; }
+.covered-item { border-left: 3px solid #1f9d55; padding-left: 8px; }
+.covered-src { font-size: 12px; color: #1c7a44; margin-left: 8px; }
 </style>
 </head>
 <body>
@@ -326,6 +341,11 @@ td.empty { text-align: center; color: #889; padding: 24px; }
           <button id="btn-analyze" class="primary">분석 시작</button>
         </div>
         <p id="input-error" class="error" hidden></p>
+        <div class="subdoc-area">
+          <label class="filebtn subdoc-add">＋ 부속 서류 추가<input id="subdoc-file" type="file" accept=".docx,.pdf,.doc,.hwp,.hwpx,.txt" multiple hidden></label>
+          <span class="subdoc-hint">검토 대상 아님 — 보안관리약정서 등 별도 서류를 넣으면 “필수 항목이 부속서류에서 커버되는지” 확인해 오탐을 줄입니다.</span>
+          <div id="subdoc-list" class="subdoc-list"></div>
+        </div>
       </div>
       <div id="analyze-setup" hidden>
         <div id="tag-bar" class="tag-bar"></div>
@@ -1061,6 +1081,37 @@ function _reasons(tier, ranked, check) {
 }
 
 // ── 메인 ─────────────────────────────────────────────────────────
+// 서브 서류 커버리지(#3): 주 계약서에서 consider(필수 부재)로 뜬 check가
+// 부속 서류(보안관리약정서 등)에서 다뤄지는지 매칭엔진으로 확인.
+// considerCps: consider 판정된 checkpoint 배열. subDocs: [{name, clauses}]. model: buildModel 결과(IDF 재사용).
+// 반환: { cpId: {docName, score} } — 부속서류에서 커버된 항목만.
+function subDocCoverage(considerCps, subDocs, model) {
+  var out = {};
+  if (!considerCps || !considerCps.length || !subDocs || !subDocs.length) return out;
+  considerCps.forEach(function (cp) {
+    var entry = { cp: cp, text: checkText(cp), doc: null };
+    for (var d = 0; d < subDocs.length; d++) {
+      var doc = subDocs[d];
+      var clauses = doc.clauses || [];
+      if (!clauses.length) continue;
+      var scored = clauses.map(function (cl) {
+        return { clause: cl, s: scoreClauseCheck(cl, entry, model) };
+      }).sort(function (a, b) { return b.s.score - a.s.score; });
+      var candidates = scored.filter(function (r) { return r.s.score >= MatcherConfig.REVIEW_FLOOR; });
+      var tier = decideTier(candidates, cp);
+      // 부속서류에서 addressed/verify로 닿고 노출 게이트 통과하면 커버로 인정.
+      if ((tier === "confirmed" || tier === "review") && candidates.length) {
+        var best = candidates[0];
+        if (passesOverlapGate(best.clause, cp, best.s.citation === true)) {
+          out[cp.id] = { docName: doc.name, score: best.s.score };
+          break; // 첫 커버 서류에서 확정
+        }
+      }
+    }
+  });
+  return out;
+}
+
 function analyze(clauses, docs, activeModules) {
   var model = buildModel(docs, activeModules);
   var results = [];
@@ -1144,6 +1195,7 @@ if (typeof module !== "undefined")
     decideTier: decideTier,
     alarmGate: alarmGate,
     coverageOf: coverageOf,
+    subDocCoverage: subDocCoverage,
     analyze: analyze
   };
 
@@ -2188,6 +2240,43 @@ function loadContractFile(f) {
 document.getElementById("docx-file").addEventListener("change", function (e) {
   loadContractFile(e.target.files[0]);
 });
+
+// 부속 서류(#3) — 검토 대상 아닌 별도 서류. 필수 항목 커버 확인용.
+state.subDocs = []; // [{name, text}]
+function renderSubDocList() {
+  var el = document.getElementById("subdoc-list");
+  el.innerHTML = state.subDocs.map(function (d, i) {
+    return '<span class="subdoc-chip">' + esc(d.name) +
+      ' <button class="subdoc-x" data-i="' + i + '" title="제거">×</button></span>';
+  }).join("");
+  el.querySelectorAll(".subdoc-x").forEach(function (b) {
+    b.addEventListener("click", function () {
+      state.subDocs.splice(Number(b.dataset.i), 1);
+      renderSubDocList();
+      if (_analyzedOnce) runAnalysis();
+    });
+  });
+}
+document.getElementById("subdoc-file").addEventListener("change", function (e) {
+  var files = Array.prototype.slice.call(e.target.files || []);
+  var err = document.getElementById("input-error");
+  var chain = Promise.resolve();
+  files.forEach(function (f) {
+    chain = chain.then(function () {
+      return extractFileText(f).then(function (text) {
+        state.subDocs.push({ name: f.name, text: text });
+      }).catch(function (ex) {
+        err.textContent = "부속 서류 '" + f.name + "' 추출 실패(" + ex.message + ") — 건너뜀";
+        err.hidden = false;
+      });
+    });
+  });
+  chain.then(function () {
+    renderSubDocList();
+    e.target.value = "";
+    if (_analyzedOnce) runAnalysis();
+  });
+});
 // 드래그앤드롭 — 드롭 존에 파일을 놓으면 추출.
 (function () {
   var zone = document.getElementById("drop-zone");
@@ -2281,6 +2370,22 @@ function runAnalysis() {
     { checkpoints: doc ? doc.checks : [] },
   ];
   state.result = analyze(state.clauses, docs, state.activeModules);
+
+  // 부속 서류 커버리지(#3): consider(필수 부재)로 뜬 항목이 부속서류에서 다뤄지는지.
+  state.subDocCov = {};
+  if (state.subDocs && state.subDocs.length) {
+    var considerCps = state.result.results
+      .filter(function (x) { return x.coverage === "consider"; })
+      .map(function (x) { return _cpById(x.cpId); })
+      .filter(Boolean);
+    if (considerCps.length) {
+      var model = buildModel(docs, state.activeModules);
+      var subs = state.subDocs.map(function (d) {
+        return { name: d.name, clauses: segmentContract(d.text) };
+      });
+      state.subDocCov = subDocCoverage(considerCps, subs, model);
+    }
+  }
   loadVerdicts();
   renderClauses();
   bindVerdictIO();
@@ -2632,7 +2737,11 @@ function renderReport() {
     else if (res.coverage === "consider") consider.push(it);
   });
   addressed.sort(_sevSort); verify.sort(_sevSort); consider.sort(_sevSort);
-  var mustConsider = consider.filter(function (it) { return it.severity === "필수"; });
+  // 필수 consider를 부속서류 커버 여부로 분리(#3).
+  var subCov = state.subDocCov || {};
+  var mustAll = consider.filter(function (it) { return it.severity === "필수"; });
+  var mustConsider = mustAll.filter(function (it) { return !subCov[it.cp.id]; }); // 진짜 미확인
+  var mustCovered = mustAll.filter(function (it) { return subCov[it.cp.id]; });   // 부속서류 커버
   var recConsider = consider.filter(function (it) { return it.severity === "권장"; });
 
   // 검토의견(코멘트)을 조항별로 모음 — 좌 컬럼용.
@@ -2681,7 +2790,8 @@ function renderReport() {
       recConsider.length + "건 · 문구 확인 권장 " + verify.length + "건을 살펴볼 것.";
   } else {
     conclCls = "concl-ok";
-    conclText = "계약서 전체적으로 특이사항 없음 — 필수·권장 검토항목이 모두 관련 조항에 닿음.";
+    conclText = "계약서 전체적으로 특이사항 없음 — 필수·권장 검토항목이 모두 관련 조항에 닿음." +
+      (mustCovered.length ? " (필수 " + mustCovered.length + "건은 부속 서류에서 커버됨)" : "");
   }
 
   var right = '<div class="report-summary"><h3>종합 리포트</h3>';
@@ -2725,6 +2835,18 @@ function renderReport() {
       return '<div class="report-item consider-item"><div class="ri-head"><span class="sev sev-필수">필수</span>' +
         '<span class="ri-q">' + labelQ(it.cp) + "</span></div>" +
         (it.cp.severity_basis ? '<p class="ri-why">' + esc(it.cp.severity_basis) + "</p>" : "") + "</div>";
+    }).join("") + "</section>";
+  }
+
+  // 부속서류에서 커버됨(#3) — 필수 미확인이었으나 부속 서류에서 다뤄진 항목.
+  if (mustCovered.length) {
+    right += '<section class="report-sec-block"><h4 class="h4-covered">부속 서류에서 커버됨 (' + mustCovered.length + ")</h4>";
+    right += '<p class="sec-hint">주 계약서엔 없으나 첨부한 부속 서류에서 다뤄지고 있어 누락 아님.</p>';
+    right += mustCovered.map(function (it) {
+      var cv = subCov[it.cp.id];
+      return '<div class="report-item covered-item"><span class="sev sev-필수">필수</span> ' +
+        '<span class="ri-q">' + labelQ(it.cp) + "</span>" +
+        '<span class="covered-src">📎 ' + esc(cv.docName) + "</span></div>";
     }).join("") + "</section>";
   }
 
