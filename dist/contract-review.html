@@ -313,6 +313,16 @@ td.empty { text-align: center; color: #889; padding: 24px; }
 .report-summary h4.h4-covered { color: #1c7a44; }
 .covered-item { border-left: 3px solid #1f9d55; padding-left: 8px; }
 .covered-src { font-size: 12px; color: #1c7a44; margin-left: 8px; }
+
+/* 지식 루프(#4) — 판정 분포·추천 코멘트 */
+.loop-info { margin-top: 8px; padding-top: 8px; border-top: 1px dashed #e0e4ee; font-size: 12.5px; }
+.loop-dist { color: #667; }
+.loop-dist .vd-badge { margin-left: 4px; }
+.loop-comments { margin-top: 6px; color: #667; display: flex; flex-wrap: wrap; gap: 5px; align-items: center; }
+.loop-c { border: 1px solid #d9dfea; background: #f7f9fc; border-radius: 12px; padding: 3px 10px;
+  font-size: 12px; cursor: pointer; color: #445; }
+.loop-c:hover { background: #eef2f8; border-color: #46618c; }
+.loop-c .loop-c-n { color: #99a; font-size: 11px; }
 </style>
 </head>
 <body>
@@ -1859,6 +1869,113 @@ var Verdict = (function () {
 if (typeof module !== "undefined") module.exports = Verdict;
 
 "use strict";
+/* 검토의견 지식 루프(#4) 순수 로직 — 폐쇄망 내부 루프.
+   검토의견(verdict) 내보내기 JSON을 cpId 단위 코퍼스에 누적 집계하여
+   코멘트 추천·판정 분포·큐레이션 신호를 산출한다. LLM·외부요청 0.
+   브라우저 전역 Loop + node require 겸용. */
+var Loop = (function () {
+  var VERDICTS = ["이상없음", "검토의견", "해당없음"];
+
+  function emptyCorpus() {
+    return { meta: { updated: "", contract_count: 0, hashes: [] }, byCheck: {} };
+  }
+
+  function _ensureCheck(corpus, cpId) {
+    if (!corpus.byCheck[cpId]) {
+      corpus.byCheck[cpId] = { counts: { "이상없음": 0, "검토의견": 0, "해당없음": 0 }, comments: [], lastSeen: "" };
+    }
+    return corpus.byCheck[cpId];
+  }
+
+  // 검토의견 내보내기 객체({meta,verdicts})를 코퍼스에 병합(불변 반환).
+  // 같은 contract_hash 재적재는 중복 카운트하지 않음(멱등).
+  function mergeIntoCorpus(corpus, exportObj) {
+    var next = JSON.parse(JSON.stringify(corpus || emptyCorpus()));
+    if (!exportObj || typeof exportObj !== "object") return next;
+    var meta = exportObj.meta || {};
+    var hash = meta.contract_hash || "";
+    var reviewer = meta.reviewer || "";
+    var date = meta.date || "";
+    if (hash && next.meta.hashes.indexOf(hash) !== -1) return next; // 이미 적재된 계약서
+    if (hash) { next.meta.hashes.push(hash); next.meta.contract_count++; }
+
+    var verdicts = exportObj.verdicts || {};
+    Object.keys(verdicts).forEach(function (cpId) {
+      var v = verdicts[cpId];
+      if (!v || VERDICTS.indexOf(v.verdict) === -1) return;
+      var slot = _ensureCheck(next, cpId);
+      slot.counts[v.verdict]++;
+      slot.lastSeen = date || slot.lastSeen;
+      var text = (v.comment || "").trim();
+      if (text) {
+        var found = null;
+        for (var i = 0; i < slot.comments.length; i++) {
+          if (slot.comments[i].text === text) { found = slot.comments[i]; break; }
+        }
+        if (found) {
+          found.count++;
+          if (found.reviewers.indexOf(reviewer) === -1 && reviewer) found.reviewers.push(reviewer);
+        } else {
+          slot.comments.push({ text: text, verdict: v.verdict, count: 1,
+            reviewers: reviewer ? [reviewer] : [], date: date });
+        }
+      }
+    });
+    next.meta.updated = date || next.meta.updated;
+    return next;
+  }
+
+  // cpId의 판정 분포 통계. 없으면 null.
+  function checkStats(corpus, cpId) {
+    var slot = corpus && corpus.byCheck && corpus.byCheck[cpId];
+    if (!slot) return null;
+    var dist = slot.counts;
+    var n = dist["이상없음"] + dist["검토의견"] + dist["해당없음"];
+    if (n === 0) return null;
+    var pct = {}, dominant = null, dmax = -1;
+    VERDICTS.forEach(function (v) {
+      pct[v] = Math.round((dist[v] / n) * 100);
+      if (dist[v] > dmax) { dmax = dist[v]; dominant = v; }
+    });
+    return { n: n, dist: dist, pct: pct, dominant: dominant, lowSample: n < 5 };
+  }
+
+  // cpId의 추천 코멘트(count 내림차순 상위 limit).
+  function topComments(corpus, cpId, limit) {
+    var slot = corpus && corpus.byCheck && corpus.byCheck[cpId];
+    if (!slot || !slot.comments.length) return [];
+    return slot.comments.slice().sort(function (a, b) { return b.count - a.count; }).slice(0, limit || 3);
+  }
+
+  // 큐레이션 신호: 반복 이상없음(gold) / 반복 해당없음(conditional).
+  // opts: {minN, ratio}. 자동 반영 아님 — 큐레이터에게 제시할 후보.
+  function curationSignals(corpus, opts) {
+    opts = opts || {};
+    var minN = opts.minN || 5, ratio = opts.ratio || 0.8;
+    var gold = [], conditional = [];
+    var byCheck = (corpus && corpus.byCheck) || {};
+    Object.keys(byCheck).forEach(function (cpId) {
+      var st = checkStats(corpus, cpId);
+      if (!st || st.n < minN) return;
+      if (st.dist["이상없음"] / st.n >= ratio) gold.push({ cpId: cpId, n: st.n, pct: st.pct["이상없음"] });
+      if (st.dist["해당없음"] / st.n >= ratio) conditional.push({ cpId: cpId, n: st.n, pct: st.pct["해당없음"] });
+    });
+    return { gold: gold, conditional: conditional };
+  }
+
+  return {
+    VERDICTS: VERDICTS,
+    emptyCorpus: emptyCorpus,
+    mergeIntoCorpus: mergeIntoCorpus,
+    checkStats: checkStats,
+    topComments: topComments,
+    curationSignals: curationSignals
+  };
+})();
+
+if (typeof module !== "undefined") module.exports = Loop;
+
+"use strict";
 /* 자동 마킹 태그 — 계약명·본문에서 계약의 세부 성격을 정규식으로 감지.
    유형(굵은 분류)과 독립. 유형 선택 부담 없이 세부 성격을 보조 배지로 표시한다.
    실데이터(회사 계약검토 리스트 6,631건) 빈도 기반으로 태그 선정.
@@ -2402,6 +2519,19 @@ function runAnalysis() {
   }
 }
 
+/* ---------- 검토의견 지식 루프(#4) — cpId 단위 누적 코퍼스 ----------
+   여러 계약서 검토의견을 쌓아 판정 분포·코멘트 추천 제공. 저장키 cr-loop-corpus. */
+var LOOP_KEY = "cr-loop-corpus";
+var loopCorpus = Loop.emptyCorpus();
+try { loopCorpus = JSON.parse(localStorage.getItem(LOOP_KEY)) || Loop.emptyCorpus(); } catch (e) {}
+function saveCorpus() { localStorage.setItem(LOOP_KEY, JSON.stringify(loopCorpus)); }
+// 현재 계약서의 검토의견을 코퍼스에 적재(닫힌 루프의 ③단계).
+function ingestCurrentToCorpus() {
+  var meta = { type_id: state.typeId, date: verdictToday(), contract_hash: verdictHash };
+  loopCorpus = Loop.mergeIntoCorpus(loopCorpus, Verdict.exportVerdicts(verdictStore, meta));
+  saveCorpus();
+}
+
 /* ---------- 조항별 검토의견(verdict) — 계약서 건별 판정 축 ----------
    '검수'(verified: 지식 정확성)와 별개. 이 계약서의 이 항목이 이상없음/검토의견/해당없음.
    저장키 cr-verdict-<계약서해시>. */
@@ -2424,6 +2554,24 @@ function verdictToday() {
   return d.getFullYear() + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + "-" + ("0" + d.getDate()).slice(-2);
 }
 var VERDICT_CLS = { "이상없음": "vd-ok", "검토의견": "vd-comment", "해당없음": "vd-na" };
+// 지식 루프(#4) — 이 cpId의 과거 판정 분포 + 추천 코멘트. 없으면 빈 문자열.
+function loopInfoHtml(cpId) {
+  var st = Loop.checkStats(loopCorpus, cpId);
+  if (!st) return "";
+  var h = '<div class="loop-info"><span class="loop-dist">과거 판정(n=' + st.n + (st.lowSample ? ", 표본 적음" : "") + "): ";
+  Loop.VERDICTS.forEach(function (v) {
+    if (st.dist[v] > 0) h += '<span class="vd-badge ' + VERDICT_CLS[v] + '">' + v.slice(0, 2) + " " + st.pct[v] + "%</span>";
+  });
+  h += "</span>";
+  var top = Loop.topComments(loopCorpus, cpId, 3);
+  if (top.length) {
+    h += '<div class="loop-comments">자주 남긴 의견: ' + top.map(function (c) {
+      return '<button class="loop-c" data-vcp="' + esc(cpId) + '" data-ct="' + esc(c.text) + '">' +
+        esc(c.text) + " <span class=\"loop-c-n\">×" + c.count + "</span></button>";
+    }).join("") + "</div>";
+  }
+  return h + "</div>";
+}
 // cpId에 대한 판정 버튼 + 코멘트 입력 HTML. 현재 판정 활성 표시.
 function verdictControlHtml(cpId) {
   var cur = verdictStore[cpId] || {};
@@ -2438,7 +2586,7 @@ function verdictControlHtml(cpId) {
     : cur.verdict === "이상없음" ? "확인 메모(선택)" : "검토의견 메모";
   var comment = '<input class="vd-note' + (showComment ? " show" : "") + '" data-vcp="' + esc(cpId) +
     '" placeholder="' + esc(ph) + '" value="' + esc(cur.comment || "") + '">';
-  return '<div class="verdict-ctl">' + btns + comment + "</div>";
+  return '<div class="verdict-ctl">' + btns + comment + "</div>" + loopInfoHtml(cpId);
 }
 // 조항별 보기·리포트 공용 — 판정 버튼 클릭·코멘트 저장 바인딩. reRender: 저장 후 호출.
 function bindVerdictControls(root, reRender) {
@@ -2459,6 +2607,15 @@ function bindVerdictControls(root, reRender) {
       // 코멘트만 입력하면 검토의견으로 자동 설정
       var v = cur.verdict || "검토의견";
       applyVerdict(cp, v, inp.value);
+      if (reRender) reRender();
+    });
+  });
+  // 추천 코멘트 클릭 → 코멘트 재사용(#4 루프 활용). 판정 없으면 검토의견으로.
+  root.querySelectorAll(".loop-c").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var cp = btn.getAttribute("data-vcp"), text = btn.getAttribute("data-ct");
+      var cur = verdictStore[cp] || {};
+      applyVerdict(cp, cur.verdict || "검토의견", text);
       if (reRender) reRender();
     });
   });
@@ -2863,13 +3020,22 @@ function renderReport() {
   if (!verify.length && !recConsider.length) right += '<p class="report-none">해당 없음.</p>';
   right += "</details>";
 
-  right += '<div class="report-actions"><button id="report-verdict-export" class="ghost">검토의견 내보내기</button></div>';
+  right += '<div class="report-actions">' +
+    '<button id="report-verdict-export" class="ghost">검토의견 내보내기</button>' +
+    '<button id="report-loop-ingest" class="ghost">이 검토를 지식에 반영</button>' +
+    '<span class="report-actions-note">누적 판정(코퍼스 ' + loopCorpus.meta.contract_count + '건)에 이 계약서 검토의견을 추가 — 다음 검토에 분포·추천으로 활용</span></div>';
   right += "</div>";
 
   var body = document.getElementById("report-body");
   body.innerHTML = '<div class="report-split">' + left + right + "</div>";
   var rexp = document.getElementById("report-verdict-export");
   if (rexp) rexp.addEventListener("click", exportVerdicts);
+  var ring = document.getElementById("report-loop-ingest");
+  if (ring) ring.addEventListener("click", function () {
+    ingestCurrentToCorpus();
+    renderReport();      // 코퍼스 카운트·분포 갱신 반영
+    renderClauses();     // 조항별 보기 추천도 갱신
+  });
 }
 // 검토의견 한 줄 — 판정 배지 + 코멘트.
 function _commentLine(rec) {

@@ -307,3 +307,13 @@ td.empty { text-align: center; color: #889; padding: 24px; }
 .report-summary h4.h4-covered { color: #1c7a44; }
 .covered-item { border-left: 3px solid #1f9d55; padding-left: 8px; }
 .covered-src { font-size: 12px; color: #1c7a44; margin-left: 8px; }
+
+/* 지식 루프(#4) — 판정 분포·추천 코멘트 */
+.loop-info { margin-top: 8px; padding-top: 8px; border-top: 1px dashed #e0e4ee; font-size: 12.5px; }
+.loop-dist { color: #667; }
+.loop-dist .vd-badge { margin-left: 4px; }
+.loop-comments { margin-top: 6px; color: #667; display: flex; flex-wrap: wrap; gap: 5px; align-items: center; }
+.loop-c { border: 1px solid #d9dfea; background: #f7f9fc; border-radius: 12px; padding: 3px 10px;
+  font-size: 12px; cursor: pointer; color: #445; }
+.loop-c:hover { background: #eef2f8; border-color: #46618c; }
+.loop-c .loop-c-n { color: #99a; font-size: 11px; }

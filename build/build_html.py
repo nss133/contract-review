@@ -14,7 +14,7 @@ SRC = ROOT / "src"
 JS_ORDER = [
     "sim.js", "clause_role.js", "matcher_config.js", "segmenter.js", "matcher.js",
     "pf.js", "cfb.js", "extract-pdf.js", "extract-doc.js", "extract-hwp.js", "extract-zip.js", "extract.js",
-    "verify.js", "verdict.js", "tags.js", "app.js",
+    "verify.js", "verdict.js", "loop.js", "tags.js", "app.js",
 ]
 
 
