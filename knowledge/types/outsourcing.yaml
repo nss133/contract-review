@@ -37,8 +37,8 @@ checks:
   # ── M-CORE: 금융기관의 업무위탁 등에 관한 규정 ──
   - id: CORE-01
     module: M-CORE
-    check: 위탁 대상 업무의 범위가 열거 방식으로 구체적으로 특정되어 있는가("기타 갑이 지정하는 업무" 등 포괄 기재 아님)
-    label: "위탁업무 범위 특정"
+    check: 위수탁 당사자 간 합의한 업무범위 등 계약조건이 위탁계약서에 반드시 반영·교부되도록 되어 있는가
+    label: "합의 업무범위 계약서 반영"
     severity: 참고
     severity_basis: "실무 관행 항목(법령 강제 아님)"
     norm_type: 실무
@@ -51,7 +51,7 @@ checks:
         article: 제5조
         clause: 제5항 제1호
         quote: '보험회사는 손해사정 위수탁 당사자 간 합의한 업무범위 등 계약조건을 반드시 반영하여 손해사정업무 위탁계약서를 작성하고 교부하여야 한다'
-        verified: false
+        verified: true
         source_type: self_regulation
     note: 자율규제(손해사정 업무위탁 모범규준)는 손해사정 위탁에 한해 업무범위 계약서 반영 의무를 부과 — 일반 위탁의 참고 근거
   - id: CORE-02
@@ -108,8 +108,8 @@ checks:
         verified: true
   - id: CORE-05
     module: M-CORE
-    check: 수탁자가 관련 법규상 업무수탁이 가능한 자임을 확인·확약하는 조항이 있는가
-    label: "수탁자 자격 확약"
+    check: 보험회사가 손해사정 업무 위탁을 위한 평가기준을 마련·준수하여 수탁자(손해사정사·손해사정업자)를 선정하는 절차가 있는가
+    label: "손해사정 평가기준 선정"
     severity: 필수
     severity_basis: "근거 조문이 강행규정(의무)임 — 금융기관의 업무위탁 등에 관한 규정 제3조"
     norm_type: 강행
@@ -128,7 +128,7 @@ checks:
         article: 제4조
         clause: 제1항
         quote: '보험회사는 손해사정 업무 위탁을 위한 평가기준을 마련하고, 이를 준수하여 업무를 위탁할 손해사정사 또는 손해사정업자를 선정하여야 한다'
-        verified: false
+        verified: true
         source_type: self_regulation
   - id: CORE-06
     module: M-CORE
@@ -168,8 +168,8 @@ checks:
     note: 임의 서술이나 위탁자 동의는 강행적 전제이며 제2조·제3조·제4항 내지 제6항 준용 — 무단 재위탁은 감독규정 위반. PRIV-15·IT-09와 정합 위해 필수
   - id: CORE-08
     module: M-CORE
-    check: 재위탁 시 원위탁 금융회사의 감독원장 보고에 협조하도록 하는 조항이 있는가
-    label: "재위탁 감독원장보고 협조"
+    check: 재위탁 시 감독원장(감독당국)에 대한 보고의 주체가 원위탁 금융회사로 정해져 있는가
+    label: "재위탁 보고주체 지정"
     severity: 필수
     severity_basis: "근거 조문이 강행규정(의무)임 — 금융기관의 업무위탁 등에 관한 규정 제3조"
     norm_type: 강행
@@ -182,7 +182,7 @@ checks:
         article: 제3조(업무위탁 등)
         clause: 제4항 후문
         quote: '재위탁시 보고의 주체는 원위탁 금융회사로 한다'
-        verified: false
+        verified: true
   - id: CORE-09
     module: M-CORE
     check: 수탁자의 금융관련법령·업무위수탁기준 위반으로 발생한 손해에 대한 배상·구상 조항이 있는가
@@ -587,8 +587,8 @@ checks:
     note: 2023. 3. 14. 신설 조항
   - id: PRIV-16
     module: M-PRIV
-    check: 수탁자 귀책의 개인정보 침해로 위탁자가 배상한 경우의 구상 조항이 있는가
-    label: "개인정보 침해 구상"
+    check: 수탁자가 위탁받은 업무 관련 개인정보 처리 과정에서 법 위반으로 발생시킨 손해배상책임에 대하여 수탁자를 개인정보처리자의 소속 직원으로 간주하는 규정이 반영되어 있는가
+    label: "수탁자 소속직원 간주"
     severity: 참고
     severity_basis: "간주규정임 — 개인정보 보호법 제26조"
     norm_type: 간주
@@ -601,7 +601,7 @@ checks:
         article: 제26조
         clause: 제7항
         quote: '수탁자가 위탁받은 업무와 관련하여 개인정보를 처리하는 과정에서 이 법을 위반하여 발생한 손해배상책임에 대하여는 수탁자를 개인정보처리자의 소속 직원으로 본다'
-        verified: false
+        verified: true
   - id: PRIV-17
     module: M-PRIV
     check: 개인신용정보 처리위탁에 개인정보 보호법 제26조 제1항부터 제3항까지의 문서화·공개·통지 요건이 반영되어 있는가
@@ -1058,8 +1058,8 @@ checks:
         source_type: self_regulation
   - id: SOL-02
     module: M-SOLICIT
-    check: 모집 자격·등록의 유지 의무와 등록 취소·말소 시 통지·해지 조항이 있는가
-    label: "등록 유지·취소 시 해지"
+    check: 보험업법 등에 따른 위탁계약 해지 절차를 마련하고 그 해지 절차와 사유를 위탁계약서에 반영·설명하도록 되어 있는가
+    label: "위탁계약 해지절차 마련"
     severity: 참고
     severity_basis: "실무 관행 항목(법령 강제 아님)"
     norm_type: 실무
@@ -1072,7 +1072,7 @@ checks:
         article: 제37조
         clause: 제8항
         quote: '회사는 보험업법 등에 따른 위탁계약 해지 절차를 마련해야 하며, 그 해지 절차와 사유를 위탁계약서에 반영하고 모집종사자에게 설명하여야 한다'
-        verified: false
+        verified: true
         source_type: self_regulation
     note: 자율규제(보험권 표준내부통제기준 제37조)는 위탁계약 해지 절차·사유의 계약서 반영을 요구
   - id: SOL-03

@@ -796,7 +796,13 @@ function renderReport() {
     "</div>";
 
   // 1-b) 검토의견 요약 + 개진 항목(코멘트 있는 것) — 결론성 정보
-  var vsum = Verdict.verdictSummary(verdictStore);
+  // 이번 분석의 활성 항목(r.results)에 대한 판정만 집계 — 모듈 토글로 비활성된
+  // 항목의 판정이 요약 카운트와 표시 항목 수를 어긋나게 하지 않도록 필터링.
+  var activeVerdicts = {};
+  r.results.forEach(function (res) {
+    if (verdictStore[res.cpId]) activeVerdicts[res.cpId] = verdictStore[res.cpId];
+  });
+  var vsum = Verdict.verdictSummary(activeVerdicts);
   if (vsum.total) {
     h += '<div class="report-verdict-summary">검토의견: ' +
       '<span class="vd-badge vd-ok">이상없음 ' + vsum["이상없음"] + "</span>" +

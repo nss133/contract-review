@@ -562,8 +562,8 @@ checks:
     sources:
       - law: 민법
         article: 제668조
-        quote: '도급인이 완성된 목적물의 하자로 인하여 계약의 목적을 달성할 수 없는 때에는 계약을 해제할 수 있다'
-        verified: false
+        quote: 도급인이 완성된 목적물의 하자로 인하여 계약의 목적을 달성할 수 없는 때에는 계약을 해제할 수 있다. 그러나 건물 기타 토지의 공작물에 대하여는 그러하지 아니하다.
+        verified: true
     note: 임의규정 — 건물 기타 토지의 공작물에 대하여는 해제권 제한(제668조 단서)
   - id: SP-DEL-08
     module: M-DELIVERY
