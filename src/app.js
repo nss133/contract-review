@@ -326,12 +326,11 @@ function initChecklistType() {
 document.getElementById("filter-search").addEventListener("input", renderChecklist);
 
 /* ---------- 분석 모드: 입력 ---------- */
-document.getElementById("docx-file").addEventListener("change", function (e) {
-  var f = e.target.files[0];
+// 파일 하나에서 텍스트 추출해 입력창에 넣기(파일 열기·드래그앤드롭 공용).
+function loadContractFile(f) {
   if (!f) return;
   var err = document.getElementById("input-error");
-  err.hidden = true;
-  err.textContent = "파일에서 텍스트 추출 중…";
+  err.textContent = "파일에서 텍스트 추출 중… (" + f.name + ")";
   err.hidden = false;
   extractFileText(f).then(function (text) {
     document.getElementById("contract-text").value = text;
@@ -341,7 +340,30 @@ document.getElementById("docx-file").addEventListener("change", function (e) {
       "(스캔 PDF·암호 문서·구형 hwp는 자동 추출이 안 됩니다)";
     err.hidden = false;
   });
+}
+document.getElementById("docx-file").addEventListener("change", function (e) {
+  loadContractFile(e.target.files[0]);
 });
+// 드래그앤드롭 — 드롭 존에 파일을 놓으면 추출.
+(function () {
+  var zone = document.getElementById("drop-zone");
+  if (!zone) return;
+  ["dragenter", "dragover"].forEach(function (ev) {
+    zone.addEventListener(ev, function (e) { e.preventDefault(); zone.classList.add("dragging"); });
+  });
+  ["dragleave", "dragend"].forEach(function (ev) {
+    zone.addEventListener(ev, function (e) {
+      if (ev === "dragleave" && zone.contains(e.relatedTarget)) return;
+      zone.classList.remove("dragging");
+    });
+  });
+  zone.addEventListener("drop", function (e) {
+    e.preventDefault();
+    zone.classList.remove("dragging");
+    var f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+    if (f) loadContractFile(f);
+  });
+})();
 
 // 한 번의 "분석 시작"으로 유형 감지 → 모듈 스크리닝 → 검토까지 실행(군더더기 제거).
 // 이후 유형·모듈을 조정하면 즉시 재검토됨(btn-run 없음).
@@ -751,12 +773,11 @@ function _clauseSummarySection(addressed, verify) {
   return '<details class="report-sec"><summary>조항별 검토 현황</summary>' +
     '<ul class="clause-summary">' + rows.join("") + "</ul></details>";
 }
+// 리포트 = 2단 구성(#5 재구성): 좌=계약서 문안+검토의견 코멘트 / 우=종합 서술형 리포트.
 function renderReport() {
-  var key = hashText(state.text);
-  var saved = {};
-  try { saved = JSON.parse(localStorage.getItem(key) || "{}"); } catch (e) {}
   var r = state.result;
 
+  // 분류
   var addressed = [], verify = [], consider = [];
   r.results.forEach(function (res) {
     var cp = _cpById(res.cpId);
@@ -767,119 +788,129 @@ function renderReport() {
     else if (res.coverage === "consider") consider.push(it);
   });
   addressed.sort(_sevSort); verify.sort(_sevSort); consider.sort(_sevSort);
-
-  var h = "<h2>검토 워크시트</h2>";
-
-  // 0) 결론 배너 — 근거보다 먼저, 필수 미반영을 색으로 강조(#3·#7)
-  //    필수 검토제안(consider·필수)이 "꼭 들어가야 하는데 안 들어간" 핵심 알람.
   var mustConsider = consider.filter(function (it) { return it.severity === "필수"; });
   var recConsider = consider.filter(function (it) { return it.severity === "권장"; });
+
+  // 검토의견(코멘트)을 조항별로 모음 — 좌 컬럼용.
+  var commentsByClause = {};   // clauseIndex -> [{cp, verdict, comment}]
+  var unmapped = [];           // 조항 매핑 없는(consider) 의견
+  r.results.forEach(function (res) {
+    var v = verdictStore[res.cpId];
+    if (!v || !v.verdict) return;
+    if (v.verdict === "이상없음" && !v.comment) return; // 코멘트 없는 이상없음은 노이즈 — 생략
+    var cp = _cpById(res.cpId);
+    if (!cp) return;
+    var rec = { cp: cp, verdict: v.verdict, comment: v.comment || "" };
+    if (res.best && res.coverage !== "consider") {
+      var ci = res.best.clauseIndex;
+      (commentsByClause[ci] = commentsByClause[ci] || []).push(rec);
+    } else {
+      unmapped.push(rec);
+    }
+  });
+
+  // ── 좌: 계약서 문안 + 검토의견 ─────────────────────────────
+  var left = '<div class="report-doc"><h3>계약서 문안 · 검토의견</h3>';
+  left += state.clauses.map(function (c) {
+    var cs = commentsByClause[c.index] || [];
+    var block = '<div class="rd-clause"><div class="rd-head">' + esc(c.heading) + "</div>" +
+      '<pre class="rd-body">' + esc(c.body) + "</pre>";
+    if (cs.length) {
+      block += '<div class="rd-comments">' + cs.map(_commentLine).join("") + "</div>";
+    }
+    return block + "</div>";
+  }).join("");
+  if (unmapped.length) {
+    left += '<div class="rd-clause rd-unmapped"><div class="rd-head">계약서 외 검토의견(부재 항목)</div>' +
+      '<div class="rd-comments">' + unmapped.map(_commentLine).join("") + "</div></div>";
+  }
+  left += "</div>";
+
+  // ── 우: 종합 서술형 리포트 ─────────────────────────────────
   var conclCls, conclText;
   if (mustConsider.length) {
     conclCls = "concl-alert";
     conclText = "필수 검토항목 " + mustConsider.length + "건이 계약서에서 확인되지 않음 — 우선 확인 필요.";
   } else if (recConsider.length || verify.length) {
     conclCls = "concl-caution";
-    conclText = "필수 항목은 모두 관련 조항에 닿음. 권장 검토제안 " + recConsider.length +
-      "건 · 문구 확인 권장 " + verify.length + "건을 살펴볼 것.";
+    conclText = "계약서 전체적으로 필수 항목은 관련 조항에 닿음. 다만 권장 검토제안 " +
+      recConsider.length + "건 · 문구 확인 권장 " + verify.length + "건을 살펴볼 것.";
   } else {
     conclCls = "concl-ok";
-    conclText = "필수·권장 검토항목이 모두 관련 조항에 닿음. 큰 공백은 보이지 않음.";
+    conclText = "계약서 전체적으로 특이사항 없음 — 필수·권장 검토항목이 모두 관련 조항에 닿음.";
   }
-  h += '<div class="report-concl ' + conclCls + '"><span class="concl-label">결론</span>' + esc(conclText) + "</div>";
-  h += '<p class="report-intro">아래는 그 근거 — 반영된 항목·확인 권장·검토 제안을 심각도순으로 정리함. 각 항목은 검토 후 “검토 완료 표시”로 남길 수 있음.</p>';
 
-  // 1) 긍정 먼저 요약 타일
-  var considerSub = mustConsider.length
-    ? "필수 " + mustConsider.length + "건 미반영"
-    : "필요한 계약인지 검토";
-  h += '<div class="report-tiles">' +
-    _reportTile("addressed", addressed.length, "짚어진 항목", "계약서가 반영함") +
-    _reportTile("verify", verify.length, "확인 권장", "관련 조항 있음 · 문구 확인") +
-    _reportTile("consider" + (mustConsider.length ? " tile-must" : ""), consider.length, "검토 제안", considerSub) +
-    "</div>";
+  var right = '<div class="report-summary"><h3>종합 리포트</h3>';
+  right += '<div class="report-concl ' + conclCls + '"><span class="concl-label">결론</span>' + esc(conclText) + "</div>";
 
-  // 1-b) 검토의견 요약 + 개진 항목(코멘트 있는 것) — 결론성 정보
-  // 이번 분석의 활성 항목(r.results)에 대한 판정만 집계 — 모듈 토글로 비활성된
-  // 항목의 판정이 요약 카운트와 표시 항목 수를 어긋나게 하지 않도록 필터링.
+  // 검토의견 요약(활성 항목 기준)
   var activeVerdicts = {};
-  r.results.forEach(function (res) {
-    if (verdictStore[res.cpId]) activeVerdicts[res.cpId] = verdictStore[res.cpId];
-  });
+  r.results.forEach(function (res) { if (verdictStore[res.cpId]) activeVerdicts[res.cpId] = verdictStore[res.cpId]; });
   var vsum = Verdict.verdictSummary(activeVerdicts);
   if (vsum.total) {
-    h += '<div class="report-verdict-summary">검토의견: ' +
+    right += '<div class="report-verdict-summary">검토의견 기록: ' +
       '<span class="vd-badge vd-ok">이상없음 ' + vsum["이상없음"] + "</span>" +
       '<span class="vd-badge vd-comment">검토의견 ' + vsum["검토의견"] + "</span>" +
       '<span class="vd-badge vd-na">해당없음 ' + vsum["해당없음"] + "</span></div>";
   }
-  var opinions = [];
+
+  // 특이사항: 검토의견 단 항목 + 필수 검토제안(보완 필요)
+  var flagged = [];
   r.results.forEach(function (res) {
     var v = verdictStore[res.cpId];
     if (v && v.verdict === "검토의견") {
       var cp = _cpById(res.cpId);
-      if (cp) opinions.push({ cp: cp, comment: v.comment, loc: res.best ? _clauseHeading(res.best.clauseIndex) : "" });
+      if (cp) flagged.push({ cp: cp, comment: v.comment, loc: res.best ? _clauseHeading(res.best.clauseIndex) : "" });
     }
   });
-  if (opinions.length) {
-    h += '<section class="report-sec-block"><h3>검토의견 개진 항목 (' + opinions.length + ")</h3>";
-    h += opinions.map(function (o) {
+  if (flagged.length) {
+    right += '<section class="report-sec-block"><h4>검토의견 개진 (' + flagged.length + ")</h4>";
+    right += flagged.map(function (o) {
       return '<div class="opinion-item"><div class="ri-head"><span class="sev sev-' + o.cp.severity + '">' +
         esc(o.cp.severity) + '</span><span class="ri-q">' + labelQ(o.cp) + "</span></div>" +
-        (o.loc ? '<p class="ri-loc">관련 조항: ' + esc(o.loc) + "</p>" : "") +
-        (o.comment ? '<p class="oi-comment">의견: ' + esc(o.comment) + "</p>" : "") + "</div>";
-    }).join("");
-    h += "</section>";
+        (o.loc ? '<p class="ri-loc">' + esc(o.loc) + "</p>" : "") +
+        (o.comment ? '<p class="oi-comment">' + esc(o.comment) + "</p>" : "") + "</div>";
+    }).join("") + "</section>";
   }
 
-  // 2) 검토 제안 — 심각도순 · 접힘(필수 표면, 권장 접힘)
-  h += '<section class="report-sec-block">';
-  h += "<h3>검토 제안 (" + consider.length + ")</h3>";
-  if (!consider.length) {
-    h += '<p class="report-none">검토 제안 항목 없음 — 필수·권장 항목이 모두 관련 조항에 닿았음.</p>';
-  } else {
-    h += '<p class="sec-hint">이 항목이 계약서에서 보이지 않음 — 빠졌다는 뜻이 아니라, 필요한 계약인지 검토 제안.</p>';
-    var must = consider.filter(function (it) { return it.severity === "필수"; });
-    var rec = consider.filter(function (it) { return it.severity !== "필수"; });
-    h += must.map(function (it) { return _considerItem(it, saved); }).join("");
-    if (rec.length) {
-      h += '<details class="report-more"><summary>권장 검토 제안 ' + rec.length + "건 펼치기</summary>" +
-        rec.map(function (it) { return _considerItem(it, saved); }).join("") + "</details>";
-    }
+  // 보완 필요(필수 검토제안) — "다만 이 부분은 보완 필요"
+  if (mustConsider.length) {
+    right += '<section class="report-sec-block"><h4 class="h4-alert">보완 필요 — 필수 항목 미확인 (' + mustConsider.length + ")</h4>";
+    right += '<p class="sec-hint">계약서에서 매칭 조항을 못 찾음. 부속 서류에 있거나 빠졌을 수 있음 — 확인 요.</p>';
+    right += mustConsider.map(function (it) {
+      return '<div class="report-item consider-item"><div class="ri-head"><span class="sev sev-필수">필수</span>' +
+        '<span class="ri-q">' + labelQ(it.cp) + "</span></div>" +
+        (it.cp.severity_basis ? '<p class="ri-why">' + esc(it.cp.severity_basis) + "</p>" : "") + "</div>";
+    }).join("") + "</section>";
   }
-  h += "</section>";
 
-  // 3) 확인 권장
-  h += '<details class="report-sec" open><summary>확인 권장 ' + verify.length +
-    " — 관련 조항 있음, 문구 확인 권함</summary>";
-  h += verify.map(function (it) { return _verifyItem(it, saved); }).join("") ||
-    '<p class="report-none">확인 권장 항목 없음.</p>';
-  h += "</details>";
+  // 확인 권장(접힘)
+  right += '<details class="report-sec"><summary>확인 권장 ' + verify.length + "건 · 검토 제안(권장) " + recConsider.length + "건</summary>";
+  right += verify.map(function (it) {
+    return '<div class="report-item verify-item"><span class="sev sev-' + it.cp.severity + '">' + esc(it.cp.severity) +
+      '</span> <span class="ri-q">' + labelQ(it.cp) + "</span>" +
+      (it.res.best ? ' <span class="ri-loc-inline">(' + esc(_clauseHeading(it.res.best.clauseIndex)) + ")</span>" : "") + "</div>";
+  }).join("");
+  right += recConsider.map(function (it) {
+    return '<div class="report-item consider-item"><span class="sev sev-권장">권장</span> <span class="ri-q">' + labelQ(it.cp) + "</span></div>";
+  }).join("");
+  if (!verify.length && !recConsider.length) right += '<p class="report-none">해당 없음.</p>';
+  right += "</details>";
 
-  // 4) 짚어진 항목
-  h += '<details class="report-sec"><summary>짚어진 항목 ' + addressed.length +
-    " — 계약서가 반영한 항목</summary>";
-  h += addressed.map(_addressedItem).join("") ||
-    '<p class="report-none">아직 반영으로 짚인 항목 없음.</p>';
-  h += "</details>";
-
-  // 5) 조항별 검토 현황(선택)
-  h += _clauseSummarySection(addressed, verify);
-
-  // 리포트에서도 검토의견 내보내기(리뷰: 최종 산출 탭에서 되돌이 방지)
-  h += '<div class="report-actions"><button id="report-verdict-export" class="ghost">검토의견 내보내기</button>' +
-    '<span class="report-actions-note">조항별 보기에서 남긴 판정(이상없음·검토의견·해당없음)을 JSON으로 저장</span></div>';
+  right += '<div class="report-actions"><button id="report-verdict-export" class="ghost">검토의견 내보내기</button></div>';
+  right += "</div>";
 
   var body = document.getElementById("report-body");
-  body.innerHTML = h;
-  body.querySelectorAll("input[type=checkbox]").forEach(function (cb) {
-    cb.addEventListener("change", function () {
-      saved[cb.dataset.cp] = cb.checked;
-      localStorage.setItem(key, JSON.stringify(saved));
-    });
-  });
+  body.innerHTML = '<div class="report-split">' + left + right + "</div>";
   var rexp = document.getElementById("report-verdict-export");
   if (rexp) rexp.addEventListener("click", exportVerdicts);
+}
+// 검토의견 한 줄 — 판정 배지 + 코멘트.
+function _commentLine(rec) {
+  var cls = VERDICT_CLS[rec.verdict] || "";
+  return '<div class="rd-comment"><span class="vd-badge ' + cls + '">' + esc(rec.verdict) + "</span>" +
+    '<span class="rd-c-label">' + esc(labelQ(rec.cp)).replace(/<[^>]+>/g, " ") + "</span>" +
+    (rec.comment ? '<span class="rd-c-text">' + esc(rec.comment) + "</span>" : "") + "</div>";
 }
 // 인쇄 시 접힌 섹션도 펼쳐 요약 타일·검토 제안·확인 권장이 모두 나오게.
 window.addEventListener("beforeprint", function () {

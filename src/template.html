@@ -23,7 +23,10 @@
     <details id="input-panel" open>
       <summary>계약서 입력</summary>
       <div id="analyze-input">
-        <textarea id="contract-text" placeholder="계약서 텍스트를 붙여넣으세요"></textarea>
+        <div id="drop-zone" class="drop-zone">
+          <textarea id="contract-text" placeholder="계약서 텍스트를 붙여넣거나, 파일(PDF·DOCX·DOC·HWP·HWPX)을 여기로 끌어다 놓으세요"></textarea>
+          <div class="drop-overlay">파일을 놓으면 텍스트가 추출됩니다</div>
+        </div>
         <div class="input-actions">
           <label class="filebtn">파일 열기<input id="docx-file" type="file" accept=".docx,.pdf,.doc,.hwp,.hwpx" hidden></label>
           <button id="btn-analyze" class="primary">분석 시작</button>
