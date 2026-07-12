@@ -559,6 +559,32 @@ function loopInfoHtml(cpId) {
   }
   return h + "</div>";
 }
+// 코퍼스 큐레이션 신호 패널(③ 자동 강등 후보 서페이싱).
+// 반복 해당없음(표본≥5·80%+)=조건부 강등 후보, 반복 이상없음=gold(알람 우선순위 하향 후보).
+// 자동 반영 아님 — 큐레이터가 지식(yaml tier)에 반영할지 판단하는 제시용.
+function curationPanelHtml() {
+  var sig = Loop.curationSignals(loopCorpus, { minN: 5, ratio: 0.8 });
+  if (!sig.conditional.length && !sig.gold.length) return "";
+  function _name(cpId) {
+    var cp = _cpById(cpId);
+    return cp ? String(labelQ(cp)).replace(/<[^>]+>/g, " ").trim() : cpId;
+  }
+  var h = '<details class="curation-panel"><summary>지식 정규화 후보 (코퍼스 누적 신호)</summary>' +
+    '<p class="curation-hint">실무 판정이 쌓여 도출된 후보. 자동 반영 아님 — 큐레이터가 지식 조정(tier 강등 등) 여부를 판단.</p>';
+  if (sig.conditional.length) {
+    h += '<div class="curation-group"><h5>조건부 강등 후보 (반복 해당없음)</h5><ul>' +
+      sig.conditional.map(function (c) {
+        return "<li>" + esc(_name(c.cpId)) + ' <span class="cur-stat">표본 ' + c.n + "건 · 해당없음 " + c.pct + "%</span></li>";
+      }).join("") + "</ul></div>";
+  }
+  if (sig.gold.length) {
+    h += '<div class="curation-group"><h5>안정 항목 (반복 이상없음)</h5><ul>' +
+      sig.gold.map(function (c) {
+        return "<li>" + esc(_name(c.cpId)) + ' <span class="cur-stat">표본 ' + c.n + "건 · 이상없음 " + c.pct + "%</span></li>";
+      }).join("") + "</ul></div>";
+  }
+  return h + "</details>";
+}
 // cpId에 대한 판정 버튼 + 코멘트 입력 HTML. 현재 판정 활성 표시.
 function verdictControlHtml(cpId) {
   var cur = verdictStore[cpId] || {};
@@ -1046,6 +1072,7 @@ function renderReport() {
     '<button id="report-verdict-export" class="ghost">검토의견 내보내기</button>' +
     '<button id="report-loop-ingest" class="ghost">이 검토를 지식에 반영</button>' +
     '<span class="report-actions-note">누적 판정(코퍼스 ' + loopCorpus.meta.contract_count + '건)에 이 계약서 검토의견을 추가 — 다음 검토에 분포·추천으로 활용</span></div>';
+  right += curationPanelHtml();
   right += "</div>";
 
   var body = document.getElementById("report-body");

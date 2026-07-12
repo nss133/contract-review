@@ -5,7 +5,7 @@ const {
   detectType, suggestModules, analyze,
   checkText, clauseQuery, buildModel, citationHit,
   scoreClauseCheck, decideTier, normMatches, titleBonus,
-  alarmGate, coverageOf,
+  alarmGate, coverageOf, preconditionMet,
 } = require("../src/matcher.js");
 const MC = require("../src/matcher_config.js");
 const ClauseRole = require("../src/clause_role.js");
@@ -458,4 +458,32 @@ test("detectType 성격게이트: 진성 주주간계약은 억제 안 됨(화�
   const ranked = detectType(text, NATURE_TYPES);
   assert.strictEqual(ranked[0].typeId, "shareholders");
   assert.ok(ranked[0].score > 0, "shareholders가 억제되지 않아야 함");
+});
+
+// ── 조건부 부재체크(전제신호 게이트) ─────────────────────────────
+const CHECK_PLEDGE = {
+  id: "PLEDGE", severity: "필수", absence_check: true,
+  absence_precondition: ["질권", "근질권", "입질"],
+};
+const CHECK_NOPRE = { id: "NOPRE", severity: "필수", absence_check: true };
+
+test("preconditionMet: 전제어휘가 본문에 있으면 true", () => {
+  assert.strictEqual(preconditionMet(CHECK_PLEDGE, "채권에 질권을 설정한다"), true);
+});
+test("preconditionMet: 전제어휘가 없으면 false", () => {
+  assert.strictEqual(preconditionMet(CHECK_PLEDGE, "저당권만 설정하는 담보계약"), false);
+});
+test("preconditionMet: precondition 없는 check는 항상 true(하위호환)", () => {
+  assert.strictEqual(preconditionMet(CHECK_NOPRE, "아무 내용"), true);
+});
+
+test("coverageOf: 전제 불충족 부재체크는 consider가 아니라 quiet", () => {
+  // 질권 언급 없는 본문 → 질권 부재알람 억제.
+  assert.strictEqual(coverageOf("none", CHECK_PLEDGE, "저당권 담보계약"), "quiet");
+  // 질권 언급 있는 본문 → 부재알람 유지(누락검출 살림).
+  assert.strictEqual(coverageOf("none", CHECK_PLEDGE, "질권 설정할 수 있다"), "consider");
+  // precondition 없는 check는 종전대로 consider.
+  assert.strictEqual(coverageOf("none", CHECK_NOPRE, "무관 본문"), "consider");
+  // text 미전달(하위호환): 게이트 비활성 → consider.
+  assert.strictEqual(coverageOf("none", CHECK_PLEDGE), "consider");
 });

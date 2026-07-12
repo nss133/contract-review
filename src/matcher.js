@@ -234,11 +234,23 @@ function decideTier(ranked, check) {
 function alarmGate(check) {
   return MatcherConfig.ALARM_SEVERITIES.indexOf(check && check.severity) !== -1;
 }
-function coverageOf(tier, check) {
+// 조건부 부재체크(전제신호 게이트): absence_precondition이 있으면 본문에 전제어휘가
+// 1개 이상 있을 때만 부재알람 발동. 없으면 관련성 미달로 조용(quiet).
+// precondition이 없는 check는 항상 발동(하위호환). 약한 게이트(1개 충족) — 누락검출 우선.
+function preconditionMet(check, text) {
+  var pre = check && check.absence_precondition;
+  if (!pre || !pre.length) return true; // 전제 없음 = 무조건 대상
+  var t = String(text || "");
+  for (var i = 0; i < pre.length; i++) if (t.indexOf(pre[i]) !== -1) return true;
+  return false;
+}
+// text(계약서 전체 본문) 전달 시 전제신호 게이트 적용. 미전달이면 게이트 비활성(하위호환).
+function coverageOf(tier, check, text) {
   if (tier === "confirmed") return "addressed";
   if (tier === "review") return "verify";
   // tier === "none"
-  if (check && check.absence_check && alarmGate(check)) return "consider";
+  if (check && check.absence_check && alarmGate(check) &&
+      (text === undefined || preconditionMet(check, text))) return "consider";
   return "quiet";
 }
 
@@ -313,6 +325,10 @@ function analyze(clauses, docs, activeModules) {
   var results = [];
   var matches = [];
   var missing = [];
+  // 전제신호 게이트용 본문 전체(표제+본문). 조건부 부재체크가 여기서 전제어휘를 찾음.
+  var fullText = (clauses || []).map(function (cl) {
+    return String(cl.heading || "") + " " + String(cl.body || "");
+  }).join("\n");
 
   model.checks.forEach(function (entry) {
     var cp = entry.cp;
@@ -322,7 +338,7 @@ function analyze(clauses, docs, activeModules) {
 
     var candidates = scored.filter(function (r) { return r.s.score >= MatcherConfig.REVIEW_FLOOR; });
     var tier = decideTier(candidates, cp);
-    var coverage = coverageOf(tier, cp);
+    var coverage = coverageOf(tier, cp, fullText);
     var top = scored[0] || null;
 
     // 노출 게이트: 짚음/확인권장(조항 매칭 tier)에 핵심어 복수 겹침을 요구.
@@ -390,6 +406,7 @@ if (typeof module !== "undefined")
     scoreClauseCheck: scoreClauseCheck,
     decideTier: decideTier,
     alarmGate: alarmGate,
+    preconditionMet: preconditionMet,
     coverageOf: coverageOf,
     subDocCoverage: subDocCoverage,
     analyze: analyze
