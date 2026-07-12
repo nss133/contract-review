@@ -13,19 +13,29 @@ if (typeof require !== "undefined") {
   var MatcherConfig = require("./matcher_config.js");
 }
 
-// ── 유형 감지·모듈 제안 (v2 유지) ────────────────────────────────
+// ── 유형 감지 v2 (제목 가중·길이 정규화·미확정) ──────────────────
+// 점수 = Σ키워드( 표제부(앞 DETECT_HEAD_LEN자) 출현 ×DETECT_TITLE_W + min(본문 출현, DETECT_BODY_CAP) ).
+// 계약서 표제("업무위탁계약서" 등)가 최강 신호라 표제부 가중, 긴 문서의 부수 반복은 캡으로 억제.
 // 성격 배타 게이트(A3): 유형 meta의 nature_signals(성격 강신호)가 복수 검출되면
 // 그 유형의 suppresses[]에 든 유형 점수를 0으로. 예: 화해계약 강신호(화해·상호양보·부제소 등)가
 // ≥NATURE_MIN이면 shareholders(상법 조직행위) 점수를 눌러 오탐 차단.
 // 단일 부수언급(화해 1회)으로 진성 주주간계약을 죽이지 않도록 임계는 복수(2).
 var NATURE_MIN = 2;
+function _countOcc(hay, needle) {
+  return needle ? hay.split(needle).length - 1 : 0;
+}
 function detectType(text, types) {
   var t = String(text || "");
+  var head = t.slice(0, MatcherConfig.DETECT_HEAD_LEN);
   var scored = types.map(function (ty) {
-    var score = (ty.meta.detect_keywords || []).reduce(function (s, kw) {
-      return s + (t.split(kw).length - 1);
-    }, 0);
-    return { typeId: ty.meta.type_id, score: score };
+    var score = 0, hits = [];
+    (ty.meta.detect_keywords || []).forEach(function (kw) {
+      var headN = _countOcc(head, kw);
+      var bodyN = Math.min(_countOcc(t, kw) - headN, MatcherConfig.DETECT_BODY_CAP);
+      var s = headN * MatcherConfig.DETECT_TITLE_W + Math.max(bodyN, 0);
+      if (s > 0) { score += s; hits.push(kw); }
+    });
+    return { typeId: ty.meta.type_id, score: score, hits: hits };
   });
   // 성격 게이트: 강신호 복수 검출 유형의 suppresses 대상 점수를 0으로.
   var byId = {};
@@ -35,10 +45,14 @@ function detectType(text, types) {
     if (!sig || !sig.length || !sup || !sup.length) return;
     var hits = sig.reduce(function (n, kw) { return n + (t.indexOf(kw) !== -1 ? 1 : 0); }, 0);
     if (hits >= NATURE_MIN) {
-      sup.forEach(function (id) { if (byId[id]) byId[id].score = 0; });
+      sup.forEach(function (id) { if (byId[id]) { byId[id].score = 0; byId[id].suppressed = true; } });
     }
   });
   return scored.sort(function (a, b) { return b.score - a.score; });
+}
+// 유형 선택 단일화 — 앱(btn-analyze)과 골드셋 러너가 공유. 임계 미달이면 null(미확정: 공통 검토만).
+function pickType(ranked) {
+  return ranked[0] && ranked[0].score >= MatcherConfig.DETECT_MIN_SCORE ? ranked[0].typeId : null;
 }
 
 // 본문 키워드로 모듈 활성 제안. activation:"strong" 모듈은 특수 규제(전금감규 §60 등)라
@@ -392,6 +406,7 @@ function analyze(clauses, docs, activeModules) {
 if (typeof module !== "undefined")
   module.exports = {
     detectType: detectType,
+    pickType: pickType,
     suggestModules: suggestModules,
     activeCheckpoints: activeCheckpoints,
     normMatches: normMatches,

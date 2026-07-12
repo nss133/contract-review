@@ -228,6 +228,12 @@ td.empty { text-align: center; color: #889; padding: 24px; }
 .screening-hint { font-size: 12px; color: #667; margin: 8px 0 4px; }
 .tag-bar { margin: 4px 0 10px; font-size: 12px; }
 .tag-bar-label { color: #667; }
+/* P3 유형 감지 근거 노출 */
+.detect-info { color: #445; }
+.detect-info .detect-basis { color: #778; font-size: 12.5px; }
+.detect-info .detect-hint { color: #99a; font-size: 12px; margin-left: 4px; }
+.detect-undetermined { color: #8a5a1e; background: #fdf6ea; border: 1px solid #f0e2c8;
+  border-radius: 6px; padding: 3px 8px; }
 .ctag { display: inline-block; background: #eef2f8; color: #46618c; border: 1px solid #d5deec;
         border-radius: 12px; padding: 2px 10px; font-size: 12px; margin-right: 4px; }
 
@@ -797,7 +803,13 @@ var MatcherConfig = {
   TITLE_BONUS_MAX: 5,   // 표제 용어 겹침 가산 상한
   OVERLAP_MIN: 2,       // 노출(verify/addressed) 자격 최소 고유 핵심어 겹침 — 단일 겹침은 quiet 강등
   TITLE_STRONG_RATIO: 0.5, // 표제 강일치 예외: 조항 표제 핵심어 중 check와 겹친 비율 하한
-  ALARM_SEVERITIES: ["필수", "권장"] // 검토 제안(consider) 알람 게이트 — 참고 부재는 조용(quiet)
+  ALARM_SEVERITIES: ["필수", "권장"], // 검토 제안(consider) 알람 게이트 — 참고 부재는 조용(quiet)
+
+  // ── 유형 감지 v2 (P3) ──────────────────────────────────────────
+  DETECT_HEAD_LEN: 300,   // 표제부(제목·전문) 판정 길이(자) — 이 안의 키워드는 강신호
+  DETECT_TITLE_W: 3,      // 표제부 키워드 1회당 가중(본문 1회=1)
+  DETECT_BODY_CAP: 5,     // 키워드당 본문 카운트 상한 — 긴 문서의 반복 언급이 점수를 지배하지 못하게
+  DETECT_MIN_SCORE: 3     // 유형 확정 최저 점수 — 미달이면 미확정(공통 검토만). 표제 1회(3) 또는 본문 3회면 확정
 };
 
 if (typeof module !== "undefined") module.exports = MatcherConfig;
@@ -861,19 +873,29 @@ if (typeof require !== "undefined") {
   var MatcherConfig = require("./matcher_config.js");
 }
 
-// ── 유형 감지·모듈 제안 (v2 유지) ────────────────────────────────
+// ── 유형 감지 v2 (제목 가중·길이 정규화·미확정) ──────────────────
+// 점수 = Σ키워드( 표제부(앞 DETECT_HEAD_LEN자) 출현 ×DETECT_TITLE_W + min(본문 출현, DETECT_BODY_CAP) ).
+// 계약서 표제("업무위탁계약서" 등)가 최강 신호라 표제부 가중, 긴 문서의 부수 반복은 캡으로 억제.
 // 성격 배타 게이트(A3): 유형 meta의 nature_signals(성격 강신호)가 복수 검출되면
 // 그 유형의 suppresses[]에 든 유형 점수를 0으로. 예: 화해계약 강신호(화해·상호양보·부제소 등)가
 // ≥NATURE_MIN이면 shareholders(상법 조직행위) 점수를 눌러 오탐 차단.
 // 단일 부수언급(화해 1회)으로 진성 주주간계약을 죽이지 않도록 임계는 복수(2).
 var NATURE_MIN = 2;
+function _countOcc(hay, needle) {
+  return needle ? hay.split(needle).length - 1 : 0;
+}
 function detectType(text, types) {
   var t = String(text || "");
+  var head = t.slice(0, MatcherConfig.DETECT_HEAD_LEN);
   var scored = types.map(function (ty) {
-    var score = (ty.meta.detect_keywords || []).reduce(function (s, kw) {
-      return s + (t.split(kw).length - 1);
-    }, 0);
-    return { typeId: ty.meta.type_id, score: score };
+    var score = 0, hits = [];
+    (ty.meta.detect_keywords || []).forEach(function (kw) {
+      var headN = _countOcc(head, kw);
+      var bodyN = Math.min(_countOcc(t, kw) - headN, MatcherConfig.DETECT_BODY_CAP);
+      var s = headN * MatcherConfig.DETECT_TITLE_W + Math.max(bodyN, 0);
+      if (s > 0) { score += s; hits.push(kw); }
+    });
+    return { typeId: ty.meta.type_id, score: score, hits: hits };
   });
   // 성격 게이트: 강신호 복수 검출 유형의 suppresses 대상 점수를 0으로.
   var byId = {};
@@ -883,10 +905,14 @@ function detectType(text, types) {
     if (!sig || !sig.length || !sup || !sup.length) return;
     var hits = sig.reduce(function (n, kw) { return n + (t.indexOf(kw) !== -1 ? 1 : 0); }, 0);
     if (hits >= NATURE_MIN) {
-      sup.forEach(function (id) { if (byId[id]) byId[id].score = 0; });
+      sup.forEach(function (id) { if (byId[id]) { byId[id].score = 0; byId[id].suppressed = true; } });
     }
   });
   return scored.sort(function (a, b) { return b.score - a.score; });
+}
+// 유형 선택 단일화 — 앱(btn-analyze)과 골드셋 러너가 공유. 임계 미달이면 null(미확정: 공통 검토만).
+function pickType(ranked) {
+  return ranked[0] && ranked[0].score >= MatcherConfig.DETECT_MIN_SCORE ? ranked[0].typeId : null;
 }
 
 // 본문 키워드로 모듈 활성 제안. activation:"strong" 모듈은 특수 규제(전금감규 §60 등)라
@@ -1240,6 +1266,7 @@ function analyze(clauses, docs, activeModules) {
 if (typeof module !== "undefined")
   module.exports = {
     detectType: detectType,
+    pickType: pickType,
     suggestModules: suggestModules,
     activeCheckpoints: activeCheckpoints,
     normMatches: normMatches,
@@ -2370,7 +2397,8 @@ function renderChecklist() {
 
 function initChecklistType() {
   var sel = document.getElementById("checklist-type");
-  sel.innerHTML = CR.types.map(function (t) {
+  // 맨 앞 미확정 옵션(P3): 감지 점수 임계 미달 시 자동선택하지 않고 공통 검토만 — 오유형 체크리스트 로드 방지.
+  sel.innerHTML = '<option value="">— 유형 미확정 (직접 선택) —</option>' + CR.types.map(function (t) {
     return '<option value="' + esc(t.meta.type_id) + '">' + esc(t.meta.type_name) + "</option>";
   }).join("");
   sel.addEventListener("change", function () {
@@ -2472,9 +2500,11 @@ document.getElementById("btn-analyze").addEventListener("click", function () {
   state.text = document.getElementById("contract-text").value;
   if (!state.text.trim()) return;
   state.clauses = segmentContract(state.text);
+  // 유형 감지 v2(P3): 표제 가중·본문 캡 점수 + 임계(pickType). 미달이면 미확정("") — 오유형 체크리스트 로드 방지.
   var ranked = detectType(state.text, CR.types);
+  state.detectRanked = ranked;
   var sel = document.getElementById("checklist-type");
-  if (ranked[0] && ranked[0].score > 0) sel.value = ranked[0].typeId;
+  sel.value = pickType(ranked) || "";
   state.typeId = sel.value;
   renderScreening();
   renderTags();
@@ -2489,9 +2519,35 @@ function renderTags() {
   var head = String(state.text || "").slice(0, 500);
   var tags = Tags.detectTags(head);
   var bar = document.getElementById("tag-bar");
-  if (!tags.length) { bar.innerHTML = ""; return; }
-  bar.innerHTML = '<span class="tag-bar-label">자동 감지 성격:</span> ' +
-    tags.map(function (t) { return '<span class="ctag">' + esc(t) + "</span>"; }).join(" ");
+  var html = _detectInfoHtml();
+  if (tags.length) {
+    html += (html ? " · " : "") + '<span class="tag-bar-label">자동 감지 성격:</span> ' +
+      tags.map(function (t) { return '<span class="ctag">' + esc(t) + "</span>"; }).join(" ");
+  }
+  bar.innerHTML = html;
+}
+// 감지 근거 노출(P3): 왜 이 유형으로 봤는지(적중 키워드), 미확정이면 후보 제시 —
+// 오감지를 사용자가 즉시 알아채고 수동 전환할 수 있게 하는 안전장치.
+function _detectInfoHtml() {
+  var ranked = state.detectRanked;
+  if (!ranked || !ranked.length) return "";
+  var top = ranked[0];
+  var picked = pickType(ranked);
+  if (picked) {
+    var doc = typeDoc(picked);
+    var name = doc ? doc.meta.type_name : picked;
+    var kws = (top.hits || []).slice(0, 5).join("·");
+    return '<span class="detect-info">감지 유형: <strong>' + esc(name) + "</strong>" +
+      (kws ? ' <span class="detect-basis">(근거어: ' + esc(kws) + ")</span>" : "") +
+      ' <span class="detect-hint">오감지면 유형을 직접 변경하세요</span></span>';
+  }
+  var cands = ranked.filter(function (r) { return r.score > 0; }).slice(0, 3)
+    .map(function (r) {
+      var d = typeDoc(r.typeId);
+      return esc((d ? d.meta.type_name : r.typeId)) + "(" + r.score + ")";
+    }).join(" · ");
+  return '<span class="detect-info detect-undetermined">유형 미확정 — 공통 항목만 검토 중. ' +
+    (cands ? "후보: " + cands + ". " : "") + "유형을 직접 선택하세요.</span>";
 }
 
 /* ---------- 분석 모드: 모듈 스크리닝 ---------- */

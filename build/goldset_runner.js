@@ -5,7 +5,7 @@
    goldset.py가 지식 YAML을 JSON으로 내려 호출한다(브라우저와 동일 소스 사용이 목적). */
 const fs = require("fs");
 const { segmentContract } = require("../src/segmenter.js");
-const { detectType, suggestModules, analyze } = require("../src/matcher.js");
+const { detectType, pickType, suggestModules, analyze } = require("../src/matcher.js");
 
 const payload = JSON.parse(fs.readFileSync(process.argv[2], "utf8"));
 const { common, types, cases } = payload;
@@ -13,9 +13,9 @@ const { common, types, cases } = payload;
 const results = cases.map(function (c) {
   const text = String(c.text || "");
   const clauses = segmentContract(text);
-  // 유형 감지 — app.js btn-analyze와 동일: 1위 score>0일 때 채택.
+  // 유형 감지 — app.js btn-analyze와 동일 로직(pickType 공유): 임계 미달이면 미확정(null).
   const ranked = detectType(text, types);
-  const detected = ranked[0] && ranked[0].score > 0 ? ranked[0].typeId : null;
+  const detected = pickType(ranked);
   const doc = types.find(function (t) { return t.meta.type_id === detected; }) || null;
   // 모듈 활성 — app.js renderScreening과 동일: always_on + 본문 제안.
   let active = [];

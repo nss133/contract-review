@@ -53,7 +53,8 @@ def score(cases, results):
     rows, ok_all = [], True
     for c, r in zip(cases, results):
         errs = []
-        if c.get("detect_expected") and r["detected"] != c["detect_expected"]:
+        # detect_expected: null(미확정 기대)도 유효한 라벨 — 키 존재로 판정.
+        if "detect_expected" in c and r["detected"] != c["detect_expected"]:
             errs.append(f"유형감지: 기대 {c['detect_expected']} ≠ 실제 {r['detected']}")
         consider = set(r["consider"])
         for cid in c.get("consider_must_include") or []:

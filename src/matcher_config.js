@@ -19,7 +19,13 @@ var MatcherConfig = {
   TITLE_BONUS_MAX: 5,   // 표제 용어 겹침 가산 상한
   OVERLAP_MIN: 2,       // 노출(verify/addressed) 자격 최소 고유 핵심어 겹침 — 단일 겹침은 quiet 강등
   TITLE_STRONG_RATIO: 0.5, // 표제 강일치 예외: 조항 표제 핵심어 중 check와 겹친 비율 하한
-  ALARM_SEVERITIES: ["필수", "권장"] // 검토 제안(consider) 알람 게이트 — 참고 부재는 조용(quiet)
+  ALARM_SEVERITIES: ["필수", "권장"], // 검토 제안(consider) 알람 게이트 — 참고 부재는 조용(quiet)
+
+  // ── 유형 감지 v2 (P3) ──────────────────────────────────────────
+  DETECT_HEAD_LEN: 300,   // 표제부(제목·전문) 판정 길이(자) — 이 안의 키워드는 강신호
+  DETECT_TITLE_W: 3,      // 표제부 키워드 1회당 가중(본문 1회=1)
+  DETECT_BODY_CAP: 5,     // 키워드당 본문 카운트 상한 — 긴 문서의 반복 언급이 점수를 지배하지 못하게
+  DETECT_MIN_SCORE: 3     // 유형 확정 최저 점수 — 미달이면 미확정(공통 검토만). 표제 1회(3) 또는 본문 3회면 확정
 };
 
 if (typeof module !== "undefined") module.exports = MatcherConfig;

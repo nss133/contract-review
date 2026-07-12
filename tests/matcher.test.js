@@ -5,7 +5,7 @@ const {
   detectType, suggestModules, analyze,
   checkText, clauseQuery, buildModel, citationHit,
   scoreClauseCheck, decideTier, normMatches, titleBonus,
-  alarmGate, coverageOf, preconditionMet,
+  alarmGate, coverageOf, preconditionMet, pickType,
 } = require("../src/matcher.js");
 const MC = require("../src/matcher_config.js");
 const ClauseRole = require("../src/clause_role.js");
@@ -419,6 +419,33 @@ test("detectType: 키워드 빈도로 유형 순위를 매긴다", () => {
   const ranked = detectType("이 업무위탁 계약에서 수탁자는...", TYPES);
   assert.strictEqual(ranked[0].typeId, "outsourcing");
   assert.ok(ranked[0].score > ranked[1].score);
+});
+
+// ── 유형 감지 v2(P3): 표제 가중·본문 캡·미확정 임계 ──────────────
+test("detectType v2: 표제부 키워드는 본문보다 강하게 가중된다", () => {
+  const pad = "무관한 내용. ".repeat(50); // 300자 초과 패딩 — 키워드를 본문 영역으로 밀어냄
+  const inHead = detectType("업무위탁계약서\n" + pad, TYPES);
+  const inBody = detectType(pad + " 위탁", TYPES);
+  const h = inHead.find((r) => r.typeId === "outsourcing");
+  const b = inBody.find((r) => r.typeId === "outsourcing");
+  assert.ok(h.score > b.score, "표제 출현이 본문 출현보다 점수가 높아야 함");
+});
+
+test("detectType v2: 본문 반복 출현은 키워드당 캡으로 억제된다", () => {
+  const pad = "무관한 내용. ".repeat(50);
+  const many = detectType(pad + " 위탁 ".repeat(50), TYPES); // 본문 50회
+  const m = many.find((r) => r.typeId === "outsourcing");
+  assert.ok(m.score <= MC.DETECT_BODY_CAP, "본문 반복은 DETECT_BODY_CAP 이하로 캡");
+});
+
+test("pickType: 임계 미달이면 미확정(null), 표제 1회면 확정", () => {
+  const pad = "무관한 내용. ".repeat(50);
+  // 본문 1회(점수 1) — 임계(3) 미달 → 미확정
+  assert.strictEqual(pickType(detectType(pad + " 위탁", TYPES)), null);
+  // 표제 1회(점수 3) — 확정
+  assert.strictEqual(pickType(detectType("업무위탁계약서\n" + pad, TYPES)), "outsourcing");
+  // 무신호 — 미확정
+  assert.strictEqual(pickType(detectType("임대차에 관한 일반 문서", TYPES)), null);
 });
 
 test("suggestModules: 본문 키워드로 모듈 활성화를 제안한다", () => {

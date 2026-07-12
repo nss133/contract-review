@@ -306,7 +306,8 @@ function renderChecklist() {
 
 function initChecklistType() {
   var sel = document.getElementById("checklist-type");
-  sel.innerHTML = CR.types.map(function (t) {
+  // 맨 앞 미확정 옵션(P3): 감지 점수 임계 미달 시 자동선택하지 않고 공통 검토만 — 오유형 체크리스트 로드 방지.
+  sel.innerHTML = '<option value="">— 유형 미확정 (직접 선택) —</option>' + CR.types.map(function (t) {
     return '<option value="' + esc(t.meta.type_id) + '">' + esc(t.meta.type_name) + "</option>";
   }).join("");
   sel.addEventListener("change", function () {
@@ -408,9 +409,11 @@ document.getElementById("btn-analyze").addEventListener("click", function () {
   state.text = document.getElementById("contract-text").value;
   if (!state.text.trim()) return;
   state.clauses = segmentContract(state.text);
+  // 유형 감지 v2(P3): 표제 가중·본문 캡 점수 + 임계(pickType). 미달이면 미확정("") — 오유형 체크리스트 로드 방지.
   var ranked = detectType(state.text, CR.types);
+  state.detectRanked = ranked;
   var sel = document.getElementById("checklist-type");
-  if (ranked[0] && ranked[0].score > 0) sel.value = ranked[0].typeId;
+  sel.value = pickType(ranked) || "";
   state.typeId = sel.value;
   renderScreening();
   renderTags();
@@ -425,9 +428,35 @@ function renderTags() {
   var head = String(state.text || "").slice(0, 500);
   var tags = Tags.detectTags(head);
   var bar = document.getElementById("tag-bar");
-  if (!tags.length) { bar.innerHTML = ""; return; }
-  bar.innerHTML = '<span class="tag-bar-label">자동 감지 성격:</span> ' +
-    tags.map(function (t) { return '<span class="ctag">' + esc(t) + "</span>"; }).join(" ");
+  var html = _detectInfoHtml();
+  if (tags.length) {
+    html += (html ? " · " : "") + '<span class="tag-bar-label">자동 감지 성격:</span> ' +
+      tags.map(function (t) { return '<span class="ctag">' + esc(t) + "</span>"; }).join(" ");
+  }
+  bar.innerHTML = html;
+}
+// 감지 근거 노출(P3): 왜 이 유형으로 봤는지(적중 키워드), 미확정이면 후보 제시 —
+// 오감지를 사용자가 즉시 알아채고 수동 전환할 수 있게 하는 안전장치.
+function _detectInfoHtml() {
+  var ranked = state.detectRanked;
+  if (!ranked || !ranked.length) return "";
+  var top = ranked[0];
+  var picked = pickType(ranked);
+  if (picked) {
+    var doc = typeDoc(picked);
+    var name = doc ? doc.meta.type_name : picked;
+    var kws = (top.hits || []).slice(0, 5).join("·");
+    return '<span class="detect-info">감지 유형: <strong>' + esc(name) + "</strong>" +
+      (kws ? ' <span class="detect-basis">(근거어: ' + esc(kws) + ")</span>" : "") +
+      ' <span class="detect-hint">오감지면 유형을 직접 변경하세요</span></span>';
+  }
+  var cands = ranked.filter(function (r) { return r.score > 0; }).slice(0, 3)
+    .map(function (r) {
+      var d = typeDoc(r.typeId);
+      return esc((d ? d.meta.type_name : r.typeId)) + "(" + r.score + ")";
+    }).join(" · ");
+  return '<span class="detect-info detect-undetermined">유형 미확정 — 공통 항목만 검토 중. ' +
+    (cands ? "후보: " + cands + ". " : "") + "유형을 직접 선택하세요.</span>";
 }
 
 /* ---------- 분석 모드: 모듈 스크리닝 ---------- */
