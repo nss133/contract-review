@@ -469,17 +469,26 @@ function renderScreening() {
   }
   var suggested = suggestModules(state.text, doc.meta.modules);
   state.activeModules = doc.meta.modules
-    .filter(function (m) { return m.always_on || suggested.indexOf(m.id) !== -1; })
+    .filter(function (m) { return m.always_on || suggested.on.indexOf(m.id) !== -1; })
     .map(function (m) { return m.id; });
-  document.getElementById("screening").innerHTML = doc.meta.modules.map(function (m) {
+  var chips = doc.meta.modules.map(function (m) {
     if (m.always_on)
       return '<span class="module-chip on">' + esc(m.name) + " (기본)</span>";
     var on = state.activeModules.indexOf(m.id) !== -1;
-    var sug = suggested.indexOf(m.id) !== -1;
-    return '<label class="module-chip' + (on ? " on" : "") + (sug ? " suggested" : "") +
+    var sug = suggested.on.indexOf(m.id) !== -1;
+    var askMode = suggested.ask.indexOf(m.id) !== -1;
+    return '<label class="module-chip' + (on ? " on" : "") + (sug ? " suggested" : "") + (askMode ? " ask" : "") +
       '" data-mid="' + esc(m.id) + '" title="' + esc(m.screening_question || "") + '">' +
-      esc(m.name) + (sug ? " ⚡본문 검출" : "") + "</label>";
+      esc(m.name) + (sug ? " ⚡본문 검출" : "") + (askMode ? " ? 확인 필요" : "") + "</label>";
   }).join("");
+  // 약신호 질문(②): 문언만으론 실제 취급 여부 판단 불가한 모듈(confirm) — 추측 대신 사람에게 물음.
+  var askQs = doc.meta.modules
+    .filter(function (m) { return suggested.ask.indexOf(m.id) !== -1 && m.screening_question; })
+    .map(function (m) {
+      return '<div class="ask-q">? <strong>' + esc(m.name) + "</strong> — " + esc(m.screening_question) +
+        ' <span class="ask-q-hint">(본문 언급이 적어 자동 판단 불가 — 해당되면 위 칩을 켜세요)</span></div>';
+    }).join("");
+  document.getElementById("screening").innerHTML = chips + askQs;
   document.querySelectorAll("#screening .module-chip[data-mid]").forEach(function (chip) {
     chip.addEventListener("click", function () {
       var mid = chip.dataset.mid;

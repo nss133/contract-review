@@ -13,6 +13,9 @@ meta:
       always_on: false
       screening_question: 위탁 업무에 개인(신용)정보 처리가 포함되는가?
       suggest_keywords: [개인정보, 신용정보, 정보주체, 고객정보]
+      # ② 개인정보 모듈은 confirm 등급 — 강신호(특이어 2+ 또는 반복 3회+)만 자동 활성,
+      #    약신호(상투 준수조항 1회 등)는 질문으로 사람 확인(문언만으론 실제 취급 여부 판단 불가).
+      activation: confirm
     - id: M-IT
       name: 전자금융 정보처리시스템 외주(전금감규 §60)
       always_on: false

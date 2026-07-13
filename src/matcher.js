@@ -55,20 +55,37 @@ function pickType(ranked) {
   return ranked[0] && ranked[0].score >= MatcherConfig.DETECT_MIN_SCORE ? ranked[0].typeId : null;
 }
 
-// 본문 키워드로 모듈 활성 제안. activation:"strong" 모듈은 특수 규제(전금감규 §60 등)라
-// 키워드 1개로는 부족 — 서로 다른 키워드 2개+ 겹칠 때만 활성(일반 계약 오탐 억제).
+// 본문 키워드로 모듈 활성 제안 → { on: 자동활성, ask: 질문(약신호 — 사람 확인 필요) }.
+// activation 등급:
+//   (기본)      키워드 1개+ → on. 일반 모듈.
+//   "strong"    서로 다른 키워드 2개+ → on, 아니면 off. 특수 규제(§60 등) — 오탐 억제 우선.
+//   "confirm"   강신호(서로 다른 2개+ 또는 총 출현 3회+) → on / 약신호(1~2회) → ask / 무신호 → off.
+//               개인정보 등 "문언만으론 실제 취급 여부 판단 불가" 모듈 — 약신호면 추측하지 않고 사람에게 물음.
+//               (상투 준수조항의 1회 언급 ≈ 약신호, 실제 취급 계약은 반복 언급 ≈ 강신호)
 function suggestModules(text, modules) {
   var t = String(text || "");
-  return modules
+  var on = [], ask = [];
+  modules
     .filter(function (m) { return !m.always_on; })
-    .filter(function (m) {
+    .forEach(function (m) {
       var kws = m.suggest_keywords || [];
-      var hits = 0;
-      for (var i = 0; i < kws.length; i++) if (t.indexOf(kws[i]) !== -1) hits++;
-      var need = m.activation === "strong" ? 2 : 1;
-      return hits >= need;
-    })
-    .map(function (m) { return m.id; });
+      var distinct = 0, occ = 0;
+      for (var i = 0; i < kws.length; i++) {
+        var n = t.split(kws[i]).length - 1;
+        if (n > 0) { distinct++; occ += n; }
+      }
+      if (m.activation === "strong") {
+        if (distinct >= 2) on.push(m.id);
+        return;
+      }
+      if (m.activation === "confirm") {
+        if (distinct >= 2 || occ >= 3) on.push(m.id);
+        else if (occ >= 1) ask.push(m.id);
+        return;
+      }
+      if (distinct >= 1) on.push(m.id);
+    });
+  return { on: on, ask: ask };
 }
 
 function activeCheckpoints(doc, activeModules) {

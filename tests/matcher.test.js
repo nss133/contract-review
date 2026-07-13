@@ -450,8 +450,30 @@ test("pickType: 임계 미달이면 미확정(null), 표제 1회면 확정", () 
 
 test("suggestModules: 본문 키워드로 모듈 활성화를 제안한다", () => {
   const s = suggestModules("개인정보 처리 업무 포함", OUT_DOC.meta.modules);
-  assert.deepStrictEqual(s, ["M-PRIV"]);
-  assert.deepStrictEqual(suggestModules("무관한 내용", OUT_DOC.meta.modules), []);
+  assert.deepStrictEqual(s.on, ["M-PRIV"]);
+  assert.deepStrictEqual(suggestModules("무관한 내용", OUT_DOC.meta.modules).on, []);
+});
+
+// ── activation: confirm(②) — 강신호 자동/약신호 질문/무신호 꺼짐 ──
+const CONFIRM_MODS = [
+  { id: "M-PII", name: "개인정보", always_on: false, activation: "confirm",
+    suggest_keywords: ["개인정보", "신용정보", "정보주체", "고객정보"] },
+];
+test("suggestModules confirm: 강신호(서로 다른 2개+)면 자동 활성", () => {
+  const s = suggestModules("개인정보 및 신용정보의 처리 위탁", CONFIRM_MODS);
+  assert.deepStrictEqual(s, { on: ["M-PII"], ask: [] });
+});
+test("suggestModules confirm: 반복 언급(총 3회+)도 강신호", () => {
+  const s = suggestModules("개인정보의 수집, 개인정보의 이용, 개인정보의 파기", CONFIRM_MODS);
+  assert.deepStrictEqual(s, { on: ["M-PII"], ask: [] });
+});
+test("suggestModules confirm: 약신호(상투 준수조항 1회)는 질문(ask)", () => {
+  const s = suggestModules("을은 관계 법령 및 개인정보 보호법을 준수한다.", CONFIRM_MODS);
+  assert.deepStrictEqual(s, { on: [], ask: ["M-PII"] });
+});
+test("suggestModules confirm: 무신호는 꺼짐", () => {
+  const s = suggestModules("일반 물품 구매 계약", CONFIRM_MODS);
+  assert.deepStrictEqual(s, { on: [], ask: [] });
 });
 
 // ── 성격 배타 게이트(A3): 화해계약 강신호가 상법 유형을 억제 ──────────

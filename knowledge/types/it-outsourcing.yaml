@@ -19,6 +19,9 @@ meta:
       always_on: false
       screening_question: 전산시스템이 고객·임직원 등 개인(신용)정보를 처리·보관하는가?
       suggest_keywords: [개인정보, 신용정보, 고객정보, 정보주체]
+      # ② 개인정보 모듈은 confirm 등급 — 강신호(특이어 2+ 또는 반복 3회+)만 자동 활성,
+      #    약신호(상투 준수조항 1회 등)는 질문으로 사람 확인(문언만으론 실제 취급 여부 판단 불가).
+      activation: confirm
     - id: M-CLOUD
       name: 클라우드·국외 처리
       always_on: false

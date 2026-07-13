@@ -22,7 +22,7 @@ const results = cases.map(function (c) {
   if (doc) {
     const suggested = suggestModules(text, doc.meta.modules || []);
     active = (doc.meta.modules || [])
-      .filter(function (m) { return m.always_on || suggested.indexOf(m.id) !== -1; })
+      .filter(function (m) { return m.always_on || suggested.on.indexOf(m.id) !== -1; })
       .map(function (m) { return m.id; });
   }
   const docs = [{ checkpoints: common.checks }, { checkpoints: doc ? doc.checks : [] }];
