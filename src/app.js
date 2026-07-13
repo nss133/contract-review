@@ -716,7 +716,10 @@ function bindVerdictControls(root, reRender) {
 
 // 검토의견 내보내기/불러오기 (계약서 건별 JSON)
 function exportVerdicts() {
-  var meta = { type_id: state.typeId, date: verdictToday(), contract_hash: verdictHash, reviewer: getReviewer() };
+  // subdoc_coverage(#3): 부속서류에서 매칭 확인된 항목은 기계 사실로 기록에 남김 —
+  // 사람 판정(verdicts)과 별개 키. 데이터 축적 시 "부속서류로 충족되는 항목" 패턴의 원료.
+  var meta = { type_id: state.typeId, date: verdictToday(), contract_hash: verdictHash, reviewer: getReviewer(),
+    subdoc_coverage: state.subDocCov || {} };
   var blob = new Blob([JSON.stringify(Verdict.exportVerdicts(verdictStore, meta), null, 2)], { type: "application/json" });
   var url = URL.createObjectURL(blob);
   var a = document.createElement("a");
@@ -773,9 +776,12 @@ function renderCompareItem(r) {
 function renderConsiderItem(r) {
   var cp = _cpById(r.cpId);
   if (!cp) return "";
-  return '<div class="compare-item consider-item">' +
+  // 부속서류 커버(#③): 주 계약서엔 없지만 부속서류에서 확인된 항목 — 배지로 구분(그냥 '검토 필요'로 보이지 않게).
+  var sub = (state.subDocCov || {})[cp.id];
+  var subBadge = sub ? ' <span class="badge cov-subdoc" title="부속서류에서 매칭 확인됨">✓ 부속서류 반영: ' + esc(sub.docName) + "</span>" : "";
+  return '<div class="compare-item consider-item' + (sub ? " subdoc-covered" : "") + '">' +
     '<div class="ci-head"><span class="sev sev-' + cp.severity + '" title="' + esc(cp.severity_basis || "") + '">' +
-    esc(cp.severity) + "</span><span class=\"ci-id\">" + esc(cp.id) + "</span></div>" +
+    esc(cp.severity) + "</span><span class=\"ci-id\">" + esc(cp.id) + "</span>" + subBadge + "</div>" +
     '<p class="ci-q">' + labelQ(cp) + "</p>" +
     (cp.severity_basis ? '<p class="ci-basis">왜 봐야 하는지: ' + esc(cp.severity_basis) + "</p>" : "") +
     '<p class="ci-src">근거 ' + evidenceCell(cp) + "</p>" +
@@ -808,10 +814,19 @@ function renderClauses() {
       esc(c.body) + "</pre></div>";
   }).join("");
   // 검토 제안(계약서에서 확인 안 됨) — 특정 조항에 없는 부재 알람. 별도 진입 항목.
-  if (considerList.length) {
+  // 검토 제안 카운트(필수·의견·부속서류 반영) — 목록·갱신 공용.
+  function considerCountText() {
     var mustN = considerList.filter(function (r) { var c = _cpById(r.cpId); return c && c.severity === "필수"; }).length;
     var opinN = considerList.filter(function (r) { var v = verdictStore[r.cpId]; return v && v.verdict === "검토의견"; }).length;
-    var sub = (mustN ? "필수 " + mustN : "") + (opinN ? (mustN ? " · " : "") + "의견 " + opinN : "");
+    var subN = considerList.filter(function (r) { return (state.subDocCov || {})[r.cpId]; }).length;
+    var parts = [];
+    if (mustN) parts.push("필수 " + mustN);
+    if (opinN) parts.push("의견 " + opinN);
+    if (subN) parts.push("부속서류 " + subN);
+    return parts.join(" · ");
+  }
+  if (considerList.length) {
+    var sub = considerCountText();
     listHtml += '<div class="clause clause-consider" data-ci="consider"><strong>⚠ 검토 제안 (계약서에서 확인 안 됨)</strong>' +
       '<span class="cnt">' + esc(sub) + "</span>" +
       '<pre>필수·권장 항목 중 계약서에서 매칭 조항을 찾지 못한 것들. 빠졌다는 뜻이 아니라 검토가 필요한 사항.</pre></div>';
@@ -855,11 +870,9 @@ function renderClauses() {
   refreshClauseCounts = function () {
     document.querySelectorAll(".clause").forEach(function (el) {
       var raw = el.dataset.ci;
-      if (raw === "consider") { // 검토 제안 항목 카운트(필수·의견)
-        var mustN = considerList.filter(function (r) { var c = _cpById(r.cpId); return c && c.severity === "필수"; }).length;
-        var opinN = considerList.filter(function (r) { var v = verdictStore[r.cpId]; return v && v.verdict === "검토의견"; }).length;
+      if (raw === "consider") { // 검토 제안 항목 카운트(필수·의견·부속서류)
         var cntC = el.querySelector(".cnt");
-        if (cntC) cntC.textContent = (mustN ? "필수 " + mustN : "") + (opinN ? (mustN ? " · " : "") + "의견 " + opinN : "");
+        if (cntC) cntC.textContent = considerCountText();
         return;
       }
       var ci = Number(raw);
@@ -1203,7 +1216,7 @@ function renderReport() {
 function _commentLine(rec) {
   var cls = VERDICT_CLS[rec.verdict] || "";
   return '<div class="rd-comment"><span class="vd-badge ' + cls + '">' + esc(rec.verdict) + "</span>" +
-    '<span class="rd-c-label">' + esc(labelQ(rec.cp)).replace(/<[^>]+>/g, " ") + "</span>" +
+    '<span class="rd-c-label">' + esc(String(labelQ(rec.cp)).replace(/<[^>]+>/g, " ")) + "</span>" +
     (rec.comment ? '<span class="rd-c-text">' + esc(rec.comment) + "</span>" : "") + "</div>";
 }
 // 인쇄 시 접힌 섹션도 펼쳐 요약 타일·검토 제안·확인 권장이 모두 나오게.

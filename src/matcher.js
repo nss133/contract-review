@@ -362,10 +362,21 @@ function analyze(clauses, docs, activeModules) {
     if ((coverage === "addressed" || coverage === "verify") && candidates.length) {
       var bestClause = candidates[0].clause;
       var f = overlapFeatures(bestClause, cp);
+      var cited = candidates[0].s.citation === true;
       // 게이트 통과 판정은 passesOverlapGate로 단일화(순수함수·테스트 대상과 동일 로직).
-      var passed = passesOverlapGate(bestClause, cp, candidates[0].s.citation === true);
+      var passed = passesOverlapGate(bestClause, cp, cited);
       gate = { uniq: f.uniq, titleStrong: f.titleStrong, passed: passed };
       if (!passed) coverage = "quiet";
+      // weak-role 강등(실사용 피드백): 전문·목적·정의 등 weak 조항에는 구체 검토항목을 붙이지 않음 —
+      // 모든 내용이 목적에 닿는 건 논리 필연이라 정보가치 0. 예외: 명시 인용, 또는 그 조항을
+      // 직접 겨냥한 체크(표제 강일치 — 예: '계약의 목적' 체크). 강등돼도 tier는 보존(매칭 존재 자체는 기록).
+      if (coverage !== "quiet") {
+        var bestRole = ClauseRole.clauseRole(bestClause.heading, bestClause.body);
+        if (bestRole.weak === true && !cited && !f.titleStrong) {
+          coverage = "quiet";
+          gate.weakRole = true;
+        }
+      }
     }
 
     var reasons = _reasons(tier, candidates.length ? candidates : scored, cp);

@@ -324,6 +324,10 @@ td.empty { text-align: center; color: #889; padding: 24px; }
 .loop-c:hover { background: #eef2f8; border-color: #46618c; }
 .loop-c .loop-c-n { color: #99a; font-size: 11px; }
 
+/* #3 부속서류 커버 배지 */
+.cov-subdoc { background: #e8f5ee; color: #1e7a46; border: 1px solid #bfe3cd; font-size: 11.5px; }
+.consider-item.subdoc-covered { border-left: 3px solid #6fbf8f; }
+
 /* P4 팀 취합 — 검토자 입력·파일 버튼 */
 .reviewer-label { font-size: 12.5px; color: #556; display: inline-flex; align-items: center; gap: 5px; }
 .reviewer-label input { width: 110px; border: 1px solid #d9dfea; border-radius: 6px; padding: 4px 8px; font-size: 12.5px; }
