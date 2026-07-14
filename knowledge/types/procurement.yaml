@@ -40,8 +40,9 @@ checks:
     module: M-UNFAIR
     check: 서면에 기재되지 않은 사항을 요구하며 그 비용을 수급사업자에게 부담시키는 약정이 없는가
     label: "서면 외 비용전가"
-    severity: 참고
-    severity_basis: "간주규정임 — 하도급거래 공정화에 관한 법률 제3조의4"
+    severity: 권장
+    severity_override: true
+    severity_basis: "간주규정임(제3조의4 제2항 각 호는 부당특약 간주·해당부분 무효) — 하도급거래 공정화에 관한 법률 제3조의4. 회사(원사업자)가 수범자로서 제재·담보실효 노출."
     norm_type: 간주
     basis: statute
     triggers:
@@ -58,8 +59,9 @@ checks:
     module: M-UNFAIR
     check: 원사업자가 부담하여야 할 민원처리·산업재해 등 비용을 수급사업자에게 부담시키는 약정이 없는가
     label: "원사업자 비용 전가"
-    severity: 참고
-    severity_basis: "간주규정임 — 하도급거래 공정화에 관한 법률 제3조의4"
+    severity: 권장
+    severity_override: true
+    severity_basis: "간주규정임(부당특약 간주·해당부분 무효) — 하도급거래 공정화에 관한 법률 제3조의4. 회사(원사업자)가 수범자로서 제재·비용전가 무효 리스크."
     norm_type: 간주
     basis: statute
     triggers:
@@ -76,8 +78,9 @@ checks:
     module: M-UNFAIR
     check: 입찰내역에 없는 사항을 요구하며 그 비용을 수급사업자에게 부담시키는 약정이 없는가
     label: "입찰내역 외 비용전가"
-    severity: 참고
-    severity_basis: "간주규정임 — 하도급거래 공정화에 관한 법률 제3조의4"
+    severity: 권장
+    severity_override: true
+    severity_basis: "간주규정임(부당특약 간주·해당부분 무효) — 하도급거래 공정화에 관한 법률 제3조의4. 회사(원사업자) 수범자로서 제재·비용전가 무효 리스크."
     norm_type: 간주
     basis: statute
     triggers:
@@ -479,8 +482,9 @@ checks:
     module: M-DELIVERY
     check: 서비스수준(SLA)·가동률 기준과 장애 발생 시 대응·보상·손해배상 조항이 있는가
     label: "SLA·장애 손해배상"
-    severity: 참고
-    severity_basis: "실무 관행 항목(법령 강제 아님)"
+    severity: 권장
+    severity_override: true
+    severity_basis: "실무 관행 항목이나 회사(발주자·전자금융 이용주체) 리스크가 큼 — 시스템 장애 시 회사가 대외 배상·감독제재를 먼저 지므로 상대방 구상근거 확보 필요. 전자금융감독규정 제60조 품질평가 의무는 회사가 수범자."
     norm_type: 실무
     basis: practice
     triggers:

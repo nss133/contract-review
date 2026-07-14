@@ -44,9 +44,9 @@ checks:
     module: M-CH
     check: 채널의 부실·귀책으로 인한 손해(불완전판매 배상·과태료 구상)의 분담·구상 구조가 규정되어 있는가
     label: "채널 귀책 구상"
-    severity: 권장
+    severity: 필수
     severity_override: true
-    severity_basis: "실무 관행 항목 — 모집조직 위반행위에 대한 보험회사 배상책임(보험업법 §102 구조) 대비 구상 확보 필요(practice 도출규칙 override)"
+    severity_basis: "실무 관행 항목(§102 원문 미대조) — 리스크: 회사가 보험업법 §102로 모집조직 위반 손해를 1차 배상하는 구조에서 채널 귀책 구상장치 부재 시 회사가 배상·과태료를 최종 부담(회수 불능) 직결(severity_override: risk)"
     norm_type: 실무
     basis: practice
     triggers:

@@ -151,7 +151,7 @@ checks:
     absence_check: true
     sources: []
   - id: CMN-07
-    check: 갱신 방식(자동갱신·합의갱신)과 갱신 거절 통지 기한이 규정되어 있는가
+    check: 갱신 방식(자동갱신·합의갱신)과 갱신 거절 통지 기한이 규정되어 있고, 통지기한이 어느 일방(특히 우리 회사)에만 과도하게 촉박하지 않은가
     label: "갱신·갱신거절 통지"
     severity: 참고
     severity_basis: "실무 관행 항목(법령 강제 아님)"
@@ -162,7 +162,7 @@ checks:
     absence_check: true
     sources: []
   - id: CMN-08
-    check: 해지·해제 사유(중대한 위반, 도산 등)가 규정되어 있는가
+    check: 해지·해제 사유(중대한 위반, 도산 등)가 규정되어 있고, 임의해지권·해지사유가 당사자 간 균형 있게(회사에만 불리하지 않게) 부여되어 있는가
     label: "해지·해제 사유"
     severity: 참고
     severity_basis: "실무 관행 항목(법령 강제 아님)"
@@ -195,7 +195,7 @@ checks:
     absence_check: true
     sources: []
   - id: CMN-11
-    check: 손해배상 책임의 귀책사유와 배상 범위 조항이 있는가
+    check: 손해배상 책임의 귀책사유와 배상 범위 조항이 있고, 그 책임이 어느 일방(특히 우리 회사)에만 편면적으로 부과되지 않는가
     label: "손해배상 책임·범위"
     severity: 참고
     severity_basis: "실무 관행 항목(법령 강제 아님)"
@@ -240,7 +240,7 @@ checks:
         verified: true
     note: 임의규정 — 계약상 확장·제한 특약이 우선함
   - id: CMN-14
-    check: 책임 상한(cap)·면책 조항이 고의·중과실을 상한 예외로 명시하고 있는가
+    check: 책임 상한(cap)·면책 조항이 고의·중과실을 상한 예외로 명시하고 있고, 상한·면책의 이익이 당사자 간 대칭적으로(회사에만 불리하지 않게) 배분되어 있는가
     label: "책임상한·중과실 예외"
     severity: 참고
     severity_basis: "실무 관행 항목(법령 강제 아님)"
@@ -2237,3 +2237,43 @@ checks:
     note: 하도급법 적용대상 해당 시. 직접지급 의무의 범위·절차 실체는 시행령 제9조에 위임됨(원사업자 대금지급채무는 그 범위에서 소멸 — 제14조 제2항)
 
 # 잔류(service-purchase.yaml에 남는 M-PAY check): 없음 — SP-PAY-01~10 전부 하도급법 근거, 일반 대금 check 부존재.
+
+  # ── 회사 리스크 코어(⑤ 편면성·구상 — C4 재검수 신설, 상시) ──
+  - id: RISK-02
+    check: 상대방의 채무불이행·귀책으로 회사가 제3자(고객·감독당국 등)에 대해 부담한 손해·제재·비용을 상대방에게 구상·전가할 수 있는 조항이 있는가
+    label: "구상·비용전가 확보"
+    severity: 권장
+    severity_override: true
+    severity_basis: "회사 손실 직결(구상 불능) 리스크 — practice이나 상대방 귀책으로 인한 회사 손실을 회수하지 못하면 회사가 다침. 권장 승격(의도적 예외)"
+    norm_type: 실무
+    basis: practice
+    triggers:
+      keywords: [구상, 면책, indemnify, indemnification, 배상하고 방어, 손해를 보전, 제재금, 과징금, 제3자 청구, 상대방의 귀책으로]
+    absence_check: false
+    sources: []
+    note: "위탁·제휴 상대방의 위법·과실로 회사가 고객배상·감독제재를 받은 경우, 상대방에 구상·전가하는 근거가 없으면 회사가 종국 부담. 구상권·면책(indemnity)·비용보전 조항 유무를 확인."
+  - id: RISK-05
+    check: 진술·보증(representations & warranties) 또는 면책(indemnity)의 범위가 회사에만 좁게(상대방에만 넓게) 설정되어, 회사가 부담하는 보증·면책 리스크가 편면적으로 무겁지 않은가
+    label: "진술보증·면책 편면성"
+    severity: 권장
+    severity_override: true
+    severity_basis: "회사 손실 직결(보증·면책 노출) 리스크 — practice이나 회사만 광범위한 보증·면책을 부담하면 회사가 다침. 권장 승격(의도적 예외)"
+    norm_type: 실무
+    basis: practice
+    triggers:
+      keywords: [진술 및 보증, 진술과 보증, representations, warranties, 보증한다, 면책, indemnify, 하자, 보증 위반, 진술보증]
+    absence_check: false
+    sources: []
+    note: "회사의 진술·보증만 광범위하고 상대방 보증은 형식적이거나, 면책의무가 회사에만 넓으면 회사가 편면적 리스크 부담. 보증범위·존속기간·상한(cap)·바스켓의 대칭성 확인."
+  - id: RISK-06
+    check: 위약벌 또는 손해배상액의 예정이 회사에만 과중하게(상대방보다 무겁게) 부과되어 있지 않은가, 또는 회사가 과도한 위약벌을 상대방에 설정하여 감액·무효 위험을 지고 있지 않은가
+    label: "위약벌·손해배상예정 편면성"
+    severity: 참고
+    severity_basis: "실무 관행 항목(법령 강제 아님) — 편면 위약벌은 리스크이나 민법 제398조 감액법리로 완충되어 참고. 회사가 과도설정한 경우 무효·감액 위험은 note로 경고"
+    norm_type: 실무
+    basis: practice
+    triggers:
+      keywords: [위약벌, 위약금, 손해배상액의 예정, 예정액, 페널티, penalty, 배액, 배상하기로]
+    absence_check: false
+    sources: []
+    note: "위약벌이 회사에만 무겁게 부과되면 편면 부담. 반대로 회사가 상대방에 과도한 위약벌을 설정하면 부당히 과다하여 민법 제398조상 법원 감액·위약벌 일부무효 위험(회사에 유리해 보여도 집행단계에서 무력화). 위약벌/예정 성격 구분·규모 형평 확인.(민법 제398조 원문 DB 미수록 — 조문 미확인)"

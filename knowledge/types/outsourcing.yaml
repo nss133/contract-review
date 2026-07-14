@@ -267,8 +267,9 @@ checks:
     module: M-CORE
     check: 수탁자가 위탁업무와 관련한 금융감독원장의 검사·자료제출 요구에 응하도록 하는 조항이 있는가
     label: "감독원 검사·자료제출 응함"
-    severity: 참고
-    severity_basis: "실무 관행 항목(법령 강제 아님)"
+    severity: 권장
+    severity_override: true
+    severity_basis: "실무 관행 항목이나 회사 감독대응 리스크가 큼 — 회사가 감독원 검사·자료요구에 응할 의무를 지므로, 수탁자 협조 계약근거 부재는 회사의 대응불능 리스크. 업무위수탁기준(별표3) 근거."
     norm_type: 실무
     basis: practice
     triggers:

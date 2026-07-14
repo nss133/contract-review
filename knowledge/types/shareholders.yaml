@@ -106,8 +106,9 @@ checks:
     module: M-SHARE
     check: 우선매수권(ROFR) 행사의 통지 절차·행사기간·가격결정 방법이 특정되어 있는가
     label: "우선매수권(ROFR)"
-    severity: 참고
-    severity_basis: "실무 관행 항목(법령 강제 아님)"
+    severity: 권장
+    severity_override: true
+    severity_basis: "실무 관행 항목(법령 강제 아님). 리스크: 회사=주주 지위에서 ROFR 행사기간·가격결정 미비 시 지분방어·엑싯 통제장치 형해화(severity_override: risk, 지분가치 보호)"
     norm_type: 실무
     basis: practice
     triggers:
@@ -119,8 +120,9 @@ checks:
     module: M-SHARE
     check: 동반매도참여권(tag-along) 행사 시 매수인이 소수주주 지분을 동일 조건으로 인수하도록 하는 의무가 규정되어 있는가
     label: "동반매도참여권(tag-along)"
-    severity: 참고
-    severity_basis: "실무 관행 항목(법령 강제 아님)"
+    severity: 권장
+    severity_override: true
+    severity_basis: "실무 관행 항목(법령 강제 아님). 리스크: 회사=소수주주 지위에서 tag-along 부재 시 지배주주 단독 엑싯에 고립되어 잔여지분 유동성·지분가치 훼손(severity_override: risk, 엑싯 보호)"
     norm_type: 실무
     basis: practice
     triggers:
@@ -131,8 +133,9 @@ checks:
     module: M-SHARE
     check: 동반매도청구권(drag-along) 행사요건·소수주주 매도의무·공정가격 보장이 규정되어 있는가
     label: "동반매도청구권(drag-along)"
-    severity: 참고
-    severity_basis: "실무 관행 항목(법령 강제 아님)"
+    severity: 권장
+    severity_override: true
+    severity_basis: "실무 관행 항목(법령 강제 아님). 리스크: 회사가 소수주주면 drag 행사로 불리한 시점·가격 매도의무 강제 노출, 공정가격·행사요건 보장 확인이 지분가치 방어에 직결(severity_override: risk)"
     norm_type: 실무
     basis: practice
     triggers:

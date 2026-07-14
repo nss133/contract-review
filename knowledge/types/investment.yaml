@@ -150,8 +150,8 @@ checks:
     check: 추가출자(Capital Call) 요구의 요건·한도·불이행 효과가 명확한가
     label: "추가출자 요건·효과"
     module: M-PARTNER
-    severity: 권장
-    severity_basis: 실무 항목이나 출자자 리스크 큼 — 법령 근거 없음, 디폴트 조항 미비 시 손실 직결
+    severity: 필수
+    severity_basis: "실무 항목이나 출자자(LP) 리스크 직결 — 법령 근거 없음. 리스크: 회사=LP 지위에서 캐피탈콜 요건·한도·디폴트효과 미비 시 예측불가 추가출자 노출 또는 기출자분 몰취 손실 직결(severity_override: risk)"
     norm_type: 실무
     severity_override: true
     basis: practice
@@ -161,3 +161,18 @@ checks:
     sources: []
 
   # ── M-SPECIAL 보험 특별계정 ──────────────────────────────────
+  # ── 회사 리스크(⑤ C4 신설) ──
+  - id: INV-MAN-03
+    module: M-MANDATE
+    check: 투자일임재산의 분별관리(고유재산과 분리보관)와 신탁업자 예탁 등 재산보호 장치가 규정되어 있는가
+    label: "일임재산 분별관리·보호"
+    severity: 필수
+    severity_override: true
+    severity_basis: "실무 항목이나 회사=위임자 원본손실 방어 직결 — 일임재산이 운용사 고유재산과 분리·예탁되지 않으면 운용사 도산 시 회사 자산이 도산재단에 혼입되어 회수 불능. 자본시장법상 분별관리 의무의 계약 반영 여부(원문 미대조)로 practice(severity_override: risk)"
+    norm_type: 실무
+    basis: practice
+    triggers:
+      keywords: [분별관리, 고유재산, 예탁, 신탁업자, 재산보관, 분리보관]
+    absence_check: true
+    sources: []
+    note: "INV-MAN-01(선관·충실)·INV-MAN-02(이해상충)는 운용행위 규제이나, 운용사 도산 국면에서 회사 원본을 지키는 것은 분별관리·예탁. 원본손실 방어 관점 신규 제안. 자본시장법 분별관리·투자자예탁 조문 원문 대조 후 statute 승격 후보. "

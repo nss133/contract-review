@@ -19,8 +19,9 @@ checks:
     check: 대출원금(대여금액)과 인도(실행) 방법이 특정되어 있는가
     label: "대출원금·실행방법"
     module: M-LOAN
-    severity: 참고
-    severity_basis: 소비대차의 성립요건 — 민법 제598조(요물성 아님, 낙성계약이나 원금 특정은 계약 본질)
+    severity: 권장
+    severity_override: true
+    severity_basis: "소비대차 성립요건 서술(선언) — 민법 제598조. 리스크: 회사=대주 지위에서 대여채권의 금액·실행범위 미특정은 회수 시 채권 특정 곤란으로 직결(severity_override: risk)"
     norm_type: 선언
     basis: statute
     triggers:
