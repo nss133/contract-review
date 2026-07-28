@@ -300,6 +300,19 @@ checks:
         quote: '쌍무계약의 당사자 일방의 채무가 당사자쌍방의 책임없는 사유로 이행할 수 없게 된 때에는 채무자는 상대방의 이행을 청구하지 못한다'
         verified: true
     note: 채무자위험부담주의는 임의규정 — 특약으로 위험이전 시기를 달리 정할 수 있음
+  - id: SP-DEL-03-2
+    module: M-DELIVERY
+    check: 불가항력 조항이 계약이행 책임 면제뿐 아니라 대금정산·해지권·복구비용 분담 등 사후처리까지 규정하고 있는가
+    label: "불가항력 사후처리"
+    severity: 참고
+    severity_basis: "실무 관행 항목(법령 강제 아님)"
+    norm_type: 실무
+    basis: practice
+    triggers:
+      keywords: [불가항력, 천재지변, force majeure]
+    absence_check: true
+    sources: []
+    note: "실사례 검토의견(2026-07-28 큐레이션 리포트 SP-DEL-03 표본) — 불가항력 조항이 '계약이행 책임 없음'만 정하고 대금정산·해지·복구비용 분담 등 사후처리는 규정하지 않은 사례 확인. SP-DEL-03(민법§537 위험부담·basis=statute)과 근거·쟁점이 달라 원자 분리 — SP-DEL-03은 '위험부담 조항 존재 자체', 본 체크는 '불가항력 조항의 사후처리 완비 여부'. 사후처리 방식은 법령이 특정하지 않아 basis=practice."
   - id: SP-DEL-04
     module: M-DELIVERY
     check: 발주자(채권자) 귀책 또는 수령지체 중 이행불능 시 수급인의 대금청구권 유지 조항이 있는가
@@ -388,6 +401,20 @@ checks:
         quote: '전3조의 규정에 의한 하자의 보수, 손해배상의 청구 및 계약의 해제는 목적물의 인도를 받은 날로부터 1년내에 하여야 한다'
         verified: true
     note: 하자담보 제척기간은 임의규정 — 특약으로 연장·단축 가능
+  - id: SP-DEL-08-2
+    module: M-DELIVERY
+    tier: conditional
+    check: 지체상금·하자보수와 함께 이행(하자)보증보험 증권 징구 여부가 확인되어 있는가
+    label: "이행(하자)보증보험 확인"
+    severity: 참고
+    severity_basis: "실무 관행 항목(법령 강제 아님)"
+    norm_type: 실무
+    basis: practice
+    triggers:
+      keywords: [이행보증보험, 하자보증보험, 보증보험증권, 이행보증]
+    absence_check: true
+    sources: []
+    note: "회사 표준계약서 자체가 이행보증보험 '有/無' 두 버전으로 병존(사내 표준계약서 선택적 채택 구조 — 조달 규모·리스크에 따라 보험 미징구도 정상 운영). tier: conditional로 두어 무보험 버전에서 무조건 부재알람이 뜨지 않도록 함(누락 여부가 아니라 '징구 여부가 문서상 확인되는지'만 확인하는 참고 성격). 지체상금(SP-DEL-02)·하자보수(SP-DEL-05)와 별개로 담보수단(보험) 존재 자체를 다루는 원자 체크."
   - id: SP-DEL-09
     module: M-DELIVERY
     check: 구매(매매) 목적물의 하자에 대한 매도인의 하자담보책임 조항이 있는가
