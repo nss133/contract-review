@@ -5,7 +5,10 @@
    오탈자·견적서 대조 등 룰로 불가한 항목은 범위 밖(스펙 후속 과제).
    브라우저 전역 Formal + node require 겸용. */
 var Formal = (function () {
-  var OUR_FULL = /미래에셋생명보험\s*(?:㈜|주식회사|\(주\))/;
+  // 정식 상호: 접미형("미래에셋생명보험㈜") 또는 전치형("주식회사 미래에셋생명보험")
+  var OUR_FULL_SUFFIX = /미래에셋생명보험\s*(?:㈜|주식회사|\(주\))/;
+  var OUR_FULL_PREFIX = /(?:주식회사|㈜)\s*미래에셋생명보험/;
+  var OUR_FULL = new RegExp(OUR_FULL_SUFFIX.source + "|" + OUR_FULL_PREFIX.source);
   var OUR_STEM_BAD = /미래에셋생명(?!보험)/g; // '보험' 누락 오기
   var BLANKS = [
     { re: /OOO|○○○|◯◯◯/g, label: "OOO 자리표시" },
@@ -20,16 +23,27 @@ var Formal = (function () {
     var t = String(text || "");
     var out = [];
     // FORM-NAME — 당사 상호(체크리스트: "당사 상호: 미래에셋생명보험㈜ 또는 …주식회사")
-    var bad = t.match(OUR_STEM_BAD) || [];
-    if (bad.length)
-      out.push({ id: "FORM-NAME", title: "당사 상호 표기", status: "warn",
-        detail: "'미래에셋생명' 뒤 '보험' 누락 의심 " + bad.length + "곳 — 정식 상호: 미래에셋생명보험㈜/주식회사" });
-    else if (/미래에셋생명보험/.test(t) && !OUR_FULL.test(t))
-      out.push({ id: "FORM-NAME", title: "당사 상호 표기", status: "warn",
-        detail: "법인 형태(㈜·주식회사) 표기 확인 필요" });
-    else
-      out.push({ id: "FORM-NAME", title: "당사 상호 표기", status: "pass",
-        detail: /미래에셋생명보험/.test(t) ? "정식 상호 확인" : "당사 상호 미등장" });
+    // 정식 상호(접미형 또는 전치형)가 있으면 pass
+    if (OUR_FULL.test(t)) {
+      out.push({ id: "FORM-NAME", title: "당사 상호 표기", status: "pass", detail: "정식 상호 확인" });
+    }
+    // 정식 상호 없이 "(이하 \"미래에셋생명\"이라 한다)" 별칭 선언이 있으면 pass(관행 인정)
+    else if (/\(이하\s*"?미래에셋생명"?이?라\s*한다\)/.test(t)) {
+      out.push({ id: "FORM-NAME", title: "당사 상호 표기", status: "pass", detail: "정식 상호 + 별칭 선언 확인" });
+    }
+    // 정식 상호도 없고 별칭 선언도 없는 경우만 stem 오기 검출
+    else {
+      var bad = t.match(OUR_STEM_BAD) || [];
+      if (bad.length)
+        out.push({ id: "FORM-NAME", title: "당사 상호 표기", status: "warn",
+          detail: "'미래에셋생명' 뒤 '보험' 누락 의심 " + bad.length + "곳 — 정식 상호: 미래에셋생명보험㈜/주식회사" });
+      else if (/미래에셋생명보험/.test(t))
+        out.push({ id: "FORM-NAME", title: "당사 상호 표기", status: "warn",
+          detail: "법인 형태(㈜·주식회사) 표기 확인 필요" });
+      else
+        out.push({ id: "FORM-NAME", title: "당사 상호 표기", status: "pass",
+          detail: "당사 상호 미등장" });
+    }
     // FORM-BLANK — 빈칸 잔존(체크리스트: "빈칸을 모두 정확히 채워넣었는가")
     var hits = [];
     BLANKS.forEach(function (b) {
