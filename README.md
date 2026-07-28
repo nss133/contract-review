@@ -31,7 +31,7 @@ dist/contract-review.html  (단일 파일, 외부 의존 0)
 `sim.js`(유사도 char_wb TF-IDF·Jaccard) → `clause_role.js`(조항역할·규범유형) →
 `matcher_config.js`(임계값) → `segmenter.js`(조항 분할) → `matcher.js`(점수·tier) →
 `pf.js`·`cfb.js`·`extract-*.js`(파일 추출: PDF·DOC·HWP·HWPX·DOCX) →
-`verify.js`·`verdict.js`·`tags.js` → `app.js`(UI). 이 순서로 인라인된다.
+`verify.js`·`verdict.js`·`loop.js`(지식 루프)·`goldset.js`(내장 골드셋)·`tags.js`·`formal.js`(형식 점검) → `app.js`(UI). 이 순서로 인라인된다.
 
 ## 계약서 입력 — 붙여넣기 또는 파일
 
