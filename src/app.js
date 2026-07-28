@@ -531,6 +531,19 @@ function runAnalysis() {
       state.subDocCov = subDocCoverage(considerCps, subs, model);
     }
   }
+
+  // 별첨 참조(#4): 부속서류 파일 미업로드분에 한해, 본문이 표준 부속서류 체결을 참조하면
+  // covers에 속한 consider 항목을 "별첨 참조" 그룹으로 분류(기계매칭 subDocCov 우선).
+  var fullText = (state.clauses || []).map(function (cl) {
+    return String(cl.heading || "") + " " + String(cl.body || "");
+  }).join("\n"); // ↑ matcher.js analyze의 fullText 구성과 동일
+  state.refCov = {};
+  detectSubdocRefs(fullText, (CR.common.meta || {}).standard_subdocs || []).forEach(function (ref) {
+    ref.covers.forEach(function (cpId) {
+      if (!state.subDocCov[cpId]) state.refCov[cpId] = { title: ref.title, signal: ref.signal, quote: ref.quote };
+    });
+  });
+
   loadVerdicts();
   renderClauses();
   bindVerdictIO();
@@ -915,9 +928,12 @@ function renderConsiderItem(r) {
   // 부속서류 커버(#③): 주 계약서엔 없지만 부속서류에서 확인된 항목 — 배지로 구분(그냥 '검토 필요'로 보이지 않게).
   var sub = (state.subDocCov || {})[cp.id];
   var subBadge = sub ? ' <span class="badge cov-subdoc" title="부속서류에서 매칭 확인됨">✓ 부속서류 반영: ' + esc(sub.docName) + "</span>" : "";
-  return '<div class="compare-item consider-item' + (sub ? " subdoc-covered" : "") + '">' +
+  // 별첨 참조(#4): 본문이 표준 부속서류 체결을 참조하는 경우 — 기계매칭(sub)과 시각·의미상 구분.
+  var ref = !sub && (state.refCov || {})[cp.id];
+  var refBadge = ref ? ' <span class="badge cov-refdoc" title="근거: ' + esc(ref.quote) + '">◇ 별첨 참조: ' + esc(ref.title) + "</span>" : "";
+  return '<div class="compare-item consider-item' + (sub ? " subdoc-covered" : "") + (ref ? " refdoc-covered" : "") + '">' +
     '<div class="ci-head"><span class="sev sev-' + cp.severity + '" title="' + esc(cp.severity_basis || "") + '">' +
-    esc(cp.severity) + "</span><span class=\"ci-id\">" + esc(cp.id) + "</span>" + subBadge + "</div>" +
+    esc(cp.severity) + "</span><span class=\"ci-id\">" + esc(cp.id) + "</span>" + subBadge + refBadge + "</div>" +
     '<p class="ci-q">' + labelQ(cp) + "</p>" +
     (cp.severity_basis ? '<p class="ci-basis">왜 봐야 하는지: ' + esc(cp.severity_basis) + "</p>" : "") +
     '<p class="ci-src">근거 ' + evidenceCell(cp) + "</p>" +
@@ -955,10 +971,12 @@ function renderClauses() {
     var mustN = considerList.filter(function (r) { var c = _cpById(r.cpId); return c && c.severity === "필수"; }).length;
     var opinN = considerList.filter(function (r) { var v = verdictStore[r.cpId]; return v && v.verdict === "검토의견"; }).length;
     var subN = considerList.filter(function (r) { return (state.subDocCov || {})[r.cpId]; }).length;
+    var refN = considerList.filter(function (r) { return !(state.subDocCov || {})[r.cpId] && (state.refCov || {})[r.cpId]; }).length;
     var parts = [];
     if (mustN) parts.push("필수 " + mustN);
     if (opinN) parts.push("의견 " + opinN);
     if (subN) parts.push("부속서류 " + subN);
+    if (refN) parts.push("별첨참조 " + refN);
     return parts.join(" · ");
   }
   if (considerList.length) {
@@ -972,10 +990,13 @@ function renderClauses() {
     var detail = document.getElementById("mapping-detail");
     if (ci === "consider") {
       // 검토 제안 전용 — 조항 매핑 없음. 각 항목에 판정·코멘트(오류 여부 검토).
-      // 부속서류 커버 항목(#③)은 '진짜 미확인'과 분리 — 반영된 사실이 검토 필요처럼 보이지 않게.
+      // 부속서류 커버 항목(#③)·별첨 참조 항목(#4)은 '진짜 미확인'과 분리 — 반영/참조된 사실이
+      // 검토 필요처럼 보이지 않게. 우선순위: 기계매칭(subCov) > 별첨 참조(refCov).
       var subCov = state.subDocCov || {};
-      var uncovered = considerList.filter(function (r) { return !subCov[r.cpId]; });
+      var refCov = state.refCov || {};
+      var uncovered = considerList.filter(function (r) { return !subCov[r.cpId] && !refCov[r.cpId]; });
       var covered = considerList.filter(function (r) { return subCov[r.cpId]; });
+      var referenced = considerList.filter(function (r) { return !subCov[r.cpId] && refCov[r.cpId]; });
       var items = uncovered.map(renderConsiderItem).join("") ||
         '<p class="compare-empty">검토 제안 항목 없음</p>';
       var coveredHtml = covered.length
@@ -983,10 +1004,15 @@ function renderClauses() {
           '<p class="consider-hint">주 계약서엔 없지만 부속 서류에서 매칭 확인됨 — 커버 적정성만 확인하세요.</p>' +
           covered.map(renderConsiderItem).join("")
         : "";
+      var referencedHtml = referenced.length
+        ? '<h3 class="refdoc-covered-head"><span class="badge cov-refdoc">◇ 별첨 참조</span> 별첨 약정서로 커버 예정</h3>' +
+          '<p class="consider-hint">본문이 표준 부속서류 체결을 정하고 있음 — 약정서 체결·첨부 여부만 확인하세요.</p>' +
+          referenced.map(renderConsiderItem).join("")
+        : "";
       detail.innerHTML =
         '<div class="consider-panel"><h3><span class="badge cov-consider">! 검토 제안</span> 계약서에서 확인되지 않은 항목</h3>' +
         '<p class="consider-hint">각 항목이 실제로 빠진 것인지(오류) 아니면 해당 없는지 검토하고 의견을 남기세요.</p>' +
-        items + coveredHtml + "</div>";
+        items + coveredHtml + referencedHtml + "</div>";
       bindVerdictControls(detail, function () { showClause("consider"); refreshClauseCounts(); renderReport(); });
       return;
     }
@@ -1086,10 +1112,12 @@ function renderReport() {
   // 보완 필요로 다시 띄우지 않음(#①). 매칭 안 됐어도 검토자 판정이 우선.
   function _isNA(cp) { var v = verdictStore[cp.id]; return v && v.verdict === "해당없음"; }
   var subCov = state.subDocCov || {};
+  var refCov = state.refCov || {}; // 별첨 참조(#4) — 기계매칭(subCov) 우선
   var mustAll = consider.filter(function (it) { return it.severity === "필수" && !_isNA(it.cp); });
   var mustNA = consider.filter(function (it) { return it.severity === "필수" && _isNA(it.cp); }); // 검토자가 해당없음 판정
-  var mustConsider = mustAll.filter(function (it) { return !subCov[it.cp.id]; }); // 진짜 미확인
+  var mustConsider = mustAll.filter(function (it) { return !subCov[it.cp.id] && !refCov[it.cp.id]; }); // 진짜 미확인
   var mustCovered = mustAll.filter(function (it) { return subCov[it.cp.id]; });   // 부속서류 커버
+  var mustReferenced = mustAll.filter(function (it) { return !subCov[it.cp.id] && refCov[it.cp.id]; }); // 별첨 참조
   var recConsider = consider.filter(function (it) { return it.severity === "권장" && !_isNA(it.cp); });
 
   // 검토의견(코멘트)을 조항별로 모음 — 좌 컬럼용.
@@ -1155,10 +1183,11 @@ function renderReport() {
   } else if (mustCore.length) {
     conclCls = "concl-alert";
     conclText = "아직 검토의견 미기입. 계약 본질상 필요한 필수 항목 " + mustCore.length + "개가 계약서에서 확인되지 않음 — 우선 확인 필요.";
-  } else if (recConsider.length || verify.length || mustCond.length) {
+  } else if (recConsider.length || verify.length || mustCond.length || mustReferenced.length) {
     conclCls = "concl-caution";
     conclText = "아직 검토의견 미기입. 필수(본질) 항목은 관련 조항에 닿음. 확인 권장 " + verify.length +
-      "건" + (mustCond.length ? " · 특수규제 확인 " + mustCond.length + "건(적용 시)" : "") + "을 살펴볼 것.";
+      "건" + (mustCond.length ? " · 특수규제 확인 " + mustCond.length + "건(적용 시)" : "") +
+      (mustReferenced.length ? " · 별첨 약정서 참조 " + mustReferenced.length + "건(체결·첨부 확인)" : "") + "을 살펴볼 것.";
   } else {
     conclCls = "concl-ok";
     conclText = "계약서 전체적으로 특이사항 없음 — 필수·권장 항목이 모두 관련 조항에 닿음." +
@@ -1226,6 +1255,19 @@ function renderReport() {
       return '<div class="report-item covered-item"><span class="sev sev-필수">필수</span> ' +
         '<span class="ri-q">' + labelQ(it.cp) + "</span>" +
         '<span class="covered-src">📎 ' + esc(cv.docName) + "</span></div>";
+    }).join("") + "</section>";
+  }
+
+  // 별첨 약정서 참조(#4) — 필수 미확인이었으나 본문이 표준 부속서류 체결을 참조하는 항목.
+  // 기계매칭(부속서류 업로드)과 달리 사람이 약정서 체결·첨부 여부를 확인해야 하는 그룹.
+  if (mustReferenced.length) {
+    right += '<section class="report-sec-block"><h4 class="h4-refdoc">별첨 약정서 참조 (' + mustReferenced.length + ")</h4>";
+    right += '<p class="sec-hint">본문이 표준 부속서류 체결을 정하고 있음 — 약정서 체결·첨부 여부만 확인하세요.</p>';
+    right += mustReferenced.map(function (it) {
+      var rv = refCov[it.cp.id];
+      return '<div class="report-item refdoc-item"><span class="sev sev-필수">필수</span> ' +
+        '<span class="ri-q">' + labelQ(it.cp) + "</span>" +
+        '<span class="refdoc-src" title="' + esc(rv.quote) + '">◇ ' + esc(rv.title) + "</span></div>";
     }).join("") + "</section>";
   }
 

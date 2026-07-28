@@ -79,6 +79,15 @@ meta:
       screening_question: 원사업자·수급사업자 간 제조·수리·건설·용역위탁으로 하도급법 적용대상에 해당하는가?
       suggest_keywords: [하도급, 하도급대금, 수급사업자, 원사업자, 준공금, 기성금, 건설위탁, 부당특약]
       activation: strong
+  # 표준 부속서류 레지스트리(#4): 본계약이 별첨 체결을 참조하면 covers의 부재알람을
+  # "별첨 참조 — 체결·첨부 여부 확인" 그룹으로 전환. 기계매칭(부속서류 업로드)이 항상 우선.
+  standard_subdocs:
+    - id: SUBDOC-PII
+      title: 개인(신용)정보 보안관리약정서
+      ref_signals: [보안관리약정서, 보안관리 약정, 개인(신용)정보보안관리약정, 정보보안관리약정]
+      # covers는 Task 4 매처의 5/13 auto-confirm 결과가 아니라 약정서가 실질적으로 다루는
+      # 전체 PRIV 항목(13개) — 참조 전환은 사람 확인용 그룹핑이지 매칭 성공 여부와 무관함.
+      covers: [PRIV-02, PRIV-03, PRIV-04, PRIV-05, PRIV-06, PRIV-07, PRIV-08, PRIV-13, PRIV-14, PRIV-15, PRIV-19, PRIV-20, PRIV-21]
 checks:
   - id: CMN-01
     check: 계약 당사자가 법인 명의로 정확히 특정되어 있는가(영업점·부서 명의 아님)

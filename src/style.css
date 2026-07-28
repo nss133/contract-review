@@ -317,6 +317,14 @@ td.empty { text-align: center; color: #889; padding: 24px; }
 .consider-item.subdoc-covered { border-left: 3px solid #6fbf8f; }
 .subdoc-covered-head { margin-top: 22px; padding-top: 14px; border-top: 2px solid #e8f5ee; }
 
+/* #4 별첨 참조 배지 — 기계매칭(#3, 녹색)과 시각·의미상 구분되는 중립 회청색 */
+.cov-refdoc { background: #eef1f6; color: #4a5b73; border: 1px solid #ccd6e2; font-size: 11.5px; }
+.consider-item.refdoc-covered { border-left: 3px solid #8ca3bf; }
+.refdoc-covered-head { margin-top: 22px; padding-top: 14px; border-top: 2px solid #eef1f6; }
+.report-summary h4.h4-refdoc { color: #4a5b73; }
+.refdoc-item { border-left: 3px solid #8ca3bf; padding-left: 8px; }
+.refdoc-src { font-size: 12px; color: #4a5b73; margin-left: 8px; }
+
 /* P4 팀 취합 — 검토자 입력·파일 버튼 */
 .reviewer-label { font-size: 12.5px; color: #556; display: inline-flex; align-items: center; gap: 5px; }
 .reviewer-label input { width: 110px; border: 1px solid #d9dfea; border-radius: 6px; padding: 4px 8px; font-size: 12.5px; }

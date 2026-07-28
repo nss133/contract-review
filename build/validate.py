@@ -125,3 +125,14 @@ def _validate(common, types):
                     re.compile(p)
                 except re.error:
                     raise ValidationError(f"{cid}: triggers.patterns 정규식 오류 '{p}'")
+
+    subdocs = common["meta"].get("standard_subdocs", [])
+    if not isinstance(subdocs, list):
+        raise ValidationError("meta.standard_subdocs는 리스트여야 함")
+    for sd in subdocs:
+        missing = {"id", "title", "ref_signals", "covers"} - sd.keys()
+        if missing:
+            raise ValidationError(f"standard_subdocs: {sorted(missing)} 필요")
+        for cid in sd["covers"]:
+            if cid not in seen_ids:
+                raise ValidationError(f"standard_subdocs {sd['id']}: 존재하지 않는 check '{cid}'")

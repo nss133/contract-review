@@ -5,7 +5,7 @@
    goldset.py가 지식 YAML을 JSON으로 내려 호출한다(브라우저와 동일 소스 사용이 목적). */
 const fs = require("fs");
 const { segmentContract } = require("../src/segmenter.js");
-const { detectType, pickType, suggestModules, analyze, buildModel, subDocCoverage } = require("../src/matcher.js");
+const { detectType, pickType, suggestModules, analyze, buildModel, subDocCoverage, detectSubdocRefs } = require("../src/matcher.js");
 
 const payload = JSON.parse(fs.readFileSync(process.argv[2], "utf8"));
 const { common, types, cases } = payload;
@@ -44,6 +44,15 @@ const results = cases.map(function (c) {
       [{ name: "subdoc", clauses: segmentContract(String(c.subdoc_text)) }], model);
     subdocCovered = Object.keys(cov);
   }
+  // 별첨 참조(#4) 재현 — 기계매칭(subdoc_covered)이 우선.
+  const refs = detectSubdocRefs(text, (common.meta || {}).standard_subdocs || []);
+  const refCovered = [];
+  refs.forEach(function (ref) {
+    ref.covers.forEach(function (id) {
+      if (consider.indexOf(id) !== -1 && subdocCovered.indexOf(id) === -1 && refCovered.indexOf(id) === -1)
+        refCovered.push(id);
+    });
+  });
   return {
     id: c.id,
     detected: detected,
@@ -51,6 +60,7 @@ const results = cases.map(function (c) {
     consider: consider,
     addressed: addressed,
     subdoc_covered: subdocCovered,
+    ref_covered: refCovered,
   };
 });
 process.stdout.write(JSON.stringify(results));

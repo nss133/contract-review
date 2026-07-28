@@ -358,6 +358,27 @@ function subDocCoverage(considerCps, subDocs, model) {
   return out;
 }
 
+// 표준 부속서류 참조 감지(#4): 본문이 별첨 약정서 체결을 참조하면 그 서류가 커버하는
+// check들을 "별첨 참조" 그룹으로 묶을 근거를 준다. addressed로 치지 않음 —
+// N건 알람을 "약정서 체결·첨부 여부 확인" 1건으로 전환하는 용도. 증적: 참조 문구 quote.
+function detectSubdocRefs(fullText, defs) {
+  var out = [];
+  var t = String(fullText || "");
+  (defs || []).forEach(function (d) {
+    var sigs = d.ref_signals || [];
+    for (var i = 0; i < sigs.length; i++) {
+      var idx = t.indexOf(sigs[i]);
+      if (idx !== -1) {
+        var s = Math.max(0, idx - 40), e = Math.min(t.length, idx + sigs[i].length + 40);
+        out.push({ id: d.id, title: d.title, signal: sigs[i],
+          quote: t.slice(s, e).replace(/\s+/g, " ").trim(), covers: (d.covers || []).slice() });
+        break; // 서류당 첫 신호 1회
+      }
+    }
+  });
+  return out;
+}
+
 function analyze(clauses, docs, activeModules) {
   var model = buildModel(docs, activeModules);
   var results = [];
@@ -459,5 +480,6 @@ if (typeof module !== "undefined")
     preconditionMet: preconditionMet,
     coverageOf: coverageOf,
     subDocCoverage: subDocCoverage,
+    detectSubdocRefs: detectSubdocRefs,
     analyze: analyze
   };

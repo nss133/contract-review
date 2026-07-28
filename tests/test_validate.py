@@ -155,3 +155,35 @@ def test_bad_trigger_pattern_rejected(knowledge_dir):
     (knowledge_dir / "common.yaml").write_text(bad)
     with pytest.raises(ValidationError, match="patterns"):
         load_knowledge(knowledge_dir)
+
+
+def test_standard_subdocs_unknown_check_rejected(knowledge_dir):
+    # meta.standard_subdocs에 존재하지 않는 check id를 covers로 넣으면 ValidationError.
+    bad = (knowledge_dir / "common.yaml").read_text().replace(
+        "  modules: []\n",
+        "  modules: []\n"
+        "  standard_subdocs:\n"
+        "    - id: SUBDOC-TEST\n"
+        "      title: 테스트 약정서\n"
+        "      ref_signals: [테스트약정서]\n"
+        "      covers: [NOPE-01]\n",
+    )
+    (knowledge_dir / "common.yaml").write_text(bad)
+    with pytest.raises(ValidationError, match="standard_subdocs"):
+        load_knowledge(knowledge_dir)
+
+
+def test_standard_subdocs_valid_accepted(knowledge_dir):
+    # covers가 실존 check id면 정상 통과.
+    ok = (knowledge_dir / "common.yaml").read_text().replace(
+        "  modules: []\n",
+        "  modules: []\n"
+        "  standard_subdocs:\n"
+        "    - id: SUBDOC-TEST\n"
+        "      title: 테스트 약정서\n"
+        "      ref_signals: [테스트약정서]\n"
+        "      covers: [CMN-01]\n",
+    )
+    (knowledge_dir / "common.yaml").write_text(ok)
+    k = load_knowledge(knowledge_dir)
+    assert k["common"]["meta"]["standard_subdocs"][0]["id"] == "SUBDOC-TEST"

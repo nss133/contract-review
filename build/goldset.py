@@ -85,6 +85,10 @@ def score(cases, results):
         for cid in c.get("subdoc_must_cover") or []:
             if cid not in subcov:
                 errs.append(f"부속커버 실패: {cid}가 subdoc_covered에 없음")
+        refcov = set(r.get("ref_covered") or [])
+        for cid in c.get("refcover_must_include") or []:
+            if cid not in refcov:
+                errs.append(f"별첨참조 실패: {cid}가 ref_covered에 없음")
         rows.append({
             "id": c["id"], "desc": c.get("desc", ""), "ok": not errs, "errors": errs,
             "detected": r["detected"], "consider_n": len(consider),
