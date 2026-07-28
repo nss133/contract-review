@@ -143,8 +143,8 @@ Task 7 Step 1 산출물. 13종 자체점검 체크리스트(사내 실무팀 작
 
 | 후보 | 게이트 결정 | 반영 check id | 실행 내역 |
 |---|---|---|---|
-| ① 계열사 계약 여부 | **채택** — 근거는 보험업법 제111조(대주주와의 거래제한) + 상법 제398조(이사 등 자기거래) 병기 | `REL-09` (common.yaml, X-RELATED) | basis=statute. sources는 이미 DB verified: true인 기존 REL-01(보험업법§111)·REL-05(상법§398) quote를 재인용(신규 조문 창작 없음). severity=필수(강행) |
-| ② 이행(하자)보증보험 유무 | **채택** — practice/참고 + `tier: conditional`(확인 질문형, 有/無 2버전 오탐 방지) | `SP-DEL-08-2` (procurement.yaml, M-DELIVERY) | basis=practice, sources: [] (법령 근거 없음), tier: conditional로 "無" 버전 오탐 방지 |
+| ① 계열사 계약 여부 | **채택** — 근거는 보험업법 제111조(대주주와의 거래제한) + 상법 제398조(이사 등 자기거래) 병기 | `REL-09` (common.yaml, X-RELATED) | basis=statute. **[픽스 라운드 1 정정]** 최초 반영 시 보험업법§111 quote를 REL-01(사실은 §116 문언이 잘못 붙은 기존 오류)에서 재인용하는 실수가 있었음. `data/law_snapshot.sqlite` 원문 직접 조회로 재확인 후 상법§398(REL-05와 동일 원문, 정확)·보험업법§111①1호(대주주 출자지원 신용공여, 원문 그대로) 두 source로 정정. 사용자 게이트 결정("전부 verified:false 초안")에 따라 두 source 모두 verified:false로 하향. severity=필수(강행) |
+| ② 이행(하자)보증보험 유무 | **채택** — practice/참고 + 조건부 부재체크(有/無 2버전 오탐 방지) | `SP-DEL-08-2` (procurement.yaml, M-DELIVERY) | basis=practice, sources: []. **[픽스 라운드 1 정정]** 최초 반영은 `tier: conditional`로 게이트했으나, 보증보험 유무는 계약서 문언(it-svc 有 버전 제5조 "이행보증보험증권의 제출")에 직접 드러나는 제도채택이라 schema.md 기준상 conditional이 아니라 `absence_precondition`이 맞음(ITDL-06 SLA 체크와 동일 패턴) — `absence_precondition: [보증보험, 이행보증, 하자보증, 보증보험증권]`로 교체 |
 | ③ 별첨 서류 완비 | **제외(신설 안 함)** — Task 5 SUBDOC 레지스트리로 커버 판단 | — | 반영 없음. SUBDOC-PII 레지스트리가 "본문이 별첨을 인용·특정하는가" 기능을 이미 수행 중이라 중복 신설 불요 |
 | ④ 계약서↔견적서 일치 | **제외(신설 안 함)** — 룰 불가(원문 대조 필요), 후속 과제로만 문서화 | — | 반영 없음 |
 | ⑤ SP-DEL-03 불가항력 보완 | **채택** — 기존 SP-DEL-03 유지, **SP-DEL-03-2 신설**(불가항력 사후처리 — 정산·해지·복구비용 포함 여부) | `SP-DEL-03-2` (procurement.yaml, M-DELIVERY, SP-DEL-03과 같은 모듈·인접 배치) | basis=practice(사후처리 방식은 법령 미특정), severity=참고 |
@@ -155,7 +155,7 @@ Task 7 Step 1 산출물. 13종 자체점검 체크리스트(사내 실무팀 작
 - `python3 -m pytest tests/ -q` — 59 passed
 - `node --test` — 159 passed
 - `python3 build/goldset.py` — **골드셋 30/30 통과** (신규 3건 반영 후에도 기존 케이스 라벨 변경 없이 유지 — 게이트 조정 불요, 신규 check가 골드셋 표본에서 새 오탐을 유발하지 않음)
-- `python3 build/build_html.py` — 스모크 OK, check 249개→252개(+3: REL-09·SP-DEL-08-2·SP-DEL-03-2). enrich 경고는 REL-09에서 1건 추가(보험업법 제111조 quote 문언 불일치) — REL-01과 동일 소스 재인용에 따른 것으로, 브랜치 기준선(REL-01) 시점부터 존재하던 동일 계열 경고이며 이번 변경이 새로 유발한 경고 유형은 아님
+- `python3 build/build_html.py` — 스모크 OK, check 249개→252개(+3: REL-09·SP-DEL-08-2·SP-DEL-03-2). **[픽스 라운드 1 이전 상태]** 당시 enrich 경고가 REL-09에서 1건 추가되었는데, 이는 "REL-06 재인용에 따른 pre-existing 계열"이 아니라 §111·§116 조문 오인용 실제 버그였음 — 아래 "픽스 라운드 1" 절 참조
 - dist/contract-review.html·contract-review.zip 재생성 완료
 
 ## 제외 항목 목록
@@ -192,7 +192,7 @@ Task 7 Step 1 산출물. 13종 자체점검 체크리스트(사내 실무팀 작
 
 Step 2 게이트 확정에 따라 아래 3건을 반영, knowledge 빌드·전체 게이트 통과 확인:
 
-1. **REL-09** (`common.yaml`, X-RELATED) — 계열사 여부 확인 스크리닝. basis=statute, sources는 REL-01(보험업법§111)·REL-05(상법§398)의 기존 verified:true quote 재인용(신규 조문 창작 없음)
+1. **REL-09** (`common.yaml`, X-RELATED) — 계열사 여부 확인 스크리닝. basis=statute, sources는 최초 REL-01(보험업법§111)·REL-05(상법§398)의 verified:true quote 재인용으로 반영했으나, 픽스 라운드 1에서 REL-01 quote 자체가 §116 문언 오기입이었음이 발견되어 원문 재조회 후 정정(아래 참조)
 2. **SP-DEL-08-2** (`procurement.yaml`, M-DELIVERY) — 이행(하자)보증보험 확인. basis=practice, tier: conditional
 3. **SP-DEL-03-2** (`procurement.yaml`, M-DELIVERY) — 불가항력 사후처리 완비 여부. basis=practice, SP-DEL-03과 별개 원자체크로 인접 배치
 
@@ -204,4 +204,21 @@ Step 2 게이트 확정에 따라 아래 3건을 반영, knowledge 빌드·전�
 - `node --test` → 159 passed
 - `python3 build/goldset.py` → 30/30 통과(기존 케이스 라벨 변경 없음, 트리거·게이트 조정 불요)
 - `python3 build/build_html.py` → 스모크 OK, check 249→252개. enrich 경고는 REL-09에서 1건 추가되나 REL-01과 동일 소스 재인용에 따른 기존 계열 경고(신규 유형 아님)
+  - **[정정 — 아래 "픽스 라운드 1·2" 참조]** 위 서술은 부정확했음. "동일 소스 재인용에 따른 기존 계열 경고"가 아니라 §111·§116 조문을 실제로 혼동한 버그였고, REL-01 자체도 오기재 상태였음(픽스 라운드 2에서 근본 교정).
 - `dist/contract-review.html`·`dist/contract-review.zip` 재생성 완료, 커밋 대상에 포함
+
+## 픽스 라운드 2 (2026-07-28, REL-01 선행 부채 정정)
+
+리뷰(`task-7-review.md`)가 REL-09의 §111 quote 오류를 재조사하는 과정에서, 재인용 원본인 **REL-01 자체가 오기재 상태**(quote가 실제로는 §116 문언, clause "제1항 제2호"는 §111에 존재하지 않음, `verified: true`로 기존에 잘못 승격됨)임을 확인 — 이는 Task 7이 만든 오류가 아니라 커밋 4879220(2026-07-14, 지식 원자분해 작업)에서 유래한 선행 부채. team-lead 지시에 따라 REL-01을 근본에서 교정:
+
+- `data/law_snapshot.sqlite` 원문 재조회 결과 보험업법 §111은 ①1호(대주주 출자지원 신용공여)·②(이사회 전원의결)만 존재 확인.
+- REL-01의 `check`·`label`·`sources[0]`을 §111①1호 실제 문언("대주주가 다른 회사에 출자하는 것을 지원하기 위한 신용공여")에 맞게 축소 정정. 종전 "자산 무상양도·불리조건 거래" 프레이밍은 §116(REL-04)이 이미 별도로 커버.
+- `verified: true → false`로 하향, note에 "2026-07-28 원문 불일치 발견으로 교정·검수 하향 — 재검수 필요" 및 발견 경위 기록.
+- 그 결과 REL-09의 §111①1호 source도 REL-01의 정정된 실제 원문과 동일한 근거를 공유하게 됨(양쪽 모두 verified:false, 재검수 대기).
+
+### 게이트 재실행 (REL-01 교정 반영)
+- `python3 build/build_html.py` → REL-01·REL-09 quote_mismatch 경고 소거 확인(재실행 시 미출력). 잔존 경고는 CRS-01·CRS-02·REL-03·REL-06·REL-07 5건(모두 Task 7 범위 밖 pre-existing, REL-03도 §111 인용이나 제3항·보고공시 취지의 별개 조문·별개 결함이라 이번 정정 범위 아님). check 252개 유지.
+- `python3 -m pytest tests/ -q` → 59 passed
+- `node --test` → 159 passed
+- `python3 build/goldset.py` → 30/30 통과
+- `dist/contract-review.html`·`dist/contract-review.zip` 재생성 완료
