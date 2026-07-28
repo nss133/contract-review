@@ -93,13 +93,46 @@ var Loop = (function () {
     return { gold: gold, conditional: conditional };
   }
 
+  // 코퍼스 백업({meta:{hashes…}, byCheck}) 병합 — export JSON이 아닌 이미 집계된 코퍼스.
+  // 집계라 계약 단위 분해가 불가하므로 멱등 규칙: 백업 해시가 하나라도 기적재면 전체 스킵.
+  function mergeCorpusBackup(corpus, backup) {
+    var next = JSON.parse(JSON.stringify(corpus || emptyCorpus()));
+    if (!backup || !backup.byCheck || !backup.meta) return next;
+    var hashes = backup.meta.hashes || [];
+    for (var i = 0; i < hashes.length; i++)
+      if (next.meta.hashes.indexOf(hashes[i]) !== -1) return next;
+    next.meta.hashes = next.meta.hashes.concat(hashes);
+    next.meta.contract_count += backup.meta.contract_count || hashes.length;
+    Object.keys(backup.byCheck).forEach(function (cpId) {
+      var src = backup.byCheck[cpId];
+      var slot = _ensureCheck(next, cpId);
+      VERDICTS.forEach(function (v) { slot.counts[v] += (src.counts && src.counts[v]) || 0; });
+      (src.comments || []).forEach(function (cm) {
+        var found = null;
+        for (var j = 0; j < slot.comments.length; j++)
+          if (slot.comments[j].text === cm.text) { found = slot.comments[j]; break; }
+        if (found) {
+          found.count += cm.count || 1;
+          (cm.reviewers || []).forEach(function (r) {
+            if (r && found.reviewers.indexOf(r) === -1) found.reviewers.push(r);
+          });
+        } else slot.comments.push(JSON.parse(JSON.stringify(cm)));
+      });
+      if (src.lastSeen && src.lastSeen > (slot.lastSeen || "")) slot.lastSeen = src.lastSeen;
+    });
+    if (backup.meta.updated && backup.meta.updated > (next.meta.updated || ""))
+      next.meta.updated = backup.meta.updated;
+    return next;
+  }
+
   return {
     VERDICTS: VERDICTS,
     emptyCorpus: emptyCorpus,
     mergeIntoCorpus: mergeIntoCorpus,
     checkStats: checkStats,
     topComments: topComments,
-    curationSignals: curationSignals
+    curationSignals: curationSignals,
+    mergeCorpusBackup: mergeCorpusBackup
   };
 })();
 

@@ -26,6 +26,15 @@ const byType = {}; // type_id → 계약 수
 for (const f of files) {
   let obj;
   try { obj = JSON.parse(fs.readFileSync(path.join(dir, f), "utf8")); } catch (e) { skipped++; continue; }
+  if (obj && obj.byCheck) { // 코퍼스 백업 형식(반출 집계) — 계약 단위가 아니라 통째 병합
+    const before = corpus.meta.contract_count;
+    corpus = Loop.mergeCorpusBackup(corpus, obj);
+    if (corpus.meta.contract_count > before) {
+      loaded += corpus.meta.contract_count - before;
+      byType["(백업)"] = (byType["(백업)"] || 0) + (corpus.meta.contract_count - before);
+    } else skipped++;
+    continue;
+  }
   if (!obj || !obj.verdicts) { skipped++; continue; }
   const before = corpus.meta.contract_count;
   corpus = Loop.mergeIntoCorpus(corpus, obj);

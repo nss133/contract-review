@@ -115,3 +115,38 @@ test("curationSignals: 반복 해당없음은 조건부화 후보, 반복 이상
   assert.ok(sig.conditional.some((x) => x.cpId === "NA"));
   assert.ok(sig.gold.some((x) => x.cpId === "OK"));
 });
+
+test("mergeCorpusBackup: 코퍼스 백업(byCheck) 병합", () => {
+  const backup = {
+    meta: { updated: "2026-07-15", contract_count: 2, hashes: ["cr-a", "cr-b"] },
+    byCheck: { "CMN-11": { counts: { "이상없음": 2, "검토의견": 0, "해당없음": 0 },
+      comments: [{ text: "조항 있음", verdict: "이상없음", count: 1, reviewers: ["손남수"], date: "2026-07-15" }],
+      lastSeen: "2026-07-15" } },
+  };
+  const c1 = L.mergeCorpusBackup(L.emptyCorpus(), backup);
+  assert.strictEqual(c1.meta.contract_count, 2);
+  assert.strictEqual(c1.byCheck["CMN-11"].counts["이상없음"], 2);
+  assert.strictEqual(c1.byCheck["CMN-11"].comments[0].reviewers[0], "손남수");
+  // 멱등: 같은 백업 재투입 — 해시 겹침 → 전체 스킵
+  const c2 = L.mergeCorpusBackup(c1, backup);
+  assert.strictEqual(c2.meta.contract_count, 2);
+  assert.strictEqual(c2.byCheck["CMN-11"].counts["이상없음"], 2);
+});
+
+test("mergeCorpusBackup: 기존 코퍼스와 코멘트 병합(동문 합산)", () => {
+  const base = L.mergeIntoCorpus(L.emptyCorpus(), {
+    meta: { contract_hash: "cr-x", reviewer: "손남수", date: "2026-07-16" },
+    verdicts: { "CMN-11": { verdict: "이상없음", comment: "조항 있음" } },
+  });
+  const backup = {
+    meta: { updated: "2026-07-15", contract_count: 1, hashes: ["cr-a"] },
+    byCheck: { "CMN-11": { counts: { "이상없음": 1, "검토의견": 0, "해당없음": 0 },
+      comments: [{ text: "조항 있음", verdict: "이상없음", count: 2, reviewers: ["김검토"], date: "2026-07-15" }],
+      lastSeen: "2026-07-15" } },
+  };
+  const m = L.mergeCorpusBackup(base, backup);
+  assert.strictEqual(m.meta.contract_count, 2);
+  assert.strictEqual(m.byCheck["CMN-11"].counts["이상없음"], 2);
+  assert.strictEqual(m.byCheck["CMN-11"].comments[0].count, 3); // 1+2 합산
+  assert.deepStrictEqual(m.byCheck["CMN-11"].comments[0].reviewers.sort(), ["김검토", "손남수"]);
+});
