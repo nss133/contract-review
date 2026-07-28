@@ -143,7 +143,7 @@ Task 7 Step 1 산출물. 13종 자체점검 체크리스트(사내 실무팀 작
 
 | 후보 | 게이트 결정 | 반영 check id | 실행 내역 |
 |---|---|---|---|
-| ① 계열사 계약 여부 | **채택** — 근거는 보험업법 제111조(대주주와의 거래제한) + 상법 제398조(이사 등 자기거래) 병기 | `REL-09` (common.yaml, X-RELATED) | basis=statute. sources는 이미 DB verified: true인 기존 REL-05(상법§398)·REL-06(공정거래법§45①9호) quote를 재인용(신규 조문 창작 없음). severity=필수(강행) |
+| ① 계열사 계약 여부 | **채택** — 근거는 보험업법 제111조(대주주와의 거래제한) + 상법 제398조(이사 등 자기거래) 병기 | `REL-09` (common.yaml, X-RELATED) | basis=statute. sources는 이미 DB verified: true인 기존 REL-01(보험업법§111)·REL-05(상법§398) quote를 재인용(신규 조문 창작 없음). severity=필수(강행) |
 | ② 이행(하자)보증보험 유무 | **채택** — practice/참고 + `tier: conditional`(확인 질문형, 有/無 2버전 오탐 방지) | `SP-DEL-08-2` (procurement.yaml, M-DELIVERY) | basis=practice, sources: [] (법령 근거 없음), tier: conditional로 "無" 버전 오탐 방지 |
 | ③ 별첨 서류 완비 | **제외(신설 안 함)** — Task 5 SUBDOC 레지스트리로 커버 판단 | — | 반영 없음. SUBDOC-PII 레지스트리가 "본문이 별첨을 인용·특정하는가" 기능을 이미 수행 중이라 중복 신설 불요 |
 | ④ 계약서↔견적서 일치 | **제외(신설 안 함)** — 룰 불가(원문 대조 필요), 후속 과제로만 문서화 | — | 반영 없음 |
@@ -155,7 +155,7 @@ Task 7 Step 1 산출물. 13종 자체점검 체크리스트(사내 실무팀 작
 - `python3 -m pytest tests/ -q` — 59 passed
 - `node --test` — 159 passed
 - `python3 build/goldset.py` — **골드셋 30/30 통과** (신규 3건 반영 후에도 기존 케이스 라벨 변경 없이 유지 — 게이트 조정 불요, 신규 check가 골드셋 표본에서 새 오탐을 유발하지 않음)
-- `python3 build/build_html.py` — 스모크 OK, check 249개→252개(+3: REL-09·SP-DEL-08-2·SP-DEL-03-2). enrich 경고는 REL-09에서 1건 추가(공정거래법 제45조 quote 문언 불일치) — REL-06과 동일 소스 재인용에 따른 것으로, 브랜치 기준선(REL-06) 시점부터 존재하던 동일 계열 경고이며 이번 변경이 새로 유발한 경고 유형은 아님
+- `python3 build/build_html.py` — 스모크 OK, check 249개→252개(+3: REL-09·SP-DEL-08-2·SP-DEL-03-2). enrich 경고는 REL-09에서 1건 추가(보험업법 제111조 quote 문언 불일치) — REL-01과 동일 소스 재인용에 따른 것으로, 브랜치 기준선(REL-01) 시점부터 존재하던 동일 계열 경고이며 이번 변경이 새로 유발한 경고 유형은 아님
 - dist/contract-review.html·contract-review.zip 재생성 완료
 
 ## 제외 항목 목록
@@ -192,7 +192,7 @@ Task 7 Step 1 산출물. 13종 자체점검 체크리스트(사내 실무팀 작
 
 Step 2 게이트 확정에 따라 아래 3건을 반영, knowledge 빌드·전체 게이트 통과 확인:
 
-1. **REL-09** (`common.yaml`, X-RELATED) — 계열사 여부 확인 스크리닝. basis=statute, sources는 REL-05(상법§398)·REL-06(공정거래법§45①9호)의 기존 verified:true quote 재인용(신규 조문 창작 없음)
+1. **REL-09** (`common.yaml`, X-RELATED) — 계열사 여부 확인 스크리닝. basis=statute, sources는 REL-01(보험업법§111)·REL-05(상법§398)의 기존 verified:true quote 재인용(신규 조문 창작 없음)
 2. **SP-DEL-08-2** (`procurement.yaml`, M-DELIVERY) — 이행(하자)보증보험 확인. basis=practice, tier: conditional
 3. **SP-DEL-03-2** (`procurement.yaml`, M-DELIVERY) — 불가항력 사후처리 완비 여부. basis=practice, SP-DEL-03과 별개 원자체크로 인접 배치
 
@@ -203,5 +203,5 @@ Step 2 게이트 확정에 따라 아래 3건을 반영, knowledge 빌드·전�
 - `python3 -m pytest tests/ -q` → 59 passed
 - `node --test` → 159 passed
 - `python3 build/goldset.py` → 30/30 통과(기존 케이스 라벨 변경 없음, 트리거·게이트 조정 불요)
-- `python3 build/build_html.py` → 스모크 OK, check 249→252개. enrich 경고는 REL-09에서 1건 추가되나 REL-06과 동일 소스 재인용에 따른 기존 계열 경고(신규 유형 아님)
+- `python3 build/build_html.py` → 스모크 OK, check 249→252개. enrich 경고는 REL-09에서 1건 추가되나 REL-01과 동일 소스 재인용에 따른 기존 계열 경고(신규 유형 아님)
 - `dist/contract-review.html`·`dist/contract-review.zip` 재생성 완료, 커밋 대상에 포함
