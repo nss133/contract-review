@@ -78,6 +78,13 @@ def score(cases, results):
             hits = sorted(x for x in consider if x.startswith(pre))
             if hits:
                 errs.append(f"오탐: {pre}* 부재알람 {hits}")
+        for cid in c.get("addressed_must_include") or []:
+            if cid not in addressed:
+                errs.append(f"반영검출 실패: {cid}가 addressed에 없음")
+        subcov = set(r.get("subdoc_covered") or [])
+        for cid in c.get("subdoc_must_cover") or []:
+            if cid not in subcov:
+                errs.append(f"부속커버 실패: {cid}가 subdoc_covered에 없음")
         rows.append({
             "id": c["id"], "desc": c.get("desc", ""), "ok": not errs, "errors": errs,
             "detected": r["detected"], "consider_n": len(consider),
