@@ -62,8 +62,15 @@ function pickType(ranked) {
 //   "confirm"   강신호(서로 다른 2개+ 또는 총 출현 3회+) → on / 약신호(1~2회) → ask / 무신호 → off.
 //               개인정보 등 "문언만으론 실제 취급 여부 판단 불가" 모듈 — 약신호면 추측하지 않고 사람에게 물음.
 //               (상투 준수조항의 1회 언급 ≈ 약신호, 실제 취급 계약은 반복 언급 ≈ 강신호)
+// 「법령명」 인용구는 카운트에서 제외 — "제N조(법규준수) …「개인정보 보호법」, 「신용정보의
+// 이용 및 보호에 관한 법률」 등을 준수한다"류 법령명 열거 문장에서, 서로 다른 두 법령명에
+// 우연히 포함된 키워드가 "서로 다른 신호 2개"로 오카운트되는 것을 방지(사내표준층 케이스20
+// mal-ad-online 회귀 — 실제 개인정보 처리 문언 없이 법령명 나열만으로 X-PII 오발동).
+function _stripStatuteCitations(text) {
+  return text.replace(/「[^」]*」/g, "");
+}
 function suggestModules(text, modules) {
-  var t = String(text || "");
+  var t = _stripStatuteCitations(String(text || ""));
   var on = [], ask = [];
   modules
     .filter(function (m) { return !m.always_on; })

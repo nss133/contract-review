@@ -399,6 +399,11 @@ checks:
     triggers:
       keywords: [매도인, 하자담보, 물품 하자, 담보책임]
     absence_check: true
+    # 조건부 부재체크: 매매(소유권이전형 구매) 성격일 때만 부재알람.
+    # 2026-07-28 사내표준층 트리아지: 종전 전제 없음 상태에서 M-DELIVERY 활성(구매·용역·공급
+    # 등 광범위 procurement 키워드로 즉시 on)만으로 무조건 발동 — 용역/광고/임대차 등 "매도인"
+    # 당사자 구도 자체가 없는 계약(케이스19·21·23·27)까지 오탐. 매매 전제어 co-occurrence 요구.
+    absence_precondition: [매도인, 매수인, 물품의 소유권, 소유권 이전]
     sources:
       - law: 민법
         article: 제580조

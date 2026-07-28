@@ -2,6 +2,12 @@ meta:
   type_id: investment
   type_name: 투자
   detect_keywords: [투자, 펀드, 사모펀드, 집합투자, 수익증권, 출자, 조합, 투자신탁, 투자일임, 신탁계약, capital call, 캐피탈콜, Capital Call, 변액펀드, 블라인드, PEF, 메자닌, 리츠, ISDA, CSA, 장외파생, 증거금]
+  # 성격 배타 게이트(A3, settlement→shareholders 선례와 동일 구조): 신탁계약서는 신탁법상
+  # 당사자를 "위탁자/수탁자"로 명명하는 것이 표준 용례인데, 이 어휘가 outsourcing.yaml의
+  # 핵심 키워드(위탁/수탁)와 문자열 충돌해 outsourcing으로 오분류됨(사내표준층 케이스18 회귀).
+  # 신탁 강신호가 복수 검출되면 outsourcing 점수를 억제.
+  nature_signals: [신탁계약, 위탁자, 수탁자, 수익자, 신탁재산]
+  suppresses: [outsourcing]
   modules:
     - id: M-FUND
       name: 집합투자·펀드
