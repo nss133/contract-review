@@ -64,21 +64,34 @@ def _ensure_schema(conn):
 
 
 def replay_external(db_path, json_path=EXTERNAL_JSON):
-    """조달분을 스냅샷에 upsert. 삽입/갱신 건수를 반환.
-    extract_snapshot 말미에서도 호출됨(재빌드 후 조달분 재적용)."""
+    """조달분을 스냅샷에 upsert. 실제 삽입/갱신 건수를 반환(skip 제외).
+    extract_snapshot 말미에서도 호출됨(재빌드 후 조달분 재적용).
+
+    절단 가드: 기존 row의 text가 seed보다 길면 seed가 발췌본(절단)일 가능성이
+    높으므로 skip하고 stderr에 경고함(보험업법 제111조 절단 사고 재발 방지).
+    seed가 기존과 같거나 더 길면 정상 refresh로 보고 upsert함."""
     rows = load_external(json_path)
     if not rows:
         return 0
     now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     conn = sqlite3.connect(db_path)
+    applied = 0
     try:
         _ensure_schema(conn)
         for law_name, article_ref, text, mst in rows:
             existing = conn.execute(
-                "SELECT id FROM law_articles WHERE law_name = ? AND article_ref = ?",
+                "SELECT id, length(text) FROM law_articles "
+                "WHERE law_name = ? AND article_ref = ?",
                 (law_name, article_ref),
             ).fetchone()
             if existing:
+                if existing[1] > len(text):
+                    print(
+                        f"경고: seed 건너뜀 — {law_name} {article_ref}: "
+                        f"기존 row({existing[1]}자)가 seed({len(text)}자)보다 김 (절단 의심)",
+                        file=sys.stderr,
+                    )
+                    continue
                 conn.execute(
                     "UPDATE law_articles SET text = ?, mst = ?, source = ?, updated_at = ? "
                     "WHERE id = ?",
@@ -90,19 +103,20 @@ def replay_external(db_path, json_path=EXTERNAL_JSON):
                     "VALUES (?, ?, ?, ?, ?, ?)",
                     (law_name, article_ref, text, mst, SOURCE, now),
                 )
+            applied += 1
         conn.commit()
     finally:
         conn.close()
-    return len(rows)
+    return applied
 
 
 def main():
+    if not load_external():
+        print(f"경고: {EXTERNAL_JSON} 가 없거나 비어 있음. 삽입 없음.", file=sys.stderr)
+        return 1
     db_path = config.SNAPSHOT_DB
     db_path.parent.mkdir(parents=True, exist_ok=True)
     n = replay_external(db_path)
-    if n == 0:
-        print(f"경고: {EXTERNAL_JSON} 가 없거나 비어 있음. 삽입 없음.", file=sys.stderr)
-        return 1
     conn = sqlite3.connect(db_path)
     try:
         summary = conn.execute(
