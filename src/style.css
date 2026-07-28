@@ -61,6 +61,10 @@ textarea#contract-text { width: 100%; height: 200px; }
 .badge.cov-quiet { background: #eef0f3; color: #99a; }
 .badge.self-reg { background: #efe9fa; color: #6c3fb5; }
 
+.formal-item { padding: 2px 8px; border-radius: 10px; font-size: .85em; margin-right: 6px; }
+.formal-pass { background: var(--ok-bg, #e6f4ea); }
+.formal-warn { background: var(--warn-bg, #fdf3d7); }
+
 details.law { margin-top: 8px; font-size: 13px; }
 details.law pre { white-space: pre-wrap; background: #f8f9fc; padding: 10px;
                   border-radius: 6px; max-height: 300px; overflow-y: auto; }

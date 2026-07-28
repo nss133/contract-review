@@ -167,6 +167,16 @@ function renderModuleGuideBar(modules) {
   }).join("");
 }
 
+/* 형식 점검(#5) 바 — 매칭 체크리스트와 분리(통과/확인 2상태, 판정 대상 아님). */
+function renderFormalBar() {
+  var el = document.getElementById("formal-bar");
+  if (!el) return;
+  el.innerHTML = (state.formal || []).map(function (f) {
+    return '<span class="formal-item ' + (f.status === "warn" ? "formal-warn" : "formal-pass") +
+      '" title="' + esc(f.detail) + '">' + (f.status === "warn" ? "△ " : "✓ ") + esc(f.title) + "</span>";
+  }).join("");
+}
+
 function renderModuleFilterOptions(modules) {
   var sel = document.getElementById("filter-module");
   var prev = sel.value;
@@ -544,10 +554,14 @@ function runAnalysis() {
     });
   });
 
+  // 형식 점검(#5): 상호·빈칸·일자·법인표기 룰 검출
+  state.formal = Formal.checkFormal(state.text);
+
   loadVerdicts();
   renderClauses();
   bindVerdictIO();
   renderChecklist();
+  renderFormalBar();
   renderReport();
   document.getElementById("analyze-result").hidden = false;
   document.getElementById("clauses-empty").hidden = true;
@@ -1268,6 +1282,15 @@ function renderReport() {
       return '<div class="report-item refdoc-item"><span class="sev sev-필수">필수</span> ' +
         '<span class="ri-q">' + labelQ(it.cp) + "</span>" +
         '<span class="refdoc-src" title="' + esc(rv.quote) + '">◇ ' + esc(rv.title) + "</span></div>";
+    }).join("") + "</section>";
+  }
+
+  // 형식 점검(#5) — warn 항목만 리포트 섹션에 표시
+  var formalWarns = (state.formal || []).filter(function (f) { return f.status === "warn"; });
+  if (formalWarns.length) {
+    right += '<section class="report-sec-block"><h4>형식 점검</h4>';
+    right += formalWarns.map(function (f) {
+      return '<div class="report-item"><span class="ri-q">' + esc(f.title) + ' — ' + esc(f.detail) + "</span></div>";
     }).join("") + "</section>";
   }
 
