@@ -38,15 +38,15 @@ checks:
     note: 하도급법 적용대상 해당 시
   - id: SP-UNF-02
     module: M-UNFAIR
-    check: 서면에 기재되지 않은 사항을 요구하며 그 비용을 수급사업자에게 부담시키는 약정이 없는가
-    label: "서면 외 비용전가"
+    check: 서면 미기재·입찰내역 외 사항 요구 또는 원사업자 부담 비용(민원·산재 등)을 수급사업자에게 전가하는 약정이 없는가
+    label: "비용전가 부당특약"
     severity: 권장
     severity_override: true
     severity_basis: "간주규정임(제3조의4 제2항 각 호는 부당특약 간주·해당부분 무효) — 하도급거래 공정화에 관한 법률 제3조의4. 회사(원사업자)가 수범자로서 제재·담보실효 노출."
     norm_type: 간주
     basis: statute
     triggers:
-      keywords: [서면에 기재되지, 비용을 부담, 추가 비용]
+      keywords: [서면에 기재되지, 비용을 부담, 추가 비용, 민원처리, 산업재해, 입찰내역, 입찰]
     absence_check: false
     sources:
       - law: 하도급거래 공정화에 관한 법률
@@ -54,45 +54,18 @@ checks:
         clause: 제2항 제1호
         quote: '원사업자가 제3조제1항의 서면에 기재되지 아니한 사항을 요구함에 따라 발생된 비용을 수급사업자에게 부담시키는 약정'
         verified: true
-    note: 하도급법 적용대상 해당 시. 제3조의4 제2항 각 호는 부당한 특약으로 간주되며 해당 부분에 한하여 무효(제3항)
-  - id: SP-UNF-03
-    module: M-UNFAIR
-    check: 원사업자가 부담하여야 할 민원처리·산업재해 등 비용을 수급사업자에게 부담시키는 약정이 없는가
-    label: "원사업자 비용 전가"
-    severity: 권장
-    severity_override: true
-    severity_basis: "간주규정임(부당특약 간주·해당부분 무효) — 하도급거래 공정화에 관한 법률 제3조의4. 회사(원사업자)가 수범자로서 제재·비용전가 무효 리스크."
-    norm_type: 간주
-    basis: statute
-    triggers:
-      keywords: [민원처리, 산업재해, 비용을 부담]
-    absence_check: false
-    sources:
       - law: 하도급거래 공정화에 관한 법률
         article: 제3조의4
         clause: 제2항 제2호
         quote: '원사업자가 부담하여야 할 민원처리, 산업재해 등과 관련된 비용을 수급사업자에게 부담시키는 약정'
         verified: true
-    note: 하도급법 적용대상 해당 시
-  - id: SP-UNF-04
-    module: M-UNFAIR
-    check: 입찰내역에 없는 사항을 요구하며 그 비용을 수급사업자에게 부담시키는 약정이 없는가
-    label: "입찰내역 외 비용전가"
-    severity: 권장
-    severity_override: true
-    severity_basis: "간주규정임(부당특약 간주·해당부분 무효) — 하도급거래 공정화에 관한 법률 제3조의4. 회사(원사업자) 수범자로서 제재·비용전가 무효 리스크."
-    norm_type: 간주
-    basis: statute
-    triggers:
-      keywords: [입찰내역, 비용을 부담, 입찰]
-    absence_check: false
-    sources:
       - law: 하도급거래 공정화에 관한 법률
         article: 제3조의4
         clause: 제2항 제3호
         quote: '원사업자가 입찰내역에 없는 사항을 요구함에 따라 발생된 비용을 수급사업자에게 부담시키는 약정'
         verified: true
-    note: 하도급법 적용대상 해당 시
+    note: 하도급법 적용대상 해당 시. 제3조의4 제2항 각 호는 부당한 특약으로 간주되며 해당 부분에 한하여 무효(제3항). SP-UNF-03·SP-UNF-04 통합(2026-07-29 지식 다이어트) — 비용전가 3유형(서면 미기재·민원 산재·입찰내역 외)은 계약서 1회 스캔으로 한 번에 판정, 각 호 근거는 sources 병기
+  # SP-UNF-03·SP-UNF-04 통합 제거(2026-07-29 지식 다이어트) — 하도급법 §3조의4 ②의 비용전가 각 호를 SP-UNF-02로 통합(sources·keywords 병기, triage §3 G1 참조)
   - id: SP-UNF-05
     module: M-UNFAIR
     check: 신의성실 원칙을 위반하여 공정성을 잃은 약관 조항(무효 사유)이 계약에 포함되어 있지 않은가
@@ -255,7 +228,7 @@ checks:
   # ── M-DELIVERY: 검수 + 민법 제398조·제537조·제538조·제667조~제670조·제580조~제582조 ──
   - id: SP-DEL-01
     module: M-DELIVERY
-    check: 검사·검수의 기준·방법·기한과 합격/불합격 시 처리(보완·재납품) 절차가 규정되어 있는가
+    check: 검사·검수(산출물 검수·인수 포함)의 기준·방법·기한과 불합격 시 처리(보완·재납품·재검수) 절차가 규정되어 있는가
     label: "검사·검수 절차"
     severity: 참고
     severity_basis: "실무 관행 항목(법령 강제 아님)"
@@ -265,6 +238,7 @@ checks:
       keywords: [검사, 검수, 인수, 합격, 불합격]
     absence_check: true
     sources: []
+    note: ITDL-03(검수·인수 기준) 통합(2026-07-29 지식 다이어트) — 같은 모듈(M-DELIVERY) 내 완전 동취지 쌍, 코퍼스 판정 이력은 SP-DEL-01로 이관
   - id: SP-DEL-02
     module: M-DELIVERY
     check: 납품·용역 이행지체에 대한 지체상금(손해배상액의 예정) 약정이 있는가
@@ -385,14 +359,14 @@ checks:
     note: 임의규정 — 건물 기타 토지의 공작물에 대하여는 해제권 제한(제668조 단서)
   - id: SP-DEL-08
     module: M-DELIVERY
-    check: 도급(용역) 하자담보책임의 존속기간(인도일부터 1년 등)이 규정되어 있고, 유지보수(유상)의 범위·대가가 무상 하자보수와 구분되어 있는가
+    check: 도급(용역) 하자담보책임의 존속기간(인도·검수완료 기산, 1년 등)과 하자 대응 절차가 규정되어 있고, 유지보수(유상)의 범위·대가가 무상 하자보수와 구분되어 있는가
     label: "하자담보 존속기간"
     severity: 권장
     severity_basis: "하자담보 존속기간 임의규정(특약으로 조정 가능) — 민법 제670조"
     norm_type: 임의
     basis: statute
     triggers:
-      keywords: [담보책임 기간, 존속기간, 하자담보 기간, 1년내, 유지보수, 유지관리, 유상, 별도계약]
+      keywords: [담보책임 기간, 존속기간, 하자담보 기간, 1년내, 유지보수, 유지관리, 유상, 별도계약, 하자보수, 하자담보, 무상, 결함]
     absence_check: false
     sources:
       - law: 민법
@@ -400,7 +374,7 @@ checks:
         clause: 제1항
         quote: '전3조의 규정에 의한 하자의 보수, 손해배상의 청구 및 계약의 해제는 목적물의 인도를 받은 날로부터 1년내에 하여야 한다'
         verified: true
-    note: 하자담보 제척기간은 임의규정 — 특약으로 연장·단축 가능. 유지보수(유상) 범위·대가·별도계약 여부와 무상 하자보수의 구분은 ITDL-05 병기 강등분(2026-07-29 지식 다이어트)
+    note: 하자담보 제척기간은 임의규정 — 특약으로 연장·단축 가능. 유지보수(유상) 범위·대가·별도계약 여부와 무상 하자보수의 구분은 ITDL-05 병기 강등분, ITDL-04(하자담보 기간·절차)는 동일 모듈 내 중복으로 통합·코퍼스 이력 병합(2026-07-29 지식 다이어트)
   - id: SP-DEL-08-2
     module: M-DELIVERY
     check: 지체상금·하자보수와 함께 이행(하자)보증보험 증권 징구 여부가 확인되어 있는가
@@ -477,31 +451,8 @@ checks:
         verified: true
     note: 제척기간은 임의규정 — 특약으로 조정 가능
   # ── (구 it-outsourcing 잔여 편입 — 검수·하자·유지보수·SLA) ──
-  - id: ITDL-03
-    module: M-DELIVERY
-    check: 산출물의 검수·인수 기준(검사 항목·합격 기준)과 검수 기한·재검수 절차가 규정되어 있는가
-    label: "검수·인수 기준"
-    severity: 참고
-    severity_basis: "실무 관행 항목(법령 강제 아님)"
-    norm_type: 실무
-    basis: practice
-    triggers:
-      keywords: [검수, 인수, 검사, 합격 기준, 검수 기한]
-    absence_check: true
-    sources: []
-  - id: ITDL-04
-    module: M-DELIVERY
-    check: 검수 완료·인도 후 하자담보(무상 하자보수) 기간과 하자 대응 절차가 규정되어 있는가
-    label: "하자담보 기간·절차"
-    severity: 참고
-    severity_basis: "실무 관행 항목(법령 강제 아님)"
-    norm_type: 실무
-    basis: practice
-    triggers:
-      keywords: [하자보수, 하자담보, 무상, 하자 보증, 결함]
-    absence_check: true
-    sources: []
-    note: (수급인 하자담보책임 민법 제667조 근거 — 로컬 DB 미수록, 원문 미확인)
+  # ITDL-03 통합 제거(2026-07-29 지식 다이어트) — 같은 파일 같은 모듈(M-DELIVERY)의 완전 동취지 쌍인 SP-DEL-01(검사·검수 절차)로 통합, 코퍼스 이력(n=1) 이관(triage §3 G8 참조)
+  # ITDL-04 통합 제거(2026-07-29 지식 다이어트) — 동일 모듈 내 하자담보 기간 중복인 SP-DEL-08(하자담보 존속기간)로 통합, 코퍼스 이력(n=2) 병합(triage §3 G9 참조)
   # ITDL-05 병기 강등(2026-07-29 지식 다이어트) — 3신호(골드셋 발화·코퍼스·체크리스트) 모두 음성이나 유지보수↔하자보수 구분은 IT 용역 실무 쟁점이라 삭제 대신 SP-DEL-08 문안에 병기(triage §2 참조)
   - id: ITDL-06
     module: M-DELIVERY

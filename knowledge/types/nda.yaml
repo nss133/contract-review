@@ -12,14 +12,14 @@ checks:
   # ── M-NDA: 영업비밀 요건 (부정경쟁방지 및 영업비밀보호에 관한 법률 제2조 제2호) ──
   - id: NDA-01
     module: M-NDA
-    check: 비밀정보의 정의가 "공공연히 알려져 있지 아니한"(비공지성) 정보에 한정되도록 범위가 특정되어 있는가
+    check: 비밀정보의 정의가 "공공연히 알려져 있지 아니한"(비공지성) 정보에 한정되도록 범위가 특정되어 있는가(존속기간을 무제한·영구로 정한 경우 비공지성 상실과의 정합 포함)
     label: "비공지성 범위 특정"
     severity: 참고
     severity_basis: "선언규정임(영업비밀 정의) — 부정경쟁방지 및 영업비밀보호에 관한 법률 제2조"
     norm_type: 선언
     basis: statute
     triggers:
-      keywords: [비밀정보, 비밀정보의 정의, 공지, 공지된, 공연히 알려진]
+      keywords: [비밀정보, 비밀정보의 정의, 공지, 공지된, 공연히 알려진, 영구히, 무기한, 무제한, 존속기간, 기간의 정함이 없]
     absence_check: true
     sources:
       - law: 부정경쟁방지 및 영업비밀보호에 관한 법률
@@ -28,7 +28,7 @@ checks:
         quote: '공공연히 알려져 있지 아니하고'
         verified: true
         source_type: law
-    note: 이미 공지된 정보는 영업비밀보호법상 보호대상이 아님 — 정의가 지나치게 포괄적이면 예외사유(공지정보)와 충돌
+    note: 이미 공지된 정보는 영업비밀보호법상 보호대상이 아님 — 정의가 지나치게 포괄적이면 예외사유(공지정보)와 충돌. NDA-11 통합(2026-07-29 지식 다이어트) — 같은 비공지성 요건의 이중 원자화 해소. 영업비밀은 비공지성 상실 시 보호 종료되므로 존속기간이 정보 성질과 정합해야 하며, 무제한·영구 존속기간은 상대방에 부당하게 불리한 약정으로 유효성이 다투어질 수 있음(단순 존속기간 명시 여부는 CMN-16)
   - id: NDA-02
     module: M-NDA
     check: 비밀정보가 "독립된 경제적 가치"를 가지는 기술상·경영상 정보를 포섭하는가
@@ -160,60 +160,32 @@ checks:
     absence_check: false
     sources: []
   # ── M-NDA: 존속기간·반환·파기 ──
-  - id: NDA-11
-    module: M-NDA
-    check: 영업비밀이 '공공연히 알려져 있지 아니'한 상태(비공지성)일 것을 요건으로 정의하고 있는가
-    label: "영업비밀 비공지성 정의"
-    severity: 참고
-    severity_basis: "선언규정임(영업비밀 정의·비공지성) — 부정경쟁방지 및 영업비밀보호에 관한 법률 제2조"
-    norm_type: 선언
-    basis: statute
-    triggers:
-      keywords: [영구히, 무기한, 무제한, 존속기간, 기간의 정함이 없]
-    absence_check: false
-    sources:
-      - law: 부정경쟁방지 및 영업비밀보호에 관한 법률
-        article: 제2조
-        clause: 제2호(비공지성)
-        quote: '공공연히 알려져 있지 아니하고'
-        verified: true
-        source_type: law
-    note: 단순 존속기간 명시 여부는 공통(CMN-16)에서 확인 — 본 항목은 NDA 고유 쟁점. 영업비밀은 비공지성이 상실되면 보호가 종료되므로 존속기간이 정보의 성질·보호기간과 정합해야 함. 존속기간을 무제한·영구로 정한 경우 상대방에 부당하게 불리한 약정으로 유효성이 다투어질 수 있음
+  # NDA-11 통합 제거(2026-07-29 지식 다이어트) — 비공지성 요건의 이중 원자화(cos 0.391), NDA-01로 통합·존속기간 정합 문안 병기(triage §3 G4 참조)
   - id: NDA-12
     module: M-NDA
-    check: 계약 종료 또는 보유자 요청 시 비밀정보(사본 포함)의 반환·파기 의무 조항이 있는가
+    check: 계약 종료 또는 보유자 요청 시 비밀정보(사본 포함)의 반환·파기 의무와 그 이행 증빙(파기확인서 등) 조항이 있는가
     label: "반환·파기 의무"
     severity: 참고
     severity_basis: "실무 관행 항목(법령 강제 아님)"
     norm_type: 실무
     basis: practice
     triggers:
-      keywords: [반환, 파기, 폐기, 사본, 반납]
+      keywords: [반환, 파기, 폐기, 사본, 반납, 파기확인서, 증빙, 파기 사실 확인]
     absence_check: true
     sources: []
-  - id: NDA-13
-    module: M-NDA
-    check: 파기·반환 이행을 확인하는 파기확인서 제출 등 증빙 조항이 있는가
-    label: "파기확인서 증빙"
-    severity: 참고
-    severity_basis: "실무 관행 항목(법령 강제 아님)"
-    norm_type: 실무
-    basis: practice
-    triggers:
-      keywords: [파기확인서, 확인서, 증빙, 파기 사실 확인]
-    absence_check: false
-    sources: []
+    note: NDA-13(파기확인서 증빙) 통합(2026-07-29 지식 다이어트) — 파기확인서는 반환·파기 의무의 증빙 절차로 실무상 같은 조항에서 한 판정
+  # NDA-13 통합 제거(2026-07-29 지식 다이어트) — 반환·파기 의무의 증빙 절차를 NDA-12로 통합(triage §3 G5 참조)
   # ── M-NDA: 침해 시 구제 (영업비밀보호법 제10조~제14조의4) ──
   - id: NDA-14
     module: M-NDA
-    check: 비밀정보 침해·누설 시 침해행위의 금지·예방 청구(가처분 포함)가 가능함이 확인되거나 배제되지 않는가
-    label: "침해금지·예방청구"
+    check: 법정 구제수단(침해금지·예방청구, 손해액 추정, 징벌적 배상, 신용회복조치, 비밀유지명령)을 제한·배제하는 문언이 없는가
+    label: "법정 구제수단 보전"
     severity: 권장
     severity_basis: "근거 조문이 임의규정임 — 부정경쟁방지 및 영업비밀보호에 관한 법률 제10조"
     norm_type: 임의
     basis: statute
     triggers:
-      keywords: [금지청구, 침해금지, 예방, 가처분, 침해행위의 금지]
+      keywords: [금지청구, 침해금지, 예방, 가처분, 침해행위의 금지, 손해액 추정, 이익액, 징벌적, 5배, 배액, 신용회복, 신용 실추, 비밀유지명령, 열람 제한]
     absence_check: false
     sources:
       - law: 부정경쟁방지 및 영업비밀보호에 관한 법률
@@ -222,7 +194,30 @@ checks:
         quote: '영업비밀의 보유자는 영업비밀 침해행위를 하거나 하려는 자에 대하여 그 행위에 의하여 영업상의 이익이 침해되거나 침해될 우려가 있는 경우에는 법원에 그 행위의 금지 또는 예방을 청구할 수 있다'
         verified: true
         source_type: law
-    note: 법정 구제권 — 계약이 이를 배제·제한하는 문언이 없는지 확인
+      - law: 부정경쟁방지 및 영업비밀보호에 관한 법률
+        article: 제14조의2
+        clause: 제2항
+        quote: '영업상의 이익을 침해한 자가 그 침해행위에 의하여 이익을 받은 것이 있으면 그 이익액을 영업상의 이익을 침해당한 자의 손해액으로 추정한다'
+        verified: true
+        source_type: law
+      - law: 부정경쟁방지 및 영업비밀보호에 관한 법률
+        article: 제14조의2
+        clause: 제6항
+        quote: '영업비밀 침해행위가 고의적인 것으로 인정되는 경우에는 제5조 또는 제11조에도 불구하고 제1항부터 제5항까지의 규정에 따라 손해로 인정된 금액의 5배를 넘지 아니하는 범위에서 배상액을 정할 수 있다'
+        verified: true
+        source_type: law
+      - law: 부정경쟁방지 및 영업비밀보호에 관한 법률
+        article: 제12조
+        quote: '영업비밀 보유자의 청구에 의하여 제11조에 따른 손해배상을 갈음하거나 손해배상과 함께 영업상의 신용을 회복하는 데에 필요한 조치를 명할 수 있다'
+        verified: true
+        source_type: law
+      - law: 부정경쟁방지 및 영업비밀보호에 관한 법률
+        article: 제14조의4
+        clause: 제1항
+        quote: '해당 소송의 계속적인 수행 외의 목적으로 사용하거나 그 영업비밀에 관계된 이 항에 따른 명령을 받은 자 외의 자에게 공개하지 아니할 것을 명할 수 있다'
+        verified: true
+        source_type: law
+    note: 법정 구제권 5종(§10 금지·예방청구, §14조의2② 손해액 추정, §14조의2⑥ 5배 징벌배상, §12 신용회복, §14조의4 비밀유지명령) — 계약서에서 판정할 실질은 '배제 조항 유무' 하나. NDA-16·17·18·19 통합(2026-07-29 지식 다이어트, 각 근거는 sources 병기)
   - id: NDA-15
     module: M-NDA
     check: 비밀정보(영업비밀) 침해로 인한 손해배상책임 조항이 있는가
@@ -240,90 +235,8 @@ checks:
         quote: '고의 또는 과실에 의한 영업비밀 침해행위로 영업비밀 보유자의 영업상 이익을 침해하여 손해를 입힌 자는 그 손해를 배상할 책임을 진다'
         verified: true
         source_type: law
-  - id: NDA-16
-    module: M-NDA
-    check: 침해자가 얻은 이익을 손해액으로 추정하는 등 손해액 입증경감 규정을 원용할 수 있는 구조인가
-    label: "손해액 추정 원용"
-    severity: 참고
-    severity_basis: "추정규정임 — 부정경쟁방지 및 영업비밀보호에 관한 법률 제14조의2"
-    norm_type: 추정
-    basis: statute
-    triggers:
-      keywords: [손해액 추정, 이익액, 손해액, 입증]
-    absence_check: false
-    sources:
-      - law: 부정경쟁방지 및 영업비밀보호에 관한 법률
-        article: 제14조의2
-        clause: 제2항
-        quote: '영업상의 이익을 침해한 자가 그 침해행위에 의하여 이익을 받은 것이 있으면 그 이익액을 영업상의 이익을 침해당한 자의 손해액으로 추정한다'
-        verified: true
-        source_type: law
-  - id: NDA-17
-    module: M-NDA
-    check: 고의적 영업비밀 침해 시 손해액의 5배 범위 징벌적 손해배상이 가능함이 확인되거나 배제되지 않는가
-    label: "징벌적 손해배상"
-    severity: 권장
-    severity_basis: "근거 조문이 임의규정임 — 부정경쟁방지 및 영업비밀보호에 관한 법률 제14조의2"
-    norm_type: 임의
-    basis: statute
-    triggers:
-      keywords: [징벌적, 5배, 3배, 배액, 고의적]
-    absence_check: false
-    sources:
-      - law: 부정경쟁방지 및 영업비밀보호에 관한 법률
-        article: 제14조의2
-        clause: 제6항
-        quote: '영업비밀 침해행위가 고의적인 것으로 인정되는 경우에는 제5조 또는 제11조에도 불구하고 제1항부터 제5항까지의 규정에 따라 손해로 인정된 금액의 5배를 넘지 아니하는 범위에서 배상액을 정할 수 있다'
-        verified: true
-        source_type: law
-  - id: NDA-18
-    module: M-NDA
-    check: 침해로 신용이 실추된 경우 신용회복에 필요한 조치를 청구할 수 있음이 배제되지 않는가
-    label: "신용회복 조치"
-    severity: 권장
-    severity_basis: "근거 조문이 임의규정임 — 부정경쟁방지 및 영업비밀보호에 관한 법률 제12조"
-    norm_type: 임의
-    basis: statute
-    triggers:
-      keywords: [신용회복, 신용 회복, 신용 실추, 명예 회복]
-    absence_check: false
-    sources:
-      - law: 부정경쟁방지 및 영업비밀보호에 관한 법률
-        article: 제12조
-        quote: '영업비밀 보유자의 청구에 의하여 제11조에 따른 손해배상을 갈음하거나 손해배상과 함께 영업상의 신용을 회복하는 데에 필요한 조치를 명할 수 있다'
-        verified: true
-        source_type: law
-  - id: NDA-19
-    module: M-NDA
-    check: 침해 관련 소송 시 비밀유지명령 등 소송상 비밀보호 수단이 배제되지 않는가
-    label: "비밀유지명령 보호"
-    severity: 권장
-    severity_basis: "근거 조문이 임의규정임 — 부정경쟁방지 및 영업비밀보호에 관한 법률 제14조의4"
-    norm_type: 임의
-    basis: statute
-    triggers:
-      keywords: [비밀유지명령, 소송, 소송상 비밀, 열람 제한]
-    absence_check: false
-    sources:
-      - law: 부정경쟁방지 및 영업비밀보호에 관한 법률
-        article: 제14조의4
-        clause: 제1항
-        quote: '해당 소송의 계속적인 수행 외의 목적으로 사용하거나 그 영업비밀에 관계된 이 항에 따른 명령을 받은 자 외의 자에게 공개하지 아니할 것을 명할 수 있다'
-        verified: true
-        source_type: law
-  - id: NDA-20
-    module: M-NDA
-    check: 위반 시 위약벌 또는 손해배상액의 예정 조항이 있는가
-    label: "위약벌·손해배상 예정"
-    severity: 참고
-    severity_basis: "실무 관행 항목(법령 강제 아님)"
-    norm_type: 실무
-    basis: practice
-    triggers:
-      keywords: [위약벌, 손해배상액의 예정, 위약금, 예정액]
-    absence_check: false
-    sources: []
-    note: 손해배상액의 예정은 민법 제398조상 부당히 과다하면 법원이 감액할 수 있음 — 위약벌과 예정의 성격 구분 필요(민법 제398조 원문 DB 미수록)
+  # NDA-16·17·18·19 통합 제거(2026-07-29 지식 다이어트) — "~가 배제되지 않는가"형 법정효과 안내 체크 4건을 NDA-14(법정 구제수단 보전)로 통합, 각 조문 근거는 NDA-14 sources 병기(triage §3 G6 참조)
+  # NDA-20 통합 제거(2026-07-29 지식 다이어트) — 위약벌·손해배상예정 존재확인은 공통 RISK-06(편면성)과 같은 조항 한 판정(cos 0.459), RISK-06 문안에 병기(triage §3 G7 참조)
   - id: NDA-21
     module: M-NDA
     check: 계약 종료·해지 후에도 비밀유지·반환파기·구제 조항이 존속하도록 하는 잔존조항이 있는가

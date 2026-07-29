@@ -24,11 +24,7 @@ meta:
       always_on: false
       screening_question: 주주의 경업금지·전업의무·이탈 시 지분 정산이 포함되는가?
       suggest_keywords: [경업금지, 전업, 겸직, 콜옵션, 풋옵션, 진술 및 보장]
-    - id: M-SETTLE
-      name: 합의서 일반(화해·부제소)
-      always_on: false
-      screening_question: 분쟁 종결·정산을 위한 화해·합의(합의서) 요소가 있는가?
-      suggest_keywords: [화해, 합의서, 부제소, 청구권 포기, 분쟁 종결]
+    # M-SETTLE 모듈 제거(2026-07-29 지식 다이어트 G10) — 소속 SH-SET-01~04 전부를 settlement 유형의 SETTLE-* 계열로 흡수하며 모듈 공동화. 주주간계약 내 화해 조항은 이제 settlement 유형 감지(nature_signals) 경로로만 커버됨(트레이드오프 승인, triage §3 G10 참조)
 checks:
   # ── M-SHARE: 주식 처분 통제 (상법 제335조·제335조의2·제336조·제337조) ──
   - id: SH-SHARE-01
@@ -462,67 +458,5 @@ checks:
       keywords: [진술 및 보장, 진술보장, 표명보장, 면책]
     absence_check: true
     sources: []
-  # ── M-SETTLE: 합의서 일반 (민법 제731조·제732조·제733조; 부제소는 practice) ──
-  - id: SH-SET-01
-    module: M-SETTLE
-    check: 화해(정산합의)의 상호양보와 분쟁 종결 의사가 명확히 기재되어 있는가
-    label: "화해 상호양보·종결"
-    severity: 참고
-    severity_basis: "선언규정임(화해의 성립요건) — 민법 제731조"
-    norm_type: 선언
-    basis: statute
-    triggers:
-      keywords: [화해, 상호양보, 분쟁 종결, 합의]
-    absence_check: false
-    sources:
-      - law: 민법
-        article: 제731조
-        quote: '화해는 당사자가 상호양보하여 당사자간의 분쟁을 종지할 것을 약정함으로써 그 효력이 생긴다'
-        verified: true
-  - id: SH-SET-02
-    module: M-SETTLE
-    check: 화해의 창설적 효력(종전 권리관계 소멸·재구성)을 전제로 정산 범위가 특정되어 있는가
-    label: "화해 창설적 효력"
-    severity: 참고
-    severity_basis: "선언규정임(화해의 창설적 효력) — 민법 제732조"
-    norm_type: 선언
-    basis: statute
-    triggers:
-      keywords: [창설적 효력, 권리 소멸, 화해, 정산 범위]
-    absence_check: false
-    sources:
-      - law: 민법
-        article: 제732조
-        quote: '화해계약은 당사자 일방이 양보한 권리가 소멸되고 상대방이 화해로 인하여 그 권리를 취득하는 효력이 있다'
-        verified: true
-  - id: SH-SET-03
-    module: M-SETTLE
-    check: 화해 목적인 분쟁 자체는 착오 취소가 제한되고 자격·분쟁 외 사항 착오만 취소 가능함을 고려하여 합의 대상을 특정했는가
-    label: "화해 착오취소 제한"
-    severity: 필수
-    severity_basis: "근거 조문이 강행규정(의무)임 — 민법 제733조"
-    norm_type: 강행
-    basis: statute
-    triggers:
-      keywords: [착오, 취소, 화해, 합의 대상]
-    absence_check: false
-    sources:
-      - law: 민법
-        article: 제733조
-        quote: '화해계약은 착오를 이유로 하여 취소하지 못한다'
-        verified: true
-    note: 화해의 목적인 분쟁 외 사항(당사자 자격 등)의 착오는 취소 가능 — 합의 대상·전제사실을 명확히 특정할 것
-  - id: SH-SET-04
-    module: M-SETTLE
-    check: 부제소 특약(청구권 포기)의 대상 범위가 특정되어 있는가
-    label: "부제소 특약 범위"
-    severity: 참고
-    severity_basis: "실무 관행 항목(법령 강제 아님)"
-    norm_type: 실무
-    basis: practice
-    triggers:
-      keywords: [부제소, 소를 제기하지, 청구권 포기, 권리 포기]
-    absence_check: true
-    sources: []
-    note: 범위를 특정하지 않은 포괄적·전면적 부제소 합의는 효력이 제한될 수 있음
+  # SH-SET-01·02·03·04 통합 제거(2026-07-29 지식 다이어트) — shareholders의 M-SETTLE 4건을 settlement 유형의 화해 체크 계열(SETTLE-01/03/04/05·06)로 흡수(Phase C2 횡단모듈 철학). SH-SET-03(필수)→SETTLE-04(권장) severity 경위는 SETTLE-04 note 참조(triage §3 G10)
   # ── M-ANTITRUST: 공정거래 (독점규제 및 공정거래에 관한 법률 제11조·제9조) ──

@@ -261,18 +261,7 @@ checks:
     absence_check: true
     sources: []
     note: (업무위탁규정 제3조의2 별표 3 근거 — DB 미수록, 원문 미확인)
-  - id: CORE-15
-    module: M-CORE
-    check: 계약 종료·해지 시 업무·자료의 이관(인수인계, 데이터 반환·파기, 전환 지원) 조항이 있는가
-    label: "종료 시 업무·자료 이관"
-    severity: 참고
-    severity_basis: "실무 관행 항목(법령 강제 아님)"
-    norm_type: 실무
-    basis: practice
-    triggers:
-      keywords: [이관, 인수인계, 반환, 파기]
-    absence_check: true
-    sources: []
+  # CORE-15 통합 제거(2026-07-29 지식 다이어트) — 위수탁 5케이스 전부 quiet, 이관 실질을 공통 CMN-10(종료 시 정산·반환, 발화 5회) 문안에 병기(triage §3 G12 참조)
   # CORE-16 삭제(2026-07-29 지식 다이어트) — 골드셋 위수탁 5케이스 전부 quiet. BCP의 규제 실질은 전자금융(ITSEC-06 비상대책)·클라우드(ITCL-03 업무연속성)가 강행 근거로 존치 — 일반 위수탁 참고 부재확인의 부가가치 낮음(triage §2 참조)
   # ── M-PRIV: 개인정보 보호법 제26조·시행령 제28조·신용정보법 제17조 ──
   - id: DIS-01
