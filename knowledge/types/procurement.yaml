@@ -385,14 +385,14 @@ checks:
     note: 임의규정 — 건물 기타 토지의 공작물에 대하여는 해제권 제한(제668조 단서)
   - id: SP-DEL-08
     module: M-DELIVERY
-    check: 도급(용역) 하자담보책임의 존속기간(인도일부터 1년 등)이 규정되어 있는가
+    check: 도급(용역) 하자담보책임의 존속기간(인도일부터 1년 등)이 규정되어 있고, 유지보수(유상)의 범위·대가가 무상 하자보수와 구분되어 있는가
     label: "하자담보 존속기간"
     severity: 권장
     severity_basis: "하자담보 존속기간 임의규정(특약으로 조정 가능) — 민법 제670조"
     norm_type: 임의
     basis: statute
     triggers:
-      keywords: [담보책임 기간, 존속기간, 하자담보 기간, 1년내]
+      keywords: [담보책임 기간, 존속기간, 하자담보 기간, 1년내, 유지보수, 유지관리, 유상, 별도계약]
     absence_check: false
     sources:
       - law: 민법
@@ -400,7 +400,7 @@ checks:
         clause: 제1항
         quote: '전3조의 규정에 의한 하자의 보수, 손해배상의 청구 및 계약의 해제는 목적물의 인도를 받은 날로부터 1년내에 하여야 한다'
         verified: true
-    note: 하자담보 제척기간은 임의규정 — 특약으로 연장·단축 가능
+    note: 하자담보 제척기간은 임의규정 — 특약으로 연장·단축 가능. 유지보수(유상) 범위·대가·별도계약 여부와 무상 하자보수의 구분은 ITDL-05 병기 강등분(2026-07-29 지식 다이어트)
   - id: SP-DEL-08-2
     module: M-DELIVERY
     check: 지체상금·하자보수와 함께 이행(하자)보증보험 증권 징구 여부가 확인되어 있는가
@@ -502,18 +502,7 @@ checks:
     absence_check: true
     sources: []
     note: (수급인 하자담보책임 민법 제667조 근거 — 로컬 DB 미수록, 원문 미확인)
-  - id: ITDL-05
-    module: M-DELIVERY
-    check: 유지보수의 대상·범위·대가와 별도계약 여부(무상 하자보수와의 구분)가 규정되어 있는가
-    label: "유지보수 범위·대가"
-    severity: 참고
-    severity_basis: "실무 관행 항목(법령 강제 아님)"
-    norm_type: 실무
-    basis: practice
-    triggers:
-      keywords: [유지보수, 유지관리, 운영, 유상, 별도계약]
-    absence_check: true
-    sources: []
+  # ITDL-05 병기 강등(2026-07-29 지식 다이어트) — 3신호(골드셋 발화·코퍼스·체크리스트) 모두 음성이나 유지보수↔하자보수 구분은 IT 용역 실무 쟁점이라 삭제 대신 SP-DEL-08 문안에 병기(triage §2 참조)
   - id: ITDL-06
     module: M-DELIVERY
     check: 서비스수준(SLA)·가동률 기준과 장애 발생 시 대응·보상·손해배상 조항이 있는가

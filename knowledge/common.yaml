@@ -2020,25 +2020,7 @@ checks:
         quote: 채무의 담보로 제공한 부동산에 대하여 다른 채권자보다 자기채권의 우선변제를 받을 권리
         verified: true
         source_type: law
-  - id: FIN-SEC-04
-    check: 저당권 피담보채권 범위(원본·이자·지연배상 1년분 한정)가 반영되어 있는가
-    label: "저당 피담보채권 범위"
-    module: X-SEC
-    severity: 권장
-    severity_basis: 강행규정(법정 담보범위) — 민법 제360조(지연배상 1년분 한정). 법률상 당연 적용이나 계약 반영 시 오해 방지
-    norm_type: 강행
-    severity_override: true
-    basis: statute
-    triggers:
-      keywords: [피담보채권, 지연배상, 실행비용]
-    absence_check: false
-    sources:
-      - law: 민법
-        article: 제360조
-        clause: ""
-        quote: 그러나 지연배상에 대하여는 원본의 이행기일을 경과한 후의 1년분에 한하여 저당권을 행사할 수 있다
-        verified: true
-        source_type: law
+  # FIN-SEC-04 삭제(2026-07-29 지식 다이어트) — 민법 §360은 계약 문언 없어도 적용되는 법정 효과 안내성 체크로 계약서 판정 실익 낮음. 채권최고액 특정은 FIN-SEC-03(필수)이 존치 담당(triage §2 참조)
   - id: FIN-SEC-05
     check: 채권양도담보 설정 시 채무자 통지·승낙(확정일자)으로 대항요건을 갖추는가
     label: "채권양도담보 대항요건"
@@ -2273,19 +2255,7 @@ checks:
     absence_check: false
     sources: []
     note: "위탁·제휴 상대방의 위법·과실로 회사가 고객배상·감독제재를 받은 경우, 상대방에 구상·전가하는 근거가 없으면 회사가 종국 부담. 구상권·면책(indemnity)·비용보전 조항 유무를 확인."
-  - id: RISK-05
-    check: 진술·보증(representations & warranties) 또는 면책(indemnity)의 범위가 회사에만 좁게(상대방에만 넓게) 설정되어, 회사가 부담하는 보증·면책 리스크가 편면적으로 무겁지 않은가
-    label: "진술보증·면책 편면성"
-    severity: 권장
-    severity_override: true
-    severity_basis: "회사 손실 직결(보증·면책 노출) 리스크 — practice이나 회사만 광범위한 보증·면책을 부담하면 회사가 다침. 권장 승격(의도적 예외)"
-    norm_type: 실무
-    basis: practice
-    triggers:
-      keywords: [진술 및 보증, 진술과 보증, representations, warranties, 보증한다, 면책, indemnify, 하자, 보증 위반, 진술보증]
-    absence_check: false
-    sources: []
-    note: "회사의 진술·보증만 광범위하고 상대방 보증은 형식적이거나, 면책의무가 회사에만 넓으면 회사가 편면적 리스크 부담. 보증범위·존속기간·상한(cap)·바스켓의 대칭성 확인."
+  # RISK-05 삭제(2026-07-29 지식 다이어트) — 국내 일반 위·수탁 계약에 진술보증 조항 자체가 드물어 골드셋 30케이스 전부 무발화(quiet)·absence_check 없음. 진술보장 실질은 SH-EXIT-05(주주간계약 전용)가 존치 커버(triage §2 참조)
   - id: RISK-06
     check: 위약벌 또는 손해배상액의 예정이 회사에만 과중하게(상대방보다 무겁게) 부과되어 있지 않은가, 또는 회사가 과도한 위약벌을 상대방에 설정하여 감액·무효 위험을 지고 있지 않은가
     label: "위약벌·손해배상예정 편면성"

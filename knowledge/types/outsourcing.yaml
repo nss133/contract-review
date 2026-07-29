@@ -230,23 +230,7 @@ checks:
         clause: 제1항
         quote: '그 사실을 업무를 위탁받은 자가 그 위탁받은 업무를 실제로 수행하려는 날의 7영업일 이전에 <별지 제1호 서식>에 따라 다음 각호의 서류를 첨부하여 감독원장에게 보고하여야 한다'
         verified: true
-  - id: CORE-12
-    module: M-CORE
-    check: 본 위탁이 사전보고 생략(반기별 사후보고) 사유에 해당하는지 확인되는가
-    label: "사전보고 생략 사유"
-    severity: 권장
-    severity_basis: "근거 조문이 임의규정임 — 금융기관의 업무위탁 등에 관한 규정 제4조"
-    norm_type: 임의
-    basis: statute
-    triggers:
-      keywords: [사후보고, 반기, 업무보고서]
-    absence_check: false
-    sources:
-      - law: 금융기관의 업무위탁 등에 관한 규정
-        article: 제4조(보고)
-        clause: 제2항
-        quote: '제1항에 의한 사전보고를 생략하고, <별지 제2호 서식>에 따라 업무위수탁현황을 그 금융기관의 설립근거가 되는 법률 등에 따른 업무보고서에 포함하여 감독원장에게 반기별로 사후보고할 수 있다'
-        verified: true
+  # CORE-12 삭제(2026-07-29 지식 다이어트) — 계약 문언이 아닌 절차 해당성 판단(프로세스성)으로 별도 행 실익 없음. CORE-11(사전보고 연동, 존치) 판정 시 사람이 함께 결정(triage §2 참조)
   - id: CORE-13
     module: M-CORE
     check: 감독당국의 변경권고 등 조치가 있는 경우 계약 변경·시정에 협조하는 조항이 있는가
@@ -289,18 +273,7 @@ checks:
       keywords: [이관, 인수인계, 반환, 파기]
     absence_check: true
     sources: []
-  - id: CORE-16
-    module: M-CORE
-    check: 수탁자의 서비스 중단·도산에 대비한 비상계획(BCP) 조항이 있는가
-    label: "비상계획(BCP)"
-    severity: 참고
-    severity_basis: "실무 관행 항목(법령 강제 아님)"
-    norm_type: 실무
-    basis: practice
-    triggers:
-      keywords: [업무연속성, 비상계획, 재해복구, 백업]
-    absence_check: true
-    sources: []
+  # CORE-16 삭제(2026-07-29 지식 다이어트) — 골드셋 위수탁 5케이스 전부 quiet. BCP의 규제 실질은 전자금융(ITSEC-06 비상대책)·클라우드(ITCL-03 업무연속성)가 강행 근거로 존치 — 일반 위수탁 참고 부재확인의 부가가치 낮음(triage §2 참조)
   # ── M-PRIV: 개인정보 보호법 제26조·시행령 제28조·신용정보법 제17조 ──
   - id: DIS-01
     module: M-DISPATCH
