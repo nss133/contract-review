@@ -30,6 +30,10 @@ textarea#contract-text { width: 100%; height: 200px; }
 .ask-q { flex-basis: 100%; font-size: 12.5px; color: #8a5a1e; background: #fdf6ea;
   border: 1px solid #f0e2c8; border-radius: 6px; padding: 5px 10px; margin-top: 2px; }
 .ask-q .ask-q-hint { color: #b09468; font-size: 11.5px; }
+/* 표준 부속서류 사용 체크(#B) — 별첨 참조 분류 + 검토의견 자동 기재 토글 */
+.subdoc-use { flex-basis: 100%; font-size: 12.5px; color: #23477a; background: #eef4fb;
+  border: 1px solid #cfdcee; border-radius: 6px; padding: 5px 10px; margin-top: 2px; cursor: pointer; }
+.subdoc-use .subdoc-use-hint { color: #7a8ba3; font-size: 11.5px; }
 
 #input-panel { background: #fff; border: 1px solid #e0e2ee; border-radius: 8px;
                padding: 4px 16px 16px; margin-bottom: 16px; }

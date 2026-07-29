@@ -93,3 +93,60 @@ test("bulkVerdict: 잘못된 verdict는 무시(원본 반환)", () => {
   assert.strictEqual(r.applied, 0);
 });
 
+// ── 일괄 판정+코멘트(보안관리약정서 자동 기재 #B) ────────────────────
+const AUTO = "표준 개인(신용)정보 보안관리약정서(2025.01) 체결로 반영 — 별첨 체결·간인 확인";
+
+test("bulkVerdictComment: 미판정만 verdict+코멘트로 채움, 기판정 보존", () => {
+  let store = V.setVerdict({}, "PRIV-02", "검토의견", "사람이 찍은 의견", "d1");
+  const r = V.bulkVerdictComment(store, ["PRIV-02", "PRIV-03", "PRIV-04"], "이상없음", AUTO, "d2");
+  assert.strictEqual(r.applied, 2);                            // PRIV-03·04만
+  assert.strictEqual(r.store["PRIV-02"].verdict, "검토의견");   // 기판정 불변
+  assert.strictEqual(r.store["PRIV-02"].comment, "사람이 찍은 의견");
+  assert.strictEqual(r.store["PRIV-03"].verdict, "이상없음");
+  assert.strictEqual(r.store["PRIV-03"].comment, AUTO);
+  assert.strictEqual(r.store["PRIV-03"].date, "d2");
+});
+
+test("bulkVerdictComment: 재실행해도 이중 기재 없음(멱등)", () => {
+  const r1 = V.bulkVerdictComment({}, ["PRIV-03"], "이상없음", AUTO, "d1");
+  const r2 = V.bulkVerdictComment(r1.store, ["PRIV-03"], "이상없음", AUTO, "d2");
+  assert.strictEqual(r2.applied, 0);
+  assert.strictEqual(r2.store["PRIV-03"].date, "d1"); // 최초 기재 유지
+});
+
+test("bulkVerdictComment: 잘못된 verdict는 무시(원본 반환)", () => {
+  const r = V.bulkVerdictComment({}, ["A-1"], "없는판정", AUTO, "d");
+  assert.strictEqual(r.applied, 0);
+});
+
+test("revertBulkVerdict: 자동 기재분(판정·코멘트 원형)만 제거", () => {
+  let store = V.bulkVerdictComment({}, ["PRIV-03", "PRIV-04", "PRIV-05"], "이상없음", AUTO, "d1").store;
+  store = V.setVerdict(store, "PRIV-04", "검토의견", AUTO, "d2");              // 판정을 사람이 변경
+  store = V.setVerdict(store, "PRIV-05", "이상없음", "직접 확인함", "d2");      // 코멘트를 사람이 변경
+  store = V.setVerdict(store, "PRIV-06", "이상없음", "", "d2");                // 자동 기재와 무관한 판정
+  const r = V.revertBulkVerdict(store, ["PRIV-03", "PRIV-04", "PRIV-05", "PRIV-06"], "이상없음", AUTO);
+  assert.strictEqual(r.removed, 1);
+  assert.ok(!("PRIV-03" in r.store));                          // 원형 그대로 → 제거
+  assert.strictEqual(r.store["PRIV-04"].verdict, "검토의견");   // 사람 수정분 생존
+  assert.strictEqual(r.store["PRIV-05"].comment, "직접 확인함");
+  assert.strictEqual(r.store["PRIV-06"].verdict, "이상없음");   // 코멘트 불일치 → 생존
+});
+
+test("revertBulkVerdict: cpIds 밖 항목은 건드리지 않음(불변 반환)", () => {
+  const s0 = V.bulkVerdictComment({}, ["PRIV-03", "OUT-01"], "이상없음", AUTO, "d1").store;
+  const r = V.revertBulkVerdict(s0, ["PRIV-03"], "이상없음", AUTO);
+  assert.strictEqual(r.removed, 1);
+  assert.strictEqual(r.store["OUT-01"].comment, AUTO);         // 범위 밖 생존
+  assert.strictEqual(s0["PRIV-03"].verdict, "이상없음");        // 원본 미변경
+});
+
+test("토글 왕복(#B): ON 기재 → OFF 해제 → 원상 복귀", () => {
+  const ids = ["PRIV-02", "PRIV-03"];
+  let store = V.setVerdict({}, "PRIV-02", "이상없음", "", "d0"); // 사전에 사람이 찍은 판정
+  const on = V.bulkVerdictComment(store, ids, "이상없음", AUTO, "d1");
+  assert.strictEqual(on.applied, 1);                            // PRIV-03만 자동 기재
+  const off = V.revertBulkVerdict(on.store, ids, "이상없음", AUTO);
+  assert.strictEqual(off.removed, 1);
+  assert.deepStrictEqual(off.store, store);                     // 사람 판정만 남아 원상 복귀
+});
+

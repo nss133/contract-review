@@ -88,6 +88,9 @@ meta:
       # covers는 Task 4 매처의 5/13 auto-confirm 결과가 아니라 약정서가 실질적으로 다루는
       # 전체 PRIV 항목(13개) — 참조 전환은 사람 확인용 그룹핑이지 매칭 성공 여부와 무관함.
       covers: [PRIV-02, PRIV-03, PRIV-04, PRIV-05, PRIV-06, PRIV-07, PRIV-08, PRIV-13, PRIV-14, PRIV-15, PRIV-19, PRIV-20, PRIV-21]
+      # 사용 체크(#B) ON 시 covers의 미판정 항목에 자동 기재되는 검토의견 코멘트.
+      # 토글 OFF 시 판정 '이상없음' + 이 문구 원형 그대로인 항목만 제거(사람 수정분 보존).
+      auto_comment: "표준 개인(신용)정보 보안관리약정서(2025.01) 체결로 반영 — 별첨 체결·간인 확인"
 checks:
   - id: CMN-01
     check: 계약 당사자가 법인 명의로 정확히 특정되어 있는가(영업점·부서 명의 아님)

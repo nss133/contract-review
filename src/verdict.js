@@ -54,18 +54,39 @@ var Verdict = (function () {
     return out;
   }
 
-  // 일괄 판정(통과계약 모드): cpIds 중 '미판정'인 것만 verdict로 채움 — 이미 찍은 판정(예외 지정분)은 보존.
+  // 일괄 판정(코멘트 포함): cpIds 중 '미판정'인 것만 verdict+comment로 채움 — 이미 찍은 판정(예외 지정분)은 보존.
   // 반환: { store, applied } — applied는 실제 채워진 개수.
-  function bulkVerdict(store, cpIds, verdict, date) {
+  function bulkVerdictComment(store, cpIds, verdict, comment, date) {
     if (VERDICTS.indexOf(verdict) === -1) return { store: store || {}, applied: 0 };
     var next = _clone(store || {});
     var applied = 0;
     (cpIds || []).forEach(function (id) {
       if (next[id] && next[id].verdict) return; // 기판정 보존
-      next[id] = { verdict: verdict, comment: "", date: date || "" };
+      next[id] = { verdict: verdict, comment: comment || "", date: date || "" };
       applied++;
     });
     return { store: next, applied: applied };
+  }
+
+  // 일괄 판정(통과계약 모드) — 코멘트 없는 bulkVerdictComment.
+  function bulkVerdict(store, cpIds, verdict, date) {
+    return bulkVerdictComment(store, cpIds, verdict, "", date);
+  }
+
+  // 일괄 판정 해제(자동 기재 취소용): cpIds 중 verdict·comment가 '원형 그대로'인 항목만 제거 —
+  // 판정이나 코멘트를 사람이 손댄 항목은 자동 생성분으로 보지 않고 보존.
+  // 반환: { store, removed } — removed는 실제 제거된 개수.
+  function revertBulkVerdict(store, cpIds, verdict, comment) {
+    var next = _clone(store || {});
+    var removed = 0;
+    (cpIds || []).forEach(function (id) {
+      var v = next[id];
+      if (v && v.verdict === verdict && (v.comment || "") === (comment || "")) {
+        delete next[id];
+        removed++;
+      }
+    });
+    return { store: next, removed: removed };
   }
 
   return {
@@ -73,6 +94,8 @@ var Verdict = (function () {
     verdictKey: verdictKey,
     setVerdict: setVerdict,
     bulkVerdict: bulkVerdict,
+    bulkVerdictComment: bulkVerdictComment,
+    revertBulkVerdict: revertBulkVerdict,
     verdictSummary: verdictSummary,
     exportVerdicts: exportVerdicts,
     importVerdicts: importVerdicts

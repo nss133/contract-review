@@ -358,6 +358,8 @@ document.getElementById("docx-file").addEventListener("change", function (e) {
 
 // 부속 서류(#3) — 검토 대상 아닌 별도 서류. 필수 항목 커버 확인용.
 state.subDocs = []; // [{name, text}]
+// 표준 부속서류 사용 체크(#B) — id → true/false 사용자 지정. 미지정(undefined)이면 자동 감지를 따름.
+state.subdocUse = {};
 function renderSubDocList() {
   var el = document.getElementById("subdoc-list");
   el.innerHTML = state.subDocs.map(function (d, i) {
@@ -469,39 +471,66 @@ function _detectInfoHtml() {
     (cands ? "후보: " + cands + ". " : "") + "유형을 직접 선택하세요.</span>";
 }
 
+/* ---------- 표준 부속서류 사용 체크(#B) ---------- */
+// 자동 감지: (a) 본문이 약정서 체결을 참조하거나 (b) 해당 약정서가 부속서류 파일로 올라와 있으면 기본 ON.
+function _subdocAutoOn(def) {
+  if (detectSubdocRefs(state.text || "", [def]).length) return true;
+  var sigs = (def.ref_signals || []).concat(def.title ? [def.title] : []);
+  return (state.subDocs || []).some(function (d) {
+    var hay = String(d.name || "") + "\n" + String(d.text || "");
+    for (var i = 0; i < sigs.length; i++) if (hay.indexOf(sigs[i]) !== -1) return true;
+    return false;
+  });
+}
+// 유효 사용 여부: 사용자 지정(체크박스 토글)이 있으면 그것, 없으면 자동 감지.
+function subdocInUse(def) {
+  var u = state.subdocUse[def.id];
+  return u === undefined ? _subdocAutoOn(def) : u;
+}
+// 자동 기재 코멘트 — 토글 OFF 시 판정·이 문구가 원형 그대로인 항목만 자동 생성분으로 보고 제거.
+function subdocAutoComment(def) {
+  return def.auto_comment || ("표준 " + def.title + " 체결로 반영 — 별첨 체결·간인 확인");
+}
+
 /* ---------- 분석 모드: 모듈 스크리닝 ---------- */
 function renderScreening() {
   var doc = typeDoc(document.getElementById("checklist-type").value);
   // 횡단모듈(Phase C): common.meta.modules(X-* 풀)는 유형과 무관하게 스크리닝 —
   // 유형 미확정 계약에도 PII·하도급 등 횡단 검토가 실질 신호로 붙음.
   var modList = (CR.common.meta.modules || []).concat(doc ? doc.meta.modules : []);
+  var chips = "", askQs = "";
   if (!modList.length) {
-    document.getElementById("screening").innerHTML = "";
     state.activeModules = [];
-    return;
-  }
-  var suggested = suggestModules(state.text, modList);
-  state.activeModules = modList
-    .filter(function (m) { return m.always_on || suggested.on.indexOf(m.id) !== -1; })
-    .map(function (m) { return m.id; });
-  var chips = modList.map(function (m) {
-    if (m.always_on)
-      return '<span class="module-chip on">' + esc(m.name) + " (기본)</span>";
-    var on = state.activeModules.indexOf(m.id) !== -1;
-    var sug = suggested.on.indexOf(m.id) !== -1;
-    var askMode = suggested.ask.indexOf(m.id) !== -1;
-    return '<label class="module-chip' + (on ? " on" : "") + (sug ? " suggested" : "") + (askMode ? " ask" : "") +
-      '" data-mid="' + esc(m.id) + '" title="' + esc(m.screening_question || "") + '">' +
-      esc(m.name) + (sug ? " ⚡본문 검출" : "") + (askMode ? " ? 확인 필요" : "") + "</label>";
-  }).join("");
-  // 약신호 질문(②): 문언만으론 실제 취급 여부 판단 불가한 모듈(confirm) — 추측 대신 사람에게 물음.
-  var askQs = modList
-    .filter(function (m) { return suggested.ask.indexOf(m.id) !== -1 && m.screening_question; })
-    .map(function (m) {
-      return '<div class="ask-q">? <strong>' + esc(m.name) + "</strong> — " + esc(m.screening_question) +
-        ' <span class="ask-q-hint">(본문 언급이 적어 자동 판단 불가 — 해당되면 위 칩을 켜세요)</span></div>';
+  } else {
+    var suggested = suggestModules(state.text, modList);
+    state.activeModules = modList
+      .filter(function (m) { return m.always_on || suggested.on.indexOf(m.id) !== -1; })
+      .map(function (m) { return m.id; });
+    chips = modList.map(function (m) {
+      if (m.always_on)
+        return '<span class="module-chip on">' + esc(m.name) + " (기본)</span>";
+      var on = state.activeModules.indexOf(m.id) !== -1;
+      var sug = suggested.on.indexOf(m.id) !== -1;
+      var askMode = suggested.ask.indexOf(m.id) !== -1;
+      return '<label class="module-chip' + (on ? " on" : "") + (sug ? " suggested" : "") + (askMode ? " ask" : "") +
+        '" data-mid="' + esc(m.id) + '" title="' + esc(m.screening_question || "") + '">' +
+        esc(m.name) + (sug ? " ⚡본문 검출" : "") + (askMode ? " ? 확인 필요" : "") + "</label>";
     }).join("");
-  document.getElementById("screening").innerHTML = chips + askQs;
+    // 약신호 질문(②): 문언만으론 실제 취급 여부 판단 불가한 모듈(confirm) — 추측 대신 사람에게 물음.
+    askQs = modList
+      .filter(function (m) { return suggested.ask.indexOf(m.id) !== -1 && m.screening_question; })
+      .map(function (m) {
+        return '<div class="ask-q">? <strong>' + esc(m.name) + "</strong> — " + esc(m.screening_question) +
+          ' <span class="ask-q-hint">(본문 언급이 적어 자동 판단 불가 — 해당되면 위 칩을 켜세요)</span></div>';
+      }).join("");
+  }
+  // 표준 부속서류 사용 체크(#B): 본문 참조·파일 업로드 감지 시 기본 ON, 항상 수동 전환 가능.
+  var subRows = ((CR.common.meta || {}).standard_subdocs || []).map(function (d) {
+    return '<label class="subdoc-use"><input type="checkbox" class="subdoc-use-cb" data-sdid="' + esc(d.id) + '"' +
+      (subdocInUse(d) ? " checked" : "") + "> 『" + esc(d.title) + "』(표준서식) 체결 사용" +
+      ' <span class="subdoc-use-hint">체크 시 약정서가 다루는 항목을 별첨 참조로 분류하고 미판정 항목에 이상없음을 자동 기재</span></label>';
+  }).join("");
+  document.getElementById("screening").innerHTML = chips + askQs + subRows;
   document.querySelectorAll("#screening .module-chip[data-mid]").forEach(function (chip) {
     chip.addEventListener("click", function () {
       var mid = chip.dataset.mid;
@@ -509,6 +538,12 @@ function renderScreening() {
       if (i === -1) state.activeModules.push(mid); else state.activeModules.splice(i, 1);
       chip.classList.toggle("on");
       if (_analyzedOnce) runAnalysis(); // 모듈 조정 시 즉시 재검토
+    });
+  });
+  document.querySelectorAll("#screening .subdoc-use-cb").forEach(function (cb) {
+    cb.addEventListener("change", function () {
+      state.subdocUse[cb.dataset.sdid] = cb.checked;
+      if (_analyzedOnce) runAnalysis(); // 모듈 토글과 동일 — 즉시 재검토(자동 기재·해제 반영)
     });
   });
 }
@@ -548,9 +583,19 @@ function runAnalysis() {
     return String(cl.heading || "") + " " + String(cl.body || "");
   }).join("\n"); // ↑ matcher.js analyze의 fullText 구성과 동일
   state.refCov = {};
-  detectSubdocRefs(fullText, (CR.common.meta || {}).standard_subdocs || []).forEach(function (ref) {
+  var subdocDefs = (CR.common.meta || {}).standard_subdocs || [];
+  detectSubdocRefs(fullText, subdocDefs).forEach(function (ref) {
+    if (state.subdocUse[ref.id] === false) return; // 검토자가 미사용 지정(#B) — 참조 문구가 있어도 그룹핑 억제
     ref.covers.forEach(function (cpId) {
       if (!state.subDocCov[cpId]) state.refCov[cpId] = { title: ref.title, signal: ref.signal, quote: ref.quote };
+    });
+  });
+  // 사용 체크 ON(#B): 참조 문구가 없어도 수동 체크만으로 covers를 별첨 참조로 분류(기계매칭 subDocCov 우선 유지).
+  subdocDefs.forEach(function (d) {
+    if (!subdocInUse(d)) return;
+    (d.covers || []).forEach(function (cpId) {
+      if (!state.subDocCov[cpId] && !state.refCov[cpId])
+        state.refCov[cpId] = { title: d.title, signal: "수동 체크", quote: "검토자 확인 — 표준 약정서 체결 사용" };
     });
   });
 
@@ -558,6 +603,7 @@ function runAnalysis() {
   state.formal = Formal.checkFormal(state.text);
 
   loadVerdicts();
+  applySubdocVerdicts();
   renderClauses();
   bindVerdictIO();
   renderChecklist();
@@ -661,6 +707,27 @@ function saveVerdicts() {
 function applyVerdict(cpId, verdict, comment) {
   verdictStore = Verdict.setVerdict(verdictStore, cpId, verdict, comment, verdictToday());
   saveVerdicts();
+}
+// 사용 체크 상태를 검토의견에 반영(#B): ON → covers 중 현재 분석에 존재하는 미판정 항목에
+// 이상없음+자동 코멘트 일괄 기재. OFF → 자동 기재분(판정·코멘트 원형 그대로)만 제거.
+// 사람이 찍었거나 손댄 판정은 어느 방향에서도 불변.
+function applySubdocVerdicts() {
+  var present = {};
+  ((state.result && state.result.results) || []).forEach(function (r) { present[r.cpId] = true; });
+  var changed = false;
+  ((CR.common.meta || {}).standard_subdocs || []).forEach(function (d) {
+    var ids = (d.covers || []).filter(function (id) { return present[id]; });
+    if (!ids.length) return;
+    var cmt = subdocAutoComment(d);
+    if (subdocInUse(d)) {
+      var fill = Verdict.bulkVerdictComment(verdictStore, ids, "이상없음", cmt, verdictToday());
+      if (fill.applied) { verdictStore = fill.store; changed = true; }
+    } else {
+      var rm = Verdict.revertBulkVerdict(verdictStore, ids, "이상없음", cmt);
+      if (rm.removed) { verdictStore = rm.store; changed = true; }
+    }
+  });
+  if (changed) saveVerdicts();
 }
 function verdictToday() {
   var d = new Date();
