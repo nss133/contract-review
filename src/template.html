@@ -59,7 +59,7 @@
       <label>검토상태 <select id="filter-match">
         <option value="">전체</option>
         <option value="unmatched">검토 제안만</option>
-        <option value="matched">반영·확인만</option>
+        <option value="matched">반영만</option>
       </select></label>
       <input id="filter-search" type="search" placeholder="확인사항·법령 검색">
     </div>
@@ -82,6 +82,12 @@
       </thead>
       <tbody id="checklist-body"></tbody>
     </table>
+
+    <section id="suggestions-panel" class="suggestions-panel">
+      <h3>제안사항</h3>
+      <p class="suggestions-hint">계약서 검토 시 이 부분들도 함께 살펴보시길 제안합니다.</p>
+      <div id="suggestions-body"></div>
+    </section>
   </section>
 
   <!-- 조항별 보기 (보조 탭) -->

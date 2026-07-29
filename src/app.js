@@ -273,15 +273,17 @@ function renderChecklist() {
   var q = document.getElementById("filter-search").value.trim();
 
   function passFilter(cp, st) {
+    // verify(확인 권장)는 표에서 제외 — 하단 "제안사항" 패널로 이동(UX 재편: 누락 오인 방지).
+    if (st.coverage === "verify") return false;
     if (modF) {
       if (modF === "__none__") { if (cp.module) return false; }
       else if (cp.module !== modF) return false;
     }
     if (sevF === "core") { if (cp.severity !== "필수" && cp.severity !== "권장") return false; }
     else if (sevF && cp.severity !== sevF) return false;
-    // matchF: unmatched="검토 제안만"(consider) / matched="반영·확인만"(addressed·verify)
+    // matchF: unmatched="검토 제안만"(consider) / matched="반영만"(addressed)
     if (matchF === "unmatched" && st.coverage !== "consider") return false;
-    if (matchF === "matched" && st.coverage !== "addressed" && st.coverage !== "verify") return false;
+    if (matchF === "matched" && st.coverage !== "addressed") return false;
     if (q) {
       var src = primarySource(cp);
       var hay = cp.check + " " + (src ? src.law + " " + src.article : "");
@@ -313,6 +315,44 @@ function renderChecklist() {
     '<tr><td colspan="6" class="empty">조건에 맞는 항목 없음</td></tr>';
 
   bindRowClicks();
+}
+
+/* ---------- 제안사항 패널 (체크리스트 표 하단) ----------
+   coverage==="verify"(확인 권장) 항목을 표에서 빼는 대신 여기로 모음 — advisory 어조.
+   판정형 어휘("누락"·"확인 권장") 금지, "~살펴보시길 제안" 톤 유지. */
+function renderSuggestionItem(r) {
+  var cp = _cpById(r.cpId);
+  if (!cp) return "";
+  return '<div class="compare-item suggestion-item">' +
+    '<div class="ci-head"><span class="sev sev-' + cp.severity + '" title="' + esc(cp.severity_basis || "") + '">' +
+    esc(cp.severity) + "</span><span class=\"ci-id\">" + esc(cp.id) + "</span></div>" +
+    '<p class="ci-q">' + labelQ(cp) + "</p>" +
+    (cp.severity_basis ? '<p class="ci-basis">' + esc(cp.severity_basis) + "</p>" : "") +
+    '<p class="ci-src">' + evidenceCell(cp) + "</p>" +
+    evidenceLineHtml(cp, r) +
+    verdictControlHtml(cp.id) +
+    "</div>";
+}
+function renderSuggestions() {
+  var box = document.getElementById("suggestions-body");
+  if (!box || !state.result) return;
+  var verify = state.result.results.filter(function (r) { return r.coverage === "verify"; });
+  var main = verify.filter(function (r) { var c = _cpById(r.cpId); return c && c.severity !== "참고"; });
+  var ref = verify.filter(function (r) { var c = _cpById(r.cpId); return c && c.severity === "참고"; });
+  main.sort(function (a, b) {
+    var ca = _cpById(a.cpId), cb = _cpById(b.cpId);
+    var sa = SEV_RANK[ca && ca.severity]; if (sa === undefined) sa = 3;
+    var sb = SEV_RANK[cb && cb.severity]; if (sb === undefined) sb = 3;
+    return sa - sb;
+  });
+  var html = main.map(renderSuggestionItem).join("") ||
+    (ref.length ? "" : '<p class="compare-empty">현재 제안할 사항 없음</p>');
+  if (ref.length) {
+    html += '<details class="ref-fold"><summary>참고 제안 ' + ref.length + '건 펼치기</summary>' +
+      ref.map(renderSuggestionItem).join("") + "</details>";
+  }
+  box.innerHTML = html;
+  bindVerdictControls(box, function () { renderSuggestions(); renderReport(); });
 }
 
 function initChecklistType() {
@@ -608,6 +648,7 @@ function runAnalysis() {
   renderClauses();
   bindVerdictIO();
   renderChecklist();
+  renderSuggestions();
   renderFormalBar();
   renderReport();
   document.getElementById("analyze-result").hidden = false;
@@ -956,7 +997,7 @@ function bindBulkVerdict() {
   function apply(coverages, verdict) {
     var r = Verdict.bulkVerdict(verdictStore, ids(coverages), verdict, verdictToday());
     verdictStore = r.store; saveVerdicts();
-    renderClauses(); renderReport();
+    renderClauses(); renderSuggestions(); renderReport();
     var msg = document.getElementById("bulk-msg");
     if (msg) msg.textContent = r.applied + "건 " + verdict + " 처리(기판정 보존)";
   }
@@ -981,6 +1022,7 @@ function bindVerdictIO() {
       verdictStore = Verdict.importVerdicts(obj);
       saveVerdicts();
       renderClauses();
+      renderSuggestions();
       renderReport();
     }).catch(function () { /* 파싱 실패 무시 */ });
     e.target.value = "";
@@ -995,8 +1037,19 @@ function _cpById(id) {
   for (var i = 0; i < cps.length; i++) if (cps[i].id === id) return cps[i];
   return null;
 }
+// 근거 원문 한 줄 — verify 항목이 왜 떴는지(매칭 조항 표제 + 원문 발췌, 겹친 어휘 강조).
+// 제안사항 패널·조항별 보기 verify 열 공용. best 매칭이 없으면 빈 문자열.
+function evidenceLineHtml(cp, r) {
+  if (!r || !r.best) return "";
+  var clause = state.clauses[r.best.clauseIndex];
+  if (!clause) return "";
+  var ev = Evidence.evidenceSnippet(cp, clause, esc);
+  if (!ev) return "";
+  return '<p class="ci-evidence">근거: ' + esc(ev.heading) + ' “' + ev.snippet + '”</p>';
+}
 // 검토항목 1건 요약: 심각도(+근거 툴팁) · 질문 · reason · 근거.
-function renderCompareItem(r) {
+// showEvidence: 조항별 보기의 verify 열에서만 근거 원문 라인을 덧붙임(addressed는 이미 조항 맥락 안이라 생략).
+function renderCompareItem(r, showEvidence) {
   var cp = _cpById(r.cpId);
   if (!cp) return "";
   var reasons = (r.best && r.best.reasons) || [];
@@ -1007,6 +1060,7 @@ function renderCompareItem(r) {
     (reasons.length ? '<p class="ci-reason">' + esc(reasons.join("; ")) + "</p>" : "") +
     (cp.severity_basis ? '<p class="ci-basis">' + esc(cp.severity_basis) + "</p>" : "") +
     '<p class="ci-src">' + evidenceCell(cp) + "</p>" +
+    (showEvidence ? evidenceLineHtml(cp, r) : "") +
     verdictControlHtml(cp.id) +
     "</div>";
 }
@@ -1106,16 +1160,16 @@ function renderClauses() {
       return;
     }
     var g = byClause[ci] || { addressed: [], verify: [] };
-    var left = g.addressed.map(renderCompareItem).join("") ||
+    var left = g.addressed.map(function (r) { return renderCompareItem(r, false); }).join("") ||
       '<p class="compare-empty">이 조항에서 반영으로 짚인 항목 없음</p>';
     // 확인 권장 항목을 심각도로 분리 — 필수·권장은 그대로 노출, 참고는 접어서 산만함을 줄임.
     var verifyMain = g.verify.filter(function (r) { var c = _cpById(r.cpId); return c && c.severity !== "참고"; });
     var verifyRef = g.verify.filter(function (r) { var c = _cpById(r.cpId); return c && c.severity === "참고"; });
-    var right = verifyMain.map(renderCompareItem).join("") ||
+    var right = verifyMain.map(function (r) { return renderCompareItem(r, true); }).join("") ||
       (verifyRef.length ? "" : '<p class="compare-empty">추가 확인 제안 없음</p>');
     if (verifyRef.length) {
       right += '<details class="ref-fold"><summary>참고 매칭 ' + verifyRef.length + '건 펼치기</summary>' +
-        verifyRef.map(renderCompareItem).join("") + "</details>";
+        verifyRef.map(function (r) { return renderCompareItem(r, true); }).join("") + "</details>";
     }
     detail.innerHTML =
       '<div class="clause-compare">' +
@@ -1284,7 +1338,7 @@ function renderReport() {
     conclText = "아직 검토의견 미기입. 계약 본질상 필요한 필수 항목 " + mustCore.length + "개가 계약서에서 확인되지 않음 — 우선 확인 필요.";
   } else if (recConsider.length || verifyMain.length || mustCond.length || mustReferenced.length) {
     conclCls = "concl-caution";
-    conclText = "아직 검토의견 미기입. 필수(본질) 항목은 관련 조항에 닿음. 확인 권장 " + verifyMain.length +
+    conclText = "아직 검토의견 미기입. 필수(본질) 항목은 관련 조항에 닿음. 제안 " + verifyMain.length +
       "건" + (mustCond.length ? " · 특수규제 확인 " + mustCond.length + "건(적용 시)" : "") +
       (mustReferenced.length ? " · 별첨 약정서 참조 " + mustReferenced.length + "건(체결·첨부 확인)" : "") + "을 살펴볼 것.";
   } else {
@@ -1380,12 +1434,14 @@ function renderReport() {
     }).join("") + "</section>";
   }
 
-  // 확인 권장(접힘) — 참고는 별첨(하단 ref-fold)으로 빼고 필수·권장만 노출.
-  right += '<details class="report-sec"><summary>확인 권장 ' + verifyMain.length + "건 · 검토 제안(권장) " + recConsider.length + "건</summary>";
+  // 제안사항(접힘) — 판정형 어휘("확인 권장") 대신 advisory 어조. 참고는 별첨(하단 ref-fold)으로 분리.
+  right += '<details class="report-sec" open><summary>제안 ' + verifyMain.length + "건 · 검토 제안(권장) " + recConsider.length + "건</summary>";
+  right += '<p class="sec-hint">계약서 검토 시 이 부분들도 함께 살펴보시길 제안합니다.</p>';
   right += verifyMain.map(function (it) {
     return '<div class="report-item verify-item"><span class="sev sev-' + it.cp.severity + '">' + esc(it.cp.severity) +
       '</span> <span class="ri-q">' + labelQ(it.cp) + "</span>" +
-      (it.res.best ? ' <span class="ri-loc-inline">(' + esc(_clauseHeading(it.res.best.clauseIndex)) + ")</span>" : "") + "</div>";
+      (it.res.best ? ' <span class="ri-loc-inline">(' + esc(_clauseHeading(it.res.best.clauseIndex)) + ")</span>" : "") +
+      evidenceLineHtml(it.cp, it.res) + "</div>";
   }).join("");
   right += recConsider.map(function (it) {
     return '<div class="report-item consider-item"><span class="sev sev-권장">권장</span> <span class="ri-q">' + labelQ(it.cp) + "</span></div>";
@@ -1393,13 +1449,14 @@ function renderReport() {
   if (!verifyMain.length && !recConsider.length) right += '<p class="report-none">해당 없음.</p>';
   right += "</details>";
 
-  // 참고 항목 별첨(#: 표시 계층화) — 반영·확인권장 등 각 섹션의 참고 항목을 한데 모아 하단에 접어둠.
+  // 참고 항목 별첨(#: 표시 계층화) — 반영·제안 등 각 섹션의 참고 항목을 한데 모아 하단에 접어둠.
   // 법적 의무 아닌 실무 참고 사항이라 본문 흐름을 방해하지 않도록 분리.
   if (verifyRef.length) {
     right += '<details class="ref-fold"><summary>참고 항목 (' + verifyRef.length + ") — 법적 의무 아님, 실무 참고</summary>";
     right += verifyRef.map(function (it) {
       return '<div class="report-item verify-item"><span class="sev sev-참고">참고</span> <span class="ri-q">' + labelQ(it.cp) + "</span>" +
-        (it.res.best ? ' <span class="ri-loc-inline">(' + esc(_clauseHeading(it.res.best.clauseIndex)) + ")</span>" : "") + "</div>";
+        (it.res.best ? ' <span class="ri-loc-inline">(' + esc(_clauseHeading(it.res.best.clauseIndex)) + ")</span>" : "") +
+        evidenceLineHtml(it.cp, it.res) + "</div>";
     }).join("");
     right += "</details>";
   }
@@ -1432,11 +1489,12 @@ function renderReport() {
     ingestCurrentToCorpus();
     renderReport();      // 코퍼스 카운트·분포 갱신 반영
     renderClauses();     // 조항별 보기 추천도 갱신
+    renderSuggestions(); // 제안사항 패널 추천도 갱신
   });
   var vfiles = document.getElementById("corpus-verdict-files");
   if (vfiles) vfiles.addEventListener("change", function () {
     importVerdictFilesToCorpus(vfiles.files, function (okN, failN) {
-      renderReport(); renderClauses(); // 먼저 다시 그린 뒤 메시지 기입(renderReport가 DOM을 교체하므로)
+      renderReport(); renderClauses(); renderSuggestions(); // 먼저 다시 그린 뒤 메시지 기입(renderReport가 DOM을 교체하므로)
       var msg = document.getElementById("team-actions-msg");
       if (msg) msg.textContent = "반영 완료: " + okN + "건 병합" + (failN ? ", 실패 " + failN + "건(형식 오류)" : "") +
         " — 코퍼스 " + loopCorpus.meta.contract_count + "건";
@@ -1448,7 +1506,7 @@ function renderReport() {
   if (crs) crs.addEventListener("change", function () {
     if (!crs.files.length) return;
     restoreCorpusBackup(crs.files[0], function (ok) {
-      if (ok) { renderReport(); renderClauses(); }
+      if (ok) { renderReport(); renderClauses(); renderSuggestions(); }
       var msg = document.getElementById("team-actions-msg");
       if (msg) msg.textContent = ok ? "코퍼스 복원 완료 — " + loopCorpus.meta.contract_count + "건" : "복원 실패: 코퍼스 백업 파일이 아님";
     });
