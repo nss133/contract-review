@@ -79,10 +79,13 @@ function evidenceCell(cp) {
 }
 
 /* ---------- coverage 배지 (계약 반영 축 — 증적 배지와 별개) ----------
-   검토 보조 화법: 판정형("확정/미검출") 폐기. 짚음/확인권장/검토제안/기타. */
+   검토 보조 화법: 판정형("확정/미검출") 폐기. 짚음/제안/검토제안/기타.
+   verify 어휘는 제안사항 패널과 동일 톤("△ 제안")으로 통일 — "확인 권장"은
+   누락 오인 소지가 있어 폐기(UX 재편). 내부 키·CSS 클래스명(verify/cov-verify)은
+   구조 변경 범위가 아니라 유지. */
 var COVERAGE_LABEL = {
   addressed: "✓ 반영",
-  verify: "◑ 확인 권장",
+  verify: "△ 제안",
   consider: "! 검토 제안",
   quiet: "·"
 };
@@ -223,7 +226,7 @@ function renderDetail(cp) {
     var clause = state.clauses[r.best.clauseIndex];
     var heading = clause ? clause.heading : ("조항#" + r.best.clauseIndex);
     h += '<div class="match-excerpt"><p class="hit">' + coverageBadgeHtml(r.coverage) + " " +
-      esc(heading) + " — 원문 확인 권장 · 점수 " + r.best.score.toFixed(1) +
+      esc(heading) + " — 매칭 근거 원문 · 점수 " + r.best.score.toFixed(1) +
       '<br><span class="reasons">' + esc((r.best.reasons || []).join("; ")) + "</span></p>";
     h += "<pre>" + esc(clause ? clause.body : "") + "</pre>";
     if (r.ranked && r.ranked.length > 1) {
@@ -1174,7 +1177,7 @@ function renderClauses() {
     detail.innerHTML =
       '<div class="clause-compare">' +
       '<div class="compare-col addressed-col"><h3><span class="badge cov-addressed">✓ 반영</span> 이 조항에서 반영된 검토항목</h3>' + left + "</div>" +
-      '<div class="compare-col verify-col"><h3><span class="badge cov-verify">◑ 확인 권장</span> 추가 확인 제안</h3>' + right + "</div>" +
+      '<div class="compare-col verify-col"><h3><span class="badge cov-verify">△ 제안</span> 함께 살펴볼 항목</h3>' + right + "</div>" +
       "</div>";
     // 판정 변경 시 이 조항만 다시 그림(활성 상태·코멘트 표시 갱신) + 조항 목록 카운트 갱신.
     bindVerdictControls(detail, function () { showClause(ci); refreshClauseCounts(); renderReport(); });
