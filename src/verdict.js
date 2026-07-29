@@ -89,9 +89,69 @@ var Verdict = (function () {
     return { store: next, removed: removed };
   }
 
+  // 종합 검토의견 저장키 — 계약서 해시별(verdictKey와 동일 패턴, 별도 축).
+  function opinionKey(hash) { return "cr-opinion-" + hash; }
+
+  // 종합 검토의견 자동 초안 조립 — 룰 기반 문장 조립(LLM 아님), ~음/~함 기술식.
+  // 사용자 코멘트 인용부만 '…'(U+2018/2019)로 감쌈 — 렌더 측이 이 구간을 형광 강조.
+  // 라벨·제목은 「…」로 구분(강조 대상 아님).
+  // data: { name, clauseCount, typeName, mustCoreLabels: [label...],
+  //         opinions: [{label, severity, loc, comment}...], formalWarnTitles: [title...] }
+  function composeOpinion(d) {
+    d = d || {};
+    var SEV = { "필수": 0, "권장": 1, "참고": 2 };
+    var sents = [];
+    // 1문장: 전반 상태 — 계약명·조항수·유형 + 필수 확인 상태
+    var mustLabels = d.mustCoreLabels || [];
+    sents.push((d.name || "계약서") + "(" + (d.clauseCount || 0) + "개 조항, " +
+      (d.typeName ? d.typeName + " 유형" : "유형 미확정") + ") 검토 결과 " +
+      (mustLabels.length
+        ? "필수 확인사항 중 " + mustLabels.length + "건이 계약서에서 확인되지 않음."
+        : "필수 확인사항은 관련 조항에 반영되어 있음."));
+    // 2문장~: 검토의견 코멘트 인용 — 필수·권장 순 최대 3건 + "외 N건"
+    var ops = (d.opinions || []).slice().sort(function (a, b) {
+      var ra = SEV[a.severity]; if (ra === undefined) ra = 3;
+      var rb = SEV[b.severity]; if (rb === undefined) rb = 3;
+      return ra - rb;
+    });
+    // 조항 위치 축약 — 표제가 "제N조(제목) 본문…" 형태로 길어도 조번호(+제목)만 인용.
+    function _shortLoc(loc) {
+      var s = String(loc || "").trim();
+      if (!s) return "";
+      var m = s.match(/^제\s?\d+\s?조(?:의\s?\d+)?\s?(?:\([^)]*\))?/);
+      if (m) return m[0];
+      return s.length > 24 ? s.slice(0, 24) + "…" : s;
+    }
+    ops.slice(0, 3).forEach(function (o, i) {
+      var c = String(o.comment || "").trim();
+      if (c.length > 80) c = c.slice(0, 80) + "…";
+      var loc = _shortLoc(o.loc);
+      sents.push((i === 0 ? "다만, " : "또한 ") + (loc ? loc + " 관련 " : "") +
+        "「" + (o.label || "") + "」에 대하여 " + (c ? "‘" + c + "’ " : "") +
+        "의견이 있어 보완 필요함.");
+    });
+    if (ops.length > 3) sents.push("외 검토의견 " + (ops.length - 3) + "건이 있음.");
+    // 필수 미확인: 조항 신설 검토
+    if (mustLabels.length) {
+      sents.push("「" + mustLabels[0] + "」" + (mustLabels.length > 1 ? " 등 " + mustLabels.length + "건은" : " 항목은") +
+        " 계약서에서 확인되지 않아 조항 신설 검토 요함.");
+    }
+    // 형식 경고 1줄
+    var fw = d.formalWarnTitles || [];
+    if (fw.length) {
+      sents.push("형식 점검에서 「" + fw[0] + "」" + (fw.length > 1 ? " 등 " + fw.length + "건" : "") +
+        " 경고가 있어 확인 요함.");
+    }
+    // 특이사항 전무
+    if (!ops.length && !mustLabels.length && !fw.length) sents.push("전반적으로 특이사항 없음.");
+    return sents.join(" ");
+  }
+
   return {
     VERDICTS: VERDICTS,
     verdictKey: verdictKey,
+    opinionKey: opinionKey,
+    composeOpinion: composeOpinion,
     setVerdict: setVerdict,
     bulkVerdict: bulkVerdict,
     bulkVerdictComment: bulkVerdictComment,

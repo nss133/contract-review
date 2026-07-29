@@ -140,6 +140,80 @@ test("revertBulkVerdict: cpIds 밖 항목은 건드리지 않음(불변 반환)"
   assert.strictEqual(s0["PRIV-03"].verdict, "이상없음");        // 원본 미변경
 });
 
+// ── 종합 검토의견 자동 초안(composeOpinion) ─────────────────────────
+test("composeOpinion: 특이사항 없음 — 전반 상태 1문장 + 특이사항 없음", () => {
+  const t = V.composeOpinion({
+    name: "업무위탁계약서", clauseCount: 24, typeName: "조달",
+    mustCoreLabels: [], opinions: [], formalWarnTitles: []
+  });
+  assert.strictEqual(t,
+    "업무위탁계약서(24개 조항, 조달 유형) 검토 결과 필수 확인사항은 관련 조항에 반영되어 있음. 전반적으로 특이사항 없음.");
+});
+
+test("composeOpinion: 검토의견 인용 — 코멘트 ‘…’ 인용·80자 말줄임·필수 우선 정렬·외 N건", () => {
+  const long = "가".repeat(100);
+  const t = V.composeOpinion({
+    name: "계약서", clauseCount: 10, typeName: "조달",
+    mustCoreLabels: [],
+    opinions: [
+      { label: "권장A", severity: "권장", loc: "제3조(대금)", comment: "지급기일 명시 필요" },
+      { label: "필수B", severity: "필수", loc: "제8조(지체상금)", comment: long },
+      { label: "권장C", severity: "권장", loc: "", comment: "" },
+      { label: "참고D", severity: "참고", loc: "제9조", comment: "참고 의견" },
+    ],
+    formalWarnTitles: []
+  });
+  // 필수 먼저 인용, 80자 초과 말줄임
+  assert.ok(t.indexOf("다만, 제8조(지체상금) 관련 「필수B」에 대하여 ‘" + "가".repeat(80) + "…’ 의견이 있어 보완 필요함.") !== -1);
+  // 권장은 "또한"으로 이어짐, 코멘트 없으면 인용부 생략
+  assert.ok(t.indexOf("또한 제3조(대금) 관련 「권장A」에 대하여 ‘지급기일 명시 필요’ 의견이 있어 보완 필요함.") !== -1);
+  assert.ok(t.indexOf("또한 「권장C」에 대하여 의견이 있어 보완 필요함.") !== -1);
+  // 3건 초과분은 "외 N건"으로 축약(참고D 미인용)
+  assert.ok(t.indexOf("참고D") === -1);
+  assert.ok(t.indexOf("외 검토의견 1건이 있음.") !== -1);
+});
+
+test("composeOpinion: 조항 위치 축약 — 표제 뒤 본문이 붙어도 조번호(+제목)만 인용", () => {
+  const t = V.composeOpinion({
+    name: "계약서", clauseCount: 6, typeName: "조달", mustCoreLabels: [],
+    opinions: [{ label: "지체상금 예정", severity: "권장",
+      loc: "제5조(지체상금) 을이 납품을 지체한 경우 지체일수당 1천분의 1의 지체상금을 지급한다.",
+      comment: "상한 설정 필요" }],
+    formalWarnTitles: []
+  });
+  assert.ok(t.indexOf("다만, 제5조(지체상금) 관련 「지체상금 예정」에 대하여 ‘상한 설정 필요’ 의견이 있어 보완 필요함.") !== -1);
+  assert.ok(t.indexOf("지체일수당") === -1);
+});
+
+test("composeOpinion: 필수 미확인 — 조항 신설 검토 문장 + 1문장 상태 반영", () => {
+  const one = V.composeOpinion({
+    name: "계약서", clauseCount: 5, typeName: "업무위탁",
+    mustCoreLabels: ["재위탁 사전동의"], opinions: [], formalWarnTitles: []
+  });
+  assert.ok(one.indexOf("검토 결과 필수 확인사항 중 1건이 계약서에서 확인되지 않음.") !== -1);
+  assert.ok(one.indexOf("「재위탁 사전동의」 항목은 계약서에서 확인되지 않아 조항 신설 검토 요함.") !== -1);
+  const many = V.composeOpinion({
+    name: "계약서", clauseCount: 5, typeName: "업무위탁",
+    mustCoreLabels: ["재위탁 사전동의", "손해배상"], opinions: [], formalWarnTitles: []
+  });
+  assert.ok(many.indexOf("「재위탁 사전동의」 등 2건은 계약서에서 확인되지 않아 조항 신설 검토 요함.") !== -1);
+});
+
+test("composeOpinion: 형식 경고 1줄 + 유형 미확정 표기", () => {
+  const t = V.composeOpinion({
+    clauseCount: 3, typeName: null, mustCoreLabels: [],
+    opinions: [], formalWarnTitles: ["빈칸 잔존", "체결일자 기재"]
+  });
+  assert.ok(t.indexOf("계약서(3개 조항, 유형 미확정) 검토 결과") === 0);
+  assert.ok(t.indexOf("형식 점검에서 「빈칸 잔존」 등 2건 경고가 있어 확인 요함.") !== -1);
+  // 형식 경고가 있으므로 "특이사항 없음" 미출력
+  assert.ok(t.indexOf("특이사항 없음") === -1);
+});
+
+test("opinionKey: 계약서 해시별 저장키", () => {
+  assert.strictEqual(V.opinionKey("cr-abc"), "cr-opinion-cr-abc");
+});
+
 test("토글 왕복(#B): ON 기재 → OFF 해제 → 원상 복귀", () => {
   const ids = ["PRIV-02", "PRIV-03"];
   let store = V.setVerdict({}, "PRIV-02", "이상없음", "", "d0"); // 사전에 사람이 찍은 판정

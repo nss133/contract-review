@@ -641,6 +641,7 @@ function runAnalysis() {
   state.formal = Formal.checkFormal(state.text);
 
   loadVerdicts();
+  _opinionEditing = false; // 재분석·해시 변경 시 종합 검토의견 편집 모드 해제
   applySubdocVerdicts();
   renderClauses();
   bindVerdictIO();
@@ -664,20 +665,45 @@ function runAnalysis() {
 }
 
 /* ---------- 분석 후 요약 바(P1) — 입력부 한 줄 축소 ---------- */
-// "계약명 · n조항 · 감지: 유형" 표기. 계약명은 본문 첫 비공백 줄에서 추정.
-function renderSummaryBar() {
-  var line = document.getElementById("summary-line");
-  if (!line || !state.clauses.length) return;
-  var name = "";
+// 계약명 추정 — 본문 첫 비공백 줄(30자 절단). 요약 바·종합 검토의견 공용.
+function _contractName() {
   var lines = String(state.text || "").split("\n");
   for (var i = 0; i < lines.length; i++) {
     var t = lines[i].trim();
-    if (t) { name = t; break; }
+    if (t) return t.length > 30 ? t.slice(0, 30) + "…" : t;
   }
-  if (name.length > 30) name = name.slice(0, 30) + "…";
+  return "계약서";
+}
+// "계약명 · n조항 · 감지: 유형" 표기.
+function renderSummaryBar() {
+  var line = document.getElementById("summary-line");
+  if (!line || !state.clauses.length) return;
   var doc = typeDoc(state.typeId);
-  line.textContent = (name || "계약서") + " · " + state.clauses.length + "조항 · 감지: " +
+  line.textContent = _contractName() + " · " + state.clauses.length + "조항 · 감지: " +
     (doc ? doc.meta.type_name : "유형 미확정");
+}
+
+/* ---------- 종합 검토의견(P1 추가) — 결론 배너 대체 축 ----------
+   자동 초안은 Verdict.composeOpinion(순수 로직)으로 판정 변경 시마다 재조립.
+   사용자가 수정하면 계약 해시별 localStorage(cr-opinion-<해시>)에 persist — 수정본 우선. */
+var _opinionEditing = false;   // 편집 모드(일시 상태 — 렌더 간 유지, 분석 시 해제)
+var _lastOpinionText = "";     // 마지막 표시 문안 — 내보내기 meta 포함용
+function opinionStoreLoad() {
+  try { return JSON.parse(localStorage.getItem(Verdict.opinionKey(verdictHash)) || "null"); }
+  catch (e) { return null; }
+}
+function opinionStoreSave(text) {
+  localStorage.setItem(Verdict.opinionKey(verdictHash),
+    JSON.stringify({ text: String(text || ""), edited: true, date: verdictToday() }));
+}
+function opinionStoreClear() {
+  try { localStorage.removeItem(Verdict.opinionKey(verdictHash)); } catch (e) {}
+}
+// 문안 표시 HTML — ‘…’ 인용부(사용자 코멘트)만 형광 강조. 수정본에서도 인용 부호를 유지하면 강조 유지.
+function opinionHtml(text) {
+  return esc(text)
+    .replace(/‘([^‘’]+)’/g, function (m, p) { return "‘<mark>" + p + "</mark>’"; })
+    .replace(/\n/g, "<br>");
 }
 // 다시 분석 — 숨긴 입력 패널을 다시 열어 본문·부속서류 수정 후 재분석하게 함.
 document.getElementById("btn-reanalyze").addEventListener("click", function () {
@@ -1000,7 +1026,8 @@ function exportVerdicts() {
   // subdoc_coverage(#3): 부속서류에서 매칭 확인된 항목은 기계 사실로 기록에 남김 —
   // 사람 판정(verdicts)과 별개 키. 데이터 축적 시 "부속서류로 충족되는 항목" 패턴의 원료.
   var meta = { type_id: state.typeId, date: verdictToday(), contract_hash: verdictHash, reviewer: getReviewer(),
-    subdoc_coverage: state.subDocCov || {} };
+    subdoc_coverage: state.subDocCov || {},
+    opinion: _lastOpinionText }; // 종합 검토의견(표시 중 문안 — 수정본 우선)
   var blob = new Blob([JSON.stringify(Verdict.exportVerdicts(verdictStore, meta), null, 2)], { type: "application/json" });
   var url = URL.createObjectURL(blob);
   var a = document.createElement("a");
@@ -1304,44 +1331,6 @@ function renderReport() {
   var mustCore = mustConsider.filter(function (it) { return it.cp.tier !== "conditional"; });
   var mustCond = mustConsider.filter(function (it) { return it.cp.tier === "conditional"; });
 
-  // 결론(#1): 검토자가 직접 쓴 검토의견 위주로. 없으면 매칭 요약으로 폴백.
-  var opinionCount = 0, okCount = 0, naCount = 0;
-  r.results.forEach(function (res) {
-    var v = verdictStore[res.cpId];
-    if (!v || !v.verdict) return;
-    if (v.verdict === "검토의견") opinionCount++;
-    else if (v.verdict === "이상없음") okCount++;
-    else if (v.verdict === "해당없음") naCount++;
-  });
-  var conclCls, conclText;
-  if (opinionCount || okCount || naCount) {
-    // 사람이 검토의견을 남긴 경우 — 그 내용 위주 서술.
-    conclCls = opinionCount ? "concl-caution" : "concl-ok";
-    var parts = [];
-    if (okCount) parts.push(okCount + "개 항목을 확인함(이상없음)");
-    if (opinionCount) parts.push(opinionCount + "개 항목에 검토의견을 개진함");
-    if (naCount) parts.push(naCount + "개 항목은 해당 없음");
-    conclText = parts.join(", ") + ".";
-    if (mustCore.length) conclText += " 필수 " + mustCore.length + "개는 계약서에서 아직 확인되지 않아 보완 필요.";
-    else if (mustNA.length && !mustCore.length) conclText += " 미확인 필수 항목은 검토자가 해당 없음으로 판정함 — 보완 불요.";
-  } else if (mustCore.length) {
-    conclCls = "concl-alert";
-    conclText = "아직 검토의견 미기입. 계약 본질상 필요한 필수 항목 " + mustCore.length + "개가 계약서에서 확인되지 않음 — 우선 확인 필요.";
-  } else if (recConsider.length || verifyMain.length || mustCond.length || mustReferenced.length) {
-    conclCls = "concl-caution";
-    conclText = "아직 검토의견 미기입. 필수(본질) 항목은 관련 조항에 닿음. 제안 " + verifyMain.length +
-      "건" + (mustCond.length ? " · 특수규제 확인 " + mustCond.length + "건(적용 시)" : "") +
-      (mustReferenced.length ? " · 별첨 약정서 참조 " + mustReferenced.length + "건(체결·첨부 확인)" : "") + "을 살펴볼 것.";
-  } else {
-    conclCls = "concl-ok";
-    conclText = "계약서 전체적으로 특이사항 없음 — 필수·권장 항목이 모두 관련 조항에 닿음." +
-      (mustCovered.length ? " (필수 " + mustCovered.length + "건은 부속 서류에서 커버됨)" : "");
-  }
-  if (verifyRef.length) conclText += " (참고 " + verifyRef.length + "건 별첨)";
-
-  var right = '<div class="report-summary"><h3>종합 리포트</h3>';
-  right += '<div class="report-concl ' + conclCls + '"><span class="concl-label">결론</span>' + esc(conclText) + "</div>";
-
   // 형식 점검(#5) — warn만 타일·섹션 대상
   var formalWarns = (state.formal || []).filter(function (f) { return f.status === "warn"; });
 
@@ -1359,6 +1348,46 @@ function renderReport() {
     if (v && v.verdict) judged++;
   });
 
+  // 검토의견 개진 목록(2번 섹션·종합 검토의견 인용 공용)
+  var flagged = [];
+  r.results.forEach(function (res) {
+    var v = verdictStore[res.cpId];
+    if (v && v.verdict === "검토의견") {
+      var cp = _cpById(res.cpId);
+      if (cp) flagged.push({ cp: cp, comment: v.comment, loc: res.best ? _clauseHeading(res.best.clauseIndex) : "" });
+    }
+  });
+
+  var right = '<div class="report-summary"><h3>종합 리포트</h3>';
+
+  // 종합 검토의견 — 기존 한 줄 결론 배너 대체. 자동 초안(판정 변경 시 즉시 재조립),
+  // 사용자가 수정하면 수정본 우선 유지 + "자동 초안으로 재생성" 제공.
+  var savedOp = opinionStoreLoad();
+  var opEdited = !!(savedOp && savedOp.edited);
+  var opText = opEdited ? String(savedOp.text || "") : Verdict.composeOpinion({
+    name: _contractName(),
+    clauseCount: state.clauses.length,
+    typeName: (typeDoc(state.typeId) || { meta: {} }).meta.type_name || null,
+    mustCoreLabels: mustCore.map(function (it) { return cpLabel(it.cp); }),
+    opinions: flagged.map(function (o) {
+      return { label: cpLabel(o.cp), severity: o.cp.severity, loc: o.loc, comment: o.comment };
+    }),
+    formalWarnTitles: formalWarns.map(function (f) { return f.title; })
+  });
+  _lastOpinionText = opText; // 내보내기(verdict JSON meta)용 캐시
+  right += '<div class="report-opinion"><div class="ro-head"><span class="ro-label">종합 검토의견</span>' +
+    '<span class="ro-mode">' + (opEdited ? "수정본" : "자동 초안") + "</span>" +
+    (_opinionEditing ? "" :
+      '<button id="opinion-edit" class="ghost">수정</button>' +
+      (opEdited ? '<button id="opinion-regen" class="ghost">자동 초안으로 재생성</button>' : "")) +
+    "</div>" +
+    (_opinionEditing
+      ? '<textarea id="opinion-textarea" class="ro-edit">' + esc(opText) + "</textarea>" +
+        '<div class="ro-edit-actions"><button id="opinion-save" class="primary">저장</button>' +
+        '<button id="opinion-cancel" class="ghost">취소</button></div>'
+      : '<p class="ro-text">' + opinionHtml(opText) + "</p>") +
+    "</div>";
+
   // 수치 타일(P1 신설) — 첫 스크린 한눈 파악. 클릭 시 해당 섹션으로 앵커 스크롤.
   // 색은 기존 coverage 체계 그대로(녹/청/황/적) — 신규 색 도입 없음.
   function _tile(anchor, cls, label, num, sub) {
@@ -1373,16 +1402,6 @@ function renderReport() {
     _tile("rpt-sec-formal", "tile-formal", "형식 경고", formalWarns.length, "") +
     _tile("rpt-sec-opinions", "tile-progress", "판정 진행", judged + " / " + judgeable, "") +
     "</div>";
-
-  // 검토의견 개진 목록(2번 섹션용)
-  var flagged = [];
-  r.results.forEach(function (res) {
-    var v = verdictStore[res.cpId];
-    if (v && v.verdict === "검토의견") {
-      var cp = _cpById(res.cpId);
-      if (cp) flagged.push({ cp: cp, comment: v.comment, loc: res.best ? _clauseHeading(res.best.clauseIndex) : "" });
-    }
-  });
 
   function _mustItem(it) {
     return '<div class="report-item consider-item"><div class="ri-head"><span class="sev sev-필수">필수</span>' +
@@ -1528,6 +1547,19 @@ function renderReport() {
   });
   // 제안 섹션 판정(P1): 리포트에서 바로 판정 — 저장 후 리포트(타일 수치 포함)·다른 뷰 갱신.
   bindVerdictControls(body, function () { renderReport(); renderClauses(); renderSuggestions(); });
+  // 종합 검토의견 — 수정(편집 모드 전환)·저장(persist)·취소·자동 초안 재생성.
+  var oedit = document.getElementById("opinion-edit");
+  if (oedit) oedit.addEventListener("click", function () { _opinionEditing = true; renderReport(); });
+  var osave = document.getElementById("opinion-save");
+  if (osave) osave.addEventListener("click", function () {
+    opinionStoreSave(document.getElementById("opinion-textarea").value);
+    _opinionEditing = false;
+    renderReport();
+  });
+  var ocancel = document.getElementById("opinion-cancel");
+  if (ocancel) ocancel.addEventListener("click", function () { _opinionEditing = false; renderReport(); });
+  var oregen = document.getElementById("opinion-regen");
+  if (oregen) oregen.addEventListener("click", function () { opinionStoreClear(); renderReport(); });
   var rprint = document.getElementById("report-print");
   if (rprint) rprint.addEventListener("click", function () { window.print(); });
   var rvIn = document.getElementById("reviewer-name");
