@@ -1214,15 +1214,11 @@ function renderClauses() {
     var g = byClause[ci] || { addressed: [], verify: [] };
     var left = g.addressed.map(function (r) { return renderCompareItem(r, false); }).join("") ||
       '<p class="compare-empty">이 조항에서 반영으로 짚인 항목 없음</p>';
-    // 확인 권장 항목을 심각도로 분리 — 필수·권장은 그대로 노출, 참고는 접어서 산만함을 줄임.
+    // 필수·권장 먼저, 참고는 뒤에 — 전부 펼침(접기는 클릭 부담이 커서 폐기, 2026-07-29 사용자 피드백).
     var verifyMain = g.verify.filter(function (r) { var c = _cpById(r.cpId); return c && c.severity !== "참고"; });
     var verifyRef = g.verify.filter(function (r) { var c = _cpById(r.cpId); return c && c.severity === "참고"; });
-    var right = verifyMain.map(function (r) { return renderCompareItem(r, true); }).join("") ||
-      (verifyRef.length ? "" : '<p class="compare-empty">추가 확인 제안 없음</p>');
-    if (verifyRef.length) {
-      right += '<details class="ref-fold"><summary>참고 매칭 ' + verifyRef.length + '건 펼치기</summary>' +
-        verifyRef.map(function (r) { return renderCompareItem(r, true); }).join("") + "</details>";
-    }
+    var right = verifyMain.concat(verifyRef).map(function (r) { return renderCompareItem(r, true); }).join("") ||
+      '<p class="compare-empty">추가 확인 제안 없음</p>';
     detail.innerHTML =
       '<div class="clause-compare">' +
       '<div class="compare-col addressed-col"><h3><span class="badge cov-addressed">✓ 반영</span> 이 조항에서 반영된 검토항목</h3>' + left + "</div>" +
