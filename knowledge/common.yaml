@@ -694,44 +694,8 @@ checks:
 # 통합이지만 4개 check가 서로 다른 조문 근거 → 삭제(중복 병합) 대상 없음.
 # alliance.yaml M-COMP·shareholders.yaml M-ANTITRUST 두 모듈이 X-COMP로 이관되어 각 파일에서 모듈 정의 제거 대상(검수 시 확인).
   # ── X-CROSS: 국외 당사자·준거법·관할 (횡단 — Phase C2 통합) ──
-  - id: CRS-01
-    module: X-CROSS
-    check: 계약에 적용될 준거법(governing law)을 당사자가 명시적으로 선택하는 조항이 존재하고 그 지정이 명확한가
-    label: "준거법 명시"
-    severity: 권장
-    severity_basis: "근거 조문이 임의규정(당사자 선택권 부여)임 — 국제사법 제45조"
-    norm_type: 임의
-    basis: statute
-    triggers:
-      keywords: [준거법, governing law, 적용 법률, 적용법, 이 계약의 해석]
-    absence_check: true
-    sources:
-      - law: 국제사법
-        article: 제45조
-        clause: 제1항
-        quote: '계약은 당사자가 명시적 또는 묵시적으로 선택한 법에 따른다. 다만, 묵시적인 선택은 계약내용이나 그 밖의 모든 사정으로부터 합리적으로 인정할 수 있는 경우로 한정한다'
-        verified: true
-        source_type: law
-    note: "국제사법 §45①은 당사자자치(준거법 선택권)를 부여하는 임의규정. 선택이 없으면 §46(가장 밀접한 관련국법)으로 보충되어 예측가능성이 낮아지므로 명시 선택이 권장. §45④: 모든 요소가 한 국가에만 관련되면 그 국가의 강행규정은 배제되지 않음(순수 국내거래에 외국법 선택 시 국내 강행규정 잔존). 보험업 등 규제법상 강행규정은 준거법 선택으로 회피 불가."
-  - id: CRS-02
-    module: X-CROSS
-    check: 분쟁해결을 위한 재판관할(전속/비전속) 또는 중재조항이 존재하고, 관할법원·중재기관·중재지·중재규칙이 특정되어 있는가
-    label: "관할·중재 조항 특정"
-    severity: 권장
-    severity_basis: "근거 조문이 임의규정(합의관할권 부여)임 — 국제사법 제8조"
-    norm_type: 임의
-    basis: statute
-    triggers:
-      keywords: [관할, jurisdiction, 전속적 관할, 중재, arbitration, 중재기관, 관할법원]
-    absence_check: true
-    sources:
-      - law: 국제사법
-        article: 제8조
-        clause: 제1항
-        quote: '당사자는 일정한 법률관계로 말미암은 소에 관하여 국제재판관할의 합의(이하 이 조에서 "합의"라 한다)를 할 수 있다'
-        verified: true
-        source_type: law
-    note: "국제사법 §8은 국제재판관할 합의권을 부여하는 임의규정. §8②: 합의는 서면(전자적 의사표시 포함)이어야 함. §8③: 관할합의는 전속적인 것으로 '추정'. §8⑤: 외국법원 전속합의가 있으면 국내법원은 원칙적으로 소를 각하(예외 4호). 전속/비전속 여부·중재기관(예: KCAB·ICC·SIAC)·중재지·중재규칙을 특정하지 않으면 관할 다툼·집행 리스크. 중재합의 성립·효력은 중재법 별도 규율(원문 미확인)."
+  # CRS-01(준거법 명시)·CRS-02(관할·중재 특정)는 2026-07-29 사용자 결정으로 제거 —
+  # 국제사법 근거 체크는 당사 실무상 불요(국외 계약은 별도 수동 검토). CRS-03~06(실무 항목)은 유지.
   - id: CRS-03
     module: X-CROSS
     check: 국문·영문 등 복수 언어로 작성된 경우, 언어 간 불일치 시 어느 언어본이 우선하는지 정하는 조항이 있는가

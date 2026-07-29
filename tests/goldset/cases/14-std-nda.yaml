@@ -2,11 +2,11 @@
 # 출처: 출처: 중소기업기술 거래 표준비밀유지협약서(NDA) 예시 (중소벤처기업부 마련·권고) | https://www.mss.go.kr/common/board/Download.do?bcIdx=1011225&cbIdx=231&streFileNm=c342d858-e73e-4064-b520-1f5d994e231f.hwp | 원문(HWP 전문 텍스트 추출, Ⅲ. 표준협약서 예시 전문)
 # 고정: nda 감지 + 국내 계약에 X-CROSS(국외·준거법) 오활성 금지 — 관할·중재는 국내
 # 분쟁해결 조항 범용어라 X-CROSS 신호에서 제거함(이 케이스가 그 회귀).
+# CRS-01·CRS-02는 2026-07-29 체크 자체가 제거됨(국제사법 불요 — 사용자 결정) — exclude 라벨도 정리.
 id: std-nda
 desc: 중기부 표준 NDA — nda 감지·X-CROSS 오활성 금지
 detect_expected: nda
 active_must_exclude: [X-CROSS]
-consider_must_exclude: [CRS-01, CRS-02]
 text: |
   비밀유지협약서(NDA)
   주식회사 ABC(이하 "ABC"라 한다)와(과) 주식회사 XYZ(이하 "XYZ"라 한다)는(은) 비밀정보의 제공과 관련하여 다음과 같이 비밀유지협약을 체결한다.
