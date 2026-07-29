@@ -4,10 +4,15 @@ body { margin: 0; font-family: "Apple SD Gothic Neo", "Malgun Gothic", sans-seri
 .topbar { display: flex; align-items: center; gap: 24px; padding: 12px 20px;
           background: #1a1a2e; color: #fff; }
 .topbar h1 { font-size: 17px; margin: 0; }
+.topbar nav { display: flex; align-items: center; flex: 1; }
 .tab { background: none; border: none; color: #aab; padding: 8px 14px;
        font-size: 14px; cursor: pointer; border-bottom: 2px solid transparent; }
 .tab.active { color: #fff; border-bottom-color: #4ea1ff; }
 .tab:disabled { opacity: .35; cursor: default; }
+/* 관리 그룹(P1) — 일상 3탭과 위계 분리: 우측 끝 + 회색 톤 */
+.nav-admin { margin-left: auto; padding-left: 14px; border-left: 1px solid #3a3a55; }
+.nav-admin .tab-admin { color: #778; font-size: 13px; }
+.nav-admin .tab-admin.active { color: #cdd3e0; border-bottom-color: #8ca3bf; }
 main { max-width: 1400px; margin: 0 auto; padding: 24px; }
 .pane { display: none; }
 .pane.active { display: block; }
@@ -152,7 +157,30 @@ td.empty { text-align: center; color: #889; padding: 24px; }
 /* 리포트 — 긍정-먼저 검토 워크시트 */
 #report-body h2 { font-size: 18px; margin: 0 0 6px; }
 .report-intro { color: #556; font-size: 13px; margin: 0 0 16px; line-height: 1.6; }
-@media (max-width: 720px) { .report-tiles { grid-template-columns: 1fr; } }
+
+/* 분석 후 요약 바(P1) — 입력부 한 줄 축소. 유형·모듈 조정은 펼침 안 */
+.report-summary-bar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  background: #fff; border: 1px solid #e0e2ee; border-radius: 8px;
+  padding: 10px 16px; margin-bottom: 16px; }
+.summary-line { font-weight: 600; font-size: 14px; }
+.summary-adjust > summary { cursor: pointer; font-size: 13px; color: #2456e6; padding: 2px 0; }
+.summary-adjust[open] { flex-basis: 100%; }
+.summary-adjust .summary-type { display: inline-block; font-size: 13px; margin: 8px 0 4px; }
+
+/* 수치 타일(P1) — 기존 coverage 색 체계 그대로. 클릭=해당 섹션 앵커 */
+.report-tiles { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin: 4px 0 18px; }
+.tile { border: 1px solid #e0e2ee; border-radius: 8px; background: #fff; padding: 10px 12px;
+  text-align: left; cursor: pointer; font: inherit; }
+.tile:hover { border-color: #b9c2d8; background: #f7f9ff; }
+.tile .tile-label { display: block; font-size: 12px; color: #667; }
+.tile .tile-num { display: block; font-size: 22px; font-weight: 700; margin-top: 2px; line-height: 1.2; }
+.tile .tile-sub { display: block; font-size: 11.5px; color: #99a; margin-top: 2px; }
+.tile-addressed .tile-num { color: #1e8449; }
+.tile-verify .tile-num { color: #1a6f96; }
+.tile-consider .tile-num { color: #b9770e; }
+.tile-formal .tile-num { color: #c0392b; }
+.tile-progress .tile-num { color: #445; }
+@media (max-width: 720px) { .report-tiles { grid-template-columns: 1fr 1fr; } }
 
 .report-sec-block { margin-bottom: 16px; }
 .report-sec-block h3 { font-size: 15px; margin: 0 0 4px; }
@@ -190,6 +218,7 @@ td.empty { text-align: center; color: #889; padding: 24px; }
 
 @media print { .topbar, .disclaimer, button { display: none; }
                .pane { display: none; } #pane-report { display: block; }
+               #input-panel, .report-summary-bar, .admin-fold { display: none; }
                .report-tiles { break-inside: avoid; }
                .report-item, .tile { break-inside: avoid; }
                .report-sec, .report-more { border: none; padding: 0; } }
@@ -294,26 +323,14 @@ td.empty { text-align: center; color: #889; padding: 24px; }
   color: #2456e6; font-size: 16px; font-weight: 600; pointer-events: none; }
 .drop-zone.dragging .drop-overlay { display: flex; }
 
-/* 리포트 2단 재구성(#5) — 좌 계약문안+검토의견 / 우 종합 리포트 */
-.report-split { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; align-items: start; }
-.report-doc, .report-summary { background: #fff; border: 1px solid #e0e2ee; border-radius: 8px;
-  padding: 16px 18px; max-height: 82vh; overflow-y: auto; }
-.report-doc h3, .report-summary h3 { margin: 0 0 12px; font-size: 16px; }
-.rd-clause { border-bottom: 1px solid #eef0f5; padding: 10px 0; }
-.rd-clause:last-child { border-bottom: none; }
-.rd-head { font-weight: 600; font-size: 14.5px; color: #1a1a2e; }
-.rd-body { white-space: pre-wrap; font: 14px/1.7 inherit; margin: 6px 0 0; color: #333; }
-.rd-comments { margin-top: 8px; display: flex; flex-direction: column; gap: 6px; }
-.rd-comment { background: #f7f9fc; border-left: 3px solid #c9d2e2; border-radius: 0 6px 6px 0;
-  padding: 6px 10px; font-size: 13px; display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
-.rd-comment .rd-c-label { font-weight: 600; color: #445; }
-.rd-comment .rd-c-text { color: #556; }
-.rd-unmapped { background: #fffdf7; border-left: 3px solid #e0a83e; padding-left: 10px; }
+/* 리포트 단일 컬럼(P1) — 계약 전문 컬럼 제거, 내부 스크롤(max-height) 제거: 페이지 스크롤 하나만 */
+.report-summary { background: #fff; border: 1px solid #e0e2ee; border-radius: 8px;
+  padding: 16px 18px; }
+.report-summary h3 { margin: 0 0 12px; font-size: 16px; }
 .report-summary h4 { margin: 16px 0 8px; font-size: 14px; }
 .report-summary h4.h4-alert { color: #b32b1f; }
 .report-summary .report-item { padding: 7px 0; border-bottom: 1px solid #f0f2f6; font-size: 13.5px; line-height: 1.5; }
 .report-summary .ri-loc-inline { color: #778; font-size: 12.5px; }
-@media (max-width: 900px) { .report-split { grid-template-columns: 1fr; } }
 
 /* 부속 서류(#3) */
 .subdoc-area { margin-top: 12px; padding-top: 12px; border-top: 1px dashed #d5deec; }

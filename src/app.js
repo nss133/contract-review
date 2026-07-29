@@ -164,12 +164,6 @@ function checkStatus(cp) {
   return { cls: COVERAGE_CLS[cov] || "", label: COVERAGE_LABEL[cov] || "", coverage: cov };
 }
 
-function renderModuleGuideBar(modules) {
-  document.getElementById("checklist-modules").innerHTML = modules.map(function (m) {
-    return '<span class="module-chip on">' + esc(m.name) + "</span>";
-  }).join("");
-}
-
 /* 형식 점검(#5) 바 — 매칭 체크리스트와 분리(통과/확인 2상태, 판정 대상 아님). */
 function renderFormalBar() {
   var el = document.getElementById("formal-bar");
@@ -264,8 +258,8 @@ function renderChecklist() {
   var typeId = document.getElementById("checklist-type").value;
   state.typeId = typeId;
   var doc = typeDoc(typeId);
+  // 모듈 칩 이중 표시 해소(P1): 표시전용 칩 바 삭제 — 활성 모듈은 리포트 요약 바에서만.
   var allModules = (CR.common.meta.modules || []).concat(doc ? doc.meta.modules : []);
-  renderModuleGuideBar(allModules);
   renderModuleFilterOptions(allModules);
 
   var base = allChecksForType(typeId);
@@ -656,14 +650,42 @@ function runAnalysis() {
   renderReport();
   document.getElementById("analyze-result").hidden = false;
   document.getElementById("clauses-empty").hidden = true;
-  document.getElementById("report-tab").disabled = false;
+  document.getElementById("checklist-empty").hidden = true;
+  document.getElementById("checklist-content").hidden = false;
+  // 입력부 축소(P1): 분석 후엔 입력 패널을 숨기고 요약 바 한 줄로 대체 — "다시 분석"으로 재노출.
+  document.getElementById("input-panel").hidden = true;
+  document.getElementById("report-summary-bar").hidden = false;
+  renderSummaryBar();
   if (!_analyzedOnce) {
-    // 최초 분석에서만 탭 이동·입력패널 접기(재검토 시 현재 탭 유지)
-    document.getElementById("input-panel").open = false;
-    document.querySelector('.tab[data-tab="checklist"]').click();
+    // 최초 분석에서만 리포트 탭으로 자동 랜딩(재검토 시 현재 탭 유지)
+    document.querySelector('.tab[data-tab="report"]').click();
     _analyzedOnce = true;
   }
 }
+
+/* ---------- 분석 후 요약 바(P1) — 입력부 한 줄 축소 ---------- */
+// "계약명 · n조항 · 감지: 유형" 표기. 계약명은 본문 첫 비공백 줄에서 추정.
+function renderSummaryBar() {
+  var line = document.getElementById("summary-line");
+  if (!line || !state.clauses.length) return;
+  var name = "";
+  var lines = String(state.text || "").split("\n");
+  for (var i = 0; i < lines.length; i++) {
+    var t = lines[i].trim();
+    if (t) { name = t; break; }
+  }
+  if (name.length > 30) name = name.slice(0, 30) + "…";
+  var doc = typeDoc(state.typeId);
+  line.textContent = (name || "계약서") + " · " + state.clauses.length + "조항 · 감지: " +
+    (doc ? doc.meta.type_name : "유형 미확정");
+}
+// 다시 분석 — 숨긴 입력 패널을 다시 열어 본문·부속서류 수정 후 재분석하게 함.
+document.getElementById("btn-reanalyze").addEventListener("click", function () {
+  var ip = document.getElementById("input-panel");
+  ip.hidden = false;
+  ip.open = true;
+  ip.scrollIntoView({ behavior: "smooth", block: "start" });
+});
 
 /* ---------- 검토의견 지식 루프(#4) — cpId 단위 누적 코퍼스 ----------
    여러 계약서 검토의견을 쌓아 판정 분포·코멘트 추천 제공. 저장키 cr-loop-corpus. */
@@ -1276,42 +1298,8 @@ function renderReport() {
   var mustReferenced = mustAll.filter(function (it) { return !subCov[it.cp.id] && refCov[it.cp.id]; }); // 별첨 참조
   var recConsider = consider.filter(function (it) { return it.severity === "권장" && !_isNA(it.cp); });
 
-  // 검토의견(코멘트)을 조항별로 모음 — 좌 컬럼용.
-  var commentsByClause = {};   // clauseIndex -> [{cp, verdict, comment}]
-  var unmapped = [];           // 조항 매핑 없는(consider) 의견
-  r.results.forEach(function (res) {
-    var v = verdictStore[res.cpId];
-    if (!v || !v.verdict) return;
-    if (v.verdict === "이상없음" && !v.comment) return; // 코멘트 없는 이상없음은 노이즈 — 생략
-    var cp = _cpById(res.cpId);
-    if (!cp) return;
-    var rec = { cp: cp, verdict: v.verdict, comment: v.comment || "" };
-    if (res.best && res.coverage !== "consider") {
-      var ci = res.best.clauseIndex;
-      (commentsByClause[ci] = commentsByClause[ci] || []).push(rec);
-    } else {
-      unmapped.push(rec);
-    }
-  });
-
-  // ── 좌: 계약서 문안 + 검토의견 ─────────────────────────────
-  var left = '<div class="report-doc"><h3>계약서 문안 · 검토의견</h3>';
-  left += state.clauses.map(function (c) {
-    var cs = commentsByClause[c.index] || [];
-    var block = '<div class="rd-clause"><div class="rd-head">' + esc(c.heading) + "</div>" +
-      '<pre class="rd-body">' + esc(c.body) + "</pre>";
-    if (cs.length) {
-      block += '<div class="rd-comments">' + cs.map(_commentLine).join("") + "</div>";
-    }
-    return block + "</div>";
-  }).join("");
-  if (unmapped.length) {
-    left += '<div class="rd-clause rd-unmapped"><div class="rd-head">계약서 외 검토의견(부재 항목)</div>' +
-      '<div class="rd-comments">' + unmapped.map(_commentLine).join("") + "</div></div>";
-  }
-  left += "</div>";
-
-  // ── 우: 종합 서술형 리포트 ─────────────────────────────────
+  // ── 종합 검토 개요(P1): 계약 전문 좌측 컬럼 제거 — 단일 컬럼·페이지 스크롤 하나 ──
+  // 전문 대조는 조항별 검토 탭이 담당. 인쇄는 이 개요를 그대로 출력.
   // 필수 consider를 tier로 분리: core=계약 본질(우선 확인) / conditional=특수규제(적용 시)
   var mustCore = mustConsider.filter(function (it) { return it.cp.tier !== "conditional"; });
   var mustCond = mustConsider.filter(function (it) { return it.cp.tier === "conditional"; });
@@ -1354,18 +1342,39 @@ function renderReport() {
   var right = '<div class="report-summary"><h3>종합 리포트</h3>';
   right += '<div class="report-concl ' + conclCls + '"><span class="concl-label">결론</span>' + esc(conclText) + "</div>";
 
+  // 형식 점검(#5) — warn만 타일·섹션 대상
+  var formalWarns = (state.formal || []).filter(function (f) { return f.status === "warn"; });
+
   // 검토의견 요약(활성 항목 기준)
   var activeVerdicts = {};
   r.results.forEach(function (res) { if (verdictStore[res.cpId]) activeVerdicts[res.cpId] = verdictStore[res.cpId]; });
   var vsum = Verdict.verdictSummary(activeVerdicts);
-  if (vsum.total) {
-    right += '<div class="report-verdict-summary">검토의견 기록: ' +
-      '<span class="vd-badge vd-ok">이상없음 ' + vsum["이상없음"] + "</span>" +
-      '<span class="vd-badge vd-comment">검토의견 ' + vsum["검토의견"] + "</span>" +
-      '<span class="vd-badge vd-na">해당없음 ' + vsum["해당없음"] + "</span></div>";
-  }
 
-  // 특이사항: 검토의견 단 항목 + 필수 검토제안(보완 필요)
+  // 판정 진행 — 이번 분석 대상(quiet 제외) 중 판정 찍힌 수
+  var judgeable = 0, judged = 0;
+  r.results.forEach(function (res) {
+    if (res.coverage === "quiet" || !_cpById(res.cpId)) return;
+    judgeable++;
+    var v = verdictStore[res.cpId];
+    if (v && v.verdict) judged++;
+  });
+
+  // 수치 타일(P1 신설) — 첫 스크린 한눈 파악. 클릭 시 해당 섹션으로 앵커 스크롤.
+  // 색은 기존 coverage 체계 그대로(녹/청/황/적) — 신규 색 도입 없음.
+  function _tile(anchor, cls, label, num, sub) {
+    return '<button class="tile ' + cls + '" data-anchor="' + anchor + '">' +
+      '<span class="tile-label">' + label + '</span><span class="tile-num">' + num + "</span>" +
+      (sub ? '<span class="tile-sub">' + sub + "</span>" : "") + "</button>";
+  }
+  right += '<div class="report-tiles">' +
+    _tile("rpt-sec-addressed", "tile-addressed", "✓ 반영", addressed.length, "") +
+    _tile("rpt-sec-suggest", "tile-verify", "△ 제안", verifyMain.length, "") +
+    _tile("rpt-sec-must", "tile-consider", "! 검토제안", mustCore.length + recConsider.length, "필수 " + mustCore.length) +
+    _tile("rpt-sec-formal", "tile-formal", "형식 경고", formalWarns.length, "") +
+    _tile("rpt-sec-opinions", "tile-progress", "판정 진행", judged + " / " + judgeable, "") +
+    "</div>";
+
+  // 검토의견 개진 목록(2번 섹션용)
   var flagged = [];
   r.results.forEach(function (res) {
     var v = verdictStore[res.cpId];
@@ -1374,36 +1383,58 @@ function renderReport() {
       if (cp) flagged.push({ cp: cp, comment: v.comment, loc: res.best ? _clauseHeading(res.best.clauseIndex) : "" });
     }
   });
-  if (flagged.length) {
-    right += '<section class="report-sec-block"><h4>검토의견 개진 (' + flagged.length + ")</h4>";
-    right += flagged.map(function (o) {
-      return '<div class="opinion-item"><div class="ri-head"><span class="sev sev-' + o.cp.severity + '">' +
-        esc(o.cp.severity) + '</span><span class="ri-q">' + labelQ(o.cp) + "</span></div>" +
-        (o.loc ? '<p class="ri-loc">' + esc(o.loc) + "</p>" : "") +
-        (o.comment ? '<p class="oi-comment">' + esc(o.comment) + "</p>" : "") + "</div>";
-    }).join("") + "</section>";
-  }
 
   function _mustItem(it) {
     return '<div class="report-item consider-item"><div class="ri-head"><span class="sev sev-필수">필수</span>' +
       '<span class="ri-q">' + labelQ(it.cp) + "</span></div>" +
       (it.cp.severity_basis ? '<p class="ri-why">' + esc(it.cp.severity_basis) + "</p>" : "") + "</div>";
   }
-  // 보완 필요(core) — 계약 본질상 필요한 필수인데 계약서에서 미확인.
+  // 1. 보완 필요(core) — 계약 본질상 필요한 필수인데 계약서에서 미확인. 항상 최상단, 0이면 한 줄 축약.
   if (mustCore.length) {
-    right += '<section class="report-sec-block"><h4 class="h4-alert">보완 필요 — 필수 항목 미확인 (' + mustCore.length + ")</h4>";
+    right += '<section id="rpt-sec-must" class="report-sec-block"><h4 class="h4-alert">보완 필요 — 필수 항목 미확인 (' + mustCore.length + ")</h4>";
     right += '<p class="sec-hint">이 유형 계약에 통상 필요한 필수 항목인데 계약서에서 매칭 조항을 못 찾음 — 확인 요.</p>';
     right += mustCore.map(_mustItem).join("") + "</section>";
-  }
-  // 특수 규제(conditional) — 전자금융감독규정 §60 등, 적용되는 경우에만 확인. 접힘.
-  if (mustCond.length) {
-    right += '<details class="report-sec"><summary>특수 규제 확인 (적용 시) ' + mustCond.length +
-      "건 — 전자금융거래 관련 시스템 외주 등에만 해당</summary>";
-    right += '<p class="sec-hint">이 계약이 해당 규제 대상(예: 전자금융거래 정보처리시스템 외주)일 때만 필수. 아니면 무시.</p>';
-    right += mustCond.map(_mustItem).join("") + "</details>";
+  } else {
+    right += '<section id="rpt-sec-must" class="report-sec-block"><h4>보완 필요 — 필수 항목 미확인 (0)</h4>' +
+      '<p class="report-none">없음 — 필수(본질) 항목은 관련 조항·부속서류에 닿음' +
+      (mustNA.length ? " (해당없음 판정 " + mustNA.length + "건 제외)" : "") + ".</p></section>";
   }
 
-  // 부속서류에서 커버됨(#3) — 필수 미확인이었으나 부속 서류에서 다뤄진 항목.
+  // 2. 검토의견 개진 — 판정 찍은 내용 요약. 앵커 안정성을 위해 항상 렌더.
+  right += '<section id="rpt-sec-opinions" class="report-sec-block"><h4>검토의견 개진 (' + flagged.length + ")</h4>";
+  if (vsum.total) {
+    right += '<div class="report-verdict-summary">검토의견 기록: ' +
+      '<span class="vd-badge vd-ok">이상없음 ' + vsum["이상없음"] + "</span>" +
+      '<span class="vd-badge vd-comment">검토의견 ' + vsum["검토의견"] + "</span>" +
+      '<span class="vd-badge vd-na">해당없음 ' + vsum["해당없음"] + "</span></div>";
+  }
+  right += flagged.map(function (o) {
+    return '<div class="opinion-item"><div class="ri-head"><span class="sev sev-' + o.cp.severity + '">' +
+      esc(o.cp.severity) + '</span><span class="ri-q">' + labelQ(o.cp) + "</span></div>" +
+      (o.loc ? '<p class="ri-loc">' + esc(o.loc) + "</p>" : "") +
+      (o.comment ? '<p class="oi-comment">' + esc(o.comment) + "</p>" : "") + "</div>";
+  }).join("") || '<p class="report-none">아직 개진한 검토의견 없음.</p>';
+  right += "</section>";
+
+  // 3. 제안 — 항목명·근거조항·원문발췌 + 판정 버튼(P1): 가벼운 계약은 리포트만으로 검토 완결.
+  right += '<section id="rpt-sec-suggest" class="report-sec-block"><h4>제안 (' + verifyMain.length + ")" +
+    (recConsider.length ? " · 검토 제안(권장) (" + recConsider.length + ")" : "") + "</h4>";
+  right += '<p class="sec-hint">계약서 검토 시 이 부분들도 함께 살펴보시길 제안합니다 — 여기서 바로 판정을 남길 수 있습니다.</p>';
+  right += verifyMain.map(function (it) {
+    return '<div class="report-item verify-item"><span class="sev sev-' + it.cp.severity + '">' + esc(it.cp.severity) +
+      '</span> <span class="ri-q">' + labelQ(it.cp) + "</span>" +
+      (it.res.best ? ' <span class="ri-loc-inline">(' + esc(_clauseHeading(it.res.best.clauseIndex)) + ")</span>" : "") +
+      evidenceLineHtml(it.cp, it.res) + verdictControlHtml(it.cp.id) + "</div>";
+  }).join("");
+  right += recConsider.map(function (it) {
+    return '<div class="report-item consider-item"><span class="sev sev-권장">권장</span> <span class="ri-q">' + labelQ(it.cp) + "</span>" +
+      (it.cp.severity_basis ? '<p class="ri-why">' + esc(it.cp.severity_basis) + "</p>" : "") +
+      verdictControlHtml(it.cp.id) + "</div>";
+  }).join("");
+  if (!verifyMain.length && !recConsider.length) right += '<p class="report-none">해당 없음.</p>';
+  right += "</section>";
+
+  // 4. 부속서류에서 커버됨(#3) — 필수 미확인이었으나 부속 서류에서 다뤄진 항목.
   if (mustCovered.length) {
     right += '<section class="report-sec-block"><h4 class="h4-covered">부속 서류에서 커버됨 (' + mustCovered.length + ")</h4>";
     right += '<p class="sec-hint">주 계약서엔 없으나 첨부한 부속 서류에서 다뤄지고 있어 누락 아님.</p>';
@@ -1428,32 +1459,22 @@ function renderReport() {
     }).join("") + "</section>";
   }
 
-  // 형식 점검(#5) — warn 항목만 리포트 섹션에 표시
-  var formalWarns = (state.formal || []).filter(function (f) { return f.status === "warn"; });
+  // 5. 형식 점검 — warn 항목만 표시
   if (formalWarns.length) {
-    right += '<section class="report-sec-block"><h4>형식 점검</h4>';
+    right += '<section id="rpt-sec-formal" class="report-sec-block"><h4>형식 점검</h4>';
     right += formalWarns.map(function (f) {
       return '<div class="report-item"><span class="ri-q">' + esc(f.title) + ' — ' + esc(f.detail) + "</span></div>";
     }).join("") + "</section>";
   }
 
-  // 제안사항(접힘) — 판정형 어휘("확인 권장") 대신 advisory 어조. 참고는 별첨(하단 ref-fold)으로 분리.
-  right += '<details class="report-sec" open><summary>제안 ' + verifyMain.length + "건 · 검토 제안(권장) " + recConsider.length + "건</summary>";
-  right += '<p class="sec-hint">계약서 검토 시 이 부분들도 함께 살펴보시길 제안합니다.</p>';
-  right += verifyMain.map(function (it) {
-    return '<div class="report-item verify-item"><span class="sev sev-' + it.cp.severity + '">' + esc(it.cp.severity) +
-      '</span> <span class="ri-q">' + labelQ(it.cp) + "</span>" +
-      (it.res.best ? ' <span class="ri-loc-inline">(' + esc(_clauseHeading(it.res.best.clauseIndex)) + ")</span>" : "") +
-      evidenceLineHtml(it.cp, it.res) + "</div>";
-  }).join("");
-  right += recConsider.map(function (it) {
-    return '<div class="report-item consider-item"><span class="sev sev-권장">권장</span> <span class="ri-q">' + labelQ(it.cp) + "</span></div>";
-  }).join("");
-  if (!verifyMain.length && !recConsider.length) right += '<p class="report-none">해당 없음.</p>';
-  right += "</details>";
-
-  // 참고 항목 별첨(#: 표시 계층화) — 반영·제안 등 각 섹션의 참고 항목을 한데 모아 하단에 접어둠.
-  // 법적 의무 아닌 실무 참고 사항이라 본문 흐름을 방해하지 않도록 분리.
+  // 6. 접힘 — 특수 규제(적용 시)·참고 별첨·반영 상세. 저빈도 정보를 하단에 모음.
+  if (mustCond.length) {
+    right += '<details class="report-sec"><summary>특수 규제 확인 (적용 시) ' + mustCond.length +
+      "건 — 전자금융거래 관련 시스템 외주 등에만 해당</summary>";
+    right += '<p class="sec-hint">이 계약이 해당 규제 대상(예: 전자금융거래 정보처리시스템 외주)일 때만 필수. 아니면 무시.</p>';
+    right += mustCond.map(_mustItem).join("") + "</details>";
+  }
+  // 참고 항목 별첨 — 법적 의무 아닌 실무 참고 사항이라 본문 흐름을 방해하지 않도록 분리.
   if (verifyRef.length) {
     right += '<details class="ref-fold"><summary>참고 항목 (' + verifyRef.length + ") — 법적 의무 아님, 실무 참고</summary>";
     right += verifyRef.map(function (it) {
@@ -1463,10 +1484,24 @@ function renderReport() {
     }).join("");
     right += "</details>";
   }
+  // 반영 상세(접힘) — 타일 앵커 대상. 어떤 항목이 어느 조항에 닿았는지.
+  right += '<details class="report-sec" id="rpt-sec-addressed"><summary>✓ 반영 (' + addressed.length + ") — 관련 조항에 닿은 항목</summary>";
+  right += addressed.map(function (it) {
+    return '<div class="report-item addressed-item"><span class="sev sev-' + it.cp.severity + '">' + esc(it.cp.severity) +
+      '</span> <span class="ri-q">' + labelQ(it.cp) + "</span>" +
+      (it.res.best ? ' <span class="ri-loc-inline">(' + esc(_clauseHeading(it.res.best.clauseIndex)) + ")</span>" : "") +
+      _verdictBadge(it.cp.id) + "</div>";
+  }).join("") || '<p class="report-none">해당 없음.</p>';
+  right += "</details>";
 
+  // 일상 액션만 노출(P1) — 관리 액션(지식 반영·골드셋 저장·판정파일 반영·코퍼스 백업/복원·정규화 후보)은
+  // "팀·지식 관리" 접힘으로 격리. 인쇄 시 접힘은 자동 펼침 대상에서 제외(admin-fold).
+  right += '<div class="report-actions">' +
+    '<button id="report-verdict-export" class="ghost">검토의견 내보내기</button>' +
+    '<button id="report-print" class="ghost">인쇄</button></div>';
+  right += '<details class="report-sec admin-fold"><summary>팀·지식 관리</summary>';
   right += '<div class="report-actions">' +
     '<label class="reviewer-label">검토자 <input id="reviewer-name" placeholder="이름(코멘트 귀속)" value="' + esc(getReviewer()) + '"></label>' +
-    '<button id="report-verdict-export" class="ghost">검토의견 내보내기</button>' +
     '<button id="report-loop-ingest" class="ghost">이 검토를 지식에 반영</button>' +
     '<button id="report-goldset-snapshot" class="ghost">골드셋 케이스로 저장</button>' +
     '<span class="report-actions-note">누적 판정(코퍼스 ' + loopCorpus.meta.contract_count + '건)에 이 계약서 검토의견을 추가 — 다음 검토에 분포·추천으로 활용</span></div>';
@@ -1477,10 +1512,24 @@ function renderReport() {
     '<label class="ghost file-btn">코퍼스 복원<input id="corpus-restore" type="file" accept=".json" hidden></label>' +
     '<span id="team-actions-msg" class="report-actions-note">팀원들의 검토의견 JSON을 코퍼스에 병합 — 같은 계약 재반영은 무시됨(멱등)</span></div>';
   right += curationPanelHtml();
+  right += "</details>";
   right += "</div>";
 
   var body = document.getElementById("report-body");
-  body.innerHTML = '<div class="report-split">' + left + right + "</div>";
+  body.innerHTML = right;
+  // 수치 타일 앵커(P1): 클릭 시 해당 섹션으로 페이지 스크롤 — 접힘 섹션은 먼저 펼침.
+  body.querySelectorAll(".tile[data-anchor]").forEach(function (t) {
+    t.addEventListener("click", function () {
+      var sec = document.getElementById(t.getAttribute("data-anchor"));
+      if (!sec) return;
+      if (sec.tagName === "DETAILS") sec.open = true;
+      sec.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  });
+  // 제안 섹션 판정(P1): 리포트에서 바로 판정 — 저장 후 리포트(타일 수치 포함)·다른 뷰 갱신.
+  bindVerdictControls(body, function () { renderReport(); renderClauses(); renderSuggestions(); });
+  var rprint = document.getElementById("report-print");
+  if (rprint) rprint.addEventListener("click", function () { window.print(); });
   var rvIn = document.getElementById("reviewer-name");
   if (rvIn) rvIn.addEventListener("change", function () { setReviewer(rvIn.value); });
   var rexp = document.getElementById("report-verdict-export");
@@ -1515,16 +1564,11 @@ function renderReport() {
     });
   });
 }
-// 검토의견 한 줄 — 판정 배지 + 코멘트.
-function _commentLine(rec) {
-  var cls = VERDICT_CLS[rec.verdict] || "";
-  return '<div class="rd-comment"><span class="vd-badge ' + cls + '">' + esc(rec.verdict) + "</span>" +
-    '<span class="rd-c-label">' + esc(String(labelQ(rec.cp)).replace(/<[^>]+>/g, " ")) + "</span>" +
-    (rec.comment ? '<span class="rd-c-text">' + esc(rec.comment) + "</span>" : "") + "</div>";
-}
-// 인쇄 시 접힌 섹션도 펼쳐 요약 타일·검토 제안·확인 권장이 모두 나오게.
+// 인쇄 시 접힌 섹션도 펼쳐 특수 규제·참고 별첨·반영 상세가 모두 나오게.
+// 팀·지식 관리 접힘(admin-fold)은 산출물이 아니므로 제외.
 window.addEventListener("beforeprint", function () {
   document.querySelectorAll("#report-body details").forEach(function (d) {
+    if (d.classList.contains("admin-fold")) return;
     if (!d.open) { d.dataset.wasClosed = "1"; d.open = true; }
   });
 });

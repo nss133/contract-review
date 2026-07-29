@@ -10,17 +10,20 @@
 <header class="topbar">
   <h1>계약서 리뷰 가이드</h1>
   <nav>
-    <button data-tab="checklist" class="tab active">체크리스트</button>
-    <button data-tab="clauses" class="tab">조항별 보기</button>
-    <button data-tab="report" class="tab" id="report-tab" disabled>리포트</button>
-    <button data-tab="verify" class="tab">검수</button>
-    <button data-tab="goldset" class="tab">골드셋</button>
+    <button data-tab="report" class="tab active">리포트</button>
+    <button data-tab="clauses" class="tab">조항별 검토</button>
+    <button data-tab="checklist" class="tab">체크리스트</button>
+    <!-- 관리 그룹(P1) — 매 검토 사용 탭과 위계 분리(우측·회색 톤). 큐레이터·회귀 채점용 -->
+    <span class="nav-admin">
+      <button data-tab="verify" class="tab tab-admin">지식 검수</button>
+      <button data-tab="goldset" class="tab tab-admin">골드셋</button>
+    </span>
   </nav>
 </header>
 
 <main>
-  <!-- 체크리스트 (주 탭) -->
-  <section id="pane-checklist" class="pane active">
+  <!-- 리포트 (첫 탭·P1) — 분석 전엔 입력 화면, 분석 후엔 요약 바 + 검토 개요 -->
+  <section id="pane-report" class="pane active">
     <details id="input-panel" open>
       <summary>계약서 입력</summary>
       <div id="analyze-input">
@@ -39,15 +42,55 @@
           <div id="subdoc-list" class="subdoc-list"></div>
         </div>
       </div>
-      <div id="analyze-setup" hidden>
-        <div id="tag-bar" class="tag-bar"></div>
-        <p class="screening-hint">적용 모듈(규제 레짐) — 칩을 눌러 켜고 끄면 즉시 재검토됩니다</p>
-        <div id="screening" class="module-bar"></div>
-      </div>
     </details>
 
+    <!-- 분석 후 요약 바(P1) — 입력부가 한 줄로 축소. 유형·모듈 조정은 펼침 안 -->
+    <div id="report-summary-bar" class="report-summary-bar" hidden>
+      <span id="summary-line" class="summary-line"></span>
+      <button id="btn-reanalyze" class="ghost">다시 분석</button>
+      <details id="summary-adjust" class="summary-adjust">
+        <summary>유형·모듈 조정</summary>
+        <label class="summary-type">계약 유형 <select id="checklist-type"></select></label>
+        <div id="analyze-setup" hidden>
+          <div id="tag-bar" class="tag-bar"></div>
+          <p class="screening-hint">적용 모듈(규제 레짐) — 칩을 눌러 켜고 끄면 즉시 재검토됩니다</p>
+          <div id="screening" class="module-bar"></div>
+        </div>
+      </details>
+    </div>
+
+    <div id="report-body"></div>
+  </section>
+
+  <!-- 조항별 검토 -->
+  <section id="pane-clauses" class="pane">
+    <p id="clauses-empty" class="empty-note">리포트 탭에서 계약서를 분석하세요.</p>
+    <div id="analyze-result" hidden>
+      <div class="verdict-bar">
+        <span class="verdict-bar-label">조항을 눌러 검토항목에 이상없음/검토의견/해당없음을 표시</span>
+        <button id="verdict-export" class="ghost">검토의견 내보내기</button>
+        <label class="filebtn ghost">불러오기<input id="verdict-import" type="file" accept=".json" hidden></label>
+      </div>
+      <!-- 일괄 판정(통과계약 모드): 예외를 먼저 개별 판정한 뒤 나머지를 한 번에 채움 — 기판정은 보존됨 -->
+      <div class="verdict-bar bulk-bar">
+        <span class="verdict-bar-label">일괄 판정(통과계약 모드) — 예외 항목 먼저 개별 판정 후 사용, 이미 찍은 판정은 보존됨:</span>
+        <button id="bulk-consider-na" class="ghost">미판정 알람 → 전부 해당없음</button>
+        <button id="bulk-consider-ok" class="ghost">미판정 알람 → 전부 이상없음</button>
+        <button id="bulk-matched-ok" class="ghost">미판정 반영·확인 → 전부 이상없음</button>
+        <span id="bulk-msg" class="report-actions-note"></span>
+      </div>
+      <div class="split">
+        <div id="clause-list" class="col"></div>
+        <div id="mapping-detail" class="col"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 체크리스트 (전 항목 감사 뷰) -->
+  <section id="pane-checklist" class="pane">
+    <p id="checklist-empty" class="empty-note">리포트 탭에서 계약서를 분석하세요.</p>
+    <div id="checklist-content" hidden>
     <div class="controls" id="checklist-toolbar">
-      <label>계약 유형 <select id="checklist-type"></select></label>
       <label>모듈 <select id="filter-module"><option value="">전체</option></select></label>
       <label>심각도 <select id="filter-severity">
         <option value="core" selected>핵심(필수+권장)</option>
@@ -63,7 +106,6 @@
       </select></label>
       <input id="filter-search" type="search" placeholder="확인사항·법령 검색">
     </div>
-    <div id="checklist-modules" class="module-bar"></div>
     <div id="formal-bar" class="module-bar"></div>
 
     <details class="sev-legend">
@@ -88,41 +130,12 @@
       <p class="suggestions-hint">계약서 검토 시 이 부분들도 함께 살펴보시길 제안합니다.</p>
       <div id="suggestions-body"></div>
     </section>
-  </section>
-
-  <!-- 조항별 보기 (보조 탭) -->
-  <section id="pane-clauses" class="pane">
-    <p id="clauses-empty" class="empty-note">먼저 체크리스트 탭에서 계약서를 분석하세요.</p>
-    <div id="analyze-result" hidden>
-      <div class="verdict-bar">
-        <span class="verdict-bar-label">조항을 눌러 검토항목에 이상없음/검토의견/해당없음을 표시</span>
-        <button id="verdict-export" class="ghost">검토의견 내보내기</button>
-        <label class="filebtn ghost">불러오기<input id="verdict-import" type="file" accept=".json" hidden></label>
-      </div>
-      <!-- 일괄 판정(통과계약 모드): 예외를 먼저 개별 판정한 뒤 나머지를 한 번에 채움 — 기판정은 보존됨 -->
-      <div class="verdict-bar bulk-bar">
-        <span class="verdict-bar-label">일괄 판정(통과계약 모드) — 예외 항목 먼저 개별 판정 후 사용, 이미 찍은 판정은 보존됨:</span>
-        <button id="bulk-consider-na" class="ghost">미판정 알람 → 전부 해당없음</button>
-        <button id="bulk-consider-ok" class="ghost">미판정 알람 → 전부 이상없음</button>
-        <button id="bulk-matched-ok" class="ghost">미판정 반영·확인 → 전부 이상없음</button>
-        <span id="bulk-msg" class="report-actions-note"></span>
-      </div>
-      <div class="split">
-        <div id="clause-list" class="col"></div>
-        <div id="mapping-detail" class="col"></div>
-      </div>
     </div>
-  </section>
-
-  <!-- 종합 리포트 -->
-  <section id="pane-report" class="pane">
-    <div id="report-body"></div>
-    <button onclick="window.print()">인쇄</button>
   </section>
 
   <!-- 앱 내장 골드셋 (폐쇄망) — 실계약 케이스 축적·새 버전 회귀 채점 -->
   <section id="pane-goldset" class="pane">
-    <p class="verify-scope-note">폐쇄망 골드셋: 검토 완료한 실계약을 <strong>케이스로 저장</strong>(리포트 탭 하단 버튼)해 공유폴더에 모으고,
+    <p class="verify-scope-note">폐쇄망 골드셋: 검토 완료한 실계약을 <strong>케이스로 저장</strong>(리포트 탭 하단 “팀·지식 관리” 안 버튼)해 공유폴더에 모으고,
       새 버전 반입 시 여기서 <strong>일괄 채점</strong>합니다. 반출용 요약에는 계약 본문이 포함되지 않습니다(check id·유형명만).</p>
     <div class="goldset-bar">
       <label class="ghost file-btn">케이스 파일 로드(복수)<input id="goldset-files" type="file" accept=".json" multiple hidden></label>
