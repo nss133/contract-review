@@ -48,7 +48,7 @@ checks:
         article: 제9조
         clause: 제22항
         quote: 집합투자기구의 조직, 운영 및 투자자의 권리ㆍ의무를 정한 것으로서 투자신탁의 신탁계약, 투자회사ㆍ투자유한회사ㆍ투자합자회사ㆍ투자유한책임회사의 정관 및 투자합자조합ㆍ투자익명조합의 조합계약을 말한다
-        verified: false
+        verified: true
         source_type: law
     note: "제9조 제22항 quote — 2026-07-28 축약 오인용 발견으로 현행 원문 교체·검수 하향 — 재검수 필요"
   - id: INV-FUND-02
