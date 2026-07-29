@@ -580,6 +580,13 @@ var LOOP_KEY = "cr-loop-corpus";
 var loopCorpus = Loop.emptyCorpus();
 try { loopCorpus = JSON.parse(localStorage.getItem(LOOP_KEY)) || Loop.emptyCorpus(); } catch (e) {}
 function saveCorpus() { localStorage.setItem(LOOP_KEY, JSON.stringify(loopCorpus)); }
+// 빌드 내장 seed 코퍼스: 검수자가 반출한 판정·코멘트가 새 환경(다른 PC·localStorage 초기화)에서도
+// 분포·추천으로 보이게 시작 시 병합. mergeCorpusBackup은 해시가 하나라도 겹치면 전체 스킵(멱등) —
+// 재오픈·이미 같은 계약을 적재한 사용자 모두 이중 카운트 없음.
+if (CR.curated_corpus) {
+  loopCorpus = Loop.mergeCorpusBackup(loopCorpus, CR.curated_corpus);
+  saveCorpus();
+}
 
 /* ── 팀 운영(P4) — 교환 단위는 판정파일(verdict JSON), 코퍼스는 로컬 집계 뷰 ──
    코퍼스끼리 병합하면 같은 계약이 이중 카운트되므로 코퍼스는 교환하지 않음.

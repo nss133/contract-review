@@ -18,7 +18,7 @@ JS_ORDER = [
 ]
 
 
-def build(knowledge_dir, out_path, law_dbs=None, news_db=None):
+def build(knowledge_dir, out_path, law_dbs=None, news_db=None, corpus_path=None):
     k = load_knowledge(knowledge_dir)
     warnings = enrich(
         k,
@@ -28,7 +28,17 @@ def build(knowledge_dir, out_path, law_dbs=None, news_db=None):
     for w in warnings:
         print(f"경고: {w}", file=sys.stderr)
 
-    payload = {"common": k["common"], "types": k["types"]}
+    # 검수자 판정 코퍼스 내장: 반출 백업(data/curated_corpus.json)을 페이지에 seed로 실음 —
+    # 새 환경(다른 PC·localStorage 초기화)에서도 판정 분포·추천 코멘트가 보이게.
+    # 파일 없으면 빈 코퍼스로 빌드 진행(경고만, 실패 아님).
+    cpath = Path(corpus_path) if corpus_path is not None else ROOT / "data" / "curated_corpus.json"
+    corpus = None
+    if cpath.exists():
+        corpus = json.loads(cpath.read_text())
+    else:
+        print(f"경고: 내장 코퍼스 없음({cpath}) — seed 없이 빌드", file=sys.stderr)
+
+    payload = {"common": k["common"], "types": k["types"], "curated_corpus": corpus}
     # </script> 조기 종료 방지: JSON 문자열 내 </ 를 <\/ 로 (JSON 유효 이스케이프)
     data_json = json.dumps(payload, ensure_ascii=False).replace("</", "<\\/")
 
