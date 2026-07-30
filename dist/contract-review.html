@@ -132,31 +132,80 @@ details.law pre { white-space: pre-wrap; background: #f8f9fc; padding: 10px;
 td.empty { text-align: center; color: #889; padding: 24px; }
 
 .empty-note { color: #667; }
-.split { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-.col { max-height: 80vh; overflow-y: auto; }
-.clause { background: #fff; border: 1px solid #e0e2ee; border-radius: 8px;
-          padding: 12px; margin-bottom: 8px; cursor: pointer; }
-.clause.sel { border-color: #2456e6; box-shadow: 0 0 0 2px #2456e633; }
-.clause .cnt { float: right; font-size: 12px; color: #2456e6; }
-.clause pre { white-space: pre-wrap; font: 14px/1.7 inherit; margin: 8px 0 0; }
 .consider-item { border-left: 4px solid #e0a83e; }
 
-/* 조항별 좌우대비 */
-.clause-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-.compare-col { background: #fff; border: 1px solid #e0e2ee; border-radius: 8px; padding: 12px 14px; }
-.compare-col h3 { margin: 0 0 12px; font-size: 15px; display: flex; align-items: center; gap: 7px; }
-.addressed-col { border-top: 3px solid #1e8449; }
-.verify-col { border-top: 3px solid #1a6f96; }
+/* ---------- 조항별 검토(P2) — 삼단 연속 스크롤 ---------- */
+/* 상단 고정 헤더: 진행률 · 검토제안 앵커 · 일괄 판정 드롭다운 · 내보내기/불러오기 */
+.clause-header { position: sticky; top: 0; z-index: 10; display: flex; align-items: center;
+  gap: 10px; flex-wrap: wrap; padding: 10px 0; margin-bottom: 10px;
+  background: #f5f6fa; border-bottom: 1px solid #e0e2ee; }
+.clause-progress { font-weight: 600; font-size: 14px; margin-right: auto; }
+.consider-anchor { color: #9a6a10; border-color: #e0a83e; background: #fffdf7; }
+.consider-anchor:hover { background: #fdf3df; }
+/* 일괄 판정 드롭다운 — 절차상 후행 도구라 접어서 1차 노출 축소 */
+.bulk-dropdown { position: relative; }
+.bulk-dropdown > summary { cursor: pointer; list-style: none; border: 1px solid #ccd;
+  background: #fff; border-radius: 6px; padding: 5px 10px; font-size: 12px; }
+.bulk-dropdown > summary::-webkit-details-marker { display: none; }
+.bulk-dropdown[open] > summary { background: #f3f5f9; }
+.bulk-dropdown .bulk-menu { position: absolute; top: calc(100% + 6px); right: 0; z-index: 20;
+  display: flex; flex-direction: column; align-items: stretch; gap: 8px; width: 320px;
+  background: #fff; border: 1px solid #d5deec; border-radius: 8px; padding: 12px;
+  box-shadow: 0 6px 18px #1a1a2e22; }
+
+/* 컬럼 안내 행 — 행 grid와 동일 컬럼 폭 */
+.clause-cols-head { display: grid; grid-template-columns: 2fr 1.2fr 1.2fr; gap: 0;
+  font-size: 12px; color: #667; font-weight: 600; padding: 0 2px 6px; }
+.clause-cols-head span { padding: 0 14px; }
+
+/* 조항 행 — grid 3셀(① 원문 ② 검토된 내용 ③ 제안 사항). 한 스크롤로 정렬 동기화를 구조적으로 보장.
+   content-visibility: 오프스크린 행의 렌더 비용 제거(§4.2) — 외부 의존성 0. */
+.clause-row { display: grid; grid-template-columns: 2fr 1.2fr 1.2fr;
+  background: #fff; border: 1px solid #e0e2ee; border-left: 4px solid transparent;
+  border-radius: 8px; margin-bottom: 10px;
+  content-visibility: auto; contain-intrinsic-size: auto 240px;
+  scroll-margin-top: 64px; /* 고정 헤더에 가리지 않게 — 딥링크·앵커 점프용 */ }
+.clause-row .cr-cell { padding: 12px 14px; min-width: 0; }
+.clause-row .cr-cell + .cr-cell { border-left: 1px solid #eef0f5; }
+.cr-src strong { font-size: 15px; }
+.cr-src pre { white-space: pre-wrap; font: 14px/1.7 inherit; margin: 8px 0 0; }
+.cr-empty { color: #bbc; margin: 2px 0; }
+/* 검토항목 전무 세그먼트((전문)·표제부·서명란) — 접지 않고 본문을 흐리게(시각적 강등) */
+.row-noitems .cr-src { color: #99a; }
+.row-noitems .cr-src strong { color: #889; font-weight: 500; }
+/* 판정 상태 → 행 좌측 경계색(§4.3) */
+.clause-row.row-vd-done { border-left-color: #1f9d55; }
+.clause-row.row-vd-comment { border-left-color: #d98a1f; }
+/* 리포트 딥링크 착지 플래시 */
+.row-flash { animation: rowflash 1.6s ease-out; }
+@keyframes rowflash { 0% { background: #fff3cd; } 100% { background: #fff; } }
+#consider-block.row-flash { animation: none; outline: 2px solid #e0a83e; outline-offset: 3px; }
+#consider-block { scroll-margin-top: 64px; margin-top: 16px; }
+.consider-sub { font-size: 12px; color: #9a6a10; font-weight: normal; margin-left: 8px; }
+
+/* ③ 제안 사항 카드 — 검토의견 기재분 압축 뷰 */
+.opinion-card { border-bottom: 1px solid #eef0f5; padding: 12px 0; border-left: 3px solid #d98a1f;
+  padding-left: 10px; margin-bottom: 4px; background: #fffaf2; border-radius: 0 6px 6px 0; }
+.opinion-card:last-child { border-bottom: none; }
+.opinion-card .ci-head { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
+.opinion-card .oc-comment { font-size: 13px; color: #7a4d0a; margin: 5px 0 2px; }
+
+@media (max-width: 900px) {
+  .clause-cols-head { display: none; }
+  .clause-row { grid-template-columns: 1fr; }
+  .clause-row .cr-cell + .cr-cell { border-left: none; border-top: 1px solid #eef0f5; }
+}
+
+/* 검토항목 카드(② 컬럼·제안사항 패널 공용) */
 .compare-item { border-bottom: 1px solid #eef0f5; padding: 14px 0; }
 .compare-item:last-child { border-bottom: none; }
-.compare-item .ci-head { display: flex; align-items: center; gap: 8px; }
+.compare-item .ci-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .compare-item .ci-id { font-size: 13px; color: #667; font-weight: 600; }
 .compare-item .ci-q { margin: 7px 0; font-size: 15px; font-weight: 600; line-height: 1.55; }
 .compare-item .ci-reason { margin: 4px 0; font-size: 13px; color: #556; line-height: 1.5; }
 .compare-item .ci-basis { margin: 4px 0; font-size: 12.5px; color: #778; line-height: 1.5; }
 .compare-item .ci-src { margin: 6px 0 0; font-size: 13px; }
 .compare-empty { color: #99a; font-size: 13px; margin: 6px 0; }
-@media (max-width: 720px) { .clause-compare { grid-template-columns: 1fr; } }
 .disclaimer { text-align: center; font-size: 12px; color: #667; padding: 16px;
               border-top: 1px solid #dde; margin-top: 30px; }
 
@@ -269,8 +318,7 @@ td.empty { text-align: center; color: #889; padding: 24px; }
 .report-verdict-summary { display: flex; gap: 10px; margin: 8px 0; font-size: 13px; }
 .opinion-item { border-left: 3px solid #d98a1f; padding: 6px 10px; margin: 6px 0; background: #fffaf2; }
 .opinion-item .oi-comment { font-size: 13px; color: #7a4d0a; margin: 3px 0 0; }
-.verdict-bar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 10px; padding: 8px 0; border-bottom: 1px solid #eef0f5; }
-.verdict-bar-label { font-size: 12px; color: #667; margin-right: auto; }
+.verdict-bar-label { font-size: 12px; color: #667; }
 .ghost { border: 1px solid #ccd; background: #fff; border-radius: 6px; padding: 5px 10px; cursor: pointer; font-size: 12px; }
 .ghost:hover { background: #f3f5f9; }
 .screening-hint { font-size: 12px; color: #667; margin: 8px 0 4px; }
@@ -297,9 +345,7 @@ td.empty { text-align: center; color: #889; padding: 24px; }
 .report-opinion .ro-edit { width: 100%; min-height: 100px; font: 14px/1.6 inherit; }
 .report-opinion .ro-edit-actions { display: flex; gap: 8px; margin-top: 8px; }
 
-/* 조항별 보기 — 검토 제안 전용 진입·패널 */
-.clause-consider { border-left: 4px solid #e0a83e; background: #fffdf7; }
-.clause-consider strong { color: #9a6a10; }
+/* 부재 알람(검토 제안) 전용 블록 */
 .consider-panel { background: #fff; border: 1px solid #e0e2ee; border-radius: 8px; padding: 12px 14px; border-top: 3px solid #e0a83e; }
 .consider-panel h3 { margin: 0 0 8px; font-size: 13px; display: flex; align-items: center; gap: 6px; }
 .consider-hint { font-size: 12px; color: #778; margin: 0 0 12px; }
@@ -356,8 +402,10 @@ td.empty { text-align: center; color: #889; padding: 24px; }
 .covered-item { border-left: 3px solid #1f9d55; padding-left: 8px; }
 .covered-src { font-size: 12px; color: #1c7a44; margin-left: 8px; }
 
-/* 지식 루프(#4) — 판정 분포·추천 코멘트 */
+/* 지식 루프(#4) — 판정 분포·추천 코멘트. P2: 1줄 요약으로 접힘(카드 높이 절약) */
 .loop-info { margin-top: 8px; padding-top: 8px; border-top: 1px dashed #e0e4ee; font-size: 12.5px; }
+.loop-fold > summary { cursor: pointer; color: #889; font-size: 12px; }
+.loop-fold[open] > summary { color: #667; margin-bottom: 4px; }
 .loop-dist { color: #667; }
 .loop-dist .vd-badge { margin-left: 4px; }
 .loop-comments { margin-top: 6px; color: #667; display: flex; flex-wrap: wrap; gap: 5px; align-items: center; }
@@ -410,9 +458,10 @@ td.empty { text-align: center; color: #889; padding: 24px; }
 .gs-change { border-left: 4px solid #b9770e; } .gs-change .gc-status { background: #fef5e7; color: #b9770e; }
 .gs-fail { border-left: 4px solid #c0392b; } .gs-fail .gc-status { background: #fdecea; color: #c0392b; }
 
-/* 일괄 판정(통과계약 모드) */
-.bulk-bar { background: #f7f9fc; border: 1px dashed #d5deec; border-radius: 8px; padding: 8px 12px; margin-top: 6px; }
-.bulk-bar .verdict-bar-label { color: #667; font-size: 12.5px; }
+/* 리포트 딥링크(§2.3-3) — "조항 보기 →" 텍스트 링크형 버튼 */
+.rpt-goto { border: none; background: none; color: #2456e6; font-size: 12px;
+  cursor: pointer; padding: 0 2px; white-space: nowrap; }
+.rpt-goto:hover { text-decoration: underline; }
 </style>
 </head>
 <body>
@@ -471,27 +520,36 @@ td.empty { text-align: center; color: #889; padding: 24px; }
     <div id="report-body"></div>
   </section>
 
-  <!-- 조항별 검토 -->
+  <!-- 조항별 검토(P2) — 삼단 연속 스크롤: 조항 행(row) 단위 grid, 클릭 탐색 없음 -->
   <section id="pane-clauses" class="pane">
     <p id="clauses-empty" class="empty-note">리포트 탭에서 계약서를 분석하세요.</p>
     <div id="analyze-result" hidden>
-      <div class="verdict-bar">
-        <span class="verdict-bar-label">조항을 눌러 검토항목에 이상없음/검토의견/해당없음을 표시</span>
+      <!-- 상단 고정 헤더: 판정 진행률 · 검토제안 앵커 · 일괄 판정(드롭다운) · 내보내기/불러오기 -->
+      <div id="clause-header" class="clause-header">
+        <span id="clause-progress" class="clause-progress"></span>
+        <button id="consider-anchor" class="ghost consider-anchor" hidden>⚠ 검토제안 0건</button>
+        <!-- 일괄 판정(통과계약 모드): 예외를 먼저 개별 판정한 뒤 나머지를 한 번에 채움 — 기판정은 보존됨.
+             절차상 후행 도구라 드롭다운으로 접어 1차 노출을 줄임 -->
+        <details id="bulk-dropdown" class="bulk-dropdown">
+          <summary>일괄 판정 ▾</summary>
+          <div class="bulk-menu">
+            <span class="verdict-bar-label">통과계약 모드 — 예외 항목 먼저 개별 판정 후 사용, 이미 찍은 판정은 보존됨</span>
+            <button id="bulk-consider-na" class="ghost">미판정 알람 → 전부 해당없음</button>
+            <button id="bulk-consider-ok" class="ghost">미판정 알람 → 전부 이상없음</button>
+            <button id="bulk-matched-ok" class="ghost">미판정 반영·확인 → 전부 이상없음</button>
+            <span id="bulk-msg" class="report-actions-note"></span>
+          </div>
+        </details>
         <button id="verdict-export" class="ghost">검토의견 내보내기</button>
         <label class="filebtn ghost">불러오기<input id="verdict-import" type="file" accept=".json" hidden></label>
       </div>
-      <!-- 일괄 판정(통과계약 모드): 예외를 먼저 개별 판정한 뒤 나머지를 한 번에 채움 — 기판정은 보존됨 -->
-      <div class="verdict-bar bulk-bar">
-        <span class="verdict-bar-label">일괄 판정(통과계약 모드) — 예외 항목 먼저 개별 판정 후 사용, 이미 찍은 판정은 보존됨:</span>
-        <button id="bulk-consider-na" class="ghost">미판정 알람 → 전부 해당없음</button>
-        <button id="bulk-consider-ok" class="ghost">미판정 알람 → 전부 이상없음</button>
-        <button id="bulk-matched-ok" class="ghost">미판정 반영·확인 → 전부 이상없음</button>
-        <span id="bulk-msg" class="report-actions-note"></span>
+      <!-- 컬럼 안내 행 + 조항 행 연속 스크롤 -->
+      <div class="clause-cols-head">
+        <span>① 계약서 원문</span><span>② 검토된 내용</span><span>③ 제안 사항</span>
       </div>
-      <div class="split">
-        <div id="clause-list" class="col"></div>
-        <div id="mapping-detail" class="col"></div>
-      </div>
+      <div id="clause-rows"></div>
+      <!-- 부재 알람(검토 제안) — 특정 조항에 속하지 않는 항목의 전용 블록(최하단 유지) -->
+      <div id="consider-block"></div>
     </div>
   </section>
 
@@ -3474,22 +3532,28 @@ function verdictToday() {
 }
 var VERDICT_CLS = { "이상없음": "vd-ok", "검토의견": "vd-comment", "해당없음": "vd-na" };
 // 지식 루프(#4) — 이 cpId의 과거 판정 분포 + 추천 코멘트. 없으면 빈 문자열.
+// P2: 카드 높이 절약을 위해 1줄 요약(최빈 판정·비율)으로 접힘 — 접기 금지 원칙의 예외 허용 대상(spec §4.3).
 function loopInfoHtml(cpId) {
   var st = Loop.checkStats(loopCorpus, cpId);
   if (!st) return "";
-  var h = '<div class="loop-info"><span class="loop-dist">과거 판정(n=' + st.n + (st.lowSample ? ", 표본 적음" : "") + "): ";
+  var topV = Loop.VERDICTS[0];
+  Loop.VERDICTS.forEach(function (v) { if (st.dist[v] > st.dist[topV]) topV = v; });
+  var top = Loop.topComments(loopCorpus, cpId, 3);
+  var summary = "과거 판정 " + st.n + "건 · " + topV.slice(0, 2) + " " + st.pct[topV] + "%" +
+    (top.length ? " · 추천 의견 " + top.length : "") + (st.lowSample ? " (표본 적음)" : "");
+  var h = '<details class="loop-info loop-fold"><summary>' + esc(summary) + "</summary>";
+  h += '<span class="loop-dist">과거 판정(n=' + st.n + (st.lowSample ? ", 표본 적음" : "") + "): ";
   Loop.VERDICTS.forEach(function (v) {
     if (st.dist[v] > 0) h += '<span class="vd-badge ' + VERDICT_CLS[v] + '">' + v.slice(0, 2) + " " + st.pct[v] + "%</span>";
   });
   h += "</span>";
-  var top = Loop.topComments(loopCorpus, cpId, 3);
   if (top.length) {
     h += '<div class="loop-comments">자주 남긴 의견: ' + top.map(function (c) {
       return '<button class="loop-c" data-vcp="' + esc(cpId) + '" data-ct="' + esc(c.text) + '">' +
         esc(c.text) + " <span class=\"loop-c-n\">×" + c.count + "</span></button>";
     }).join("") + "</div>";
   }
-  return h + "</div>";
+  return h + "</details>";
 }
 // 코퍼스 큐레이션 신호 패널(③ 자동 강등 후보 서페이싱).
 // 반복 해당없음(표본≥5·80%+)=조건부 강등 후보, 반복 이상없음=gold(알람 우선순위 하향 후보).
@@ -3518,7 +3582,8 @@ function curationPanelHtml() {
   return h + "</details>";
 }
 // cpId에 대한 판정 버튼 + 코멘트 입력 HTML. 현재 판정 활성 표시.
-function verdictControlHtml(cpId) {
+// skipLoop: 같은 행 ③ 카드처럼 loop 힌트 중복 노출이 소음인 곳에서 생략.
+function verdictControlHtml(cpId, skipLoop) {
   var cur = verdictStore[cpId] || {};
   var btns = Verdict.VERDICTS.map(function (v) {
     var on = cur.verdict === v ? " active " + VERDICT_CLS[v] : "";
@@ -3531,7 +3596,7 @@ function verdictControlHtml(cpId) {
     : cur.verdict === "이상없음" ? "확인 메모(선택)" : "검토의견 메모";
   var comment = '<input class="vd-note' + (showComment ? " show" : "") + '" data-vcp="' + esc(cpId) +
     '" placeholder="' + esc(ph) + '" value="' + esc(cur.comment || "") + '">';
-  return '<div class="verdict-ctl">' + btns + comment + "</div>" + loopInfoHtml(cpId);
+  return '<div class="verdict-ctl">' + btns + comment + "</div>" + (skipLoop ? "" : loopInfoHtml(cpId));
 }
 // 조항별 보기·리포트 공용 — 판정 버튼 클릭·코멘트 저장 바인딩. reRender: 저장 후 호출.
 function bindVerdictControls(root, reRender) {
@@ -3695,7 +3760,11 @@ function bindBulkVerdict() {
   function apply(coverages, verdict) {
     var r = Verdict.bulkVerdict(verdictStore, ids(coverages), verdict, verdictToday());
     verdictStore = r.store; saveVerdicts();
+    // 전체 재렌더로 content-visibility 높이 추정이 초기화돼 스크롤이 튐 — 위치 복원(rAF로 확정 높이 반영 후 재보정).
+    var y = window.scrollY;
     renderClauses(); renderSuggestions(); renderReport();
+    window.scrollTo(0, y);
+    requestAnimationFrame(function () { window.scrollTo(0, y); });
     var msg = document.getElementById("bulk-msg");
     if (msg) msg.textContent = r.applied + "건 " + verdict + " 처리(기판정 보존)";
   }
@@ -3746,13 +3815,15 @@ function evidenceLineHtml(cp, r) {
   return '<p class="ci-evidence">근거: ' + esc(ev.heading) + ' “' + ev.snippet + '”</p>';
 }
 // 검토항목 1건 요약: 심각도(+근거 툴팁) · 질문 · reason · 근거.
-// showEvidence: 조항별 보기의 verify 열에서만 근거 원문 라인을 덧붙임(addressed는 이미 조항 맥락 안이라 생략).
+// showEvidence: verify 항목에서만 근거 원문 라인을 덧붙임(addressed는 이미 조항 맥락 안이라 생략).
+// P2: ✓반영/△제안이 한 컬럼(②)에 섞이므로 coverage 배지를 카드 머리에 표시.
 function renderCompareItem(r, showEvidence) {
   var cp = _cpById(r.cpId);
   if (!cp) return "";
   var reasons = (r.best && r.best.reasons) || [];
   return '<div class="compare-item">' +
-    '<div class="ci-head"><span class="sev sev-' + cp.severity + '" title="' + esc(cp.severity_basis || "") + '">' +
+    '<div class="ci-head">' + coverageBadgeHtml(r.coverage) +
+    '<span class="sev sev-' + cp.severity + '" title="' + esc(cp.severity_basis || "") + '">' +
     esc(cp.severity) + "</span><span class=\"ci-id\">" + esc(cp.id) + "</span></div>" +
     '<p class="ci-q">' + labelQ(cp) + "</p>" +
     (reasons.length ? '<p class="ci-reason">' + esc(reasons.join("; ")) + "</p>" : "") +
@@ -3781,8 +3852,205 @@ function renderConsiderItem(r) {
     verdictControlHtml(cp.id) +
     "</div>";
 }
+/* ---------- 조항별 검토(P2) — 삼단 연속 스크롤 ----------
+   조항 행(row) 하나 = grid 3셀(① 계약서 원문 ② 검토된 내용 ③ 제안 사항).
+   전 행을 한 번에 렌더 — 클릭 탐색·스크롤 동기화 코드 불요(행 단위 grid가 정렬을 구조적으로 보장).
+   오프스크린 렌더 비용은 CSS content-visibility로 제거(§4.2 1차 전략).
+   미니맵(조항 점프 목차)은 P2 스코프 아웃 — 100+조항 실사용에서 필요해지면 추가. */
+var _clauseGroups = {};   // clauseIndex -> { addressed:[r], verify:[r] } — verify는 필수·권장 먼저 정렬
+var _considerList = [];   // 부재 알람(consider) — 조항 무관, 최하단 전용 블록
+
+// 판정 진행률 — 이번 분석 대상(quiet 제외) 중 판정 찍힌 수. 고정 헤더·리포트 타일 공용.
+function verdictProgress() {
+  var judgeable = 0, judged = 0;
+  ((state.result && state.result.results) || []).forEach(function (res) {
+    if (res.coverage === "quiet" || !_cpById(res.cpId)) return;
+    judgeable++;
+    var v = verdictStore[res.cpId];
+    if (v && v.verdict) judged++;
+  });
+  return { judged: judged, judgeable: judgeable };
+}
+
+// 검토 제안 카운트(필수·의견·부속서류·별첨참조) — 헤더 앵커 툴팁·부재 알람 블록 부제 공용.
+function considerCountText() {
+  var mustN = _considerList.filter(function (r) { var c = _cpById(r.cpId); return c && c.severity === "필수"; }).length;
+  var opinN = _considerList.filter(function (r) { var v = verdictStore[r.cpId]; return v && v.verdict === "검토의견"; }).length;
+  var subN = _considerList.filter(function (r) { return (state.subDocCov || {})[r.cpId]; }).length;
+  var refN = _considerList.filter(function (r) { return !(state.subDocCov || {})[r.cpId] && (state.refCov || {})[r.cpId]; }).length;
+  var parts = [];
+  if (mustN) parts.push("필수 " + mustN);
+  if (opinN) parts.push("의견 " + opinN);
+  if (subN) parts.push("부속서류 " + subN);
+  if (refN) parts.push("별첨참조 " + refN);
+  return parts.join(" · ");
+}
+
+// 행 판정 상태 → 좌측 경계색 클래스(§4.3): 검토의견 있음(주황) > 전 항목 판정 완료(녹) > 그 외(무색).
+function rowStatusCls(g) {
+  var items = g.addressed.concat(g.verify);
+  if (!items.length) return "";
+  var judgedAll = true, hasOpinion = false;
+  items.forEach(function (r) {
+    var v = verdictStore[r.cpId];
+    if (!v || !v.verdict) judgedAll = false;
+    else if (v.verdict === "검토의견") hasOpinion = true;
+  });
+  if (hasOpinion) return " row-vd-comment";
+  if (judgedAll) return " row-vd-done";
+  return "";
+}
+
+// ③ 제안 사항 카드 — 이 조항에서 검토의견으로 판정 기재한 항목(상대방에 개진할 내용의 압축 뷰).
+// 3버튼+코멘트는 유지하되 loop 힌트는 ② 카드에만(같은 행 중복 소음 방지).
+function renderOpinionCard(r) {
+  var cp = _cpById(r.cpId);
+  if (!cp) return "";
+  var v = verdictStore[r.cpId] || {};
+  return '<div class="opinion-card">' +
+    '<div class="ci-head"><span class="vd-badge vd-comment">검토의견</span>' +
+    '<span class="sev sev-' + cp.severity + '">' + esc(cp.severity) + '</span>' +
+    '<span class="ci-id">' + esc(cp.id) + "</span></div>" +
+    '<p class="ci-q">' + labelQ(cp) + "</p>" +
+    (v.comment ? '<p class="oc-comment">' + esc(v.comment) + "</p>" : "") +
+    verdictControlHtml(cp.id, true) +
+    "</div>";
+}
+
+// 조항 행 1개 — grid 3셀. ②③이 빈 셀은 흐린 placeholder 한 줄("—")로 행 리듬 유지.
+// 검토항목이 전무한 세그먼트((전문)·표제부·서명란 등)는 접지 않고 본문을 흐리게(시각적 강등).
+function clauseRowHtml(c) {
+  var g = _clauseGroups[c.index] || { addressed: [], verify: [] };
+  var cards = g.addressed.map(function (r) { return renderCompareItem(r, false); })
+    .concat(g.verify.map(function (r) { return renderCompareItem(r, true); })).join("");
+  var opinions = g.addressed.concat(g.verify).filter(function (r) {
+    var v = verdictStore[r.cpId];
+    return v && v.verdict === "검토의견";
+  }).map(renderOpinionCard).join("");
+  var noItems = !g.addressed.length && !g.verify.length;
+  // 검토항목 전무 세그먼트는 연속 빈 줄(표제부 여백 등)을 압축해 행 공간 확보 — 문언 자체는 불변.
+  var body = noItems ? String(c.body).replace(/\n{3,}/g, "\n\n") : c.body;
+  return '<div class="clause-row' + (noItems ? " row-noitems" : "") + rowStatusCls(g) +
+    '" data-ci="' + c.index + '">' +
+    '<div class="cr-cell cr-src"><strong>' + esc(c.heading) + "</strong><pre>" + esc(body) + "</pre></div>" +
+    '<div class="cr-cell cr-reviewed">' + (cards || '<p class="cr-empty">—</p>') + "</div>" +
+    '<div class="cr-cell cr-opinions">' + (opinions || '<p class="cr-empty">—</p>') + "</div>" +
+    "</div>";
+}
+
+// 행 안 판정 컨트롤 바인딩 — 판정 변경 시 그 행만 재렌더(전체 재렌더 금지: 성능·스크롤 위치 보존).
+function bindRowControls(rowEl) {
+  var ci = Number(rowEl.getAttribute("data-ci"));
+  bindVerdictControls(rowEl, function () {
+    rerenderRow(ci);
+    refreshClauseCounts();
+    renderSuggestions();
+    renderReport();
+  });
+}
+function rerenderRow(ci) {
+  var old = document.querySelector('#clause-rows .clause-row[data-ci="' + ci + '"]');
+  var c = state.clauses[ci];
+  if (!old || !c) return;
+  var tmp = document.createElement("div");
+  tmp.innerHTML = clauseRowHtml(c);
+  var next = tmp.firstChild;
+  old.parentNode.replaceChild(next, old);
+  bindRowControls(next);
+}
+
+// 부재 알람(검토 제안) 전용 블록 — 조항 무관 항목의 최하단 고정 영역.
+// 부속서류 커버(#③)·별첨 참조(#4)는 '진짜 미확인'과 분리 — 반영/참조된 사실이
+// 검토 필요처럼 보이지 않게. 우선순위: 기계매칭(subCov) > 별첨 참조(refCov).
+function renderConsiderBlock() {
+  var block = document.getElementById("consider-block");
+  if (!_considerList.length) { block.innerHTML = ""; return; }
+  var subCov = state.subDocCov || {};
+  var refCov = state.refCov || {};
+  var uncovered = _considerList.filter(function (r) { return !subCov[r.cpId] && !refCov[r.cpId]; });
+  var covered = _considerList.filter(function (r) { return subCov[r.cpId]; });
+  var referenced = _considerList.filter(function (r) { return !subCov[r.cpId] && refCov[r.cpId]; });
+  var items = uncovered.map(renderConsiderItem).join("") ||
+    '<p class="compare-empty">검토 제안 항목 없음</p>';
+  var coveredHtml = covered.length
+    ? '<h3 class="subdoc-covered-head"><span class="badge cov-subdoc">✓ 부속서류 반영</span> 부속 서류에서 확인된 항목</h3>' +
+      '<p class="consider-hint">주 계약서엔 없지만 부속 서류에서 매칭 확인됨 — 커버 적정성만 확인하세요.</p>' +
+      covered.map(renderConsiderItem).join("")
+    : "";
+  var referencedHtml = referenced.length
+    ? '<h3 class="refdoc-covered-head"><span class="badge cov-refdoc">◇ 별첨 참조</span> 별첨 약정서로 커버 예정</h3>' +
+      '<p class="consider-hint">본문이 표준 부속서류 체결을 정하고 있음 — 약정서 체결·첨부 여부만 확인하세요.</p>' +
+      referenced.map(renderConsiderItem).join("")
+    : "";
+  block.innerHTML =
+    '<div class="consider-panel"><h3><span class="badge cov-consider">! 검토 제안</span> 계약서에서 확인되지 않은 항목' +
+    '<span class="consider-sub">' + esc(considerCountText()) + "</span></h3>" +
+    '<p class="consider-hint">각 항목이 실제로 빠진 것인지(오류) 아니면 해당 없는지 검토하고 의견을 남기세요.</p>' +
+    items + coveredHtml + referencedHtml + "</div>";
+  bindVerdictControls(block, function () {
+    renderConsiderBlock();
+    refreshClauseCounts();
+    renderSuggestions();
+    renderReport();
+  });
+}
+
+// 판정 변경 후 경량 갱신(구 refreshClauseCounts 개편) — 헤더 진행률·검토제안 앵커·행 좌측 상태색.
+// 행 본문은 건드리지 않음(상태색은 클래스 토글만) — 스크롤 위치·입력 포커스 보존.
+function refreshClauseCounts() {
+  var p = verdictProgress();
+  var prog = document.getElementById("clause-progress");
+  if (prog) prog.textContent = "판정 진행 " + p.judged + " / " + p.judgeable;
+  var anchor = document.getElementById("consider-anchor");
+  if (anchor) {
+    anchor.hidden = !_considerList.length;
+    anchor.textContent = "⚠ 검토제안 " + _considerList.length + "건";
+    anchor.title = considerCountText();
+  }
+  document.querySelectorAll("#clause-rows .clause-row").forEach(function (row) {
+    var g = _clauseGroups[Number(row.dataset.ci)] || { addressed: [], verify: [] };
+    row.classList.remove("row-vd-comment", "row-vd-done");
+    var cls = rowStatusCls(g).trim();
+    if (cls) row.classList.add(cls);
+  });
+}
+
+// 행 점프 공용 — content-visibility로 오프스크린 행 높이가 추정치라 1회 스크롤은 목표가 어긋남.
+// 즉시 점프 후 rAF로 재정렬(렌더되며 확정된 높이 반영)을 수 회 반복해 착지 보정.
+function scrollToClauseEl(el) {
+  el.scrollIntoView({ block: "start" });
+  var tries = 0;
+  (function settle() {
+    if (tries++ >= 4) return;
+    el.scrollIntoView({ block: "start" });
+    requestAnimationFrame(settle);
+  })();
+}
+
+// 검토제안 앵커 — 6,000px 스크롤 없이 최하단 부재 알람 블록으로 즉시 점프(정적 요소라 1회 바인딩).
+(function () {
+  var a = document.getElementById("consider-anchor");
+  if (a) a.addEventListener("click", function () {
+    var block = document.getElementById("consider-block");
+    if (block) scrollToClauseEl(block);
+  });
+})();
+
+// 리포트 딥링크(§2.3-3) — 조항별 검토 탭 활성 + 해당 조항 행으로 스크롤·하이라이트 플래시.
+// ci: 조항 index(문자열 허용) 또는 "consider"(부재 알람 → 최하단 블록).
+function gotoClause(ci) {
+  document.querySelector('.tab[data-tab="clauses"]').click();
+  var el = ci === "consider" ? document.getElementById("consider-block")
+    : document.querySelector('#clause-rows .clause-row[data-ci="' + ci + '"]');
+  if (!el) return;
+  scrollToClauseEl(el);
+  el.classList.remove("row-flash");
+  void el.offsetWidth; // 연속 클릭 시 애니메이션 재트리거용 리플로우
+  el.classList.add("row-flash");
+}
+
 function renderClauses() {
-  // ci -> { addressed:[r...], verify:[r...] }
+  // results를 best.clauseIndex로 역인덱싱 — coverage별 그룹
   var byClause = {};
   var considerList = [];
   state.result.results.forEach(function (r) {
@@ -3793,123 +4061,28 @@ function renderClauses() {
     if (r.coverage === "addressed") g.addressed.push(r);
     else if (r.coverage === "verify") g.verify.push(r);
   });
-  // 심각도순(필수 먼저)
+  // ② 카드 순서: 필수·권장 먼저, 참고 뒤 — 전부 펼침(접기는 클릭 부담이 커서 폐기, 2026-07-29 사용자 피드백).
+  Object.keys(byClause).forEach(function (k) {
+    byClause[k].verify.sort(function (a, b) {
+      var ca = _cpById(a.cpId), cb = _cpById(b.cpId);
+      return (ca && ca.severity === "참고" ? 1 : 0) - (cb && cb.severity === "참고" ? 1 : 0);
+    });
+  });
+  // 부재 알람 심각도순(필수 먼저)
   considerList.sort(function (a, b) {
     var ca = _cpById(a.cpId), cb = _cpById(b.cpId);
     var sa = SEV_RANK[ca && ca.severity]; if (sa === undefined) sa = 3;
     var sb = SEV_RANK[cb && cb.severity]; if (sb === undefined) sb = 3;
     return sa - sb;
   });
-  var listHtml = state.clauses.map(function (c) {
-    var g = byClause[c.index] || { addressed: [], verify: [] };
-    return '<div class="clause" data-ci="' + c.index + '"><strong>' + esc(c.heading) +
-      '</strong><span class="cnt">' + esc(clauseCountText(c.index, g)) + "</span><pre>" +
-      esc(c.body) + "</pre></div>";
-  }).join("");
-  // 검토 제안(계약서에서 확인 안 됨) — 특정 조항에 없는 부재 알람. 별도 진입 항목.
-  // 검토 제안 카운트(필수·의견·부속서류 반영) — 목록·갱신 공용.
-  function considerCountText() {
-    var mustN = considerList.filter(function (r) { var c = _cpById(r.cpId); return c && c.severity === "필수"; }).length;
-    var opinN = considerList.filter(function (r) { var v = verdictStore[r.cpId]; return v && v.verdict === "검토의견"; }).length;
-    var subN = considerList.filter(function (r) { return (state.subDocCov || {})[r.cpId]; }).length;
-    var refN = considerList.filter(function (r) { return !(state.subDocCov || {})[r.cpId] && (state.refCov || {})[r.cpId]; }).length;
-    var parts = [];
-    if (mustN) parts.push("필수 " + mustN);
-    if (opinN) parts.push("의견 " + opinN);
-    if (subN) parts.push("부속서류 " + subN);
-    if (refN) parts.push("별첨참조 " + refN);
-    return parts.join(" · ");
-  }
-  if (considerList.length) {
-    var sub = considerCountText();
-    listHtml += '<div class="clause clause-consider" data-ci="consider"><strong>⚠ 검토 제안 (계약서에서 확인 안 됨)</strong>' +
-      '<span class="cnt">' + esc(sub) + "</span>" +
-      '<pre>필수·권장 항목 중 계약서에서 매칭 조항을 찾지 못한 것들. 빠졌다는 뜻이 아니라 검토가 필요한 사항.</pre></div>';
-  }
-  document.getElementById("clause-list").innerHTML = listHtml;
-  function showClause(ci) {
-    var detail = document.getElementById("mapping-detail");
-    if (ci === "consider") {
-      // 검토 제안 전용 — 조항 매핑 없음. 각 항목에 판정·코멘트(오류 여부 검토).
-      // 부속서류 커버 항목(#③)·별첨 참조 항목(#4)은 '진짜 미확인'과 분리 — 반영/참조된 사실이
-      // 검토 필요처럼 보이지 않게. 우선순위: 기계매칭(subCov) > 별첨 참조(refCov).
-      var subCov = state.subDocCov || {};
-      var refCov = state.refCov || {};
-      var uncovered = considerList.filter(function (r) { return !subCov[r.cpId] && !refCov[r.cpId]; });
-      var covered = considerList.filter(function (r) { return subCov[r.cpId]; });
-      var referenced = considerList.filter(function (r) { return !subCov[r.cpId] && refCov[r.cpId]; });
-      var items = uncovered.map(renderConsiderItem).join("") ||
-        '<p class="compare-empty">검토 제안 항목 없음</p>';
-      var coveredHtml = covered.length
-        ? '<h3 class="subdoc-covered-head"><span class="badge cov-subdoc">✓ 부속서류 반영</span> 부속 서류에서 확인된 항목</h3>' +
-          '<p class="consider-hint">주 계약서엔 없지만 부속 서류에서 매칭 확인됨 — 커버 적정성만 확인하세요.</p>' +
-          covered.map(renderConsiderItem).join("")
-        : "";
-      var referencedHtml = referenced.length
-        ? '<h3 class="refdoc-covered-head"><span class="badge cov-refdoc">◇ 별첨 참조</span> 별첨 약정서로 커버 예정</h3>' +
-          '<p class="consider-hint">본문이 표준 부속서류 체결을 정하고 있음 — 약정서 체결·첨부 여부만 확인하세요.</p>' +
-          referenced.map(renderConsiderItem).join("")
-        : "";
-      detail.innerHTML =
-        '<div class="consider-panel"><h3><span class="badge cov-consider">! 검토 제안</span> 계약서에서 확인되지 않은 항목</h3>' +
-        '<p class="consider-hint">각 항목이 실제로 빠진 것인지(오류) 아니면 해당 없는지 검토하고 의견을 남기세요.</p>' +
-        items + coveredHtml + referencedHtml + "</div>";
-      bindVerdictControls(detail, function () { showClause("consider"); refreshClauseCounts(); renderReport(); });
-      return;
-    }
-    var g = byClause[ci] || { addressed: [], verify: [] };
-    var left = g.addressed.map(function (r) { return renderCompareItem(r, false); }).join("") ||
-      '<p class="compare-empty">이 조항에서 반영으로 짚인 항목 없음</p>';
-    // 필수·권장 먼저, 참고는 뒤에 — 전부 펼침(접기는 클릭 부담이 커서 폐기, 2026-07-29 사용자 피드백).
-    var verifyMain = g.verify.filter(function (r) { var c = _cpById(r.cpId); return c && c.severity !== "참고"; });
-    var verifyRef = g.verify.filter(function (r) { var c = _cpById(r.cpId); return c && c.severity === "참고"; });
-    var right = verifyMain.concat(verifyRef).map(function (r) { return renderCompareItem(r, true); }).join("") ||
-      '<p class="compare-empty">추가 확인 제안 없음</p>';
-    detail.innerHTML =
-      '<div class="clause-compare">' +
-      '<div class="compare-col addressed-col"><h3><span class="badge cov-addressed">✓ 반영</span> 이 조항에서 반영된 검토항목</h3>' + left + "</div>" +
-      '<div class="compare-col verify-col"><h3><span class="badge cov-verify">△ 제안</span> 함께 살펴볼 항목</h3>' + right + "</div>" +
-      "</div>";
-    // 판정 변경 시 이 조항만 다시 그림(활성 상태·코멘트 표시 갱신) + 조항 목록 카운트 갱신.
-    bindVerdictControls(detail, function () { showClause(ci); refreshClauseCounts(); renderReport(); });
-  }
-  document.querySelectorAll(".clause").forEach(function (el) {
-    el.addEventListener("click", function () {
-      document.querySelectorAll(".clause").forEach(function (x) { x.classList.remove("sel"); });
-      el.classList.add("sel");
-      var ci = el.dataset.ci;
-      showClause(ci === "consider" ? "consider" : Number(ci));
-    });
-  });
-  // 조항 목록의 판정 카운트(의견 n) 갱신 — 판정 변경 후 호출.
-  refreshClauseCounts = function () {
-    document.querySelectorAll(".clause").forEach(function (el) {
-      var raw = el.dataset.ci;
-      if (raw === "consider") { // 검토 제안 항목 카운트(필수·의견·부속서류)
-        var cntC = el.querySelector(".cnt");
-        if (cntC) cntC.textContent = considerCountText();
-        return;
-      }
-      var ci = Number(raw);
-      var g = byClause[ci] || { addressed: [], verify: [] };
-      var cntEl = el.querySelector(".cnt");
-      if (cntEl) cntEl.textContent = clauseCountText(ci, g);
-    });
-  };
-}
-var refreshClauseCounts = function () {};
-// 조항의 반영·확인 건수 + 검토의견 건수 텍스트.
-function clauseCountText(ci, g) {
-  var parts = [];
-  if (g.addressed.length) parts.push("반영 " + g.addressed.length);
-  if (g.verify.length) parts.push("확인 " + g.verify.length);
-  var opinions = 0;
-  g.addressed.concat(g.verify).forEach(function (r) {
-    var v = verdictStore[r.cpId];
-    if (v && v.verdict === "검토의견") opinions++;
-  });
-  if (opinions) parts.push("의견 " + opinions);
-  return parts.join(" · ");
+  _clauseGroups = byClause;
+  _considerList = considerList;
+
+  var rowsEl = document.getElementById("clause-rows");
+  rowsEl.innerHTML = state.clauses.map(clauseRowHtml).join("");
+  rowsEl.querySelectorAll(".clause-row").forEach(bindRowControls);
+  renderConsiderBlock();
+  refreshClauseCounts();
 }
 
 /* ---------- 종합 리포트 (긍정-먼저 검토 워크시트) ----------
@@ -3981,24 +4154,26 @@ function renderReport() {
   r.results.forEach(function (res) { if (verdictStore[res.cpId]) activeVerdicts[res.cpId] = verdictStore[res.cpId]; });
   var vsum = Verdict.verdictSummary(activeVerdicts);
 
-  // 판정 진행 — 이번 분석 대상(quiet 제외) 중 판정 찍힌 수
-  var judgeable = 0, judged = 0;
-  r.results.forEach(function (res) {
-    if (res.coverage === "quiet" || !_cpById(res.cpId)) return;
-    judgeable++;
-    var v = verdictStore[res.cpId];
-    if (v && v.verdict) judged++;
-  });
+  // 판정 진행 — 이번 분석 대상(quiet 제외) 중 판정 찍힌 수(조항별 검토 헤더와 공용 헬퍼)
+  var prog = verdictProgress();
+  var judgeable = prog.judgeable, judged = prog.judged;
 
-  // 검토의견 개진 목록(2번 섹션·종합 검토의견 인용 공용)
+  // 검토의견 개진 목록(2번 섹션·종합 검토의견 인용 공용). ci: 딥링크용 조항 index(부재 알람은 consider)
   var flagged = [];
   r.results.forEach(function (res) {
     var v = verdictStore[res.cpId];
     if (v && v.verdict === "검토의견") {
       var cp = _cpById(res.cpId);
-      if (cp) flagged.push({ cp: cp, comment: v.comment, loc: res.best ? _clauseHeading(res.best.clauseIndex) : "" });
+      if (cp) flagged.push({ cp: cp, comment: v.comment,
+        loc: res.best ? _clauseHeading(res.best.clauseIndex) : "",
+        ci: res.best && res.coverage !== "consider" ? res.best.clauseIndex : "consider" });
     }
   });
+
+  // 리포트 딥링크(§2.3-3) — 항목 클릭 시 조항별 검토 탭의 해당 조항 행으로 점프.
+  function _gotoBtn(ci) {
+    return ' <button class="rpt-goto" data-ci="' + esc(String(ci)) + '">조항 보기 →</button>';
+  }
 
   var right = '<div class="report-summary"><h3>종합 리포트</h3>';
 
@@ -4047,7 +4222,7 @@ function renderReport() {
 
   function _mustItem(it) {
     return '<div class="report-item consider-item"><div class="ri-head"><span class="sev sev-필수">필수</span>' +
-      '<span class="ri-q">' + labelQ(it.cp) + "</span></div>" +
+      '<span class="ri-q">' + labelQ(it.cp) + "</span>" + _gotoBtn("consider") + "</div>" +
       (it.cp.severity_basis ? '<p class="ri-why">' + esc(it.cp.severity_basis) + "</p>" : "") + "</div>";
   }
   // 1. 보완 필요(core) — 계약 본질상 필요한 필수인데 계약서에서 미확인. 항상 최상단, 0이면 한 줄 축약.
@@ -4072,7 +4247,7 @@ function renderReport() {
   right += flagged.map(function (o) {
     return '<div class="opinion-item"><div class="ri-head"><span class="sev sev-' + o.cp.severity + '">' +
       esc(o.cp.severity) + '</span><span class="ri-q">' + labelQ(o.cp) + "</span></div>" +
-      (o.loc ? '<p class="ri-loc">' + esc(o.loc) + "</p>" : "") +
+      (o.loc ? '<p class="ri-loc">' + esc(o.loc) + _gotoBtn(o.ci) + "</p>" : '<p class="ri-loc">' + _gotoBtn(o.ci).trim() + "</p>") +
       (o.comment ? '<p class="oi-comment">' + esc(o.comment) + "</p>" : "") + "</div>";
   }).join("") || '<p class="report-none">아직 개진한 검토의견 없음.</p>';
   right += "</section>";
@@ -4084,11 +4259,13 @@ function renderReport() {
   right += verifyMain.map(function (it) {
     return '<div class="report-item verify-item"><span class="sev sev-' + it.cp.severity + '">' + esc(it.cp.severity) +
       '</span> <span class="ri-q">' + labelQ(it.cp) + "</span>" +
-      (it.res.best ? ' <span class="ri-loc-inline">(' + esc(_clauseHeading(it.res.best.clauseIndex)) + ")</span>" : "") +
+      (it.res.best ? ' <span class="ri-loc-inline">(' + esc(_clauseHeading(it.res.best.clauseIndex)) + ")</span>" +
+        _gotoBtn(it.res.best.clauseIndex) : "") +
       evidenceLineHtml(it.cp, it.res) + verdictControlHtml(it.cp.id) + "</div>";
   }).join("");
   right += recConsider.map(function (it) {
     return '<div class="report-item consider-item"><span class="sev sev-권장">권장</span> <span class="ri-q">' + labelQ(it.cp) + "</span>" +
+      _gotoBtn("consider") +
       (it.cp.severity_basis ? '<p class="ri-why">' + esc(it.cp.severity_basis) + "</p>" : "") +
       verdictControlHtml(it.cp.id) + "</div>";
   }).join("");
@@ -4186,6 +4363,10 @@ function renderReport() {
       if (sec.tagName === "DETAILS") sec.open = true;
       sec.scrollIntoView({ behavior: "smooth", block: "start" });
     });
+  });
+  // 리포트 딥링크(§2.3-3): "조항 보기 →" — 조항별 검토 탭의 해당 행(또는 부재 알람 블록)으로 점프.
+  body.querySelectorAll(".rpt-goto").forEach(function (btn) {
+    btn.addEventListener("click", function () { gotoClause(btn.getAttribute("data-ci")); });
   });
   // 제안 섹션 판정(P1): 리포트에서 바로 판정 — 저장 후 리포트(타일 수치 포함)·다른 뷰 갱신.
   bindVerdictControls(body, function () { renderReport(); renderClauses(); renderSuggestions(); });

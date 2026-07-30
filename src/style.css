@@ -126,31 +126,80 @@ details.law pre { white-space: pre-wrap; background: #f8f9fc; padding: 10px;
 td.empty { text-align: center; color: #889; padding: 24px; }
 
 .empty-note { color: #667; }
-.split { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-.col { max-height: 80vh; overflow-y: auto; }
-.clause { background: #fff; border: 1px solid #e0e2ee; border-radius: 8px;
-          padding: 12px; margin-bottom: 8px; cursor: pointer; }
-.clause.sel { border-color: #2456e6; box-shadow: 0 0 0 2px #2456e633; }
-.clause .cnt { float: right; font-size: 12px; color: #2456e6; }
-.clause pre { white-space: pre-wrap; font: 14px/1.7 inherit; margin: 8px 0 0; }
 .consider-item { border-left: 4px solid #e0a83e; }
 
-/* 조항별 좌우대비 */
-.clause-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-.compare-col { background: #fff; border: 1px solid #e0e2ee; border-radius: 8px; padding: 12px 14px; }
-.compare-col h3 { margin: 0 0 12px; font-size: 15px; display: flex; align-items: center; gap: 7px; }
-.addressed-col { border-top: 3px solid #1e8449; }
-.verify-col { border-top: 3px solid #1a6f96; }
+/* ---------- 조항별 검토(P2) — 삼단 연속 스크롤 ---------- */
+/* 상단 고정 헤더: 진행률 · 검토제안 앵커 · 일괄 판정 드롭다운 · 내보내기/불러오기 */
+.clause-header { position: sticky; top: 0; z-index: 10; display: flex; align-items: center;
+  gap: 10px; flex-wrap: wrap; padding: 10px 0; margin-bottom: 10px;
+  background: #f5f6fa; border-bottom: 1px solid #e0e2ee; }
+.clause-progress { font-weight: 600; font-size: 14px; margin-right: auto; }
+.consider-anchor { color: #9a6a10; border-color: #e0a83e; background: #fffdf7; }
+.consider-anchor:hover { background: #fdf3df; }
+/* 일괄 판정 드롭다운 — 절차상 후행 도구라 접어서 1차 노출 축소 */
+.bulk-dropdown { position: relative; }
+.bulk-dropdown > summary { cursor: pointer; list-style: none; border: 1px solid #ccd;
+  background: #fff; border-radius: 6px; padding: 5px 10px; font-size: 12px; }
+.bulk-dropdown > summary::-webkit-details-marker { display: none; }
+.bulk-dropdown[open] > summary { background: #f3f5f9; }
+.bulk-dropdown .bulk-menu { position: absolute; top: calc(100% + 6px); right: 0; z-index: 20;
+  display: flex; flex-direction: column; align-items: stretch; gap: 8px; width: 320px;
+  background: #fff; border: 1px solid #d5deec; border-radius: 8px; padding: 12px;
+  box-shadow: 0 6px 18px #1a1a2e22; }
+
+/* 컬럼 안내 행 — 행 grid와 동일 컬럼 폭 */
+.clause-cols-head { display: grid; grid-template-columns: 2fr 1.2fr 1.2fr; gap: 0;
+  font-size: 12px; color: #667; font-weight: 600; padding: 0 2px 6px; }
+.clause-cols-head span { padding: 0 14px; }
+
+/* 조항 행 — grid 3셀(① 원문 ② 검토된 내용 ③ 제안 사항). 한 스크롤로 정렬 동기화를 구조적으로 보장.
+   content-visibility: 오프스크린 행의 렌더 비용 제거(§4.2) — 외부 의존성 0. */
+.clause-row { display: grid; grid-template-columns: 2fr 1.2fr 1.2fr;
+  background: #fff; border: 1px solid #e0e2ee; border-left: 4px solid transparent;
+  border-radius: 8px; margin-bottom: 10px;
+  content-visibility: auto; contain-intrinsic-size: auto 240px;
+  scroll-margin-top: 64px; /* 고정 헤더에 가리지 않게 — 딥링크·앵커 점프용 */ }
+.clause-row .cr-cell { padding: 12px 14px; min-width: 0; }
+.clause-row .cr-cell + .cr-cell { border-left: 1px solid #eef0f5; }
+.cr-src strong { font-size: 15px; }
+.cr-src pre { white-space: pre-wrap; font: 14px/1.7 inherit; margin: 8px 0 0; }
+.cr-empty { color: #bbc; margin: 2px 0; }
+/* 검토항목 전무 세그먼트((전문)·표제부·서명란) — 접지 않고 본문을 흐리게(시각적 강등) */
+.row-noitems .cr-src { color: #99a; }
+.row-noitems .cr-src strong { color: #889; font-weight: 500; }
+/* 판정 상태 → 행 좌측 경계색(§4.3) */
+.clause-row.row-vd-done { border-left-color: #1f9d55; }
+.clause-row.row-vd-comment { border-left-color: #d98a1f; }
+/* 리포트 딥링크 착지 플래시 */
+.row-flash { animation: rowflash 1.6s ease-out; }
+@keyframes rowflash { 0% { background: #fff3cd; } 100% { background: #fff; } }
+#consider-block.row-flash { animation: none; outline: 2px solid #e0a83e; outline-offset: 3px; }
+#consider-block { scroll-margin-top: 64px; margin-top: 16px; }
+.consider-sub { font-size: 12px; color: #9a6a10; font-weight: normal; margin-left: 8px; }
+
+/* ③ 제안 사항 카드 — 검토의견 기재분 압축 뷰 */
+.opinion-card { border-bottom: 1px solid #eef0f5; padding: 12px 0; border-left: 3px solid #d98a1f;
+  padding-left: 10px; margin-bottom: 4px; background: #fffaf2; border-radius: 0 6px 6px 0; }
+.opinion-card:last-child { border-bottom: none; }
+.opinion-card .ci-head { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
+.opinion-card .oc-comment { font-size: 13px; color: #7a4d0a; margin: 5px 0 2px; }
+
+@media (max-width: 900px) {
+  .clause-cols-head { display: none; }
+  .clause-row { grid-template-columns: 1fr; }
+  .clause-row .cr-cell + .cr-cell { border-left: none; border-top: 1px solid #eef0f5; }
+}
+
+/* 검토항목 카드(② 컬럼·제안사항 패널 공용) */
 .compare-item { border-bottom: 1px solid #eef0f5; padding: 14px 0; }
 .compare-item:last-child { border-bottom: none; }
-.compare-item .ci-head { display: flex; align-items: center; gap: 8px; }
+.compare-item .ci-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .compare-item .ci-id { font-size: 13px; color: #667; font-weight: 600; }
 .compare-item .ci-q { margin: 7px 0; font-size: 15px; font-weight: 600; line-height: 1.55; }
 .compare-item .ci-reason { margin: 4px 0; font-size: 13px; color: #556; line-height: 1.5; }
 .compare-item .ci-basis { margin: 4px 0; font-size: 12.5px; color: #778; line-height: 1.5; }
 .compare-item .ci-src { margin: 6px 0 0; font-size: 13px; }
 .compare-empty { color: #99a; font-size: 13px; margin: 6px 0; }
-@media (max-width: 720px) { .clause-compare { grid-template-columns: 1fr; } }
 .disclaimer { text-align: center; font-size: 12px; color: #667; padding: 16px;
               border-top: 1px solid #dde; margin-top: 30px; }
 
@@ -263,8 +312,7 @@ td.empty { text-align: center; color: #889; padding: 24px; }
 .report-verdict-summary { display: flex; gap: 10px; margin: 8px 0; font-size: 13px; }
 .opinion-item { border-left: 3px solid #d98a1f; padding: 6px 10px; margin: 6px 0; background: #fffaf2; }
 .opinion-item .oi-comment { font-size: 13px; color: #7a4d0a; margin: 3px 0 0; }
-.verdict-bar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 10px; padding: 8px 0; border-bottom: 1px solid #eef0f5; }
-.verdict-bar-label { font-size: 12px; color: #667; margin-right: auto; }
+.verdict-bar-label { font-size: 12px; color: #667; }
 .ghost { border: 1px solid #ccd; background: #fff; border-radius: 6px; padding: 5px 10px; cursor: pointer; font-size: 12px; }
 .ghost:hover { background: #f3f5f9; }
 .screening-hint { font-size: 12px; color: #667; margin: 8px 0 4px; }
@@ -291,9 +339,7 @@ td.empty { text-align: center; color: #889; padding: 24px; }
 .report-opinion .ro-edit { width: 100%; min-height: 100px; font: 14px/1.6 inherit; }
 .report-opinion .ro-edit-actions { display: flex; gap: 8px; margin-top: 8px; }
 
-/* 조항별 보기 — 검토 제안 전용 진입·패널 */
-.clause-consider { border-left: 4px solid #e0a83e; background: #fffdf7; }
-.clause-consider strong { color: #9a6a10; }
+/* 부재 알람(검토 제안) 전용 블록 */
 .consider-panel { background: #fff; border: 1px solid #e0e2ee; border-radius: 8px; padding: 12px 14px; border-top: 3px solid #e0a83e; }
 .consider-panel h3 { margin: 0 0 8px; font-size: 13px; display: flex; align-items: center; gap: 6px; }
 .consider-hint { font-size: 12px; color: #778; margin: 0 0 12px; }
@@ -350,8 +396,10 @@ td.empty { text-align: center; color: #889; padding: 24px; }
 .covered-item { border-left: 3px solid #1f9d55; padding-left: 8px; }
 .covered-src { font-size: 12px; color: #1c7a44; margin-left: 8px; }
 
-/* 지식 루프(#4) — 판정 분포·추천 코멘트 */
+/* 지식 루프(#4) — 판정 분포·추천 코멘트. P2: 1줄 요약으로 접힘(카드 높이 절약) */
 .loop-info { margin-top: 8px; padding-top: 8px; border-top: 1px dashed #e0e4ee; font-size: 12.5px; }
+.loop-fold > summary { cursor: pointer; color: #889; font-size: 12px; }
+.loop-fold[open] > summary { color: #667; margin-bottom: 4px; }
 .loop-dist { color: #667; }
 .loop-dist .vd-badge { margin-left: 4px; }
 .loop-comments { margin-top: 6px; color: #667; display: flex; flex-wrap: wrap; gap: 5px; align-items: center; }
@@ -404,6 +452,7 @@ td.empty { text-align: center; color: #889; padding: 24px; }
 .gs-change { border-left: 4px solid #b9770e; } .gs-change .gc-status { background: #fef5e7; color: #b9770e; }
 .gs-fail { border-left: 4px solid #c0392b; } .gs-fail .gc-status { background: #fdecea; color: #c0392b; }
 
-/* 일괄 판정(통과계약 모드) */
-.bulk-bar { background: #f7f9fc; border: 1px dashed #d5deec; border-radius: 8px; padding: 8px 12px; margin-top: 6px; }
-.bulk-bar .verdict-bar-label { color: #667; font-size: 12.5px; }
+/* 리포트 딥링크(§2.3-3) — "조항 보기 →" 텍스트 링크형 버튼 */
+.rpt-goto { border: none; background: none; color: #2456e6; font-size: 12px;
+  cursor: pointer; padding: 0 2px; white-space: nowrap; }
+.rpt-goto:hover { text-decoration: underline; }
