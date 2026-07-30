@@ -562,7 +562,7 @@ function renderScreening() {
       .map(function (m) { return m.id; });
     chips = modList.map(function (m) {
       if (m.always_on)
-        return '<span class="module-chip on">' + esc(m.name) + " (기본)</span>";
+        return '<span class="module-chip fixed">' + esc(m.name) + " (기본)</span>";
       var on = state.activeModules.indexOf(m.id) !== -1;
       var sug = suggested.on.indexOf(m.id) !== -1;
       var askMode = suggested.ask.indexOf(m.id) !== -1;
@@ -580,7 +580,7 @@ function renderScreening() {
   }
   // 표준 부속서류 사용 체크(#B): 본문 참조·파일 업로드 감지 시 기본 ON, 항상 수동 전환 가능.
   var subRows = ((CR.common.meta || {}).standard_subdocs || []).map(function (d) {
-    return '<label class="subdoc-use"><input type="checkbox" class="subdoc-use-cb" data-sdid="' + esc(d.id) + '"' +
+    return '<label class="subdoc-use"><input type="checkbox" class="subdoc-use-cb" data-sdid="' + esc(d.id) + '" name="subdoc-use-' + esc(d.id) + '"' +
       (subdocInUse(d) ? " checked" : "") + "> 『" + esc(d.title) + "』(표준서식) 체결 사용" +
       ' <span class="subdoc-use-hint">체크 시 약정서가 다루는 항목을 별첨 참조로 분류하고 미판정 항목에 이상없음을 자동 기재</span></label>';
   }).join("");
@@ -907,7 +907,7 @@ function verdictControlHtml(cpId, skipLoop) {
   var ph = cur.verdict === "해당없음" ? "해당 없는 이유(선택)"
     : cur.verdict === "이상없음" ? "확인 메모(선택)" : "검토의견 메모";
   var comment = '<input class="vd-note' + (showComment ? " show" : "") + '" data-vcp="' + esc(cpId) +
-    '" placeholder="' + esc(ph) + '" value="' + esc(cur.comment || "") + '">';
+    '" name="vd-note-' + esc(cpId) + '" aria-label="' + esc(ph) + '" placeholder="' + esc(ph) + '" value="' + esc(cur.comment || "") + '">';
   return '<div class="verdict-ctl">' + btns + comment + "</div>" + (skipLoop ? "" : loopInfoHtml(cpId));
 }
 // 조항별 보기·리포트 공용 — 판정 버튼 클릭·코멘트 저장 바인딩. reRender: 저장 후 호출.
@@ -1876,7 +1876,7 @@ function renderVerifyCard(it) {
         ["확인", "보류", "수정필요"].map(function (d) {
           return '<button class="dec-btn' + (st === d ? " active dec-" + d : "") + '" data-dec="' + d + '">' + DEC_LABEL[d] + "</button>";
         }).join("") +
-        '<input class="dec-note" data-key="' + esc(key) + '" placeholder="수정 필요 메모" value="' +
+        '<input class="dec-note" data-key="' + esc(key) + '" name="dec-note-' + esc(key) + '" aria-label="수정 필요 메모" placeholder="수정 필요 메모" value="' +
         esc((verifyDecisions[key] && verifyDecisions[key].note) || "") + '"></div>';
     }
     h += "</div>";
