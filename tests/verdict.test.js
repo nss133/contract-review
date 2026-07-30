@@ -225,3 +225,31 @@ test("토글 왕복(#B): ON 기재 → OFF 해제 → 원상 복귀", () => {
   assert.deepStrictEqual(off.store, store);                     // 사람 판정만 남아 원상 복귀
 });
 
+
+// ── composeOpinion 비교 모드(재검토) — compare 옵션 인자 ─────────────
+test("composeOpinion: compare 지정 시 전년 대비 요지 문장이 1문장 뒤에 붙는다", () => {
+  const t = V.composeOpinion({
+    name: "IT용역계약서", clauseCount: 20, typeName: "조달",
+    mustCoreLabels: [], opinions: [], formalWarnTitles: [],
+    compare: { date: "2025-07-30", changed: 4, added: 2, removed: 1 }
+  });
+  assert.ok(t.indexOf("전년(2025-07-30) 검토 대비 변경 4·신설 2·삭제 1개 조항이 달라짐.") !== -1, t);
+  // 1문장(전반 상태) 바로 뒤에 위치
+  assert.ok(t.indexOf("반영되어 있음. 전년(") !== -1, t);
+});
+
+test("composeOpinion: compare 변동 0건이면 '조항 구성 변동 없음' 문장", () => {
+  const t = V.composeOpinion({
+    name: "계약서", clauseCount: 10, typeName: null,
+    compare: { date: "2025-07-30", changed: 0, added: 0, removed: 0 }
+  });
+  assert.ok(t.indexOf("전년(2025-07-30) 검토 대비 조항 구성 변동 없음.") !== -1, t);
+});
+
+test("composeOpinion: compare 미지정이면 기존 출력 불변(무영향)", () => {
+  const t = V.composeOpinion({
+    name: "업무위탁계약서", clauseCount: 24, typeName: "조달",
+    mustCoreLabels: [], opinions: [], formalWarnTitles: []
+  });
+  assert.strictEqual(t.indexOf("전년"), -1);
+});

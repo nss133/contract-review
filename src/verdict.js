@@ -96,7 +96,8 @@ var Verdict = (function () {
   // 사용자 코멘트 인용부만 '…'(U+2018/2019)로 감쌈 — 렌더 측이 이 구간을 형광 강조.
   // 라벨·제목은 「…」로 구분(강조 대상 아님).
   // data: { name, clauseCount, typeName, mustCoreLabels: [label...],
-  //         opinions: [{label, severity, loc, comment}...], formalWarnTitles: [title...] }
+  //         opinions: [{label, severity, loc, comment}...], formalWarnTitles: [title...],
+  //         compare: {date, changed, added, removed} } — compare는 비교 모드 시에만(옵션, 기존 호출 무영향)
   function composeOpinion(d) {
     d = d || {};
     var SEV = { "필수": 0, "권장": 1, "참고": 2 };
@@ -108,6 +109,16 @@ var Verdict = (function () {
       (mustLabels.length
         ? "필수 확인사항 중 " + mustLabels.length + "건이 계약서에서 확인되지 않음."
         : "필수 확인사항은 관련 조항에 반영되어 있음."));
+    // 비교 모드(재검토): 전년 대비 요지 1문장 — 정렬은 보조 도구이므로 "확인됨" 단정 대신 기술식 유지.
+    if (d.compare) {
+      var c = d.compare;
+      var diffs = [];
+      if (c.changed) diffs.push("변경 " + c.changed);
+      if (c.added) diffs.push("신설 " + c.added);
+      if (c.removed) diffs.push("삭제 " + c.removed);
+      sents.push("전년(" + (c.date || "일자 미상") + ") 검토 대비 " +
+        (diffs.length ? diffs.join("·") + "개 조항이 달라짐." : "조항 구성 변동 없음."));
+    }
     // 2문장~: 검토의견 코멘트 인용 — 필수·권장 순 최대 3건 + "외 N건"
     var ops = (d.opinions || []).slice().sort(function (a, b) {
       var ra = SEV[a.severity]; if (ra === undefined) ra = 3;
