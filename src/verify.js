@@ -43,13 +43,33 @@ var Verify = (function () {
     return { total: total, confirmed: confirmed, needsfix: needsfix, pending: pending };
   }
 
+  // 최근 검수일 — decisions에 기록된 date 중 최댓값(문자열 비교로 충분: YYYY-MM-DD 고정 포맷).
+  function lastReviewDate(decisions) {
+    var last = "";
+    Object.keys(decisions || {}).forEach(function (k) {
+      var d = decisions[k] && decisions[k].date;
+      if (d && d > last) last = d;
+    });
+    return last || null;
+  }
+
+  // practice(법령 근거 없음) 항목 수 — 검수 대상 아님, 기본 목록에서 제외하고 집계로만 노출(V2).
+  function practiceCount(items, filter) {
+    var typeId = (filter && filter.typeId) || "";
+    return items.filter(function (it) {
+      if (typeId && it.typeId !== typeId) return false;
+      return it.sources.length === 0;
+    }).length;
+  }
+
   function filterItems(items, decisions, filter) {
     var mode = (filter && filter.mode) || "all";
     var typeId = (filter && filter.typeId) || "";
     return items.filter(function (it) {
       if (typeId && it.typeId !== typeId) return false;
+      if (mode === "practice") return it.sources.length === 0; // 전용 필터로만 노출(V2)
+      if (it.sources.length === 0) return false; // practice는 전용 필터에서만
       if (mode === "all") return true;
-      if (it.sources.length === 0) return false; // practice는 all에서만
       return it.sources.some(function (s) {
         var st = srcState(it, s, decisions);
         if (mode === "unreviewed") return st === "미검수";
@@ -77,7 +97,8 @@ var Verify = (function () {
   }
 
   return { sourceKey: sourceKey, buildVerifyItems: buildVerifyItems, srcState: srcState,
-    verifyProgress: verifyProgress, filterItems: filterItems, findHighlight: findHighlight, exportJson: exportJson };
+    verifyProgress: verifyProgress, filterItems: filterItems, findHighlight: findHighlight, exportJson: exportJson,
+    lastReviewDate: lastReviewDate, practiceCount: practiceCount };
 })();
 
 if (typeof module !== "undefined") module.exports = Verify;

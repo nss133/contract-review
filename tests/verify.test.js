@@ -69,3 +69,47 @@ test("exportJson: 판정 객체를 JSON 문자열로", () => {
   const s = V.exportJson({ "CMN-12#0": { decision: "확인", date: "2026-07-09" } });
   assert.strictEqual(JSON.parse(s)["CMN-12#0"].decision, "확인");
 });
+
+// --- P3: 검수 탭 기본 뷰 정비(V1~V4) ---
+
+test("filterItems: practice 모드는 practice 항목만 노출(V2 전용 필터)", () => {
+  const items = V.buildVerifyItems(CR);
+  const shown = V.filterItems(items, {}, { mode: "practice" });
+  assert.deepStrictEqual(shown.map((i) => i.checkId), ["CMN-99"]);
+});
+
+test("filterItems: unreviewed/needsfix/confirmed 모드는 practice 항목을 제외한다(V2)", () => {
+  const items = V.buildVerifyItems(CR);
+  ["unreviewed", "needsfix", "confirmed"].forEach((mode) => {
+    const shown = V.filterItems(items, {}, { mode: mode });
+    assert.ok(!shown.some((i) => i.checkId === "CMN-99"), mode + " 모드에 practice 혼입");
+  });
+});
+
+test("practiceCount: practice 항목 수 집계(V2 한 줄 요약용)", () => {
+  const items = V.buildVerifyItems(CR);
+  assert.strictEqual(V.practiceCount(items, {}), 1);
+  assert.strictEqual(V.practiceCount(items, { typeId: "nda" }), 0); // NDA엔 practice 없음
+});
+
+test("filterItems: unreviewed 모드에서 미검수 0이면 완료 상태(V1)", () => {
+  const items = V.buildVerifyItems(CR);
+  const decisions = { "CMN-12#0": { decision: "확인", date: "2026-07-20" }, "NDA-15#0": { decision: "확인", date: "2026-07-21" } };
+  const shown = V.filterItems(items, decisions, { mode: "unreviewed" });
+  assert.strictEqual(shown.length, 0);
+  const p = V.verifyProgress(items, decisions);
+  assert.strictEqual(p.pending, 0);
+});
+
+test("lastReviewDate: decisions 중 최근 날짜 반환(V1 완료 요약용)", () => {
+  const decisions = {
+    "A#0": { decision: "확인", date: "2026-07-10" },
+    "B#0": { decision: "확인", date: "2026-07-25" },
+    "C#0": { decision: "수정필요", date: "2026-07-15" },
+  };
+  assert.strictEqual(V.lastReviewDate(decisions), "2026-07-25");
+});
+
+test("lastReviewDate: decisions 없으면 null", () => {
+  assert.strictEqual(V.lastReviewDate({}), null);
+});

@@ -85,6 +85,25 @@ var Goldset = (function () {
     };
   }
 
+  // G2: "변화" 케이스의 새 기준 갱신 — 관측(observed) 결과를 새 expect로 삼아 케이스를 재생성.
+  // text·id·desc·context(축적 당시 메타)는 원본 유지, expect만 현재 관측값으로 교체.
+  function rebuildCase(caseObj, observed) {
+    return {
+      format: caseObj.format,
+      id: caseObj.id,
+      desc: caseObj.desc,
+      created: caseObj.created,
+      text: caseObj.text,
+      expect: {
+        detected: observed.detected || null,
+        activeModules: (observed.activeModules || []).slice().sort(),
+        consider: (observed.consider || []).slice().sort(),
+        addressed: (observed.addressed || []).slice().sort()
+      },
+      context: caseObj.context
+    };
+  }
+
   // 반출용 요약 텍스트 — 계약 본문·조항 문언 포함 금지(check id·유형명·카운트만).
   function summaryText(diffs, meta) {
     var L = [];
@@ -109,7 +128,7 @@ var Goldset = (function () {
     return L.join("\n");
   }
 
-  return { buildCase: buildCase, runCase: runCase, diffCase: diffCase, summaryText: summaryText };
+  return { buildCase: buildCase, runCase: runCase, diffCase: diffCase, rebuildCase: rebuildCase, summaryText: summaryText };
 })();
 
 if (typeof module !== "undefined") module.exports = Goldset;

@@ -232,12 +232,27 @@ function renderDetail(cp) {
     h += "</div>";
   }
   if (cp.note) h += '<p class="note">비고: ' + esc(cp.note) + "</p>";
+  // §5: 표 상세에도 판정 컨트롤 추가 — 체크리스트에서 보다가 탭 이동 없이 바로 판정 가능하게.
+  if (state.result) h += verdictControlHtml(cp.id);
   return h || "<p>상세 정보 없음</p>";
+}
+
+// 체크리스트 행 펼침의 판정 컨트롤 재바인딩(판정 변경 시 그 행만 갱신 — 표 전체 재렌더 없이).
+function _rebindChecklistDetail(tr) {
+  var detail = tr.nextElementSibling;
+  if (!detail) return;
+  var cp = findCheck(tr.dataset.id);
+  if (!cp) return;
+  var td = detail.querySelector("td");
+  td.innerHTML = renderDetail(cp);
+  bindVerdictControls(td, function () { _rebindChecklistDetail(tr); });
 }
 
 function bindRowClicks() {
   document.querySelectorAll("#checklist-body tr.cp-row").forEach(function (tr) {
-    tr.addEventListener("click", function () {
+    tr.addEventListener("click", function (e) {
+      // 판정 버튼·코멘트 입력 클릭은 행 접기/펼치기를 트리거하지 않음.
+      if (e.target.closest && e.target.closest(".verdict-ctl")) return;
       var detail = tr.nextElementSibling;
       if (!detail || !detail.classList.contains("cp-detail")) return;
       var willOpen = detail.hidden;
@@ -248,6 +263,7 @@ function bindRowClicks() {
         if (cp) {
           detail.querySelector("td").innerHTML = renderDetail(cp);
           detail.dataset.filled = "1";
+          bindVerdictControls(detail.querySelector("td"), function () { _rebindChecklistDetail(tr); });
         }
       }
     });
@@ -960,11 +976,23 @@ function exportGoldsetCase() {
 // 골드셋 페인 — 케이스 파일 복수 로드 → 일괄 채점 → 결과 표 + 반출 요약.
 var _goldsetCases = [];
 var _goldsetDiffs = [];
+var _goldsetObserved = []; // diffs와 같은 인덱스 — G2 재저장(새 기준 갱신)에 필요한 관측값 보관
+function _goldsetSyncEmptyState() {
+  var empty = document.getElementById("goldset-empty");
+  if (empty) empty.hidden = !!_goldsetCases.length;
+}
 function initGoldsetPane() {
   var files = document.getElementById("goldset-files");
   var runBtn = document.getElementById("goldset-run");
   var expBtn = document.getElementById("goldset-export");
   var status = document.getElementById("goldset-status");
+  var gotoReport = document.getElementById("goldset-goto-report");
+  if (gotoReport) {
+    gotoReport.addEventListener("click", function () {
+      document.querySelector('.tab[data-tab="report"]').click();
+    });
+  }
+  _goldsetSyncEmptyState();
   if (!files) return;
   files.addEventListener("change", function () {
     var list = Array.prototype.slice.call(files.files || []);
@@ -981,6 +1009,7 @@ function initGoldsetPane() {
         if (--pending === 0) {
           status.textContent = "케이스 " + _goldsetCases.length + "건 로드" + (bad ? " (형식 오류 " + bad + "건 제외)" : "");
           runBtn.disabled = !_goldsetCases.length;
+          _goldsetSyncEmptyState();
         }
       };
       reader.readAsText(f);
@@ -988,9 +1017,8 @@ function initGoldsetPane() {
   });
   runBtn.addEventListener("click", function () {
     var env = _goldsetEnv();
-    _goldsetDiffs = _goldsetCases.map(function (c) {
-      return Goldset.diffCase(c, Goldset.runCase(c, env));
-    });
+    _goldsetObserved = _goldsetCases.map(function (c) { return Goldset.runCase(c, env); });
+    _goldsetDiffs = _goldsetCases.map(function (c, i) { return Goldset.diffCase(c, _goldsetObserved[i]); });
     renderGoldsetResults();
     expBtn.disabled = false;
   });
@@ -1005,6 +1033,14 @@ function initGoldsetPane() {
     a.click(); URL.revokeObjectURL(url);
   });
 }
+// G2: "변화" 케이스의 관측 결과를 새 기준으로 저장(케이스 JSON 재생성 다운로드).
+function _downloadGoldsetCase(caseObj) {
+  var blob = new Blob([JSON.stringify(caseObj, null, 2)], { type: "application/json" });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement("a");
+  a.href = url; a.download = "goldset_" + caseObj.id + "_rebaseline_" + verdictToday() + ".json";
+  a.click(); URL.revokeObjectURL(url);
+}
 function renderGoldsetResults() {
   var box = document.getElementById("goldset-results");
   var pass = _goldsetDiffs.filter(function (d) { return d.status === "통과"; }).length;
@@ -1013,7 +1049,7 @@ function renderGoldsetResults() {
   var h = '<p class="goldset-sum">통과 <strong>' + pass + "</strong> · 변화 <strong>" + chg +
     "</strong> · 실패 <strong>" + fail + "</strong> / 총 " + _goldsetDiffs.length +
     ' <span class="report-actions-note">변화=지식 진화로 알람이 달라진 것일 수 있음 — 내용 확인 후 재저장하면 기준 갱신</span></p>';
-  h += _goldsetDiffs.map(function (d) {
+  h += _goldsetDiffs.map(function (d, i) {
     var cls = d.status === "통과" ? "gs-pass" : d.status === "변화" ? "gs-change" : "gs-fail";
     var rows = "";
     if (!d.detectOk) rows += '<li>유형감지: 기대 <strong>' + esc(d.expectedType || "미확정") + "</strong> ≠ 실제 <strong>" + esc(d.observedType || "미확정") + "</strong></li>";
@@ -1021,11 +1057,20 @@ function renderGoldsetResults() {
     rows += li("모듈 신규활성", d.modules.added) + li("모듈 비활성화", d.modules.removed) +
       li("부재알람 신규", d.consider.added) + li("부재알람 사라짐", d.consider.removed) +
       li("반영 신규", d.addressed.added) + li("반영 사라짐", d.addressed.removed);
+    var rebaseBtn = d.status === "변화"
+      ? '<button type="button" class="ghost gs-rebase" data-gi="' + i + '">이 결과를 새 기준으로 저장</button>' : "";
     return '<div class="goldset-case ' + cls + '"><div class="gc-head"><span class="gc-status">' + d.status + "</span> " +
-      esc(d.id) + (d.desc ? ' <span class="gc-desc">' + esc(d.desc) + "</span>" : "") + "</div>" +
+      esc(d.id) + (d.desc ? ' <span class="gc-desc">' + esc(d.desc) + "</span>" : "") + rebaseBtn + "</div>" +
       (rows ? "<ul>" + rows + "</ul>" : "") + "</div>";
   }).join("");
   box.innerHTML = h;
+  box.querySelectorAll(".gs-rebase").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var i = Number(btn.getAttribute("data-gi"));
+      var rebuilt = Goldset.rebuildCase(_goldsetCases[i], _goldsetObserved[i]);
+      _downloadGoldsetCase(rebuilt);
+    });
+  });
 }
 initGoldsetPane();
 
@@ -1745,8 +1790,12 @@ function initVerify() {
   var types = [{ id: "", name: "전체 유형" }];
   if (CR.common.meta) types.push({ id: "common", name: CR.common.meta.type_name || "공통" });
   CR.types.forEach(function (t) { types.push({ id: t.meta.type_id, name: t.meta.type_name }); });
+  // V4: 유형별 미검수 카운트를 옵션 라벨에 병기 — 유형 필터가 검토 맥락과 무관하게 초기화돼도
+  // "이 유형에 아직 볼 게 있는지"가 라벨만으로 보이게.
   tsel.innerHTML = types.map(function (t) {
-    return '<option value="' + esc(t.id) + '">' + esc(t.name) + "</option>";
+    var scoped = t.id ? verifyItems.filter(function (it) { return it.typeId === t.id; }) : verifyItems;
+    var cnt = Verify.verifyProgress(scoped, verifyDecisions).pending;
+    return '<option value="' + esc(t.id) + '">' + esc(t.name) + (cnt ? " (미검수 " + cnt + ")" : "") + "</option>";
   }).join("");
   tsel.addEventListener("change", renderVerify);
   document.getElementById("verify-filter").addEventListener("change", renderVerify);
@@ -1757,13 +1806,47 @@ function initVerify() {
 var SEV_CLS = { "필수": "sev-필수", "권장": "sev-권장", "참고": "sev-참고" };
 var DEC_LABEL = { "확인": "확인", "수정필요": "수정 필요", "보류": "보류" };
 
+// 진행 바(V3): 숫자가 곧 필터 — 클릭하면 해당 상태로 즉시 전환.
+function verifyProgressHtml(p) {
+  function seg(mode, label, n) {
+    return '<button type="button" class="verify-prog-seg" data-vmode="' + mode + '">' + label + " " + n + "</button>";
+  }
+  return "statute 근거 " + p.total + "개 · " +
+    seg("confirmed", "확인", p.confirmed) + " / " +
+    seg("needsfix", "수정필요", p.needsfix) + " / " +
+    seg("unreviewed", "미검수", p.pending);
+}
+
 function renderVerify() {
+  var filterSel = document.getElementById("verify-filter");
+  var typeSel = document.getElementById("verify-type");
+  var filter = { mode: filterSel.value, typeId: typeSel.value };
   var p = Verify.verifyProgress(verifyItems, verifyDecisions);
-  document.getElementById("verify-progress").textContent =
-    "statute 근거 " + p.total + "개 · 확인 " + p.confirmed + " / 수정필요 " + p.needsfix + " / 미검수 " + p.pending;
-  var filter = { mode: document.getElementById("verify-filter").value, typeId: document.getElementById("verify-type").value };
+  document.getElementById("verify-progress").innerHTML = verifyProgressHtml(p);
+  document.querySelectorAll("#verify-progress .verify-prog-seg").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      filterSel.value = btn.getAttribute("data-vmode");
+      renderVerify();
+    });
+  });
+  // V2: 실무 항목(검수 대상 아님)은 목록에서 빼고 한 줄 집계로만 노출.
+  var pcount = Verify.practiceCount(verifyItems, filter);
+  var pnote = document.getElementById("verify-practice-note");
+  pnote.textContent = pcount ? "실무 항목 " + pcount + "건(검수 대상 아님) — 별도 필터로 확인 가능" : "";
   var shown = Verify.filterItems(verifyItems, verifyDecisions, filter);
-  document.getElementById("verify-list").innerHTML = shown.map(renderVerifyCard).join("") || "<p>해당 항목 없음</p>";
+  var listEl = document.getElementById("verify-list");
+  // V1: 미검수 필터에서 대상이 0건이면 소음(전량 렌더) 대신 완료 요약 카드.
+  if (filter.mode === "unreviewed" && shown.length === 0 && p.pending === 0) {
+    var last = Verify.lastReviewDate(verifyDecisions);
+    listEl.innerHTML = '<div class="verify-done-card">statute 근거 ' + p.total + '개 전건 검수 완료' +
+      (last ? " · 최근 검수일 " + esc(last) : "") +
+      (p.needsfix ? ' · <button type="button" class="linklike" data-vmode="needsfix">수정필요 ' + p.needsfix + "건 보기</button>" : "") +
+      "</div>";
+    var b = listEl.querySelector(".linklike");
+    if (b) b.addEventListener("click", function () { filterSel.value = "needsfix"; renderVerify(); });
+  } else {
+    listEl.innerHTML = shown.map(renderVerifyCard).join("") || "<p>해당 항목 없음</p>";
+  }
   bindVerifyButtons();
 }
 

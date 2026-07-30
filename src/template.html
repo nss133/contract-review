@@ -16,7 +16,7 @@
     <!-- 관리 그룹(P1) — 매 검토 사용 탭과 위계 분리(우측·회색 톤). 큐레이터·회귀 채점용 -->
     <span class="nav-admin">
       <button data-tab="verify" class="tab tab-admin">지식 검수</button>
-      <button data-tab="goldset" class="tab tab-admin">골드셋</button>
+      <button data-tab="goldset" class="tab tab-admin">골드셋 채점</button>
     </span>
   </nav>
 </header>
@@ -146,6 +146,15 @@
   <section id="pane-goldset" class="pane">
     <p class="verify-scope-note">폐쇄망 골드셋: 검토 완료한 실계약을 <strong>케이스로 저장</strong>(리포트 탭 하단 “팀·지식 관리” 안 버튼)해 공유폴더에 모으고,
       새 버전 반입 시 여기서 <strong>일괄 채점</strong>합니다. 반출용 요약에는 계약 본문이 포함되지 않습니다(check id·유형명만).</p>
+    <!-- G1: 케이스 미로드 시 빈 화면 대신 3단계 절차 안내 -->
+    <div id="goldset-empty" class="goldset-empty">
+      <ol class="goldset-steps">
+        <li>① 리포트 탭에서 검토 완료한 계약을 <strong>케이스로 저장</strong>(하단 “팀·지식 관리” 안 버튼)</li>
+        <li>② 저장한 케이스 파일(.json)을 폐쇄망 공유폴더에 축적</li>
+        <li>③ 새 버전 반입 시 여기서 케이스 파일을 로드해 <strong>일괄 채점</strong></li>
+      </ol>
+      <button id="goldset-goto-report" class="ghost">리포트로 이동</button>
+    </div>
     <div class="goldset-bar">
       <label class="ghost file-btn">케이스 파일 로드(복수)<input id="goldset-files" type="file" accept=".json" multiple hidden></label>
       <button id="goldset-run" class="primary" disabled>채점 실행</button>
@@ -158,18 +167,21 @@
   <section id="pane-verify" class="pane">
     <p class="verify-scope-note">이 탭은 <strong>체크리스트 근거(법령 조문)의 정확성을 검수</strong>하는 곳입니다 — 계약서 합·불 판정이 아니라, quote가 DB 원문과 맞는지 대조해 승격합니다.</p>
     <div class="verify-bar">
+      <!-- 진행 바(V3): 숫자가 곧 필터 — 클릭하면 해당 상태로 즉시 전환 -->
       <span id="verify-progress" class="verify-progress"></span>
       <label>유형 <select id="verify-type"></select></label>
       <label>상태
         <select id="verify-filter">
-          <option value="all">전체</option>
-          <option value="unreviewed">미검수만</option>
+          <option value="unreviewed" selected>미검수만</option>
           <option value="needsfix">수정 필요만</option>
           <option value="confirmed">확인됨</option>
+          <option value="all">전체</option>
+          <option value="practice">실무 항목만(검수 대상 아님)</option>
         </select>
       </label>
       <button id="verify-export" class="primary">판정 내보내기</button>
     </div>
+    <p id="verify-practice-note" class="verify-practice-note"></p>
     <div id="verify-list"></div>
   </section>
 </main>
