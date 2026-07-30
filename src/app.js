@@ -661,6 +661,7 @@ function runAnalysis() {
   loadVerdicts();
   _opinionEditing = false; // 재분석·해시 변경 시 종합 검토의견 편집 모드 해제
   applySubdocVerdicts();
+  applyCompare(); // 아카이브 로드 상태면 현재 조항 기준 정렬·이관 후보 재산출
   renderClauses();
   bindVerdictIO();
   renderChecklist();
@@ -943,6 +944,13 @@ function bindVerdictControls(root, reRender) {
       if (reRender) reRender();
     });
   });
+  // 전년 검토 인용 수용(비교 모드) — 1클릭으로 전년 판정·코멘트 기재(date 오늘, 꼬리표 부착).
+  root.querySelectorAll(".carry-accept").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      acceptCarry(btn.getAttribute("data-vcp"));
+      if (reRender) reRender();
+    });
+  });
 }
 
 // 검토의견 내보내기/불러오기 (계약서 건별 JSON)
@@ -1139,6 +1147,231 @@ function bindVerdictIO() {
   });
 }
 
+/* ---------- 재검토 비교 — 검토 아카이브 저장·불러오기·조항 정렬(스펙 2026-07-30) ----------
+   아카이브 = 기존 verdict export 상위호환(+contract_text·meta.archive·meta.name).
+   비교 계산은 순수 로직 Compare(compare.js) — 여기는 상태·렌더·이관 UI만. */
+state.compare = null; // {meta, oldClauses, oldVerdicts, mapping, byNew, removed, counts, carry, carryById}
+var ARCHIVE_NOTICE_KEY = "cr-archive-notice";
+
+// 세그먼터 내부 라벨 치환 — 구 계약 표제 등 state.clauses 밖 heading에도 적용(어휘 규칙 공용).
+function _headingText(h) {
+  return (h === "(전문)" || h === "(전체)") ? "계약서 전반" : h;
+}
+
+// 검토 아카이브 저장 — 리포트 일상 액션. 계약 전문 포함이라 최초 1회 보관 위치 고지(제약 고지 ①).
+function exportArchive() {
+  if (!state.result) return;
+  var name = prompt("아카이브 이름(계약명)", _contractName());
+  if (name === null) return; // 취소
+  try {
+    if (!localStorage.getItem(ARCHIVE_NOTICE_KEY)) {
+      alert("아카이브 파일에는 계약 본문 전문이 포함됩니다 — 폐쇄망 내부(공유폴더 등)에만 보관하세요.");
+      localStorage.setItem(ARCHIVE_NOTICE_KEY, "1");
+    }
+  } catch (e) {}
+  var meta = { type_id: state.typeId, date: verdictToday(), contract_hash: verdictHash,
+    reviewer: getReviewer(), opinion: _lastOpinionText,
+    archive: true, name: String(name || "").trim() || _contractName() };
+  var obj = Verdict.exportVerdicts(verdictStore, meta);
+  obj.contract_text = state.text;
+  var blob = new Blob([JSON.stringify(obj, null, 2)], { type: "application/json" });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement("a");
+  a.href = url;
+  a.download = "review-archive_" + (state.typeId || "common") + "_" + verdictHash + "_" + verdictToday() + ".json";
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function _setCompareMsg(text) {
+  var el = document.getElementById("compare-load-msg");
+  if (el) el.textContent = text || "";
+}
+
+// 아카이브 파일 불러오기 — 스키마 검증 후 state.compare 구성. 분석 전이면 보류(분석 시 적용).
+function loadArchiveFile(f) {
+  if (!f) return;
+  f.text().then(function (t) {
+    var obj = JSON.parse(t);
+    var ok = obj && obj.meta && typeof obj.contract_text === "string" &&
+      obj.contract_text.trim() && obj.verdicts && typeof obj.verdicts === "object";
+    if (!ok) throw new Error("format");
+    state.compare = {
+      meta: obj.meta,
+      oldClauses: segmentContract(obj.contract_text),
+      oldVerdicts: Verdict.importVerdicts(obj),
+      mapping: null
+    };
+    if (state.result) {
+      applyCompare();
+      renderClauses();
+      renderReport();
+      document.querySelector('.tab[data-tab="clauses"]').click();
+    } else {
+      _setCompareMsg("아카이브 로드됨(" + (obj.meta.name || obj.meta.date || "") + ") — 분석 시작 시 비교 뷰가 열립니다.");
+    }
+  }).catch(function () {
+    _setCompareMsg("아카이브 형식이 아님 — '검토 아카이브 저장'으로 만든 .json 파일을 선택하세요.");
+  });
+}
+// 불러오기 입력은 정적 요소 — 1회 바인딩(중복 리스너 방지).
+["compare-file", "compare-file-bar"].forEach(function (id) {
+  var inp = document.getElementById(id);
+  if (inp) inp.addEventListener("change", function (e) {
+    loadArchiveFile(e.target.files[0]);
+    e.target.value = "";
+  });
+});
+
+// 정렬·이관 후보 계산 — 분석(재분석 포함)마다 현재 조항 기준으로 재산출.
+function applyCompare() {
+  var cmp = state.compare;
+  if (!cmp || !state.result) return;
+  cmp.mapping = Compare.alignClauses(cmp.oldClauses, state.clauses);
+  cmp.byNew = {};
+  cmp.removed = [];
+  cmp.counts = { same: 0, changed: 0, added: 0, removed: 0 };
+  cmp.mapping.forEach(function (e) {
+    if (e.newIdx !== null) cmp.byNew[e.newIdx] = e;
+    if (e.kind === "removed") { cmp.removed.push(e); cmp.counts.removed++; }
+    else if (e.kind === "added") cmp.counts.added++;
+    else if (e.kind === "changed") cmp.counts.changed++;
+    else cmp.counts.same++; // same·moved 합산 — 이동은 내용 동일
+  });
+  cmp.carry = Compare.carryVerdicts(cmp.oldVerdicts, cmp.mapping, state.result.results);
+  cmp.carryById = {};
+  cmp.carry.forEach(function (c) { cmp.carryById[c.cpId] = c; });
+}
+
+// 비교 해제 — 원래 3열(① ② ③)로 복귀.
+function clearCompare() {
+  state.compare = null;
+  renderClauses();
+  renderReport();
+}
+
+// diff 렌더 — esc 후 마크업 주입(토큰별 이스케이프 → 태그 감싸기 순서 고정, XSS 안전).
+// 구 열: eq+del(취소선) / 신 열: eq+add(형광). 공백 정규화된 어절 나열이라 줄바꿈은 평탄화됨.
+function _diffHtmlOld(ops) {
+  return ops.filter(function (o) { return o.op !== "add"; }).map(function (o) {
+    return o.op === "del" ? '<del class="cmp-del">' + esc(o.text) + "</del>" : esc(o.text);
+  }).join(" ");
+}
+function _diffHtmlNew(ops) {
+  return ops.filter(function (o) { return o.op !== "del"; }).map(function (o) {
+    return o.op === "add" ? '<mark class="cmp-add">' + esc(o.text) + "</mark>" : esc(o.text);
+  }).join(" ");
+}
+
+// 전년 인용 꼬리표 — 수용된 코멘트임을 기록(중복 부착 방지).
+function _carryTail(comment) {
+  var c = String(comment || "").trim();
+  if (c.indexOf("(전년 인용)") !== -1) return c;
+  return c ? c + " (전년 인용)" : "(전년 인용)";
+}
+
+// 전년 검토 인용 프리필 카드 — 자동 확정하지 않음: [수용] 1클릭 시에만 기재(date 오늘).
+// 이관 후보가 아닌데 전년 판정이 있으면(변경·불확실 조항 등) 참고 표시만.
+function carryHintHtml(cpId) {
+  var cmp = state.compare;
+  if (!cmp || !cmp.mapping) return "";
+  var cur = verdictStore[cpId];
+  var cand = cmp.carryById[cpId];
+  if (cand) {
+    if (cur && cur.verdict) return ""; // 기판정(수용 포함) — 프리필 숨김
+    return '<div class="carry-card"><span class="badge carry-badge">전년 검토 인용</span>' +
+      '<span class="vd-badge ' + VERDICT_CLS[cand.verdict] + '">' + esc(cand.verdict) + "</span>" +
+      (cand.comment ? '<span class="carry-comment">‘' + esc(cand.comment) + "’</span>" : "") +
+      '<span class="carry-date">(' + esc(cand.date || "전년") + ")</span>" +
+      '<button class="carry-accept" data-vcp="' + esc(cpId) + '">수용</button>' +
+      '<span class="carry-hint">인용이지 확정 아님 — 법령 개정 여부는 별도 확인</span></div>';
+  }
+  var old = cmp.oldVerdicts[cpId];
+  if (old && old.verdict) {
+    return '<p class="carry-ref">전년 검토 참고(이관 안 함 — 조항 변경·대응 불확실 등): ' +
+      '<span class="vd-badge ' + VERDICT_CLS[old.verdict] + '">' + esc(old.verdict) + "</span>" +
+      (old.comment ? " ‘" + esc(old.comment) + "’" : "") + "</p>";
+  }
+  return "";
+}
+
+// 수용 1클릭 — 전년 verdict·comment로 기재하되 date는 오늘, comment 끝 "(전년 인용)".
+function acceptCarry(cpId) {
+  var cmp = state.compare;
+  var cand = cmp && cmp.carryById && cmp.carryById[cpId];
+  if (!cand) return;
+  applyVerdict(cpId, cand.verdict, _carryTail(cand.comment));
+}
+
+// 일괄 수용 — 미판정 후보만 채움(기판정 보존, 통과계약 모드와 동형).
+function acceptAllCarry() {
+  var cmp = state.compare;
+  if (!cmp || !cmp.carry) return;
+  var applied = 0;
+  cmp.carry.forEach(function (cand) {
+    var cur = verdictStore[cand.cpId];
+    if (cur && cur.verdict) return; // 기판정 보존
+    verdictStore = Verdict.setVerdict(verdictStore, cand.cpId, cand.verdict, _carryTail(cand.comment), verdictToday());
+    applied++;
+  });
+  saveVerdicts();
+  // 전체 재렌더 스크롤 보정 — bulk 판정과 동일 패턴.
+  var y = window.scrollY;
+  renderClauses(); renderSuggestions(); renderReport();
+  window.scrollTo(0, y);
+  requestAnimationFrame(function () { window.scrollTo(0, y); });
+  var msg = document.getElementById("compare-msg");
+  if (msg) msg.textContent = applied + "건 전년 판정 수용(기판정 보존)";
+}
+
+// 미수용 이관 후보 수 — 헤더 일괄 수용 버튼 라벨용.
+function _pendingCarryCount() {
+  var cmp = state.compare;
+  if (!cmp || !cmp.carry) return 0;
+  return cmp.carry.filter(function (cand) {
+    var cur = verdictStore[cand.cpId];
+    return !(cur && cur.verdict);
+  }).length;
+}
+
+// 비교 모드 헤더 — 전년 검토 메타 + 동일·변경·신설·삭제 카운트 + 일괄 수용 + 해제 + 제약 고지 힌트.
+function renderCompareHeader() {
+  var el = document.getElementById("compare-header");
+  if (!el) return;
+  var cmp = state.compare;
+  if (!cmp || !cmp.mapping) { el.hidden = true; el.innerHTML = ""; return; }
+  var m = cmp.meta || {};
+  var who = [m.name, m.date, m.reviewer].filter(Boolean).map(esc).join(", ");
+  var pending = _pendingCarryCount();
+  el.innerHTML = '<span class="cmp-title">전년 검토(' + (who || "메타 없음") + ") 대비:</span> " +
+    '<span class="cmp-counts">동일 ' + cmp.counts.same + " · 변경 " + cmp.counts.changed +
+    " · 신설 " + cmp.counts.added + " · 삭제 " + cmp.counts.removed + "</span>" +
+    (pending ? '<button id="carry-accept-all" class="ghost">동일 조항 전년 판정 ' + pending + "건 일괄 수용</button>" : "") +
+    '<button id="compare-off" class="ghost">비교 해제</button>' +
+    '<span id="compare-msg" class="report-actions-note"></span>' +
+    '<span class="cmp-hint">정렬은 보조 도구(대응 불확실 항목은 직접 확인) · 판정 이관은 인용이지 확정이 아님 — 법령 개정 여부 별도 확인</span>';
+  el.hidden = false;
+  var all = document.getElementById("carry-accept-all");
+  if (all) all.addEventListener("click", acceptAllCarry);
+  var off = document.getElementById("compare-off");
+  if (off) off.addEventListener("click", clearCompare);
+}
+
+// 삭제 조항 최하단 블록 — 구 계약에만 있던 조항.
+function renderRemovedBlock() {
+  var el = document.getElementById("compare-removed-block");
+  if (!el) return;
+  var cmp = state.compare;
+  if (!cmp || !cmp.mapping || !cmp.removed.length) { el.innerHTML = ""; return; }
+  el.innerHTML = '<div class="removed-panel"><h3><span class="badge cmp-removed">삭제</span> 구 계약에만 있던 조항 (' +
+    cmp.removed.length + ")</h3>" +
+    '<p class="consider-hint">전년 계약에는 있었으나 이번 계약에서 대응 조항을 찾지 못함 — 의도된 삭제인지 확인하세요.</p>' +
+    cmp.removed.map(function (e) {
+      var c = cmp.oldClauses[e.oldIdx];
+      return '<div class="removed-clause"><strong>' + esc(_headingText(c.heading)) + "</strong><pre>" + esc(c.body) + "</pre></div>";
+    }).join("") + "</div>";
+}
+
 /* ---------- 조항별 보기 (보조 탭) — 좌우대비 ---------- */
 // 조항 하나에 대해: 좌 "반영된 검토항목"(그 조항이 best인 addressed) / 우 "추가 확인 제안"(verify).
 // results를 best.clauseIndex로 역인덱싱하여 coverage별로 모음.
@@ -1173,6 +1406,7 @@ function renderCompareItem(r, showEvidence) {
     (cp.severity_basis ? '<p class="ci-basis">' + esc(cp.severity_basis) + "</p>" : "") +
     '<p class="ci-src">' + evidenceCell(cp) + "</p>" +
     (showEvidence ? evidenceLineHtml(cp, r) : "") +
+    carryHintHtml(cp.id) + // 비교 모드: 전년 검토 인용 프리필(동일 조항) 또는 참고 표시(변경 조항)
     verdictControlHtml(cp.id) +
     "</div>";
 }
@@ -1192,6 +1426,7 @@ function renderConsiderItem(r) {
     '<p class="ci-q">' + labelQ(cp) + "</p>" +
     (cp.severity_basis ? '<p class="ci-basis">왜 봐야 하는지: ' + esc(cp.severity_basis) + "</p>" : "") +
     '<p class="ci-src">근거 ' + evidenceCell(cp) + "</p>" +
+    carryHintHtml(cp.id) + // 비교 모드: 부재 알람도 체크 id 기준 전년 판정 인용(스펙 §판정 이관)
     verdictControlHtml(cp.id) +
     "</div>";
 }
@@ -1262,6 +1497,7 @@ function renderOpinionCard(r) {
 
 // 조항 행 1개 — grid 3셀. ②③이 빈 셀은 흐린 placeholder 한 줄("—")로 행 리듬 유지.
 // 검토항목이 전무한 세그먼트((전문)·표제부·서명란 등)는 접지 않고 본문을 흐리게(시각적 강등).
+// 비교 모드: 구 계약 열 prepend + ②③ 통합(검토·제안) — 3열 유지(스펙 §UI).
 function clauseRowHtml(c) {
   var g = _clauseGroups[c.index] || { addressed: [], verify: [] };
   var cards = g.addressed.map(function (r) { return renderCompareItem(r, false); })
@@ -1273,11 +1509,43 @@ function clauseRowHtml(c) {
   var noItems = !g.addressed.length && !g.verify.length;
   // 검토항목 전무 세그먼트는 연속 빈 줄(표제부 여백 등)을 압축해 행 공간 확보 — 문언 자체는 불변.
   var body = noItems ? String(c.body).replace(/\n{3,}/g, "\n\n") : c.body;
+  var cmp = state.compare && state.compare.mapping ? state.compare : null;
+  if (!cmp) {
+    return '<div class="clause-row' + (noItems ? " row-noitems" : "") + rowStatusCls(g) +
+      '" data-ci="' + c.index + '">' +
+      '<div class="cr-cell cr-src"><strong>' + esc(c.heading) + "</strong><pre>" + esc(body) + "</pre></div>" +
+      '<div class="cr-cell cr-reviewed">' + (cards || '<p class="cr-empty">—</p>') + "</div>" +
+      '<div class="cr-cell cr-opinions">' + (opinions || '<p class="cr-empty">—</p>') + "</div>" +
+      "</div>";
+  }
+  // ── 비교 모드 행: 구 계약(전년) | 신 계약(현재, 변경분 하이라이트) | 검토·제안 ──
+  var e = cmp.byNew[c.index];
+  var badges = "";
+  if (e) {
+    if (e.kind === "added") badges += ' <span class="badge cmp-added">신설</span>';
+    else if (e.kind === "changed") badges += ' <span class="badge cmp-changed">변경</span>';
+    else if (e.kind === "moved") badges += ' <span class="badge cmp-moved">이동</span>';
+    if (e.uncertain) badges += ' <span class="badge cmp-uncertain">대응 불확실</span>';
+  }
+  var oldCell, newBodyHtml = esc(body);
+  if (!e || e.kind === "added") {
+    oldCell = '<p class="cmp-ph">— (전년에 없음)</p>';
+  } else if (e.kind === "changed") {
+    var oc = cmp.oldClauses[e.oldIdx];
+    var ops = Compare.diffWords(oc.body, body);
+    oldCell = "<strong>" + esc(_headingText(oc.heading)) + "</strong><pre>" + _diffHtmlOld(ops) + "</pre>";
+    newBodyHtml = _diffHtmlNew(ops);
+  } else {
+    // same·moved — 원문은 신 열에 있으므로 "(전년과 동일)" 플레이스홀더(접기 아님, 스펙 허용).
+    var oc2 = cmp.oldClauses[e.oldIdx];
+    oldCell = (e.kind === "moved" ? "<strong>" + esc(_headingText(oc2.heading)) + "</strong>" : "") +
+      '<p class="cmp-ph">(전년과 동일)</p>';
+  }
   return '<div class="clause-row' + (noItems ? " row-noitems" : "") + rowStatusCls(g) +
     '" data-ci="' + c.index + '">' +
-    '<div class="cr-cell cr-src"><strong>' + esc(c.heading) + "</strong><pre>" + esc(body) + "</pre></div>" +
-    '<div class="cr-cell cr-reviewed">' + (cards || '<p class="cr-empty">—</p>') + "</div>" +
-    '<div class="cr-cell cr-opinions">' + (opinions || '<p class="cr-empty">—</p>') + "</div>" +
+    '<div class="cr-cell cr-old">' + oldCell + "</div>" +
+    '<div class="cr-cell cr-src"><strong>' + esc(c.heading) + "</strong>" + badges + "<pre>" + newBodyHtml + "</pre></div>" +
+    '<div class="cr-cell cr-reviewed">' + ((cards + opinions) || '<p class="cr-empty">—</p>') + "</div>" +
     "</div>";
 }
 
@@ -1356,6 +1624,7 @@ function refreshClauseCounts() {
     var cls = rowStatusCls(g).trim();
     if (cls) row.classList.add(cls);
   });
+  renderCompareHeader(); // 비교 모드: 일괄 수용 잔여 건수 갱신(비교 아니면 내부에서 숨김 처리)
 }
 
 // 행 점프 공용 — content-visibility로 오프스크린 행 높이가 추정치라 1회 스크롤은 목표가 어긋남.
@@ -1421,10 +1690,22 @@ function renderClauses() {
   _clauseGroups = byClause;
   _considerList = considerList;
 
+  // 비교 모드 전환 — 행 grid에 구 계약 열 prepend(grid-template-columns 전환) + 컬럼 안내 교체.
+  var cmpOn = !!(state.compare && state.compare.mapping);
   var rowsEl = document.getElementById("clause-rows");
+  rowsEl.classList.toggle("compare-mode", cmpOn);
+  var colsHead = document.getElementById("clause-cols-head");
+  if (colsHead) {
+    colsHead.classList.toggle("compare-mode", cmpOn);
+    colsHead.innerHTML = cmpOn
+      ? "<span>구 계약(전년)</span><span>신 계약(현재)</span><span>검토·제안</span>"
+      : "<span>① 계약서 원문</span><span>② 검토된 내용</span><span>③ 제안 사항</span>";
+  }
   rowsEl.innerHTML = state.clauses.map(clauseRowHtml).join("");
   rowsEl.querySelectorAll(".clause-row").forEach(bindRowControls);
   renderConsiderBlock();
+  renderCompareHeader();
+  renderRemovedBlock();
   refreshClauseCounts();
 }
 
@@ -1526,6 +1807,7 @@ function renderReport() {
 
   // 종합 검토의견 — 기존 한 줄 결론 배너 대체. 자동 초안(판정 변경 시 즉시 재조립),
   // 사용자가 수정하면 수정본 우선 유지 + "자동 초안으로 재생성" 제공.
+  var cmp = state.compare && state.compare.mapping ? state.compare : null;
   var savedOp = opinionStoreLoad();
   var opEdited = !!(savedOp && savedOp.edited);
   var opText = opEdited ? String(savedOp.text || "") : Verdict.composeOpinion({
@@ -1536,7 +1818,10 @@ function renderReport() {
     opinions: flagged.map(function (o) {
       return { label: cpLabel(o.cp), severity: o.cp.severity, loc: o.loc, comment: o.comment };
     }),
-    formalWarnTitles: formalWarns.map(function (f) { return f.title; })
+    formalWarnTitles: formalWarns.map(function (f) { return f.title; }),
+    // 비교 모드(재검토): 전년 대비 요지 1문장 — 기존 호출 무영향(옵션 인자).
+    compare: cmp ? { date: (cmp.meta || {}).date, changed: cmp.counts.changed,
+      added: cmp.counts.added, removed: cmp.counts.removed } : undefined
   });
   _lastOpinionText = opText; // 내보내기(verdict JSON meta)용 캐시
   right += '<div class="report-opinion"><div class="ro-head"><span class="ro-label">종합 검토의견</span>' +
@@ -1581,6 +1866,27 @@ function renderReport() {
     right += '<section id="rpt-sec-must" class="report-sec-block"><h4>보완 필요 — 필수 항목 미확인 (0)</h4>' +
       '<p class="report-none">없음 — 필수(본질) 항목은 관련 조항·부속서류에 닿음' +
       (mustNA.length ? " (해당없음 판정 " + mustNA.length + "건 제외)" : "") + ".</p></section>";
+  }
+
+  // 1-2. 변경·신설 조항(비교 모드 전용) — 전년 대비 달라진 조항의 딥링크 목록.
+  if (cmp) {
+    var diffEntries = cmp.mapping.filter(function (e) { return e.kind === "changed" || e.kind === "added"; });
+    right += '<section id="rpt-sec-compare" class="report-sec-block"><h4>변경·신설 조항 (' + diffEntries.length + ")</h4>";
+    right += '<p class="sec-hint">전년(' + esc((cmp.meta || {}).date || "일자 미상") +
+      ') 검토 대비 달라진 조항 — 이번 검토에서 우선 살펴볼 부분. 정렬은 보조 도구이며 대응 불확실 항목은 직접 확인 요.</p>';
+    right += diffEntries.map(function (e) {
+      var c = state.clauses[e.newIdx];
+      return '<div class="report-item"><span class="badge ' +
+        (e.kind === "added" ? "cmp-added" : "cmp-changed") + '">' + (e.kind === "added" ? "신설" : "변경") + "</span> " +
+        '<span class="ri-q">' + esc(_clauseHeading(e.newIdx)) + "</span>" +
+        (e.uncertain ? ' <span class="badge cmp-uncertain">대응 불확실</span>' : "") +
+        _gotoBtn(e.newIdx) + "</div>";
+    }).join("") || '<p class="report-none">변경·신설 조항 없음.</p>';
+    if (cmp.counts.removed) {
+      right += '<p class="sec-hint">삭제 ' + cmp.counts.removed +
+        '건은 조항별 검토 탭 최하단 "구 계약에만 있던 조항"에서 확인.</p>';
+    }
+    right += "</section>";
   }
 
   // 2. 검토의견 개진 — 판정 찍은 내용 요약. 앵커 안정성을 위해 항상 렌더.
@@ -1683,7 +1989,9 @@ function renderReport() {
   // "팀·지식 관리" 접힘으로 격리. 인쇄 시 접힘은 자동 펼침 대상에서 제외(admin-fold).
   right += '<div class="report-actions">' +
     '<button id="report-verdict-export" class="ghost">검토의견 내보내기</button>' +
-    '<button id="report-print" class="ghost">인쇄</button></div>';
+    '<button id="report-archive-export" class="ghost">검토 아카이브 저장</button>' +
+    '<button id="report-print" class="ghost">인쇄</button>' +
+    '<span class="report-actions-note">아카이브 = 계약 전문 + 판정 + 종합의견 — 다음 해 재검토 시 "이전 검토와 비교"로 불러옴</span></div>';
   right += '<details class="report-sec admin-fold"><summary>팀·지식 관리</summary>';
   right += '<div class="report-actions">' +
     '<label class="reviewer-label">검토자 <input id="reviewer-name" placeholder="이름(코멘트 귀속)" value="' + esc(getReviewer()) + '"></label>' +
@@ -1736,6 +2044,8 @@ function renderReport() {
   if (rvIn) rvIn.addEventListener("change", function () { setReviewer(rvIn.value); });
   var rexp = document.getElementById("report-verdict-export");
   if (rexp) rexp.addEventListener("click", exportVerdicts);
+  var aexp = document.getElementById("report-archive-export");
+  if (aexp) aexp.addEventListener("click", exportArchive);
   var gsnap = document.getElementById("report-goldset-snapshot");
   if (gsnap) gsnap.addEventListener("click", exportGoldsetCase);
   var ring = document.getElementById("report-loop-ingest");

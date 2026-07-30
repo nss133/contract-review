@@ -246,6 +246,52 @@ td.empty { text-align: center; color: var(--ink-faint); padding: var(--sp-4); }
   .clause-row .cr-cell + .cr-cell { border-left: none; border-top: 1px solid #eef0f5; }
 }
 
+/* ── 재검토 비교(스펙 2026-07-30) — 구 계약 열 prepend: 구 | 신 | 검토·제안 ── */
+#clause-rows.compare-mode .clause-row,
+.clause-cols-head.compare-mode { grid-template-columns: 1.2fr 1.6fr 1.2fr; }
+.compare-header { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2);
+  background: var(--c-slate-bg); border: 1px solid var(--c-slate-line); border-radius: 8px;
+  padding: var(--sp-1) var(--sp-2); margin-bottom: var(--sp-2); font-size: var(--fs-body-sub); }
+.compare-header .cmp-title { font-weight: 600; color: var(--c-slate-fg); }
+.compare-header .cmp-hint { flex-basis: 100%; font-size: var(--fs-meta); color: var(--ink-faint); }
+/* 구 계약 열 — 보조 정보라 흐리게. 변경 조항은 취소선 diff 본문 표시 */
+.cr-old { color: var(--ink-mute); }
+.cr-old strong { color: var(--ink-soft); font-weight: 500; }
+.cr-old pre { white-space: pre-wrap; font: 13px/1.7 inherit; margin: var(--sp-1) 0 0; }
+.cmp-ph { color: var(--ink-ghost); margin: 2px 0; }
+/* diff — add=형광(신 열), del=취소선(구 열) */
+.cmp-add { background: #fff3b0; color: inherit; padding: 0 1px; }
+.cmp-del { color: var(--c-red-fg); text-decoration: line-through; }
+/* 정렬 분류 배지 — coverage 색 체계 재사용(신설=청, 변경=황, 이동=회청, 불확실=적) */
+.badge.cmp-added { background: var(--c-blue-bg); color: var(--c-blue-fg); }
+.badge.cmp-changed { background: var(--c-amber-bg); color: var(--c-amber-fg); }
+.badge.cmp-moved { background: var(--c-slate-bg); color: var(--c-slate-fg); }
+.badge.cmp-uncertain { background: var(--c-red-bg); color: var(--c-red-fg); }
+.badge.cmp-removed { background: var(--c-red-bg); color: var(--c-red-fg); }
+/* 전년 검토 인용 프리필 카드 — 자동 확정 아님(수용 1클릭) */
+.carry-card { display: flex; flex-wrap: wrap; align-items: center; gap: 6px;
+  background: var(--c-slate-bg); border: 1px dashed var(--c-slate-line); border-radius: 6px;
+  padding: 6px var(--sp-1); margin: var(--sp-1) 0; font-size: var(--fs-body-sub); }
+.badge.carry-badge { background: var(--c-slate-fg); color: #fff; }
+.carry-comment { color: var(--ink-soft); }
+.carry-date { font-size: var(--fs-meta); color: var(--ink-faint); }
+.carry-accept { border: 1px solid var(--c-slate-line); background: var(--bg-card); color: var(--c-slate-fg);
+  border-radius: 5px; padding: 2px 10px; cursor: pointer; font-size: var(--fs-body-sub); }
+.carry-accept:hover { background: var(--c-slate-fg); color: #fff; }
+.carry-hint { flex-basis: 100%; font-size: var(--fs-meta); color: var(--ink-faint); }
+.carry-ref { font-size: var(--fs-meta); color: var(--ink-mute); margin: var(--sp-1) 0; }
+/* 삭제 조항 최하단 블록 */
+#compare-removed-block { margin-top: var(--sp-3); }
+.removed-panel { background: var(--bg-card); border: 1px solid var(--c-red-line); border-radius: 8px;
+  padding: var(--sp-2) var(--sp-3); }
+.removed-clause { border-top: 1px solid var(--border-hair); padding: var(--sp-1) 0; color: var(--ink-mute); }
+.removed-clause pre { white-space: pre-wrap; font: 13px/1.7 inherit; margin: 4px 0 0; }
+/* 입력 화면 아카이브 로드 영역 — 부속서류 영역과 동일 톤 */
+.compare-load-area { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-1); margin-top: var(--sp-1); }
+@media (max-width: 900px) {
+  #clause-rows.compare-mode .clause-row { grid-template-columns: 1fr; }
+}
+
 /* 검토항목 카드(② 컬럼·제안사항 패널 공용) */
 .compare-item { border-bottom: 1px solid var(--border-hair); padding: var(--sp-3) 0; }
 .compare-item:last-child { border-bottom: none; }

@@ -41,6 +41,12 @@
           <span class="subdoc-hint">검토 대상 아님 — 보안관리약정서 등 별도 서류를 넣으면 “필수 항목이 부속서류에서 커버되는지” 확인해 오탐을 줄입니다.</span>
           <div id="subdoc-list" class="subdoc-list"></div>
         </div>
+        <!-- 재검토 비교 — 전년 검토 아카이브(.json)를 불러오면 분석 후 조항별 비교본 표시 -->
+        <div class="compare-load-area">
+          <label class="filebtn">이전 검토와 비교<input id="compare-file" type="file" accept=".json" hidden></label>
+          <span class="subdoc-hint">전년 검토 아카이브(.json)를 불러오면 같은 계약의 새 버전 분석 시 동일·변경·신설·삭제 조항을 비교합니다.</span>
+          <span id="compare-load-msg" class="report-actions-note"></span>
+        </div>
       </div>
     </details>
 
@@ -48,6 +54,7 @@
     <div id="report-summary-bar" class="report-summary-bar" hidden>
       <span id="summary-line" class="summary-line"></span>
       <button id="btn-reanalyze" class="ghost">다시 분석</button>
+      <label class="filebtn ghost">이전 검토와 비교<input id="compare-file-bar" type="file" accept=".json" hidden></label>
       <details id="summary-adjust" class="summary-adjust">
         <summary>유형·모듈 조정</summary>
         <label class="summary-type">계약 유형 <select id="checklist-type"></select></label>
@@ -85,13 +92,17 @@
         <button id="verdict-export" class="ghost">검토의견 내보내기</button>
         <label class="filebtn ghost">불러오기<input id="verdict-import" type="file" accept=".json" hidden></label>
       </div>
+      <!-- 비교 모드 헤더 — 전년 검토 대비 동일·변경·신설·삭제 카운트 + 일괄 수용 + 해제 -->
+      <div id="compare-header" class="compare-header" hidden></div>
       <!-- 컬럼 안내 행 + 조항 행 연속 스크롤 -->
-      <div class="clause-cols-head">
+      <div id="clause-cols-head" class="clause-cols-head">
         <span>① 계약서 원문</span><span>② 검토된 내용</span><span>③ 제안 사항</span>
       </div>
       <div id="clause-rows"></div>
       <!-- 부재 알람(검토 제안) — 특정 조항에 속하지 않는 항목의 전용 블록(최하단 유지) -->
       <div id="consider-block"></div>
+      <!-- 비교 모드 — 구 계약에만 있던 조항(삭제) 최하단 블록 -->
+      <div id="compare-removed-block"></div>
     </div>
   </section>
 
