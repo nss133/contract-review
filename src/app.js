@@ -34,22 +34,23 @@ function labelQ(cp) {
   return esc(cp.check);
 }
 
-/* ---------- 증적 배지 ---------- */
+/* ---------- 증적 배지 ----------
+   어휘 구분(2026-07-30 사용자 결정): '법령 ○○' = 체크 근거 법령의 대조 상태,
+   '조항' = 계약서 본문. 검수 완료(verified) 상태는 정상값이므로 무배지 —
+   이상(미대조·불일치·미수록)만 표시해 배지 소음을 없앰. */
 function sourceBadgeInfo(src) {
-  /* rank: 낮을수록 심각 — 행 배지는 전 source 중 최악을 표시 */
+  /* rank: 낮을수록 심각 — 행 배지는 전 source 중 최악을 표시. null = 정상(무배지). */
   switch (src.status) {
     case "quote_mismatch":
-      return { cls: "mismatch", label: "문언 불일치", rank: 0 };
+      return { cls: "mismatch", label: "법령 불일치", rank: 0 };
     case "missing":
-      return { cls: "missing", label: "원문 미확인", rank: 0 };
+      return { cls: "missing", label: "법령 미수록", rank: 0 };
     case "no_quote":
       return { cls: "ref", label: "참조", rank: 1 };
     case "quote_ok":
-      // quote가 DB 원문에 문자적으로 일치함(빌드 시 기계 대조 통과). verified는 사람의 최종 사인오프.
-      // 미사인오프를 "미대조"로 경고하던 것은 오해 소지 — 이미 원문 일치이므로 중립 표기.
-      return src.verified
-        ? { cls: "verified", label: "원문확인", rank: 3 }
-        : { cls: "quote-ok", label: "원문 일치", rank: 3 };
+      // 기계 대조 통과 + 사람 사인오프(verified)면 정상 — 배지 생략.
+      // 사인오프 전이면 '법령 미대조'로 검수 필요를 표시.
+      return src.verified ? null : { cls: "quote-ok", label: "법령 미대조", rank: 2 };
     default:
       return { cls: "practice", label: "실무", rank: 4 };
   }
@@ -60,13 +61,13 @@ function evidenceBadgeInfo(cp) {
   var worst = null;
   sources.forEach(function (src) {
     var b = sourceBadgeInfo(src);
-    if (!worst || b.rank < worst.rank) worst = b;
+    if (b && (!worst || b.rank < worst.rank)) worst = b;
   });
-  return worst;
+  return worst; // 전 source 정상이면 null(무배지)
 }
 function sourceBadgeHtml(src) {
   var b = sourceBadgeInfo(src);
-  return '<span class="badge ' + b.cls + '">' + b.label + "</span>";
+  return b ? '<span class="badge ' + b.cls + '">' + b.label + "</span>" : "";
 }
 function evidenceCell(cp) {
   var src = primarySource(cp);
@@ -74,7 +75,8 @@ function evidenceCell(cp) {
   var lawText = src
     ? esc(src.law) + " " + esc(src.article) + (src.clause ? " " + esc(src.clause) : "")
     : "";
-  return (lawText ? lawText + " " : "") + '<span class="badge ' + badge.cls + '">' + badge.label + "</span>" +
+  return (lawText ? lawText + " " : "") +
+    (badge ? '<span class="badge ' + badge.cls + '">' + badge.label + "</span>" : "") +
     (src ? sourceTypeBadgeHtml(src) : "");
 }
 
@@ -220,7 +222,7 @@ function renderDetail(cp) {
     var clause = state.clauses[r.best.clauseIndex];
     var heading = clause ? clause.heading : ("조항#" + r.best.clauseIndex);
     h += '<div class="match-excerpt"><p class="hit">' + coverageBadgeHtml(r.coverage) + " " +
-      esc(heading) + " — 매칭 근거 원문 · 점수 " + r.best.score.toFixed(1) +
+      esc(heading) + " — 매칭 조항 발췌 · 점수 " + r.best.score.toFixed(1) +
       '<br><span class="reasons">' + esc((r.best.reasons || []).join("; ")) + "</span></p>";
     h += "<pre>" + esc(clause ? clause.body : "") + "</pre>";
     if (r.ranked && r.ranked.length > 1) {
@@ -1442,7 +1444,11 @@ function _sevSort(a, b) {
 }
 function _clauseHeading(idx) {
   var c = state.clauses[idx];
-  return c ? c.heading : ("조항#" + idx);
+  var h = c ? c.heading : ("조항#" + idx);
+  // 세그먼터 내부 라벨("(전문)"=조항 분리 전 앞부분, "(전체)"=분리 실패)은 사용자에게
+  // 무의미 — 계약 전체를 가리키는 표현으로 치환(2026-07-30 피드백).
+  if (h === "(전문)" || h === "(전체)") return "계약서 전반";
+  return h;
 }
 // 리포트에서 각 항목의 검토의견 배지(있으면).
 function _verdictBadge(cpId) {

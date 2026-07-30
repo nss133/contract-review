@@ -117,7 +117,9 @@ var Verdict = (function () {
     // 조항 위치 축약 — 표제가 "제N조(제목) 본문…" 형태로 길어도 조번호(+제목)만 인용.
     function _shortLoc(loc) {
       var s = String(loc || "").trim();
-      if (!s) return "";
+      // 특정 조항에 귀속되지 않는 의견(세그먼터 내부 라벨·전반 지칭)은 빈 값으로 —
+      // 문장에서 "계약서 전체를 기준으로 볼 때"로 표현(2026-07-30 피드백).
+      if (!s || s === "(전문)" || s === "(전체)" || s === "계약서 전반") return "";
       var m = s.match(/^제\s?\d+\s?조(?:의\s?\d+)?\s?(?:\([^)]*\))?/);
       if (m) return m[0];
       return s.length > 24 ? s.slice(0, 24) + "…" : s;
@@ -126,7 +128,8 @@ var Verdict = (function () {
       var c = String(o.comment || "").trim();
       if (c.length > 80) c = c.slice(0, 80) + "…";
       var loc = _shortLoc(o.loc);
-      sents.push((i === 0 ? "다만, " : "또한 ") + (loc ? loc + " 관련 " : "") +
+      sents.push((i === 0 ? "다만, " : "또한 ") +
+        (loc ? loc + " 관련 " : "계약서 전체를 기준으로 볼 때 ") +
         "「" + (o.label || "") + "」에 대하여 " + (c ? "‘" + c + "’ " : "") +
         "의견이 있어 보완 필요함.");
     });
