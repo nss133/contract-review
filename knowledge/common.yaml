@@ -1892,13 +1892,13 @@ checks:
         article: 제15조
         clause: 제2항
         quote: '국내 소속금융회사의 대주주가 자기 또는 제3자의 계산으로 해당 금융회사와 대통령령으로 정하는 금액 이상의 내부거래를 하려는 경우 미리 이사회에 해당 거래의 주요 내용을 밝히고 이사회의 승인을 받아야 한다. 이 경우 이사회의 승인은 재적 이사 3분의 2 이상의 찬성으로 하여야 하고, 그 거래의 내용과 절차는 공정하여야 한다'
-        verified: false
+        verified: true
         source_type: law
       - law: 금융회사의 지배구조에 관한 법률
         article: 제15조
         clause: 제1항 제7호
         quote: '대주주ㆍ임원 등과 회사 간의 이해상충 행위 감독에 관한 사항'
-        verified: false
+        verified: true
         source_type: law
       - law: 보험업법
         article: 제111조
