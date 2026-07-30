@@ -193,10 +193,99 @@ var Compare = (function () {
     return out;
   }
 
+  /* ── 아카이브 레지스트리 — 저장 시 localStorage 사본 등록·전년 검토 자동 안내 ──
+     저장/탐색의 순수 로직만. localStorage 접근·배너 UI는 app.js 몫. */
+  var REG_LIMIT = 4 * 1024 * 1024;  // 총량 제한(기본 4MB — JSON 문자열 길이 근사)
+  var REG_MAX_ENTRIES = 100;        // 항목 수 상한(지문만 남아도 무한 증식 방지)
+  var REG_KW_MAX = 80;              // 지문 키워드 수(빈도 상위)
+  var FIND_MIN = 0.5;               // 후보 임계(키워드 자카드)
+  var FIND_NEAR = 0.05;             // 동률 근접 폭 — 이내면 2건까지 안내
+
+  // 어휘 지문 — 계약명+본문의 2글자+ 한글 키워드 빈도 상위 N개. 본문이 정리(강등)돼도 매칭 가능.
+  function registryFingerprint(name, typeId, text) {
+    var counts = Object.create(null);
+    var m = (String(name || "") + " " + String(text || "")).match(/[가-힣]{2,}/g) || [];
+    for (var i = 0; i < m.length; i++) counts[m[i]] = (counts[m[i]] || 0) + 1;
+    var kw = Object.keys(counts).sort(function (a, b) {
+      return counts[b] - counts[a] || (a < b ? -1 : 1); // 빈도 → 사전순(결정적)
+    }).slice(0, REG_KW_MAX);
+    return { name: String(name || ""), type_id: typeId || null, kw: kw };
+  }
+
+  function _kwJaccard(aArr, bArr) {
+    if (!aArr.length || !bArr.length) return 0;
+    var a = Object.create(null);
+    for (var i = 0; i < aArr.length; i++) a[aArr[i]] = 1;
+    var inter = 0;
+    for (var j = 0; j < bArr.length; j++) if (a[bArr[j]]) inter++;
+    return inter / (aArr.length + bArr.length - inter);
+  }
+
+  /* registryPush(registry, entry, opts) → 새 레지스트리 배열(원본 불변).
+     entry: {name, date, reviewer, type_id, contract_hash, contract_text}
+     같은 contract_hash는 교체(최신 유지). 용량 초과 시 오래된 항목부터 contract_text 제거
+     (지문만 유지 — 스펙 §용량 관리), 그래도 초과·항목 수 초과면 오래된 항목 제거. */
+  function registryPush(registry, entry, opts) {
+    opts = opts || {};
+    var limit = opts.limit || REG_LIMIT;
+    var next = (registry || []).filter(function (e) {
+      return e && e.contract_hash !== entry.contract_hash;
+    }).map(function (e) { // 얕은 복사 — 강등 시 원본 불변 유지
+      var c = {};
+      for (var k in e) if (Object.prototype.hasOwnProperty.call(e, k)) c[k] = e[k];
+      return c;
+    });
+    next.push({
+      name: entry.name || "", date: entry.date || "", reviewer: entry.reviewer || "",
+      type_id: entry.type_id || null, contract_hash: entry.contract_hash,
+      contract_text: entry.contract_text,
+      fp: registryFingerprint(entry.name, entry.type_id, entry.contract_text)
+    });
+    // 1차 강등: 오래된 항목(앞쪽)부터 본문 제거
+    for (var i = 0; i < next.length && JSON.stringify(next).length > limit; i++) {
+      if (next[i].contract_text !== undefined) delete next[i].contract_text;
+    }
+    // 2차: 항목 수·잔여 용량 — 오래된 항목 자체를 제거
+    while (next.length > (opts.maxEntries || REG_MAX_ENTRIES) ||
+           (next.length > 1 && JSON.stringify(next).length > limit)) {
+      next.shift();
+    }
+    return next;
+  }
+
+  /* registryFind(registry, current, opts) → [{entry, score}] 점수 내림차순.
+     current: {typeId, hash, name, text}. 규칙(스펙 §자동 후보 탐색):
+     유형 일치(현재 미확정이면 전체) · 자기 자신(hash) 제외 · opts.exclude(무시 목록) 제외 ·
+     키워드 자카드 임계 이상 → 최고 1건, 동률 근접(0.05 이내)이면 최대 2건. */
+  function registryFind(registry, current, opts) {
+    opts = opts || {};
+    var min = opts.min || FIND_MIN;
+    var exclude = opts.exclude || [];
+    var curKw = registryFingerprint(current.name, current.typeId, current.text).kw;
+    var scored = [];
+    (registry || []).forEach(function (e) {
+      if (!e || !e.fp || !Array.isArray(e.fp.kw)) return;
+      if (e.contract_hash === current.hash) return;             // 자기 자신 제외
+      if (exclude.indexOf(e.contract_hash) !== -1) return;      // 무시 목록
+      if (current.typeId && e.type_id && e.type_id !== current.typeId) return; // 유형 필터(미확정이면 전체)
+      var s = _kwJaccard(curKw, e.fp.kw);
+      if (s >= min) scored.push({ entry: e, score: s });
+    });
+    scored.sort(function (a, b) { return b.score - a.score; });
+    if (scored.length <= 1) return scored;
+    // 최고 1건 + 동률 근접(0.05 이내) 시 2건까지
+    var out = [scored[0]];
+    if (scored[0].score - scored[1].score <= FIND_NEAR) out.push(scored[1]);
+    return out;
+  }
+
   return {
     alignClauses: alignClauses,
     diffWords: diffWords,
-    carryVerdicts: carryVerdicts
+    carryVerdicts: carryVerdicts,
+    registryFingerprint: registryFingerprint,
+    registryPush: registryPush,
+    registryFind: registryFind
   };
 })();
 

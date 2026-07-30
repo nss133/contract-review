@@ -288,6 +288,18 @@ td.empty { text-align: center; color: var(--ink-faint); padding: var(--sp-4); }
 .removed-clause pre { white-space: pre-wrap; font: 13px/1.7 inherit; margin: 4px 0 0; }
 /* 입력 화면 아카이브 로드 영역 — 부속서류 영역과 동일 톤 */
 .compare-load-area { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-1); margin-top: var(--sp-1); }
+/* 전년 검토 자동 안내 배너 — 제안형(요약 바 아래·리포트 위) */
+.archive-banner { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-1) var(--sp-2);
+  background: var(--c-blue-bg); border: 1px solid var(--c-blue-line); border-radius: 8px;
+  padding: var(--sp-1) var(--sp-2); margin-bottom: var(--sp-2); font-size: var(--fs-body-sub); }
+.archive-banner .ab-lead { color: var(--c-blue-fg); font-weight: 600; }
+.archive-banner .ab-cand { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.archive-banner .ab-note { font-size: var(--fs-meta); color: var(--ink-mute); }
+.archive-banner .ab-start { border: 1px solid var(--c-blue-line); background: var(--bg-card); color: var(--c-blue-fg);
+  border-radius: 5px; padding: 2px 12px; cursor: pointer; font-size: var(--fs-body-sub); }
+.archive-banner .ab-start:hover { background: var(--c-blue-fg); color: #fff; }
+.archive-banner .ab-dismiss { border: none; background: none; color: var(--ink-faint);
+  cursor: pointer; font-size: var(--fs-meta); text-decoration: underline; }
 @media (max-width: 900px) {
   #clause-rows.compare-mode .clause-row { grid-template-columns: 1fr; }
 }

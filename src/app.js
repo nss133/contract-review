@@ -662,6 +662,7 @@ function runAnalysis() {
   _opinionEditing = false; // 재분석·해시 변경 시 종합 검토의견 편집 모드 해제
   applySubdocVerdicts();
   applyCompare(); // 아카이브 로드 상태면 현재 조항 기준 정렬·이관 후보 재산출
+  renderArchiveBanner(); // 비교 미진입 시 레지스트리에서 전년 검토 후보 자동 안내
   renderClauses();
   bindVerdictIO();
   renderChecklist();
@@ -1181,6 +1182,11 @@ function exportArchive() {
   a.download = "review-archive_" + (state.typeId || "common") + "_" + verdictHash + "_" + verdictToday() + ".json";
   document.body.appendChild(a); a.click(); document.body.removeChild(a);
   URL.revokeObjectURL(url);
+  // 파일 다운로드와 동시에 레지스트리 사본 등록 — 다음 해 분석 시 자동 안내의 원천.
+  saveArchiveRegistry(Compare.registryPush(loadArchiveRegistry(), {
+    name: meta.name, date: meta.date, reviewer: meta.reviewer,
+    type_id: state.typeId || null, contract_hash: verdictHash, contract_text: state.text
+  }));
 }
 
 function _setCompareMsg(text) {
@@ -1188,7 +1194,26 @@ function _setCompareMsg(text) {
   if (el) el.textContent = text || "";
 }
 
-// 아카이브 파일 불러오기 — 스키마 검증 후 state.compare 구성. 분석 전이면 보류(분석 시 적용).
+// 아카이브 객체 적용 — 파일 불러오기·레지스트리 자동 안내(비교 시작) 공용 경로.
+function applyArchiveObject(obj) {
+  state.compare = {
+    meta: obj.meta,
+    oldClauses: segmentContract(obj.contract_text),
+    oldVerdicts: Verdict.importVerdicts(obj),
+    mapping: null
+  };
+  if (state.result) {
+    applyCompare();
+    renderClauses();
+    renderReport();
+    renderArchiveBanner(); // 비교 진입 — 자동 안내 배너 숨김
+    document.querySelector('.tab[data-tab="clauses"]').click();
+  } else {
+    _setCompareMsg("아카이브 로드됨(" + (obj.meta.name || obj.meta.date || "") + ") — 분석 시작 시 비교 뷰가 열립니다.");
+  }
+}
+
+// 아카이브 파일 불러오기 — 스키마 검증 후 적용. 분석 전이면 보류(분석 시 적용).
 function loadArchiveFile(f) {
   if (!f) return;
   f.text().then(function (t) {
@@ -1196,22 +1221,94 @@ function loadArchiveFile(f) {
     var ok = obj && obj.meta && typeof obj.contract_text === "string" &&
       obj.contract_text.trim() && obj.verdicts && typeof obj.verdicts === "object";
     if (!ok) throw new Error("format");
-    state.compare = {
-      meta: obj.meta,
-      oldClauses: segmentContract(obj.contract_text),
-      oldVerdicts: Verdict.importVerdicts(obj),
-      mapping: null
-    };
-    if (state.result) {
-      applyCompare();
-      renderClauses();
-      renderReport();
-      document.querySelector('.tab[data-tab="clauses"]').click();
-    } else {
-      _setCompareMsg("아카이브 로드됨(" + (obj.meta.name || obj.meta.date || "") + ") — 분석 시작 시 비교 뷰가 열립니다.");
-    }
+    applyArchiveObject(obj);
   }).catch(function () {
     _setCompareMsg("아카이브 형식이 아님 — '검토 아카이브 저장'으로 만든 .json 파일을 선택하세요.");
+  });
+}
+
+/* ── 아카이브 레지스트리 — 저장 시 localStorage 사본 등록, 분석 시 전년 검토 자동 안내 ──
+   검토자가 아카이브 존재를 모를 수 있음 → 앱이 후보를 찾아 배너로 제안(순수 로직은 Compare.registry*).
+   판정(verdicts)은 사본에 안 담음 — 같은 PC의 cr-verdict-<해시> 저장분을 비교 시작 시 재사용. */
+var ARCHIVE_REG_KEY = "cr-archive-registry";
+var ARCHIVE_DISMISS_KEY = "cr-archive-dismiss"; // { <현재 계약 해시>: [무시한 후보 해시...] }
+function loadArchiveRegistry() {
+  try { return JSON.parse(localStorage.getItem(ARCHIVE_REG_KEY)) || []; } catch (e) { return []; }
+}
+// QuotaExceededError 방어 — 실패 시 전 항목 본문 강등(지문만) → 최근 절반만 → 포기(안내 기능만 저하).
+function saveArchiveRegistry(reg) {
+  try { localStorage.setItem(ARCHIVE_REG_KEY, JSON.stringify(reg)); return; } catch (e) {}
+  var slim = reg.map(function (e) {
+    var c = {};
+    for (var k in e) if (Object.prototype.hasOwnProperty.call(e, k) && k !== "contract_text") c[k] = e[k];
+    return c;
+  });
+  try { localStorage.setItem(ARCHIVE_REG_KEY, JSON.stringify(slim)); return; } catch (e2) {}
+  try { localStorage.setItem(ARCHIVE_REG_KEY, JSON.stringify(slim.slice(-Math.ceil(slim.length / 2)))); } catch (e3) {}
+}
+function loadArchiveDismiss() {
+  try { return JSON.parse(localStorage.getItem(ARCHIVE_DISMISS_KEY)) || {}; } catch (e) { return {}; }
+}
+function addArchiveDismiss(curHash, candHash) {
+  var d = loadArchiveDismiss();
+  if (!d[curHash]) d[curHash] = [];
+  if (d[curHash].indexOf(candHash) === -1) d[curHash].push(candHash);
+  try { localStorage.setItem(ARCHIVE_DISMISS_KEY, JSON.stringify(d)); } catch (e) {}
+}
+
+// 레지스트리 후보로 즉시 비교 시작 — 판정·종합의견은 같은 PC의 저장분을 재사용.
+function startCompareFromRegistry(entry) {
+  var verdicts = {};
+  try { verdicts = JSON.parse(localStorage.getItem(Verdict.verdictKey(entry.contract_hash)) || "{}"); } catch (e) {}
+  var opinion = "";
+  try {
+    var op = JSON.parse(localStorage.getItem(Verdict.opinionKey(entry.contract_hash)) || "null");
+    if (op) opinion = op.text || "";
+  } catch (e) {}
+  applyArchiveObject({
+    meta: { type_id: entry.type_id, date: entry.date, contract_hash: entry.contract_hash,
+      reviewer: entry.reviewer, opinion: opinion, archive: true, name: entry.name },
+    contract_text: entry.contract_text,
+    verdicts: verdicts
+  });
+}
+
+// 전년 검토 자동 안내 배너 — 분석 완료 시 레지스트리에서 후보 탐색(비교 모드면 생략).
+function renderArchiveBanner() {
+  var el = document.getElementById("archive-banner");
+  if (!el) return;
+  if (!state.result || (state.compare && state.compare.mapping)) { el.hidden = true; el.innerHTML = ""; return; }
+  var cands = Compare.registryFind(loadArchiveRegistry(),
+    { typeId: state.typeId || "", hash: verdictHash, name: _contractName(), text: state.text },
+    { exclude: loadArchiveDismiss()[verdictHash] || [] });
+  if (!cands.length) { el.hidden = true; el.innerHTML = ""; return; }
+  el.innerHTML = '<span class="ab-lead">이 계약의 이전 검토로 보이는 아카이브가 있음 — 비교하여 달라진 조항만 살펴볼 수 있음.</span>' +
+    cands.map(function (c) {
+      var e = c.entry;
+      return '<span class="ab-cand">「' + esc(e.name || "이름 없음") + "」(" + esc(e.date || "일자 미상") +
+        (e.reviewer ? ", " + esc(e.reviewer) : "") + ")" +
+        (e.contract_text ? "" : ' <span class="ab-note">본문이 정리되어 파일 선택이 필요함</span>') +
+        ' <button class="ab-start" data-h="' + esc(e.contract_hash) + '">비교 시작</button>' +
+        '<button class="ab-dismiss ghost" data-h="' + esc(e.contract_hash) + '">무시</button></span>';
+    }).join("");
+  el.hidden = false;
+  el.querySelectorAll(".ab-start").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var h = btn.getAttribute("data-h");
+      var hit = cands.filter(function (c) { return c.entry.contract_hash === h; })[0];
+      if (!hit) return;
+      if (hit.entry.contract_text) { startCompareFromRegistry(hit.entry); return; }
+      // 용량 강등으로 지문만 남은 항목 — 아카이브 파일을 직접 선택하게 안내.
+      _setCompareMsg("이 항목은 본문 사본이 정리됨 — 저장해 둔 아카이브 파일(.json)을 선택하세요.");
+      var inp = document.getElementById("compare-file-bar");
+      if (inp) inp.click();
+    });
+  });
+  el.querySelectorAll(".ab-dismiss").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      addArchiveDismiss(verdictHash, btn.getAttribute("data-h"));
+      renderArchiveBanner(); // 무시 반영 — 남은 후보 없으면 숨김
+    });
   });
 }
 // 불러오기 입력은 정적 요소 — 1회 바인딩(중복 리스너 방지).
@@ -1243,11 +1340,12 @@ function applyCompare() {
   cmp.carry.forEach(function (c) { cmp.carryById[c.cpId] = c; });
 }
 
-// 비교 해제 — 원래 3열(① ② ③)로 복귀.
+// 비교 해제 — 원래 3열(① ② ③)로 복귀. 자동 안내 배너는 재탐색(무시 기록은 유지됨).
 function clearCompare() {
   state.compare = null;
   renderClauses();
   renderReport();
+  renderArchiveBanner();
 }
 
 // diff 렌더 — esc 후 마크업 주입(토큰별 이스케이프 → 태그 감싸기 순서 고정, XSS 안전).

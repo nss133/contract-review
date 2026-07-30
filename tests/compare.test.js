@@ -210,3 +210,92 @@ test("carryVerdicts: quiet 항목은 후보 아님", () => {
   const results = [{ cpId: "CP-1", coverage: "quiet", best: { clauseIndex: 0 } }];
   assert.strictEqual(Compare.carryVerdicts(OLD_VERDICTS, MAPPING, results).length, 0);
 });
+
+// ── 아카이브 레지스트리(자동 안내) — registryPush·용량 강등·후보 매칭 ──
+const TEXT_A = "위탁자와 수탁자는 전산시스템 유지보수 용역에 관하여 계약을 체결한다. " +
+  "수탁자는 재위탁 금지 의무와 비밀유지 의무를 부담하며 지체상금과 손해배상 조항이 적용된다. " +
+  "하자보수 보증기간은 검수 완료일부터 일 년으로 하고 이행보증보험증권을 제출한다.";
+const TEXT_A2 = TEXT_A + " 개인정보 보호 조항이 신설되어 수탁자는 개인정보를 안전하게 관리한다."; // 같은 계약의 이듬해 수정본
+const TEXT_B = "임대인은 임차인에게 건물을 임대하고 임차인은 차임을 지급한다. " +
+  "보증금 반환과 원상회복 의무, 임대차 기간 갱신에 관한 사항을 정한다.";
+
+function regEntry(hash, name, typeId, text) {
+  return { name: name, date: "2025-07-30", reviewer: "손남수",
+    type_id: typeId, contract_hash: hash, contract_text: text };
+}
+
+test("registryPush: 항목 등록 시 지문(fp)이 생성되고 같은 hash는 교체된다", () => {
+  let reg = Compare.registryPush([], regEntry("h1", "IT용역", "procurement", TEXT_A));
+  assert.strictEqual(reg.length, 1);
+  assert.ok(reg[0].fp && Array.isArray(reg[0].fp.kw) && reg[0].fp.kw.length > 0);
+  assert.strictEqual(reg[0].contract_text, TEXT_A);
+  // 같은 계약(hash) 재등록 → 교체(중복 없음, 최신 유지)
+  reg = Compare.registryPush(reg, regEntry("h1", "IT용역(수정)", "procurement", TEXT_A));
+  assert.strictEqual(reg.length, 1);
+  assert.strictEqual(reg[0].name, "IT용역(수정)");
+});
+
+test("registryPush: 용량 초과 시 오래된 항목부터 contract_text를 제거하고 지문만 유지", () => {
+  // 한도 = "h1·h2 지문만 + h3 전문" 상태의 크기 — 이 상태로 정확히 강등되는지 검증.
+  let full = Compare.registryPush([], regEntry("h1", "A", "procurement", TEXT_A));
+  full = Compare.registryPush(full, regEntry("h2", "B", "lease", TEXT_B));
+  full = Compare.registryPush(full, regEntry("h3", "C", "procurement", TEXT_A2));
+  const degraded = full.map((e, i) => {
+    const c = Object.assign({}, e);
+    if (i < 2) delete c.contract_text;
+    return c;
+  });
+  const limit = JSON.stringify(degraded).length;
+  let reg = Compare.registryPush([], regEntry("h1", "A", "procurement", TEXT_A), { limit });
+  reg = Compare.registryPush(reg, regEntry("h2", "B", "lease", TEXT_B), { limit });
+  reg = Compare.registryPush(reg, regEntry("h3", "C", "procurement", TEXT_A2), { limit });
+  assert.strictEqual(reg.length, 3); // 항목은 유지
+  assert.strictEqual(reg[0].contract_text, undefined); // 가장 오래된 h1부터 본문 강등
+  assert.ok(reg[0].fp.kw.length > 0); // 지문은 유지
+  assert.strictEqual(reg[2].contract_text, TEXT_A2); // 최신은 전문 보유
+});
+
+test("registryFind: 같은 계약 수정본을 상위 1건으로 찾고 자기 자신·무관 계약은 제외", () => {
+  let reg = Compare.registryPush([], regEntry("h1", "IT용역 위탁", "procurement", TEXT_A));
+  reg = Compare.registryPush(reg, regEntry("h2", "건물 임대차", "lease", TEXT_B));
+  const cands = Compare.registryFind(reg, { typeId: "procurement", hash: "hNew", name: "IT용역 위탁", text: TEXT_A2 });
+  assert.strictEqual(cands.length, 1);
+  assert.strictEqual(cands[0].entry.contract_hash, "h1");
+  assert.ok(cands[0].score > 0.5);
+  // 자기 자신(동일 hash) 제외
+  const self = Compare.registryFind(reg, { typeId: "procurement", hash: "h1", name: "IT용역 위탁", text: TEXT_A });
+  assert.strictEqual(self.filter((c) => c.entry.contract_hash === "h1").length, 0);
+});
+
+test("registryFind: type_id 필터 — 유형 일치만, 미확정(빈)이면 전체 탐색", () => {
+  let reg = Compare.registryPush([], regEntry("h1", "IT용역", "procurement", TEXT_A));
+  // 유형이 다르면 본문이 같아도 후보 아님
+  const other = Compare.registryFind(reg, { typeId: "lease", hash: "hNew", name: "IT용역", text: TEXT_A });
+  assert.strictEqual(other.length, 0);
+  // 미확정이면 전체 탐색
+  const und = Compare.registryFind(reg, { typeId: "", hash: "hNew", name: "IT용역", text: TEXT_A });
+  assert.strictEqual(und.length, 1);
+});
+
+test("registryFind: 무시 목록(exclude)·임계 미달·동률 근접 2건", () => {
+  let reg = Compare.registryPush([], regEntry("h1", "IT용역", "procurement", TEXT_A));
+  reg = Compare.registryPush(reg, regEntry("h1b", "IT용역 사본", "procurement", TEXT_A)); // 동률 후보
+  reg = Compare.registryPush(reg, regEntry("h2", "임대차", "procurement", TEXT_B));       // 임계 미달(본문 무관)
+  const cur = { typeId: "procurement", hash: "hNew", name: "IT용역", text: TEXT_A2 };
+  const cands = Compare.registryFind(reg, cur);
+  assert.strictEqual(cands.length, 2); // 동률 근접 시 최대 2건 — 임계 미달 h2는 제외
+  const hashes = cands.map((c) => c.entry.contract_hash).sort();
+  assert.deepStrictEqual(hashes, ["h1", "h1b"]);
+  // 무시 목록 — 후보에서 제외
+  const rest = Compare.registryFind(reg, cur, { exclude: ["h1"] });
+  assert.strictEqual(rest.length, 1);
+  assert.strictEqual(rest[0].entry.contract_hash, "h1b");
+});
+
+test("registryFind: 지문만 남은 항목(본문 강등)도 후보 매칭된다", () => {
+  let reg = Compare.registryPush([], regEntry("h1", "IT용역", "procurement", TEXT_A));
+  delete reg[0].contract_text; // 용량 강등 상태 재현
+  const cands = Compare.registryFind(reg, { typeId: "procurement", hash: "hNew", name: "IT용역", text: TEXT_A2 });
+  assert.strictEqual(cands.length, 1);
+  assert.strictEqual(cands[0].entry.contract_hash, "h1");
+});
