@@ -4314,6 +4314,19 @@ function renderGoldsetResults() {
 }
 initGoldsetPane();
 
+// 파일명 금지문자 치환 — Windows·macOS 공용 안전 집합.
+function _safeFileName(s) {
+  return String(s || "").replace(/[\\/:*?"<>|]/g, "_").replace(/\s+/g, " ").trim();
+}
+// 회신용 검토의견 파일 자동 명명 — 검토의견_<계약명>_<검토자>_<YYYYMMDD>.json.
+// 계약명은 요약 바와 동일(_contractName), 검토자 미입력 시 생략. 원버튼·개별 내보내기 공용.
+function verdictFileName() {
+  var parts = ["검토의견", _safeFileName(_contractName()) || "계약서"];
+  var rv = _safeFileName(getReviewer());
+  if (rv) parts.push(rv);
+  parts.push(verdictToday().replace(/-/g, ""));
+  return parts.join("_") + ".json";
+}
 function exportVerdicts() {
   // subdoc_coverage(#3): 부속서류에서 매칭 확인된 항목은 기계 사실로 기록에 남김 —
   // 사람 판정(verdicts)과 별개 키. 데이터 축적 시 "부속서류로 충족되는 항목" 패턴의 원료.
@@ -4323,13 +4336,28 @@ function exportVerdicts() {
   var blob = new Blob([JSON.stringify(Verdict.exportVerdicts(verdictStore, meta), null, 2)], { type: "application/json" });
   var url = URL.createObjectURL(blob);
   var a = document.createElement("a");
-  // 공유폴더 취합 시 충돌 방지 — 계약해시·검토자·날짜로 유니크 파일명.
-  var rv = getReviewer();
   a.href = url;
-  a.download = "verdicts_" + (state.typeId || "common") + "_" + verdictHash +
-    (rv ? "_" + rv : "") + "_" + verdictToday() + ".json";
+  a.download = verdictFileName(); // 팀 회신용 자동 명명 — JSON 형식 자체는 불변(파일명만 변경)
   document.body.appendChild(a); a.click(); document.body.removeChild(a);
   URL.revokeObjectURL(url);
+}
+
+/* ---------- 검토 마치기(원버튼) — 팀원 일상 마무리 액션 ----------
+   ① 지식 반영(코퍼스 ingest — 해시 멱등이라 중복 클릭 안전)
+   ② 검토 아카이브를 브라우저(레지스트리)에 등록 — 파일 다운로드 없이, 다음 해 자동 안내의 원천
+   ③ 회신용 검토의견 파일 1개 다운로드(자동 명명)
+   개별 버튼 3종은 "팀·지식 관리" 접힘에 유지(동작 불변) — 멘털 모델: 버튼 하나·파일 하나. */
+function finishReview() {
+  if (!state.result) return;
+  ingestCurrentToCorpus();
+  saveArchiveRegistry(Compare.registryPush(loadArchiveRegistry(), {
+    name: _contractName(), date: verdictToday(), reviewer: getReviewer(),
+    type_id: state.typeId || null, contract_hash: verdictHash, contract_text: state.text
+  }));
+  exportVerdicts();
+  renderReport(); renderClauses(); renderSuggestions(); // 코퍼스 카운트·추천 갱신
+  var msg = document.getElementById("finish-msg");
+  if (msg) msg.textContent = "검토가 저장되었음 — 다운로드된 파일을 팀 취합 담당에게 회신해 주세요.";
 }
 // 일괄 판정(통과계약 모드) — 미판정만 채움(기판정=예외 보존은 Verdict.bulkVerdict가 보장).
 function bindBulkVerdict() {
@@ -5318,14 +5346,19 @@ function renderReport() {
   }).join("") || '<p class="report-none">해당 없음.</p>';
   right += "</details>";
 
-  // 일상 액션만 노출(P1) — 관리 액션(지식 반영·골드셋 저장·판정파일 반영·코퍼스 백업/복원·정규화 후보)은
-  // "팀·지식 관리" 접힘으로 격리. 인쇄 시 접힘은 자동 펼침 대상에서 제외(admin-fold).
+  // 일상 액션 = 원버튼 [검토 마치기] 하나(팀 피드백: 저장 3종 혼란 제거) + 인쇄.
+  // 개별 저장 버튼(내보내기·아카이브·지식 반영)과 관리 액션(골드셋 저장·판정파일 반영·
+  // 코퍼스 백업/복원·정규화 후보)은 "팀·지식 관리" 접힘으로 격리(전문가용, 동작 불변).
+  // 인쇄 시 접힘은 자동 펼침 대상에서 제외(admin-fold).
+  right += '<div class="report-actions">' +
+    '<button id="report-finish" class="primary">검토 마치기</button>' +
+    '<button id="report-print" class="ghost">인쇄</button>' +
+    '<span id="finish-msg" class="report-actions-note">지식 반영 + 브라우저에 아카이브 등록 + 회신용 검토의견 파일 1개 다운로드</span></div>';
+  right += '<details class="report-sec admin-fold"><summary>팀·지식 관리</summary>';
   right += '<div class="report-actions">' +
     '<button id="report-verdict-export" class="ghost">검토의견 내보내기</button>' +
     '<button id="report-archive-export" class="ghost">검토 아카이브 저장</button>' +
-    '<button id="report-print" class="ghost">인쇄</button>' +
-    '<span class="report-actions-note">아카이브 = 계약 전문 + 판정 + 종합의견 — 다음 해 재검토 시 "이전 검토와 비교"로 불러옴</span></div>';
-  right += '<details class="report-sec admin-fold"><summary>팀·지식 관리</summary>';
+    '<span class="report-actions-note">아카이브 = 계약 전문 + 판정 + 종합의견(파일로도 받기) — 다음 해 재검토 시 "이전 검토와 비교"로 불러옴</span></div>';
   right += '<div class="report-actions">' +
     '<label class="reviewer-label">검토자 <input id="reviewer-name" placeholder="이름(코멘트 귀속)" value="' + esc(getReviewer()) + '"></label>' +
     '<button id="report-loop-ingest" class="ghost">이 검토를 지식에 반영</button>' +
@@ -5373,6 +5406,8 @@ function renderReport() {
   if (oregen) oregen.addEventListener("click", function () { opinionStoreClear(); renderReport(); });
   var rprint = document.getElementById("report-print");
   if (rprint) rprint.addEventListener("click", function () { window.print(); });
+  var rfin = document.getElementById("report-finish");
+  if (rfin) rfin.addEventListener("click", finishReview);
   var rvIn = document.getElementById("reviewer-name");
   if (rvIn) rvIn.addEventListener("change", function () { setReviewer(rvIn.value); });
   var rexp = document.getElementById("report-verdict-export");
