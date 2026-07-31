@@ -203,10 +203,10 @@ test("composeOpinion: 필수 미확인 — 조항 신설 검토 문장 + 1문장
 test("composeOpinion: 형식 경고 1줄 + 유형 미확정 표기", () => {
   const t = V.composeOpinion({
     clauseCount: 3, typeName: null, mustCoreLabels: [],
-    opinions: [], formalWarnTitles: ["빈칸 잔존", "체결일자 기재"]
+    opinions: [], formalWarnTitles: ["대표자 이름 표기", "회사 주소 표기"]
   });
   assert.ok(t.indexOf("계약서(3개 조항, 유형 미확정) 검토 결과") === 0);
-  assert.ok(t.indexOf("형식 점검에서 「빈칸 잔존」 등 2건 경고가 있어 확인 요함.") !== -1);
+  assert.ok(t.indexOf("형식 점검에서 「대표자 이름 표기」 등 2건 경고가 있어 확인 요함.") !== -1);
   // 형식 경고가 있으므로 "특이사항 없음" 미출력
   assert.ok(t.indexOf("특이사항 없음") === -1);
 });

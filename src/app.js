@@ -695,7 +695,7 @@ function runAnalysis() {
     });
   });
 
-  // 형식 점검(#5): 상호·빈칸·일자·법인표기 룰 검출
+  // 형식 점검(#5): 당사 고유명사(상호·대표자·주소) 근사 오기 룰 검출 — 일반 오타·빈칸은 범위 밖
   state.formal = Formal.checkFormal(state.text);
 
   loadVerdicts();
@@ -2066,7 +2066,7 @@ function renderReport() {
     _tile("rpt-sec-suggest", "tile-verify", "△ 함께 살펴볼 항목", verifyMain.length,
       "관련 조항이 있어 보임 — 참고 제안") +
     _tile("rpt-sec-formal", "tile-formal", "형식 확인 필요", formalWarns.length,
-      "경고 " + formalWarns.length + "건 (형식 " + formalN + "개 항목 점검) — 상호·빈칸·날짜 등") +
+      "경고 " + formalWarns.length + "건 (형식 " + formalN + "개 항목 점검) — 상호·대표자·주소 오기") +
     _tile("rpt-sec-opinions", "tile-progress", "검토 진행률", judged + " / " + judgeable,
       "판정한 항목 / 판정 대상") +
     "</div>";
@@ -2185,6 +2185,8 @@ function renderReport() {
   // 4. 형식 점검 — warn 항목만 표시
   if (formalWarns.length) {
     right += '<section id="rpt-sec-formal" class="report-sec-block sec-formal"><h4>형식 점검</h4>';
+    // 점검 범위 한정 부연(7차 피드백) — 일반 오타는 룰로 검출 불가
+    right += '<p class="sec-hint">당사 고유명사(상호·대표자·주소) 근방의 근사 오기만 점검함 — 일반 오타·빈칸은 점검 범위 밖.</p>';
     right += formalWarns.map(function (f) {
       return '<div class="report-item"><span class="ri-q">' + esc(f.title) + ' — ' + esc(f.detail) + "</span></div>";
     }).join("") + "</section>";
