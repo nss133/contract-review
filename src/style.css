@@ -602,7 +602,7 @@ td.empty { text-align: center; color: var(--ink-faint); padding: var(--sp-4); }
    인쇄: 배경 미출력 대비 좌측 보더가 구분을 유지(아래 규칙이 print 리셋보다 명시도 높음). */
 .report-summary .sec-consider, .report-summary .sec-verify, .report-summary .sec-formal,
 .report-summary .sec-opinions, .report-summary .sec-covered, .report-summary .sec-refdoc,
-.report-summary .sec-compare, .report-summary .sec-addressed {
+.report-summary .sec-compare, .report-summary .sec-addressed, .report-summary .sec-done {
   border-left: 4px solid transparent; border-radius: 0 8px 8px 0;
   padding: var(--sp-2) 14px; margin-bottom: var(--sp-3);
 }
@@ -621,3 +621,15 @@ td.empty { text-align: center; color: var(--ink-faint); padding: var(--sp-4); }
 .report-summary .sec-addressed { background: var(--c-green-bg); border: 1px solid var(--c-green-line);
   border-left-width: 4px; }
 .report-summary .sec-addressed > summary { color: var(--c-green-fg); }
+
+/* 판정 완료 구역(피드백 3차) — 알람에서 판정을 마친 항목의 행선지. 알람색이 아닌 완료색(초록). */
+.report-summary .sec-done { background: var(--c-green-bg); border-left-color: var(--c-green-line); }
+.report-summary .sec-done h4, .report-summary h4.h4-done { color: var(--c-green-fg); }
+.report-done-line { color: var(--c-green-fg); font-weight: 600; font-size: var(--fs-body-sub); margin: var(--sp-1) 0; }
+.sec-progress { font-weight: 500; font-size: var(--fs-meta); color: var(--ink-soft); margin-left: 8px; }
+.report-item.done-item { border-left: 4px solid var(--c-green-line); }
+/* 조항별 검토 부재 알람 블록의 판정 완료 소구역 — 리포트와 동일 어휘·색 */
+.badge.cov-done { background: var(--c-green-bg); color: var(--c-green-fg); font-weight: 600; }
+.consider-done-head { margin: var(--sp-3) 0 4px; }
+.consider-done-line { color: var(--c-green-fg); font-weight: 600; font-size: var(--fs-body-sub); margin: var(--sp-1) 0; }
+.consider-anchor.consider-anchor-done { color: var(--c-green-fg); border-color: var(--c-green-line); background: var(--c-green-bg); }

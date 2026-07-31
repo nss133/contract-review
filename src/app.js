@@ -1591,15 +1591,25 @@ function verdictProgress() {
   return { judged: judged, judgeable: judgeable };
 }
 
-// 검토 제안 카운트(필수·의견·부속서류·별첨참조) — 헤더 앵커 툴팁·부재 알람 블록 부제 공용.
+// 부재 알람의 판정 여부 — 판정을 찍은 항목은 알람에서 이탈(피드백 3차, 리포트 집계와 동일 원칙).
+function _considerJudged(r) {
+  var v = verdictStore[r.cpId];
+  return !!(v && v.verdict);
+}
+// 미판정 알람 수 — 헤더 앵커·부재 알람 블록·considerCountText 공용(전면 일관).
+function considerPendingCount() {
+  return _considerList.filter(function (r) { return !_considerJudged(r); }).length;
+}
+// 검토 제안 카운트(미판정 필수·판정 완료·부속서류·별첨참조) — 헤더 앵커 툴팁·부재 알람 블록 부제 공용.
 function considerCountText() {
-  var mustN = _considerList.filter(function (r) { var c = _cpById(r.cpId); return c && c.severity === "필수"; }).length;
-  var opinN = _considerList.filter(function (r) { var v = verdictStore[r.cpId]; return v && v.verdict === "검토의견"; }).length;
-  var subN = _considerList.filter(function (r) { return (state.subDocCov || {})[r.cpId]; }).length;
-  var refN = _considerList.filter(function (r) { return !(state.subDocCov || {})[r.cpId] && (state.refCov || {})[r.cpId]; }).length;
+  var pending = _considerList.filter(function (r) { return !_considerJudged(r); });
+  var mustN = pending.filter(function (r) { var c = _cpById(r.cpId); return c && c.severity === "필수"; }).length;
+  var doneN = _considerList.length - pending.length;
+  var subN = pending.filter(function (r) { return (state.subDocCov || {})[r.cpId]; }).length;
+  var refN = pending.filter(function (r) { return !(state.subDocCov || {})[r.cpId] && (state.refCov || {})[r.cpId]; }).length;
   var parts = [];
   if (mustN) parts.push("필수 " + mustN);
-  if (opinN) parts.push("의견 " + opinN);
+  if (doneN) parts.push("판정 완료 " + doneN);
   if (subN) parts.push("부속서류 " + subN);
   if (refN) parts.push("별첨참조 " + refN);
   return parts.join(" · ");
@@ -1719,11 +1729,17 @@ function renderConsiderBlock() {
   if (!_considerList.length) { block.innerHTML = ""; return; }
   var subCov = state.subDocCov || {};
   var refCov = state.refCov || {};
-  var uncovered = _considerList.filter(function (r) { return !subCov[r.cpId] && !refCov[r.cpId]; });
-  var covered = _considerList.filter(function (r) { return subCov[r.cpId]; });
-  var referenced = _considerList.filter(function (r) { return !subCov[r.cpId] && refCov[r.cpId]; });
+  // 판정 우선 분리(피드백 3차): 판정 찍힌 항목은 알람·커버 그룹에서 빼고 최하단 "판정 완료"로.
+  // 카드의 판정 버튼은 유지 — 같은 판정을 다시 누르면 취소되어 알람으로 복귀.
+  var pending = _considerList.filter(function (r) { return !_considerJudged(r); });
+  var judgedList = _considerList.filter(_considerJudged);
+  var uncovered = pending.filter(function (r) { return !subCov[r.cpId] && !refCov[r.cpId]; });
+  var covered = pending.filter(function (r) { return subCov[r.cpId]; });
+  var referenced = pending.filter(function (r) { return !subCov[r.cpId] && refCov[r.cpId]; });
   var items = uncovered.map(renderConsiderItem).join("") ||
-    '<p class="compare-empty">확인 안 된 항목 없음</p>';
+    (judgedList.length
+      ? '<p class="consider-done-line">모든 항목 확인 완료 — 알람에 떴던 항목의 판정을 마쳤음.</p>'
+      : '<p class="compare-empty">확인 안 된 항목 없음</p>');
   var coveredHtml = covered.length
     ? '<h3 class="subdoc-covered-head"><span class="badge cov-subdoc">✓ 부속서류 반영</span> 부속 서류에서 확인된 항목</h3>' +
       '<p class="consider-hint">주 계약서엔 없지만 부속 서류에서 매칭 확인됨 — 커버 적정성만 확인하세요.</p>' +
@@ -1734,11 +1750,16 @@ function renderConsiderBlock() {
       '<p class="consider-hint">본문이 표준 부속서류 체결을 정하고 있음 — 약정서 체결·첨부 여부만 확인하세요.</p>' +
       referenced.map(renderConsiderItem).join("")
     : "";
+  var judgedHtml = judgedList.length
+    ? '<h3 class="consider-done-head"><span class="badge cov-done">✓ 판정 완료</span> 검토자가 확인을 마친 항목 (' + judgedList.length + ")</h3>" +
+      '<p class="consider-hint">판단 내용을 부기하고 처리된 항목 — 판정을 취소하면 다시 알람으로 돌아옴.</p>' +
+      judgedList.map(renderConsiderItem).join("")
+    : "";
   block.innerHTML =
     '<div class="consider-panel"><h3><span class="badge cov-consider">! 계약서에서 확인 안 됨</span> 누락인지 해당없음인지 판단이 필요한 항목' +
     '<span class="consider-sub">' + esc(considerCountText()) + "</span></h3>" +
-    '<p class="consider-hint">각 항목이 실제로 빠진 것인지(오류) 아니면 해당 없는지 검토하고 의견을 남기세요.</p>' +
-    items + coveredHtml + referencedHtml + "</div>";
+    '<p class="consider-hint">각 항목이 실제로 빠진 것인지(오류) 아니면 해당 없는지 검토하고 의견을 남기세요 — 판정을 남기면 하단 "판정 완료"로 이동함.</p>' +
+    items + coveredHtml + referencedHtml + judgedHtml + "</div>";
   bindVerdictControls(block, function () {
     renderConsiderBlock();
     refreshClauseCounts();
@@ -1755,8 +1776,11 @@ function refreshClauseCounts() {
   if (prog) prog.textContent = "검토 진행 " + p.judged + " / " + p.judgeable;
   var anchor = document.getElementById("consider-anchor");
   if (anchor) {
+    // 미판정만 카운트(피드백 3차) — 판정을 찍으면 즉시 감소, 전부 판정되면 완료 표기로 전환.
+    var pendingN = considerPendingCount();
     anchor.hidden = !_considerList.length;
-    anchor.textContent = "⚠ 확인 안 된 항목 " + _considerList.length + "건";
+    anchor.textContent = pendingN ? "⚠ 확인 안 된 항목 " + pendingN + "건" : "✓ 알람 전부 판정 완료";
+    anchor.classList.toggle("consider-anchor-done", !pendingN);
     anchor.title = considerCountText();
   }
   document.querySelectorAll("#clause-rows .clause-row").forEach(function (row) {
@@ -1900,20 +1924,33 @@ function renderReport() {
   // '해당없음'으로 검토자가 판정한 항목은 부재 알람에서 제외 — 사람이 해당 없음을 이미 판단했으므로
   // 보완 필요로 다시 띄우지 않음(#①). 매칭 안 됐어도 검토자 판정이 우선.
   function _isNA(cp) { var v = verdictStore[cp.id]; return v && v.verdict === "해당없음"; }
+  // 판정 반영(팀 피드백 3차): 판정을 찍은 항목은 검토를 마친 것 — 알람(확인 안 된 항목)에서 이탈.
+  // coverage(매칭 결과)는 불변, 표시·집계 레이어에서만 분리. 검토의견 판정분은 "검토의견 개진"
+  // 구역이 담당하고, 이상없음·해당없음 판정분은 "판정 완료" 소구역으로 이동.
+  function _verdictOf(cp) { var v = verdictStore[cp.id]; return (v && v.verdict) || ""; }
   var subCov = state.subDocCov || {};
   var refCov = state.refCov || {}; // 별첨 참조(#4) — 기계매칭(subCov) 우선
   var mustAll = consider.filter(function (it) { return it.severity === "필수" && !_isNA(it.cp); });
-  var mustNA = consider.filter(function (it) { return it.severity === "필수" && _isNA(it.cp); }); // 검토자가 해당없음 판정
   var mustConsider = mustAll.filter(function (it) { return !subCov[it.cp.id] && !refCov[it.cp.id]; }); // 진짜 미확인
-  var mustCovered = mustAll.filter(function (it) { return subCov[it.cp.id]; });   // 부속서류 커버
+  var mustCovered = mustAll.filter(function (it) { return subCov[it.cp.id]; });   // 부속서류 커버(기계 사실 — 판정 무관 유지)
   var mustReferenced = mustAll.filter(function (it) { return !subCov[it.cp.id] && refCov[it.cp.id]; }); // 별첨 참조
-  var recConsider = consider.filter(function (it) { return it.severity === "권장" && !_isNA(it.cp); });
+  var recAll = consider.filter(function (it) { return it.severity === "권장"; });
 
   // ── 종합 검토 개요(P1): 계약 전문 좌측 컬럼 제거 — 단일 컬럼·페이지 스크롤 하나 ──
   // 전문 대조는 조항별 검토 탭이 담당. 인쇄는 이 개요를 그대로 출력.
   // 필수 consider를 tier로 분리: core=계약 본질(우선 확인) / conditional=특수규제(적용 시)
-  var mustCore = mustConsider.filter(function (it) { return it.cp.tier !== "conditional"; });
-  var mustCond = mustConsider.filter(function (it) { return it.cp.tier === "conditional"; });
+  var mustUncov = consider.filter(function (it) {
+    return it.severity === "필수" && !subCov[it.cp.id] && !refCov[it.cp.id];
+  }); // 미커버 필수(판정 포함 — 알람·판정완료 분리의 모수)
+  var mustCoreAll = mustUncov.filter(function (it) { return it.cp.tier !== "conditional"; });
+  var mustCondAll = mustUncov.filter(function (it) { return it.cp.tier === "conditional"; });
+  // 알람 = 미판정만. 판정분은 verdict별 행선지로.
+  var mustCore = mustCoreAll.filter(function (it) { return !_verdictOf(it.cp); });
+  var mustCond = mustCondAll.filter(function (it) { return !_verdictOf(it.cp); });
+  var recConsider = recAll.filter(function (it) { return !_verdictOf(it.cp); });
+  var alarmJudged = mustCoreAll.concat(mustCondAll, recAll).filter(function (it) { return _verdictOf(it.cp); });
+  var alarmDone = alarmJudged.filter(function (it) { return _verdictOf(it.cp) !== "검토의견"; }); // 이상없음·해당없음 → 판정 완료 소구역
+  var alarmOpinN = alarmJudged.length - alarmDone.length; // 검토의견 → 개진 구역(중복 나열 안 함)
 
   // 형식 점검(#5) — warn만 타일·섹션 대상
   var formalWarns = (state.formal || []).filter(function (f) { return f.status === "warn"; });
@@ -2005,15 +2042,40 @@ function renderReport() {
       '<span class="ri-q">' + labelQ(it.cp) + "</span>" + _gotoBtn("consider") + "</div>" +
       (it.cp.severity_basis ? '<p class="ri-why">' + esc(it.cp.severity_basis) + "</p>" : "") + "</div>";
   }
-  // 1. 보완 필요(core) — 계약 본질상 필요한 필수인데 계약서에서 미확인. 항상 최상단, 0이면 한 줄 축약.
+  // 1. 보완 필요(core) — 계약 본질상 필요한 필수인데 계약서에서 미확인·미판정. 항상 최상단.
+  // 제목 옆에 미확인·판정 완료 진행 병기 — 판정을 찍으면 알람이 줄어드는 게 보이게(피드백 3차).
+  var alarmProg = alarmJudged.length
+    ? ' <span class="sec-progress">미확인 ' + (mustCore.length + mustCond.length + recConsider.length) +
+      " · 판정 완료 " + alarmJudged.length + "</span>" : "";
   if (mustCore.length) {
-    right += '<section id="rpt-sec-must" class="report-sec-block sec-consider"><h4 class="h4-alert">보완 필요 — 필수 항목 미확인 (' + mustCore.length + ")</h4>";
-    right += '<p class="sec-hint">이 유형 계약에 통상 필요한 필수 항목인데 계약서에서 매칭 조항을 못 찾음 — 확인 요.</p>';
+    right += '<section id="rpt-sec-must" class="report-sec-block sec-consider"><h4 class="h4-alert">보완 필요 — 필수 항목 미확인 (' + mustCore.length + ")" + alarmProg + "</h4>";
+    right += '<p class="sec-hint">이 유형 계약에 통상 필요한 필수 항목인데 계약서에서 매칭 조항을 못 찾음 — 확인 요. 판정을 남기면 아래 "판정 완료"로 이동함.</p>';
     right += mustCore.map(_mustItem).join("") + "</section>";
+  } else if (alarmJudged.length) {
+    // 알람이 전부 판정됨 — "남은 게 있나?" 불안 제거(완료색 한 줄).
+    right += '<section id="rpt-sec-must" class="report-sec-block sec-done"><h4 class="h4-done">보완 필요 — 필수 항목 미확인 (0)' + alarmProg + "</h4>" +
+      '<p class="report-done-line">모든 항목 확인 완료 — 알람에 떴던 항목의 판정을 마쳤음.</p></section>';
   } else {
     right += '<section id="rpt-sec-must" class="report-sec-block sec-consider"><h4>보완 필요 — 필수 항목 미확인 (0)</h4>' +
-      '<p class="report-none">없음 — 필수(본질) 항목은 관련 조항·부속서류에 닿음' +
-      (mustNA.length ? " (해당없음 판정 " + mustNA.length + "건 제외)" : "") + ".</p></section>";
+      '<p class="report-none">없음 — 필수(본질) 항목은 관련 조항·부속서류에 닿음.</p></section>';
+  }
+
+  // 1-1. 판정 완료 소구역 — 알람에 떴던 항목 중 검토자가 이상없음·해당없음으로 확인을 마친 것.
+  // 알람색(노랑)이 아닌 완료색(초록). 판정 버튼 유지 — 같은 판정을 다시 누르면 취소되어 알람으로 복귀.
+  if (alarmDone.length) {
+    right += '<section class="report-sec-block sec-done"><h4 class="h4-done">판정 완료 — 검토자가 확인을 마친 항목 (' + alarmDone.length + ")</h4>";
+    right += '<p class="sec-hint">판단 내용을 부기하고 이상없음·해당없음으로 처리한 항목' +
+      (alarmOpinN ? ' — 검토의견 판정 ' + alarmOpinN + '건은 아래 "검토의견 개진" 구역에 있음' : "") +
+      ". 판정을 취소하면 다시 알람으로 돌아감.</p>";
+    right += alarmDone.map(function (it) {
+      var v = verdictStore[it.cp.id] || {};
+      return '<div class="report-item done-item"><div class="ri-head">' +
+        '<span class="vd-badge ' + (VERDICT_CLS[v.verdict] || "") + '">' + esc(v.verdict || "") + "</span>" +
+        '<span class="sev sev-' + it.cp.severity + '">' + esc(it.cp.severity) + "</span>" +
+        '<span class="ri-q">' + labelQ(it.cp) + "</span></div>" +
+        (v.comment ? '<p class="oi-comment">' + esc(v.comment) + "</p>" : "") +
+        verdictControlHtml(it.cp.id, true) + "</div>";
+    }).join("") + "</section>";
   }
 
   // 1-2. 변경·신설 조항(비교 모드 전용) — 전년 대비 달라진 조항의 딥링크 목록.
