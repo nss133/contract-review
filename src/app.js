@@ -108,6 +108,28 @@ function sourceTypeBadgeHtml(src) {
   return "";
 }
 
+/* ---------- 표준 문안 참고 (표시 전용) ----------
+   knowledge/std_refs.yaml → build_html.attach_std_refs가 check.std_refs로 join한
+   공개 표준계약 문서(계약예규·공정위 표준하도급계약서)의 조항 발췌.
+   판정·severity·매칭·골드셋 채점에 일절 관여하지 않음 — "표준 문서는 이렇게 정하고
+   있음"을 보여주는 회색 인용 블록일 뿐임(판정 어휘 금지). 1건이면 바로 노출,
+   2건 이상이면 첫 건 + 나머지는 details 접힘. */
+function stdRefLine(ref) {
+  return '<p class="std-ref-line">참고 — ' + esc(ref.doc) + " " + esc(ref.art) +
+    '<span class="std-ref-date"> (' + esc(ref.doc_date) + ')</span>: “' + esc(ref.quote) + '”</p>';
+}
+function stdRefsHtml(cp) {
+  var refs = (cp && cp.std_refs) || [];
+  if (!refs.length) return "";
+  var h = '<div class="std-refs"><p class="std-ref-label">표준 문안 참고 — 표준 문서는 이렇게 정하고 있음</p>' +
+    stdRefLine(refs[0]);
+  if (refs.length > 1) {
+    h += '<details class="std-ref-more"><summary>표준 문안 ' + (refs.length - 1) + "건 더 보기</summary>" +
+      refs.slice(1).map(stdRefLine).join("") + "</details>";
+  }
+  return h + "</div>";
+}
+
 /* ---------- 체크 카드 (조항별 보기·리포트 공용) ---------- */
 function renderCheckCard(cp, hits) {
   var h = '<div class="cp-card"><h3><span class="sev sev-' + cp.severity + '" title="' +
@@ -136,6 +158,7 @@ function renderCheckCard(cp, hits) {
     h += '<details class="law"><summary>[동향] ' + esc(n.title) + " (" + esc(n.published_at) +
       ")</summary><p>" + esc(n.summary || "") + "</p></details>";
   });
+  h += stdRefsHtml(cp); // 표시 전용 — 판정·severity 무영향
   if (cp.note) h += '<p class="note">비고: ' + esc(cp.note) + "</p>";
   return h + "</div>";
 }
@@ -248,6 +271,7 @@ function renderDetail(cp) {
     }
     h += "</div>";
   }
+  h += stdRefsHtml(cp); // 표시 전용 — 판정·severity 무영향
   if (cp.note) h += '<p class="note">비고: ' + esc(cp.note) + "</p>";
   // §5: 표 상세에도 판정 컨트롤 추가 — 체크리스트에서 보다가 탭 이동 없이 바로 판정 가능하게.
   if (state.result) h += verdictControlHtml(cp.id);
@@ -360,6 +384,7 @@ function renderSuggestionItem(r) {
     (cp.severity_basis ? '<p class="ci-basis">' + esc(cp.severity_basis) + "</p>" : "") +
     '<p class="ci-src">' + evidenceCell(cp) + "</p>" +
     evidenceLineHtml(cp, r) +
+    stdRefsHtml(cp) + // 표시 전용 — 판정·severity 무영향
     verdictControlHtml(cp.id) +
     "</div>";
 }
@@ -1566,6 +1591,7 @@ function renderConsiderItem(r) {
     '<p class="ci-q">' + labelQ(cp) + "</p>" +
     (cp.severity_basis ? '<p class="ci-basis">왜 봐야 하는지: ' + esc(cp.severity_basis) + "</p>" : "") +
     '<p class="ci-src">근거 ' + evidenceCell(cp) + "</p>" +
+    stdRefsHtml(cp) + // 표시 전용 — 부재를 짚을 때 표준 문서의 대응 문안을 함께 보여줌(판정 무영향)
     carryHintHtml(cp.id) + // 비교 모드: 부재 알람도 체크 id 기준 전년 판정 인용(스펙 §판정 이관)
     verdictControlHtml(cp.id) +
     "</div>";
@@ -2039,7 +2065,9 @@ function renderReport() {
   function _mustItem(it) {
     return '<div class="report-item consider-item"><div class="ri-head"><span class="sev sev-필수">필수</span>' +
       '<span class="ri-q">' + labelQ(it.cp) + "</span>" + _gotoBtn("consider") + "</div>" +
-      (it.cp.severity_basis ? '<p class="ri-why">' + esc(it.cp.severity_basis) + "</p>" : "") + "</div>";
+      (it.cp.severity_basis ? '<p class="ri-why">' + esc(it.cp.severity_basis) + "</p>" : "") +
+      stdRefsHtml(it.cp) + // 표시 전용 — 판정·severity 무영향
+      "</div>";
   }
   // 1. 보완 필요(core) — 계약 본질상 필요한 필수인데 계약서에서 미확인·미판정. 항상 최상단.
   // 제목 옆에 미확인·판정 완료 진행 병기 — 판정을 찍으면 알람이 줄어드는 게 보이게(피드백 3차).
@@ -2114,6 +2142,7 @@ function renderReport() {
     return '<div class="report-item consider-item"><span class="sev sev-권장">권장</span> <span class="ri-q">' + labelQ(it.cp) + "</span>" +
       _gotoBtn("consider") +
       (it.cp.severity_basis ? '<p class="ri-why">' + esc(it.cp.severity_basis) + "</p>" : "") +
+      stdRefsHtml(it.cp) + // 표시 전용 — 판정·severity 무영향
       verdictControlHtml(it.cp.id) + "</div>";
   }).join("");
   if (!verifyMain.length && !recConsider.length) right += '<p class="report-none">해당 없음.</p>';

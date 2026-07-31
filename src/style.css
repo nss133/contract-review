@@ -363,6 +363,16 @@ td.empty { text-align: center; color: var(--ink-faint); padding: var(--sp-4); }
 .ref-fold > summary { cursor: pointer; padding: 6px 0; font-size: var(--fs-meta); color: var(--ink-faint); font-weight: 500; }
 .ref-fold[open] > summary { color: var(--ink-mute); }
 
+/* 표준 문안 참고(std_refs) — 표시 전용 회색 인용 블록. 판정·severity 색 체계와 구분되게
+   무채색으로 유지(판정 어휘·경고색 금지). 부재알람·제안·상세 카드 공용. */
+.std-refs { margin: var(--sp-1) 0; padding: 6px var(--sp-2); background: #f7f8fa;
+            border-left: 3px solid #d5d9e2; border-radius: 0 6px 6px 0; }
+.std-refs .std-ref-label { margin: 0 0 4px; font-size: var(--fs-meta); color: var(--ink-faint); font-weight: 500; }
+.std-refs .std-ref-line { margin: 2px 0; font-size: var(--fs-meta); color: var(--ink-mute); line-height: 1.6; }
+.std-refs .std-ref-date { color: var(--ink-faint); }
+.std-refs .std-ref-more { margin-top: 2px; }
+.std-refs .std-ref-more > summary { cursor: pointer; font-size: var(--fs-meta); color: var(--ink-faint); }
+
 .report-item { border: 1px solid #eceef5; border-radius: 8px; padding: var(--sp-2) 14px;
                margin-bottom: var(--sp-1); background: var(--bg-card); }
 .report-item.consider-item { border-left: 4px solid var(--c-amber-line); }

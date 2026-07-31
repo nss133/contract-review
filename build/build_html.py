@@ -4,6 +4,8 @@ import re
 import sys
 from pathlib import Path
 
+import yaml
+
 import config
 from enrich import enrich
 from validate import load_knowledge
@@ -18,6 +20,24 @@ JS_ORDER = [
 ]
 
 
+def attach_std_refs(knowledge, refs_path):
+    """knowledge/std_refs.yaml(표준 문안 참고)을 check당 join — 표시 전용.
+
+    가중치·판정·매칭·골드셋 채점에 일절 관여하지 않음(트리아지 §④ 절대 조건):
+    goldset 러너는 load_knowledge만 쓰므로 이 필드를 보지 못하고, matcher는
+    미지 필드를 무시함. quote 창작 방지는 tests/test_std_refs.py가 게이트.
+    파일 없으면 빈 값으로 진행(경고만, 실패 아님)."""
+    path = Path(refs_path)
+    if not path.is_file():
+        print(f"경고: 표준 문안 참고 없음({path}) — std_refs 없이 빌드", file=sys.stderr)
+        return
+    refs = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    for doc in [knowledge["common"], *knowledge["types"]]:
+        for cp in doc["checks"]:
+            if cp["id"] in refs:
+                cp["std_refs"] = refs[cp["id"]]
+
+
 def build(knowledge_dir, out_path, law_dbs=None, news_db=None, corpus_path=None):
     k = load_knowledge(knowledge_dir)
     warnings = enrich(
@@ -27,6 +47,7 @@ def build(knowledge_dir, out_path, law_dbs=None, news_db=None, corpus_path=None)
     )
     for w in warnings:
         print(f"경고: {w}", file=sys.stderr)
+    attach_std_refs(k, Path(knowledge_dir) / "std_refs.yaml")
 
     # 검수자 판정 코퍼스 내장: 반출 백업(data/curated_corpus.json)을 페이지에 seed로 실음 —
     # 새 환경(다른 PC·localStorage 초기화)에서도 판정 분포·추천 코멘트가 보이게.
