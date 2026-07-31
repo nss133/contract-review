@@ -593,3 +593,31 @@ td.empty { text-align: center; color: var(--ink-faint); padding: var(--sp-4); }
 .rpt-goto { border: none; background: none; color: var(--accent); font-size: var(--fs-meta);
   cursor: pointer; padding: 0 2px; white-space: nowrap; }
 .rpt-goto:hover { text-decoration: underline; }
+
+/* ---------- 리포트 섹션 색상 구역(팀 피드백 2차) ----------
+   각 섹션을 타일과 같은 의미색의 연한 배경 + 좌측 굵은 보더 + 제목 악센트 구역으로 —
+   타일 클릭 → 같은 색 구역 착지의 시각 연결. 신규 hex 없이 기존 의미색 토큰에서 파생.
+   반영=초록 · 확인 안 됨=노랑(주의) · 함께 살펴볼=파랑 · 형식=빨강 · 검토의견(진행률)=회청 중립.
+   내부 카드(.report-item)는 흰 배경 유지 — 연한 배경 위에서 본문 대비 확보.
+   인쇄: 배경 미출력 대비 좌측 보더가 구분을 유지(아래 규칙이 print 리셋보다 명시도 높음). */
+.report-summary .sec-consider, .report-summary .sec-verify, .report-summary .sec-formal,
+.report-summary .sec-opinions, .report-summary .sec-covered, .report-summary .sec-refdoc,
+.report-summary .sec-compare, .report-summary .sec-addressed {
+  border-left: 4px solid transparent; border-radius: 0 8px 8px 0;
+  padding: var(--sp-2) 14px; margin-bottom: var(--sp-3);
+}
+.report-summary .sec-consider { background: var(--c-amber-bg); border-left-color: var(--c-amber-line); }
+.report-summary .sec-consider h4 { color: var(--c-amber-fg); }
+.report-summary .sec-verify { background: var(--c-blue-bg); border-left-color: var(--c-blue-line); }
+.report-summary .sec-verify h4 { color: var(--c-blue-fg); }
+.report-summary .sec-formal { background: var(--c-red-bg); border-left-color: var(--c-red-line); }
+.report-summary .sec-formal h4 { color: var(--c-red-fg); }
+.report-summary .sec-opinions { background: var(--c-slate-bg); border-left-color: var(--c-slate-line); }
+.report-summary .sec-opinions h4 { color: var(--c-slate-fg); }
+.report-summary .sec-covered { background: var(--c-green-bg); border-left-color: var(--c-green-line); }
+.report-summary .sec-refdoc { background: var(--c-slate-bg); border-left-color: var(--c-slate-line); }
+.report-summary .sec-compare { background: var(--c-blue-bg); border-left-color: var(--c-blue-line); }
+.report-summary .sec-compare h4 { color: var(--c-blue-fg); }
+.report-summary .sec-addressed { background: var(--c-green-bg); border: 1px solid var(--c-green-line);
+  border-left-width: 4px; }
+.report-summary .sec-addressed > summary { color: var(--c-green-fg); }

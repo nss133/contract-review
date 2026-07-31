@@ -1986,13 +1986,14 @@ function renderReport() {
       (sub ? '<span class="tile-sub">' + sub + "</span>" : "") + "</button>";
   }
   // 타일 문구 풀어쓰기(팀 피드백 2026-07): 압축어 라벨 폐기 — 설명형 라벨 + 한 줄 부연(작은 글씨).
+  // 순서(피드백 2차): 반영 → 확인 안 됨 → 함께 살펴볼 — 하단 섹션 배치와 동일 논리(보완 필요가 상단).
   right += '<div class="report-tiles">' +
     _tile("rpt-sec-addressed", "tile-addressed", "✓ 계약서에 반영된 항목", addressed.length,
       "확인 필요 사항이 조항에 들어 있음") +
-    _tile("rpt-sec-suggest", "tile-verify", "△ 함께 살펴볼 항목", verifyMain.length,
-      "관련 조항이 있어 보임 — 참고 제안") +
     _tile("rpt-sec-must", "tile-consider", "! 계약서에서 확인 안 된 항목", mustCore.length + recConsider.length,
       "필수 " + mustCore.length + "건 — 누락인지 해당없음인지 판단 필요") +
+    _tile("rpt-sec-suggest", "tile-verify", "△ 함께 살펴볼 항목", verifyMain.length,
+      "관련 조항이 있어 보임 — 참고 제안") +
     _tile("rpt-sec-formal", "tile-formal", "형식 확인 필요", formalWarns.length,
       "상호·빈칸·날짜 등") +
     _tile("rpt-sec-opinions", "tile-progress", "검토 진행률", judged + " / " + judgeable,
@@ -2006,11 +2007,11 @@ function renderReport() {
   }
   // 1. 보완 필요(core) — 계약 본질상 필요한 필수인데 계약서에서 미확인. 항상 최상단, 0이면 한 줄 축약.
   if (mustCore.length) {
-    right += '<section id="rpt-sec-must" class="report-sec-block"><h4 class="h4-alert">보완 필요 — 필수 항목 미확인 (' + mustCore.length + ")</h4>";
+    right += '<section id="rpt-sec-must" class="report-sec-block sec-consider"><h4 class="h4-alert">보완 필요 — 필수 항목 미확인 (' + mustCore.length + ")</h4>";
     right += '<p class="sec-hint">이 유형 계약에 통상 필요한 필수 항목인데 계약서에서 매칭 조항을 못 찾음 — 확인 요.</p>';
     right += mustCore.map(_mustItem).join("") + "</section>";
   } else {
-    right += '<section id="rpt-sec-must" class="report-sec-block"><h4>보완 필요 — 필수 항목 미확인 (0)</h4>' +
+    right += '<section id="rpt-sec-must" class="report-sec-block sec-consider"><h4>보완 필요 — 필수 항목 미확인 (0)</h4>' +
       '<p class="report-none">없음 — 필수(본질) 항목은 관련 조항·부속서류에 닿음' +
       (mustNA.length ? " (해당없음 판정 " + mustNA.length + "건 제외)" : "") + ".</p></section>";
   }
@@ -2018,7 +2019,7 @@ function renderReport() {
   // 1-2. 변경·신설 조항(비교 모드 전용) — 전년 대비 달라진 조항의 딥링크 목록.
   if (cmp) {
     var diffEntries = cmp.mapping.filter(function (e) { return e.kind === "changed" || e.kind === "added"; });
-    right += '<section id="rpt-sec-compare" class="report-sec-block"><h4>변경·신설 조항 (' + diffEntries.length + ")</h4>";
+    right += '<section id="rpt-sec-compare" class="report-sec-block sec-compare"><h4>변경·신설 조항 (' + diffEntries.length + ")</h4>";
     right += '<p class="sec-hint">전년(' + esc((cmp.meta || {}).date || "일자 미상") +
       ') 검토 대비 달라진 조항 — 이번 검토에서 우선 살펴볼 부분. 정렬은 보조 도구이며 대응 불확실 항목은 직접 확인 요.</p>';
     right += diffEntries.map(function (e) {
@@ -2036,24 +2037,9 @@ function renderReport() {
     right += "</section>";
   }
 
-  // 2. 검토의견 개진 — 판정 찍은 내용 요약. 앵커 안정성을 위해 항상 렌더.
-  right += '<section id="rpt-sec-opinions" class="report-sec-block"><h4>검토의견 개진 (' + flagged.length + ")</h4>";
-  if (vsum.total) {
-    right += '<div class="report-verdict-summary">검토의견 기록: ' +
-      '<span class="vd-badge vd-ok">이상없음 ' + vsum["이상없음"] + "</span>" +
-      '<span class="vd-badge vd-comment">검토의견 ' + vsum["검토의견"] + "</span>" +
-      '<span class="vd-badge vd-na">해당없음 ' + vsum["해당없음"] + "</span></div>";
-  }
-  right += flagged.map(function (o) {
-    return '<div class="opinion-item"><div class="ri-head"><span class="sev sev-' + o.cp.severity + '">' +
-      esc(o.cp.severity) + '</span><span class="ri-q">' + labelQ(o.cp) + "</span></div>" +
-      (o.loc ? '<p class="ri-loc">' + esc(o.loc) + _gotoBtn(o.ci) + "</p>" : '<p class="ri-loc">' + _gotoBtn(o.ci).trim() + "</p>") +
-      (o.comment ? '<p class="oi-comment">' + esc(o.comment) + "</p>" : "") + "</div>";
-  }).join("") || '<p class="report-none">아직 개진한 검토의견 없음.</p>';
-  right += "</section>";
-
-  // 3. 제안 — 항목명·근거조항·원문발췌 + 판정 버튼(P1): 가벼운 계약은 리포트만으로 검토 완결.
-  right += '<section id="rpt-sec-suggest" class="report-sec-block"><h4>함께 살펴볼 항목 (' + verifyMain.length + ")" +
+  // 2. 함께 살펴볼 항목 — 항목명·근거조항·원문발췌 + 판정 버튼(P1): 가벼운 계약은 리포트만으로 검토 완결.
+  // (섹션 순서는 타일 순서와 동일 논리 — 확인 안 됨 → 함께 살펴볼 → 형식 → 검토의견, 반영은 하단 접힘)
+  right += '<section id="rpt-sec-suggest" class="report-sec-block sec-verify"><h4>함께 살펴볼 항목 (' + verifyMain.length + ")" +
     (recConsider.length ? " · 확인 안 된 항목(권장) (" + recConsider.length + ")" : "") + "</h4>";
   right += '<p class="sec-hint">계약서 검토 시 이 부분들도 함께 살펴보시길 제안합니다 — 여기서 바로 판정을 남길 수 있습니다.</p>';
   right += verifyMain.map(function (it) {
@@ -2072,9 +2058,9 @@ function renderReport() {
   if (!verifyMain.length && !recConsider.length) right += '<p class="report-none">해당 없음.</p>';
   right += "</section>";
 
-  // 4. 부속서류에서 커버됨(#3) — 필수 미확인이었으나 부속 서류에서 다뤄진 항목.
+  // 3. 부속서류에서 커버됨(#3) — 필수 미확인이었으나 부속 서류에서 다뤄진 항목.
   if (mustCovered.length) {
-    right += '<section class="report-sec-block"><h4 class="h4-covered">부속 서류에서 커버됨 (' + mustCovered.length + ")</h4>";
+    right += '<section class="report-sec-block sec-covered"><h4 class="h4-covered">부속 서류에서 커버됨 (' + mustCovered.length + ")</h4>";
     right += '<p class="sec-hint">주 계약서엔 없으나 첨부한 부속 서류에서 다뤄지고 있어 누락 아님.</p>';
     right += mustCovered.map(function (it) {
       var cv = subCov[it.cp.id];
@@ -2087,7 +2073,7 @@ function renderReport() {
   // 별첨 약정서 참조(#4) — 필수 미확인이었으나 본문이 표준 부속서류 체결을 참조하는 항목.
   // 기계매칭(부속서류 업로드)과 달리 사람이 약정서 체결·첨부 여부를 확인해야 하는 그룹.
   if (mustReferenced.length) {
-    right += '<section class="report-sec-block"><h4 class="h4-refdoc">별첨 약정서 참조 (' + mustReferenced.length + ")</h4>";
+    right += '<section class="report-sec-block sec-refdoc"><h4 class="h4-refdoc">별첨 약정서 참조 (' + mustReferenced.length + ")</h4>";
     right += '<p class="sec-hint">본문이 표준 부속서류 체결을 정하고 있음 — 약정서 체결·첨부 여부만 확인하세요.</p>';
     right += mustReferenced.map(function (it) {
       var rv = refCov[it.cp.id];
@@ -2097,13 +2083,29 @@ function renderReport() {
     }).join("") + "</section>";
   }
 
-  // 5. 형식 점검 — warn 항목만 표시
+  // 4. 형식 점검 — warn 항목만 표시
   if (formalWarns.length) {
-    right += '<section id="rpt-sec-formal" class="report-sec-block"><h4>형식 점검</h4>';
+    right += '<section id="rpt-sec-formal" class="report-sec-block sec-formal"><h4>형식 점검</h4>';
     right += formalWarns.map(function (f) {
       return '<div class="report-item"><span class="ri-q">' + esc(f.title) + ' — ' + esc(f.detail) + "</span></div>";
     }).join("") + "</section>";
   }
+
+  // 5. 검토의견 개진 — 판정 찍은 내용 요약(검토 진행률 타일의 착지 구역). 앵커 안정성을 위해 항상 렌더.
+  right += '<section id="rpt-sec-opinions" class="report-sec-block sec-opinions"><h4>검토의견 개진 (' + flagged.length + ")</h4>";
+  if (vsum.total) {
+    right += '<div class="report-verdict-summary">검토의견 기록: ' +
+      '<span class="vd-badge vd-ok">이상없음 ' + vsum["이상없음"] + "</span>" +
+      '<span class="vd-badge vd-comment">검토의견 ' + vsum["검토의견"] + "</span>" +
+      '<span class="vd-badge vd-na">해당없음 ' + vsum["해당없음"] + "</span></div>";
+  }
+  right += flagged.map(function (o) {
+    return '<div class="opinion-item"><div class="ri-head"><span class="sev sev-' + o.cp.severity + '">' +
+      esc(o.cp.severity) + '</span><span class="ri-q">' + labelQ(o.cp) + "</span></div>" +
+      (o.loc ? '<p class="ri-loc">' + esc(o.loc) + _gotoBtn(o.ci) + "</p>" : '<p class="ri-loc">' + _gotoBtn(o.ci).trim() + "</p>") +
+      (o.comment ? '<p class="oi-comment">' + esc(o.comment) + "</p>" : "") + "</div>";
+  }).join("") || '<p class="report-none">아직 개진한 검토의견 없음.</p>';
+  right += "</section>";
 
   // 6. 접힘 — 특수 규제(적용 시)·참고 별첨·반영 상세. 저빈도 정보를 하단에 모음.
   if (mustCond.length) {
@@ -2123,7 +2125,7 @@ function renderReport() {
     right += "</details>";
   }
   // 반영 상세(접힘) — 타일 앵커 대상. 어떤 항목이 어느 조항에 닿았는지.
-  right += '<details class="report-sec" id="rpt-sec-addressed"><summary>✓ 계약서에 반영된 항목 (' + addressed.length + ") — 확인 필요 사항이 어느 조항에 들어 있는지</summary>";
+  right += '<details class="report-sec sec-addressed" id="rpt-sec-addressed"><summary>✓ 계약서에 반영된 항목 (' + addressed.length + ") — 확인 필요 사항이 어느 조항에 들어 있는지</summary>";
   right += addressed.map(function (it) {
     return '<div class="report-item addressed-item"><span class="sev sev-' + it.cp.severity + '">' + esc(it.cp.severity) +
       '</span> <span class="ri-q">' + labelQ(it.cp) + "</span>" +
