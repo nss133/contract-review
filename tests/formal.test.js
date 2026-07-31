@@ -144,6 +144,12 @@ test("FORM-ADDR: 주소 부재는 정상 → pass", () => {
   assert.ok(r.detail.includes("미기재"));
 });
 
+test("FORM-ADDR: 상대방 주소(마포구 아닌 타지역, 당사 블록 인접)는 후보 아님 → pass", () => {
+  const rs = F.checkFormal(
+    "미래에셋생명보험주식회사\n서울시 마포구 만리재로 24\n대표이사 김재식 (인)\n\n한빛시스템 주식회사\n서울시 강남구 테헤란로 12\n대표이사 박민수 (인)");
+  assert.strictEqual(byId(rs, "FORM-ADDR").status, "pass");
+});
+
 test("FORM-ADDR: 당사 상호와 먼 위치(근접 윈도 밖)의 타 주소는 대조 대상 아님", () => {
   const filler = "제1조 계약의 목적. ".repeat(30);
   const rs = F.checkFormal("미래에셋생명보험㈜와 을은 계약한다.\n" + filler + "\n을: 서울특별시 영등포구 의사당대로 3");
