@@ -64,6 +64,9 @@ body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Apple SD Goth
 .nav-admin { margin-left: auto; padding-left: 14px; border-left: 1px solid #3a3a55; }
 .nav-admin .tab-admin { color: #778; font-size: var(--fs-body-sub); }
 .nav-admin .tab-admin.active { color: #cdd3e0; border-bottom-color: var(--c-slate-line); }
+/* 관리모드(#admin) 전용 노출 — 골드셋 관련 UI. 코드·기능은 보존, 표시만 제어(app.js applyAdminMode) */
+.tab-goldset, #report-goldset-snapshot { display: none; }
+body.admin-mode .tab-goldset, body.admin-mode #report-goldset-snapshot { display: inline-block; }
 main { max-width: 1400px; margin: 0 auto; padding: var(--sp-4); }
 .pane { display: none; }
 .pane.active { display: block; }

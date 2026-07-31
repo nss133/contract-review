@@ -151,6 +151,21 @@ document.querySelectorAll(".tab").forEach(function (btn) {
   });
 });
 
+/* ---------- 관리모드(#admin) — 골드셋 노출 토글 ----------
+   팀 배포 기본 화면에서 골드셋 관련 UI를 숨김(팀원 혼란 제거). URL 해시를
+   #admin으로 열면 표시 — 기능·코드는 그대로, body 클래스 + CSS로 표시만 제어.
+   지식 검수 탭은 현행 유지(숨기지 않음). */
+function applyAdminMode() {
+  var on = location.hash === "#admin";
+  document.body.classList.toggle("admin-mode", on);
+  // 관리모드 해제 시 골드셋 탭이 열려 있으면 리포트로 복귀 — 숨은 탭의 pane 잔류 방지.
+  var gs = document.querySelector('.tab[data-tab="goldset"]');
+  if (!on && gs && gs.classList.contains("active"))
+    document.querySelector('.tab[data-tab="report"]').click();
+}
+window.addEventListener("hashchange", applyAdminMode);
+applyAdminMode();
+
 /* ---------- 체크리스트 표 (주 탭) ---------- */
 // 정렬 우선순위: 검토 제안 → 확인 권장 → 반영 → 기타(조용) → 미분석/비활성
 var COVERAGE_RANK = { consider: 0, verify: 1, addressed: 2, quiet: 3 };

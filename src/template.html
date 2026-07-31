@@ -16,7 +16,8 @@
     <!-- 관리 그룹(P1) — 매 검토 사용 탭과 위계 분리(우측·회색 톤). 큐레이터·회귀 채점용 -->
     <span class="nav-admin">
       <button data-tab="verify" class="tab tab-admin">지식 검수</button>
-      <button data-tab="goldset" class="tab tab-admin">골드셋 채점</button>
+      <!-- 골드셋은 관리모드(#admin) 전용 노출 — 팀원 기본 화면에서 숨김(기능·코드는 보존) -->
+      <button data-tab="goldset" class="tab tab-admin tab-goldset">골드셋 채점</button>
     </span>
   </nav>
 </header>
