@@ -4383,10 +4383,10 @@ function exportVerdicts() {
 }
 
 /* ---------- 검토 마치기(원버튼) — 팀원 일상 마무리 액션 ----------
-   ① 지식 반영(코퍼스 ingest — 해시 멱등이라 중복 클릭 안전)
-   ② 검토 아카이브를 브라우저(레지스트리)에 등록 — 파일 다운로드 없이, 다음 해 자동 안내의 원천
-   ③ 회신용 검토의견 파일 1개 다운로드(자동 명명)
-   개별 버튼 3종은 "팀·지식 관리" 접힘에 유지(동작 불변) — 멘털 모델: 버튼 하나·파일 하나. */
+   마치기 = 축적까지(피드백 4차): ① 지식 반영(코퍼스 ingest — 해시 멱등이라 중복 클릭 안전)
+   ② 검토 아카이브를 브라우저(레지스트리)에 등록 — 다음 해 자동 안내의 원천.
+   파일 생성·공유는 별개 작업 — 옆의 [검토의견 파일로 내보내기] 버튼이 담당(다운로드 없음).
+   개별 버튼 3종은 "팀·지식 관리" 접힘에 유지(동작 불변). */
 function finishReview() {
   if (!state.result) return;
   ingestCurrentToCorpus();
@@ -4394,10 +4394,9 @@ function finishReview() {
     name: _contractName(), date: verdictToday(), reviewer: getReviewer(),
     type_id: state.typeId || null, contract_hash: verdictHash, contract_text: state.text
   }));
-  exportVerdicts();
   renderReport(); renderClauses(); renderSuggestions(); // 코퍼스 카운트·추천 갱신
   var msg = document.getElementById("finish-msg");
-  if (msg) msg.textContent = "검토가 저장되었음 — 다운로드된 파일을 팀 취합 담당에게 회신해 주세요.";
+  if (msg) msg.textContent = "검토가 저장되었음. 판정·코멘트는 다음 검토의 추천에 활용됨.";
 }
 // 일괄 판정(통과계약 모드) — 미판정만 채움(기판정=예외 보존은 Verdict.bulkVerdict가 보장).
 function bindBulkVerdict() {
@@ -5450,14 +5449,16 @@ function renderReport() {
   }).join("") || '<p class="report-none">해당 없음.</p>';
   right += "</details>";
 
-  // 일상 액션 = 원버튼 [검토 마치기] 하나(팀 피드백: 저장 3종 혼란 제거) + 인쇄.
+  // 일상 액션(팀 피드백 4차): [검토 마치기]=축적(지식 반영+아카이브 등록, 다운로드 없음),
+  // 파일 생성·공유는 별도 [검토의견 파일로 내보내기](자동 명명) + 인쇄.
   // 개별 저장 버튼(내보내기·아카이브·지식 반영)과 관리 액션(골드셋 저장·판정파일 반영·
   // 코퍼스 백업/복원·정규화 후보)은 "팀·지식 관리" 접힘으로 격리(전문가용, 동작 불변).
   // 인쇄 시 접힘은 자동 펼침 대상에서 제외(admin-fold).
   right += '<div class="report-actions">' +
     '<button id="report-finish" class="primary">검토 마치기</button>' +
+    '<button id="report-export-file" class="ghost">검토의견 파일로 내보내기 (공유·회신용)</button>' +
     '<button id="report-print" class="ghost">인쇄</button>' +
-    '<span id="finish-msg" class="report-actions-note">지식 반영 + 브라우저에 아카이브 등록 + 회신용 검토의견 파일 1개 다운로드</span></div>';
+    '<span id="finish-msg" class="report-actions-note">마치기 = 지식 반영 + 브라우저에 아카이브 등록 — 파일이 필요하면 내보내기 사용</span></div>';
   right += '<details class="report-sec admin-fold"><summary>팀·지식 관리</summary>';
   right += '<div class="report-actions">' +
     '<button id="report-verdict-export" class="ghost">검토의견 내보내기</button>' +
@@ -5512,6 +5513,8 @@ function renderReport() {
   if (rprint) rprint.addEventListener("click", function () { window.print(); });
   var rfin = document.getElementById("report-finish");
   if (rfin) rfin.addEventListener("click", finishReview);
+  var rexpf = document.getElementById("report-export-file");
+  if (rexpf) rexpf.addEventListener("click", exportVerdicts);
   var rvIn = document.getElementById("reviewer-name");
   if (rvIn) rvIn.addEventListener("change", function () { setReviewer(rvIn.value); });
   var rexp = document.getElementById("report-verdict-export");
