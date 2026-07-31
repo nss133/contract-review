@@ -79,16 +79,16 @@
       <!-- 상단 고정 헤더: 판정 진행률 · 검토제안 앵커 · 일괄 판정(드롭다운) · 내보내기/불러오기 -->
       <div id="clause-header" class="clause-header">
         <span id="clause-progress" class="clause-progress"></span>
-        <button id="consider-anchor" class="ghost consider-anchor" hidden>⚠ 검토제안 0건</button>
+        <button id="consider-anchor" class="ghost consider-anchor" hidden>⚠ 확인 안 된 항목 0건</button>
         <!-- 일괄 판정(통과계약 모드): 예외를 먼저 개별 판정한 뒤 나머지를 한 번에 채움 — 기판정은 보존됨.
              절차상 후행 도구라 드롭다운으로 접어 1차 노출을 줄임 -->
         <details id="bulk-dropdown" class="bulk-dropdown">
           <summary>일괄 판정 ▾</summary>
           <div class="bulk-menu">
             <span class="verdict-bar-label">통과계약 모드 — 예외 항목 먼저 개별 판정 후 사용, 이미 찍은 판정은 보존됨</span>
-            <button id="bulk-consider-na" class="ghost">미판정 알람 → 전부 해당없음</button>
-            <button id="bulk-consider-ok" class="ghost">미판정 알람 → 전부 이상없음</button>
-            <button id="bulk-matched-ok" class="ghost">미판정 반영·확인 → 전부 이상없음</button>
+            <button id="bulk-consider-na" class="ghost">확인 안 된 항목(미판정) → 전부 해당없음</button>
+            <button id="bulk-consider-ok" class="ghost">확인 안 된 항목(미판정) → 전부 이상없음</button>
+            <button id="bulk-matched-ok" class="ghost">반영·살펴볼 항목(미판정) → 전부 이상없음</button>
             <span id="bulk-msg" class="report-actions-note"></span>
           </div>
         </details>
@@ -99,7 +99,7 @@
       <div id="compare-header" class="compare-header" hidden></div>
       <!-- 컬럼 안내 행 + 조항 행 연속 스크롤 -->
       <div id="clause-cols-head" class="clause-cols-head">
-        <span>① 계약서 원문</span><span>② 검토된 내용</span><span>③ 제안 사항</span>
+        <span>① 계약서 원문</span><span>② 검토된 내용</span><span>③ 남긴 검토의견</span>
       </div>
       <div id="clause-rows"></div>
       <!-- 부재 알람(검토 제안) — 특정 조항에 속하지 않는 항목의 전용 블록(최하단 유지) -->
@@ -124,8 +124,8 @@
       </select></label>
       <label>검토상태 <select id="filter-match">
         <option value="">전체</option>
-        <option value="unmatched">검토 제안만</option>
-        <option value="matched">반영만</option>
+        <option value="unmatched">확인 안 된 항목만</option>
+        <option value="matched">반영된 항목만</option>
       </select></label>
       <input id="filter-search" type="search" aria-label="확인사항·법령 검색" placeholder="확인사항·법령 검색">
     </div>
@@ -143,13 +143,13 @@
 
     <table id="checklist-table">
       <thead>
-        <tr><th>매칭</th><th>ID</th><th>확인 사항</th><th>심각도</th><th>규범</th><th>근거</th></tr>
+        <tr><th>검토 상태</th><th>ID</th><th>확인 사항</th><th>심각도</th><th>규범</th><th>근거</th></tr>
       </thead>
       <tbody id="checklist-body"></tbody>
     </table>
 
     <section id="suggestions-panel" class="suggestions-panel">
-      <h3>제안사항</h3>
+      <h3>함께 살펴볼 항목</h3>
       <p class="suggestions-hint">계약서 검토 시 이 부분들도 함께 살펴보시길 제안합니다.</p>
       <div id="suggestions-body"></div>
     </section>
@@ -208,9 +208,9 @@
   <span class="badge ref">참조</span>
   <span class="badge practice">실무</span>
   <span class="badge self-reg">자율규제</span>
-  <br>검토 상태: <span class="badge cov-addressed">✓ 반영</span>
-  <span class="badge cov-verify">△ 제안</span>
-  <span class="badge cov-consider">! 검토 제안</span>
+  <br>검토 상태: <span class="badge cov-addressed">✓ 계약서에 반영</span> 확인 필요 사항이 조항에 들어 있음
+  · <span class="badge cov-verify">△ 함께 살펴볼 항목</span> 관련 조항이 있어 보임 — 참고 제안
+  · <span class="badge cov-consider">! 계약서에서 확인 안 됨</span> 누락인지 해당없음인지 판단 필요
 </footer>
 
 <script id="cr-data" type="application/json">__DATA_JSON__</script>

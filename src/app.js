@@ -81,14 +81,14 @@ function evidenceCell(cp) {
 }
 
 /* ---------- coverage 배지 (계약 반영 축 — 증적 배지와 별개) ----------
-   검토 보조 화법: 판정형("확정/미검출") 폐기. 짚음/제안/검토제안/기타.
-   verify 어휘는 제안사항 패널과 동일 톤("△ 제안")으로 통일 — "확인 권장"은
-   누락 오인 소지가 있어 폐기(UX 재편). 내부 키·CSS 클래스명(verify/cov-verify)은
-   구조 변경 범위가 아니라 유지. */
+   검토 보조 화법: 판정형("확정/미검출") 폐기. 팀 피드백(2026-07 "무슨 말인지
+   모르겠다")에 따라 압축어("반영/제안/검토 제안") 대신 구체적으로 이해되는
+   문구로 풀어씀 — 타일·섹션 제목·풋터 범례와 동일 어휘로 일관.
+   내부 키·CSS 클래스명(verify/cov-verify)은 구조 변경 범위가 아니라 유지. */
 var COVERAGE_LABEL = {
-  addressed: "✓ 반영",
-  verify: "△ 제안",
-  consider: "! 검토 제안",
+  addressed: "✓ 계약서에 반영",
+  verify: "△ 함께 살펴볼 항목",
+  consider: "! 계약서에서 확인 안 됨",
   quiet: "·"
 };
 var COVERAGE_CLS = {
@@ -361,9 +361,9 @@ function renderSuggestions() {
     return sa - sb;
   });
   var html = main.map(renderSuggestionItem).join("") ||
-    (ref.length ? "" : '<p class="compare-empty">현재 제안할 사항 없음</p>');
+    (ref.length ? "" : '<p class="compare-empty">현재 함께 살펴볼 항목 없음</p>');
   if (ref.length) {
-    html += '<details class="ref-fold"><summary>참고 제안 ' + ref.length + '건 펼치기</summary>' +
+    html += '<details class="ref-fold"><summary>참고로 살펴볼 항목 ' + ref.length + '건 펼치기</summary>' +
       ref.map(renderSuggestionItem).join("") + "</details>";
   }
   box.innerHTML = html;
@@ -1680,7 +1680,7 @@ function renderConsiderBlock() {
   var covered = _considerList.filter(function (r) { return subCov[r.cpId]; });
   var referenced = _considerList.filter(function (r) { return !subCov[r.cpId] && refCov[r.cpId]; });
   var items = uncovered.map(renderConsiderItem).join("") ||
-    '<p class="compare-empty">검토 제안 항목 없음</p>';
+    '<p class="compare-empty">확인 안 된 항목 없음</p>';
   var coveredHtml = covered.length
     ? '<h3 class="subdoc-covered-head"><span class="badge cov-subdoc">✓ 부속서류 반영</span> 부속 서류에서 확인된 항목</h3>' +
       '<p class="consider-hint">주 계약서엔 없지만 부속 서류에서 매칭 확인됨 — 커버 적정성만 확인하세요.</p>' +
@@ -1692,7 +1692,7 @@ function renderConsiderBlock() {
       referenced.map(renderConsiderItem).join("")
     : "";
   block.innerHTML =
-    '<div class="consider-panel"><h3><span class="badge cov-consider">! 검토 제안</span> 계약서에서 확인되지 않은 항목' +
+    '<div class="consider-panel"><h3><span class="badge cov-consider">! 계약서에서 확인 안 됨</span> 누락인지 해당없음인지 판단이 필요한 항목' +
     '<span class="consider-sub">' + esc(considerCountText()) + "</span></h3>" +
     '<p class="consider-hint">각 항목이 실제로 빠진 것인지(오류) 아니면 해당 없는지 검토하고 의견을 남기세요.</p>' +
     items + coveredHtml + referencedHtml + "</div>";
@@ -1709,11 +1709,11 @@ function renderConsiderBlock() {
 function refreshClauseCounts() {
   var p = verdictProgress();
   var prog = document.getElementById("clause-progress");
-  if (prog) prog.textContent = "판정 진행 " + p.judged + " / " + p.judgeable;
+  if (prog) prog.textContent = "검토 진행 " + p.judged + " / " + p.judgeable;
   var anchor = document.getElementById("consider-anchor");
   if (anchor) {
     anchor.hidden = !_considerList.length;
-    anchor.textContent = "⚠ 검토제안 " + _considerList.length + "건";
+    anchor.textContent = "⚠ 확인 안 된 항목 " + _considerList.length + "건";
     anchor.title = considerCountText();
   }
   document.querySelectorAll("#clause-rows .clause-row").forEach(function (row) {
@@ -1796,8 +1796,8 @@ function renderClauses() {
   if (colsHead) {
     colsHead.classList.toggle("compare-mode", cmpOn);
     colsHead.innerHTML = cmpOn
-      ? "<span>구 계약(전년)</span><span>신 계약(현재)</span><span>검토·제안</span>"
-      : "<span>① 계약서 원문</span><span>② 검토된 내용</span><span>③ 제안 사항</span>";
+      ? "<span>구 계약(전년)</span><span>신 계약(현재)</span><span>검토 내용·의견</span>"
+      : "<span>① 계약서 원문</span><span>② 검토된 내용</span><span>③ 남긴 검토의견</span>";
   }
   rowsEl.innerHTML = state.clauses.map(clauseRowHtml).join("");
   rowsEl.querySelectorAll(".clause-row").forEach(bindRowControls);
@@ -1942,12 +1942,18 @@ function renderReport() {
       '<span class="tile-label">' + label + '</span><span class="tile-num">' + num + "</span>" +
       (sub ? '<span class="tile-sub">' + sub + "</span>" : "") + "</button>";
   }
+  // 타일 문구 풀어쓰기(팀 피드백 2026-07): 압축어 라벨 폐기 — 설명형 라벨 + 한 줄 부연(작은 글씨).
   right += '<div class="report-tiles">' +
-    _tile("rpt-sec-addressed", "tile-addressed", "✓ 반영", addressed.length, "") +
-    _tile("rpt-sec-suggest", "tile-verify", "△ 제안", verifyMain.length, "") +
-    _tile("rpt-sec-must", "tile-consider", "! 검토제안", mustCore.length + recConsider.length, "필수 " + mustCore.length) +
-    _tile("rpt-sec-formal", "tile-formal", "형식 경고", formalWarns.length, "") +
-    _tile("rpt-sec-opinions", "tile-progress", "판정 진행", judged + " / " + judgeable, "") +
+    _tile("rpt-sec-addressed", "tile-addressed", "✓ 계약서에 반영된 항목", addressed.length,
+      "확인 필요 사항이 조항에 들어 있음") +
+    _tile("rpt-sec-suggest", "tile-verify", "△ 함께 살펴볼 항목", verifyMain.length,
+      "관련 조항이 있어 보임 — 참고 제안") +
+    _tile("rpt-sec-must", "tile-consider", "! 계약서에서 확인 안 된 항목", mustCore.length + recConsider.length,
+      "필수 " + mustCore.length + "건 — 누락인지 해당없음인지 판단 필요") +
+    _tile("rpt-sec-formal", "tile-formal", "형식 확인 필요", formalWarns.length,
+      "상호·빈칸·날짜 등") +
+    _tile("rpt-sec-opinions", "tile-progress", "검토 진행률", judged + " / " + judgeable,
+      "판정한 항목 / 판정 대상") +
     "</div>";
 
   function _mustItem(it) {
@@ -2004,8 +2010,8 @@ function renderReport() {
   right += "</section>";
 
   // 3. 제안 — 항목명·근거조항·원문발췌 + 판정 버튼(P1): 가벼운 계약은 리포트만으로 검토 완결.
-  right += '<section id="rpt-sec-suggest" class="report-sec-block"><h4>제안 (' + verifyMain.length + ")" +
-    (recConsider.length ? " · 검토 제안(권장) (" + recConsider.length + ")" : "") + "</h4>";
+  right += '<section id="rpt-sec-suggest" class="report-sec-block"><h4>함께 살펴볼 항목 (' + verifyMain.length + ")" +
+    (recConsider.length ? " · 확인 안 된 항목(권장) (" + recConsider.length + ")" : "") + "</h4>";
   right += '<p class="sec-hint">계약서 검토 시 이 부분들도 함께 살펴보시길 제안합니다 — 여기서 바로 판정을 남길 수 있습니다.</p>';
   right += verifyMain.map(function (it) {
     return '<div class="report-item verify-item"><span class="sev sev-' + it.cp.severity + '">' + esc(it.cp.severity) +
@@ -2074,7 +2080,7 @@ function renderReport() {
     right += "</details>";
   }
   // 반영 상세(접힘) — 타일 앵커 대상. 어떤 항목이 어느 조항에 닿았는지.
-  right += '<details class="report-sec" id="rpt-sec-addressed"><summary>✓ 반영 (' + addressed.length + ") — 관련 조항에 닿은 항목</summary>";
+  right += '<details class="report-sec" id="rpt-sec-addressed"><summary>✓ 계약서에 반영된 항목 (' + addressed.length + ") — 확인 필요 사항이 어느 조항에 들어 있는지</summary>";
   right += addressed.map(function (it) {
     return '<div class="report-item addressed-item"><span class="sev sev-' + it.cp.severity + '">' + esc(it.cp.severity) +
       '</span> <span class="ri-q">' + labelQ(it.cp) + "</span>" +
