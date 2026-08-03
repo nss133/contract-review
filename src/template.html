@@ -77,19 +77,19 @@
   <section id="pane-clauses" class="pane">
     <p id="clauses-empty" class="empty-note">리포트 탭에서 계약서를 분석하세요.</p>
     <div id="analyze-result" hidden>
-      <!-- 상단 고정 헤더: 판정 진행률 · 검토제안 앵커 · 일괄 판정(드롭다운) · 내보내기/불러오기 -->
+      <!-- 상단 고정 헤더: 검토 진행률 · 검토제안 앵커 · 일괄 검토(드롭다운) · 내보내기/불러오기 -->
       <div id="clause-header" class="clause-header">
         <span id="clause-progress" class="clause-progress"></span>
         <button id="consider-anchor" class="ghost consider-anchor" hidden>⚠ 확인 안 된 항목 0건</button>
-        <!-- 일괄 판정(통과계약 모드): 예외를 먼저 개별 판정한 뒤 나머지를 한 번에 채움 — 기판정은 보존됨.
+        <!-- 일괄 검토(통과계약 모드): 예외를 먼저 개별 검토한 뒤 나머지를 한 번에 채움 — 기존 검토 결과는 보존됨.
              절차상 후행 도구라 드롭다운으로 접어 1차 노출을 줄임 -->
         <details id="bulk-dropdown" class="bulk-dropdown">
-          <summary>일괄 판정 ▾</summary>
+          <summary>일괄 검토 ▾</summary>
           <div class="bulk-menu">
-            <span class="verdict-bar-label">통과계약 모드 — 예외 항목 먼저 개별 판정 후 사용, 이미 찍은 판정은 보존됨</span>
-            <button id="bulk-consider-na" class="ghost">확인 안 된 항목(미판정) → 전부 해당없음</button>
-            <button id="bulk-consider-ok" class="ghost">확인 안 된 항목(미판정) → 전부 이상없음</button>
-            <button id="bulk-matched-ok" class="ghost">반영·살펴볼 항목(미판정) → 전부 이상없음</button>
+            <span class="verdict-bar-label">통과계약 모드 — 예외 항목 먼저 개별 검토 후 사용, 이미 남긴 검토 결과는 보존됨</span>
+            <button id="bulk-consider-na" class="ghost">확인 안 된 항목(미검토) → 전부 해당없음</button>
+            <button id="bulk-consider-ok" class="ghost">확인 안 된 항목(미검토) → 전부 이상없음</button>
+            <button id="bulk-matched-ok" class="ghost">반영·살펴볼 항목(미검토) → 전부 이상없음</button>
             <span id="bulk-msg" class="report-actions-note"></span>
           </div>
         </details>
@@ -194,7 +194,7 @@
           <option value="practice">실무 항목만(검수 대상 아님)</option>
         </select>
       </label>
-      <button id="verify-export" class="primary">판정 내보내기</button>
+      <button id="verify-export" class="primary">검수 결과 내보내기</button>
     </div>
     <p id="verify-practice-note" class="verify-practice-note"></p>
     <div id="verify-list"></div>
