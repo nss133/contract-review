@@ -800,7 +800,8 @@ function setReviewer(name) {
 }
 // 현재 계약서의 검토의견을 코퍼스에 적재(닫힌 루프의 ③단계).
 function ingestCurrentToCorpus() {
-  var meta = { type_id: state.typeId, date: verdictToday(), contract_hash: verdictHash, reviewer: getReviewer() };
+  var meta = { type_id: state.typeId, date: verdictToday(), contract_hash: verdictHash, reviewer: getReviewer(),
+    app_version: CR.app_version || "" };
   loopCorpus = Loop.mergeIntoCorpus(loopCorpus, Verdict.exportVerdicts(verdictStore, meta));
   saveCorpus();
 }
@@ -1143,6 +1144,7 @@ function exportVerdicts() {
   // 사람 판정(verdicts)과 별개 키. 데이터 축적 시 "부속서류로 충족되는 항목" 패턴의 원료.
   var meta = { type_id: state.typeId, date: verdictToday(), contract_hash: verdictHash, reviewer: getReviewer(),
     subdoc_coverage: state.subDocCov || {},
+    app_version: CR.app_version || "",
     opinion: _lastOpinionText }; // 종합 검토의견(표시 중 문안 — 수정본 우선)
   var blob = new Blob([JSON.stringify(Verdict.exportVerdicts(verdictStore, meta), null, 2)], { type: "application/json" });
   var url = URL.createObjectURL(blob);
@@ -1239,6 +1241,7 @@ function exportArchive() {
   } catch (e) {}
   var meta = { type_id: state.typeId, date: verdictToday(), contract_hash: verdictHash,
     reviewer: getReviewer(), opinion: _lastOpinionText,
+    app_version: CR.app_version || "",
     archive: true, name: String(name || "").trim() || _contractName() };
   var obj = Verdict.exportVerdicts(verdictStore, meta);
   obj.contract_text = state.text;

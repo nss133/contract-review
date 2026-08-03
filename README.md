@@ -49,11 +49,18 @@ dist/contract-review.html  (단일 파일, 외부 의존 0)
 
 ```bash
 python3 build/build_html.py
-# → dist/contract-review.html 생성
+# → dist/contract-review.html + dist/contract-review-v{버전}.zip(배포용) 생성
 ```
 
 빌드는 `data/law_snapshot.sqlite`(리포에 커밋된 조문 스냅샷)에서 조문 원문을 읽는다.
 **원본 DB 없이 클론만으로 빌드된다.** (스냅샷 구조는 아래 "데이터" 참조)
+
+### 버전 관리
+
+루트 `VERSION` 파일이 단일 소스 — 빌드가 앱 상단바·푸터 표기, 배포 zip 파일명,
+내보내기 JSON(`meta.app_version`)에 자동 주입한다. 부여 규칙: **팀 피드백 라운드
+반영 시 minor**(예: 10차 = 1.10.0), 버그·데이터 소수정은 patch. 릴리스 절차 =
+`VERSION` 올리고 재빌드 — zip 파일명이 곧 배포본 식별자.
 
 ## 테스트
 

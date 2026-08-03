@@ -1,4 +1,5 @@
 __pycache__/
+dist/*.zip
 .pytest_cache/
 .DS_Store
 .omc/

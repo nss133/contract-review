@@ -644,6 +644,9 @@ td.empty { text-align: center; color: var(--ink-faint); padding: var(--sp-4); }
 .consider-done-line { color: var(--c-green-fg); font-weight: 600; font-size: var(--fs-body-sub); margin: var(--sp-1) 0; }
 .consider-anchor.consider-anchor-done { color: var(--c-green-fg); border-color: var(--c-green-line); background: var(--c-green-bg); }
 
+/* 앱 버전 표기(2026-08-03) — 상단바 제목 옆 작은 배지, 푸터에 빌드일 병기 */
+.app-version { font-size: 12px; font-weight: 400; color: var(--ink-mute); margin-left: 6px; letter-spacing: 0; }
+
 /* ── 검토 흐름 재설계(2026-08-03): 요약 스트립·soft gate 배너·결론 타일 ── */
 .verify-anchor { color: var(--c-blue-fg); border-color: var(--c-blue-line); background: #f6fbfe; }
 .verify-anchor:hover { background: var(--c-blue-bg); }

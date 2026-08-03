@@ -1,7 +1,9 @@
 """knowledge/ + src/ + vendor/ → dist/contract-review.html 단일 파일 조립."""
+import datetime as _dt
 import json
 import re
 import sys
+import zipfile
 from pathlib import Path
 
 import yaml
@@ -59,7 +61,14 @@ def build(knowledge_dir, out_path, law_dbs=None, news_db=None, corpus_path=None)
     else:
         print(f"경고: 내장 코퍼스 없음({cpath}) — seed 없이 빌드", file=sys.stderr)
 
-    payload = {"common": k["common"], "types": k["types"], "curated_corpus": corpus}
+    # 앱 버전(2026-08-03 도입) — 루트 VERSION 파일이 단일 소스. UI 표기·zip 파일명·
+    # 내보내기 meta(app_version)에 공용. 부여 규칙: 팀 피드백 라운드 반영 시 minor,
+    # 버그·데이터 소수정은 patch (예: 10차 반영 = 1.10.0).
+    version = (ROOT / "VERSION").read_text().strip()
+    build_date = _dt.date.today().isoformat()
+
+    payload = {"common": k["common"], "types": k["types"], "curated_corpus": corpus,
+               "app_version": version}
     # </script> 조기 종료 방지: JSON 문자열 내 </ 를 <\/ 로 (JSON 유효 이스케이프)
     data_json = json.dumps(payload, ensure_ascii=False).replace("</", "<\\/")
 
@@ -78,17 +87,29 @@ def build(knowledge_dir, out_path, law_dbs=None, news_db=None, corpus_path=None)
     html = html.replace("/*__PDF_WORKER_SRC__*/", worker_src)
     html = html.replace("/*__APP_JS__*/", "\n".join((SRC / f).read_text() for f in JS_ORDER))
     html = html.replace("__DATA_JSON__", data_json)
+    html = html.replace("__APP_VERSION__", version)
+    html = html.replace("__BUILD_DATE__", build_date)
 
     out = Path(out_path)
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(html)
     _smoke(out)
+
+    # 배포 zip 자동 생성 — 파일명에 버전 포함(팀 배포본 식별). 구버전 zip은 정리해
+    # dist에 최신 배포본 하나만 유지(zip은 파생물 — git 미추적).
+    for old in out.parent.glob("contract-review*.zip"):
+        old.unlink()
+    zpath = out.parent / f"contract-review-v{version}.zip"
+    with zipfile.ZipFile(zpath, "w", zipfile.ZIP_DEFLATED) as zf:
+        zf.write(out, out.name)
+    print(f"배포 zip: {zpath.name} ({zpath.stat().st_size // 1024}KB)")
     return out
 
 
 def _smoke(path):
     html = path.read_text()
     assert "__DATA_JSON__" not in html and "/*__" not in html, "플레이스홀더 잔존"
+    assert "__APP_VERSION__" not in html and "__BUILD_DATE__" not in html, "버전 플레이스홀더 잔존"
     m = re.search(r'<script id="cr-data"[^>]*>(.*?)</script>', html, re.S)
     assert m, "cr-data 스크립트 블록 없음"
     data = json.loads(m.group(1))
