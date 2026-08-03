@@ -343,15 +343,51 @@ test("analyze: reason은 정보형 — 판정형(단일 후보/검토필요/미�
   r.matches.forEach((m) => assert.ok(!hasVerdict(m.hits.reasons)));
 });
 
-test("analyze: verify(weak-role) reason은 목적·정의 문구 확인 권장 안내", () => {
+test("analyze: verify(weak-role) reason은 목적·정의 해당 여부 확인 안내", () => {
   const r = analyze(CLAUSES, [OUT_DOC], ["M-CORE"]);
   const purp = r.results.filter((x) => x.cpId === "PURP")[0];
   // 목적(weak) 조항 매칭 + 인용 없음 → 자동확정 불가, verify
   assert.strictEqual(purp.coverage, "verify");
-  assert.ok(purp.best.reasons.some((s) => s.indexOf("목적·정의 조항이라 문구 확인 권장") !== -1));
-  // 일반 verify 안내 문구도 존재하는지(충분한지 확인 권장) 확인
+  assert.ok(purp.best.reasons.some((s) => s.indexOf("목적·정의 조항이라 해당 여부 확인 필요") !== -1));
+  // 일반 verify 안내 문구(매칭 확신 의미 — 내용 충분성 평가 아님, 2026-08-03 교정) 확인
   const allVerify = r.results.filter((x) => x.coverage === "verify" && x.best);
-  assert.ok(allVerify.every((x) => x.best.reasons.some((s) => s.indexOf("확인 권장") !== -1)));
+  assert.ok(allVerify.every((x) => x.best.reasons.some((s) => s.indexOf("확인 필요") !== -1)));
+});
+
+// ── 결정 문구 승격(decisive_patterns, 2026-08-03) ──────────────────
+test("decideTier: 결정 문구 일치 시 review→confirmed 승격 (전속관할)", () => {
+  const check = { id: "J-1", check: "분쟁해결 방식과 관할 법원 지정 조항이 있는가",
+    severity: "참고", norm_type: "실무", decisive_patterns: ["전속관할", "제1심"] };
+  const jur = { heading: "제20조 (관할)",
+    body: "이 계약과 관련한 분쟁은 서울중앙지방법원을 제1심 전속관할 법원으로 한다." };
+  const other = { heading: "제10조 (손해배상)", body: "분쟁이 발생한 경우 손해를 배상한다." };
+  // 점수 20(REVIEW_FLOOR 이상·ABS_SCORE 미만), 마진 2(<MARGIN_HIGH) → 본래 review
+  const ranked = [
+    { clause: jur, s: { score: 20, citation: false } },
+    { clause: other, s: { score: 18, citation: false } },
+  ];
+  assert.strictEqual(decideTier(ranked, check), "confirmed");
+  // 패턴 없으면 원래대로 review — 전역 임계값 무영향 확인
+  assert.strictEqual(decideTier(ranked, { ...check, decisive_patterns: [] }), "review");
+});
+
+test("decideTier: weak-role 게이트가 결정 문구 승격보다 우선 (정의 조항 오탐 차단)", () => {
+  const check = { id: "J-2", check: "관할 법원 지정 조항이 있는가",
+    severity: "참고", norm_type: "실무", decisive_patterns: ["전속관할"] };
+  const def = { heading: "제2조 (정의)",
+    body: "이 계약에서 전속관할이라 함은 특정 법원에만 소를 제기할 수 있는 관할을 말한다." };
+  const ranked = [{ clause: def, s: { score: 20, citation: false } }];
+  assert.strictEqual(decideTier(ranked, check), "review");
+});
+
+test("decisiveHit: 표제·본문에서 패턴 탐지, 없으면 null", () => {
+  const { decisiveHit } = require("../src/matcher.js");
+  const check = { decisive_patterns: ["대한상사중재원"] };
+  assert.strictEqual(
+    decisiveHit({ heading: "제21조 (중재)", body: "분쟁은 대한상사중재원의 중재로 해결한다." }, check),
+    "대한상사중재원");
+  assert.strictEqual(decisiveHit({ heading: "제1조", body: "목적 조항" }, check), null);
+  assert.strictEqual(decisiveHit({ heading: "제1조", body: "무엇이든" }, {}), null);
 });
 
 test("analyze: absence 재정의 — missing === coverage 'consider' 집합", () => {

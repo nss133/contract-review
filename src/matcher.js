@@ -250,6 +250,19 @@ function scoreClauseCheck(clause, checkEntry, model) {
 // 계약서 도메인에선 "체크가 조항 하나에 매칭"이 정상 — 단일 매칭도 근거가 강하면 짚음(confirmed).
 //   짚음 도달: (명시 인용) · (충분한 절대점수 단독) · (뚜렷한 최상위=margin).
 //   weak 역할(목적·정의·전문·계약기간·완전합의) + 인용 없음 → 자동확정 불가(최대 review) — 도메인 유효.
+// 결정 문구 승격(2026-08-03 피드백): check에 decisive_patterns가 있고 best 조항에 그 결정적
+// 문구(예: CMN-19 "전속관할")가 그대로 있으면, 점수·마진이 확정 문턱에 못 미쳐도 confirmed로
+// 승격. 전역 임계값(ABS_SCORE 등)은 건드리지 않고 체크 단위로만 확신을 보강 — 명확히 규정된
+// 조항이 "확인 권장"으로 떨어지는 과잉 표시 방지. weak-role 게이트(목적·정의 조항)는 승격보다
+// 우선 — 정의 조항이 용어로 결정 문구를 담는 오탐 차단.
+function decisiveHit(clause, check) {
+  var pats = (check && check.decisive_patterns) || [];
+  if (!pats.length || !clause) return null;
+  var t = String(clause.heading || "") + " " + String(clause.body || "");
+  for (var i = 0; i < pats.length; i++) if (pats[i] && t.indexOf(pats[i]) !== -1) return pats[i];
+  return null;
+}
+
 function decideTier(ranked, check) {
   if (!ranked.length) return "none";
   var best = ranked[0];
@@ -262,7 +275,8 @@ function decideTier(ranked, check) {
   if (ranked.length >= 2 &&
     (best.s.score - ranked[1].s.score) >= MatcherConfig.MARGIN_HIGH &&
     best.s.score >= MatcherConfig.REVIEW_FLOOR) return "confirmed"; // 뚜렷한 최상위
-  return "review"; // 관련 조항은 있으나(≥REVIEW_FLOOR) 확정 근거 부족 → 확인 권장
+  if (decisiveHit(best.clause, check)) return "confirmed"; // 결정 문구 승격
+  return "review"; // 관련 조항은 있으나(≥REVIEW_FLOOR) 확정 근거 부족 → 해당 여부 확인
 }
 
 // ── coverage 상태 (검토 관점 표시값) ─────────────────────────────
@@ -317,13 +331,16 @@ function _reasons(tier, ranked, check) {
   }
   var role = ClauseRole.clauseRole(best.clause.heading, best.clause.body);
   if (tier === "confirmed") {
+    var dh = decisiveHit(best.clause, check);
+    if (dh) return ["결정 문구 일치 (“" + dh + "”)"];
     if (s.normMatch) return ["본문 문구·규범 일치"];
     var kws = _overlapKeywords(best.clause, check);
     return ["본문 문구 일치" + (kws.length ? " (핵심어: " + kws.join(", ") + ")" : "")];
   }
-  // review
-  if (role.weak) return ["관련 조항 있음 — 목적·정의 조항이라 문구 확인 권장"];
-  return ["관련 조항 있음 — 충분한지 확인 권장"];
+  // review — 매칭 확신 부족 표시(2026-08-03 문구 교정): 조항 내용의 충분성 평가로 읽히지 않게,
+  // "이 조항이 해당 항목이 맞는지"라는 매칭 확인 의미로 한정.
+  if (role.weak) return ["관련 조항으로 보임 — 목적·정의 조항이라 해당 여부 확인 필요"];
+  return ["관련 조항으로 보임 — 이 항목에 해당하는 조항인지 확인 필요"];
 }
 
 // ── 메인 ─────────────────────────────────────────────────────────
@@ -475,6 +492,7 @@ if (typeof module !== "undefined")
     overlapFeatures: overlapFeatures,
     passesOverlapGate: passesOverlapGate,
     scoreClauseCheck: scoreClauseCheck,
+    decisiveHit: decisiveHit,
     decideTier: decideTier,
     alarmGate: alarmGate,
     preconditionMet: preconditionMet,

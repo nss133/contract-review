@@ -316,6 +316,9 @@ checks:
     basis: practice
     triggers:
       keywords: [관할, 분쟁, 중재, 관할법원]
+    # 결정 문구 승격(2026-08-03): 아래 문구가 조항에 그대로 있으면 법원·중재기관을 명확히
+    # 지정한 것 — 점수가 확정 문턱에 못 미쳐도 confirmed 승격("확인 권장" 과잉 표시 방지)
+    decisive_patterns: [전속관할, 합의관할, 관할법원으로 한다, 관할 법원으로 한다, 관할로 한다, 제1심, 대한상사중재원, 중재로 해결]
     absence_check: true
     sources: []
     note: (관할 합의 관련 민사소송법 조문은 로컬 DB 미수록 — 조문 미확인)
