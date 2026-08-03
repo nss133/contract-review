@@ -713,15 +713,18 @@ function runAnalysis() {
   document.getElementById("clauses-empty").hidden = true;
   document.getElementById("checklist-empty").hidden = true;
   document.getElementById("checklist-content").hidden = false;
-  // 입력부 축소(P1): 분석 후엔 입력 패널을 숨기고 요약 바 한 줄로 대체 — "다시 분석"으로 재노출.
-  document.getElementById("input-panel").hidden = true;
+  document.getElementById("report-empty").hidden = true;
   document.getElementById("report-summary-bar").hidden = false;
   renderSummaryBar();
-  if (!_analyzedOnce) {
-    // 최초 분석에서만 리포트 탭으로 자동 랜딩(재검토 시 현재 탭 유지)
-    document.querySelector('.tab[data-tab="report"]').click();
-    _analyzedOnce = true;
+  // 랜딩 분기(2026-08-03 재설계): 검토 필요 항목(미검토 알람+함께 살펴볼)이 있으면 조항별 검토로,
+  // 없으면(통과성 계약) 리포트로. 입력 탭에서 분석을 시작한 경우엔 재분석이라도 항상 랜딩 —
+  // 유형·모듈 조정 등 검토 중 재분석은 현재 탭 유지.
+  var fromInput = document.getElementById("pane-input").classList.contains("active");
+  if (!_analyzedOnce || fromInput) {
+    var landTab = pendingReviewCount() > 0 ? "clauses" : "report";
+    document.querySelector('.tab[data-tab="' + landTab + '"]').click();
   }
+  _analyzedOnce = true;
 }
 
 /* ---------- 분석 후 요약 바(P1) — 입력부 한 줄 축소 ---------- */
@@ -765,12 +768,9 @@ function opinionHtml(text) {
     .replace(/‘([^‘’]+)’/g, function (m, p) { return "‘<mark>" + p + "</mark>’"; })
     .replace(/\n/g, "<br>");
 }
-// 다시 분석 — 숨긴 입력 패널을 다시 열어 본문·부속서류 수정 후 재분석하게 함.
+// 다시 분석 — 계약서 입력 탭으로 이동(본문·부속서류가 보존되어 있어 수정 후 재분석).
 document.getElementById("btn-reanalyze").addEventListener("click", function () {
-  var ip = document.getElementById("input-panel");
-  ip.hidden = false;
-  ip.open = true;
-  ip.scrollIntoView({ behavior: "smooth", block: "start" });
+  document.querySelector('.tab[data-tab="input"]').click();
 });
 
 /* ---------- 검토의견 지식 루프(#4) — cpId 단위 누적 코퍼스 ----------
@@ -1616,6 +1616,24 @@ function verdictProgress() {
   return { judged: judged, judgeable: judgeable };
 }
 
+// 검토 필요 잔여(2026-08-03 재설계) — 미검토 알람(부재, 필수·권장) + 미검토 함께 살펴볼(verify 필수·권장).
+// 랜딩 분기·리포트 soft gate 배너·검토 마치기 게이트·완료 CTA 공용. 리포트 집계와 동일 규칙:
+// 부속서류·별첨 커버 필수는 알람 아님, 참고 심각도는 잔여로 세지 않음.
+function pendingReviewCount() {
+  var n = 0;
+  ((state.result && state.result.results) || []).forEach(function (res) {
+    var cp = _cpById(res.cpId);
+    if (!cp || cp.severity === "참고") return;
+    var v = verdictStore[res.cpId];
+    if (v && v.verdict) return;
+    if (res.coverage === "consider") {
+      if (cp.severity === "필수" && ((state.subDocCov || {})[res.cpId] || (state.refCov || {})[res.cpId])) return;
+      n++;
+    } else if (res.coverage === "verify") n++;
+  });
+  return n;
+}
+
 // 부재 알람의 판정 여부 — 판정을 찍은 항목은 알람에서 이탈(피드백 3차, 리포트 집계와 동일 원칙).
 function _considerJudged(r) {
   var v = verdictStore[r.cpId];
@@ -1624,6 +1642,21 @@ function _considerJudged(r) {
 // 미판정 알람 수 — 헤더 앵커·부재 알람 블록·considerCountText 공용(전면 일관).
 function considerPendingCount() {
   return _considerList.filter(function (r) { return !_considerJudged(r); }).length;
+}
+
+// 미검토 '함께 살펴볼'(verify 필수·권장) — 항목 수 + 해당 조항 행 목록(스트립 앵커 순환 점프용).
+function verifyPendingInfo() {
+  var count = 0, rows = [];
+  Object.keys(_clauseGroups).map(Number).sort(function (a, b) { return a - b; }).forEach(function (ci) {
+    var pend = (_clauseGroups[ci].verify || []).filter(function (r) {
+      var cp = _cpById(r.cpId);
+      if (!cp || cp.severity === "참고") return false;
+      var v = verdictStore[r.cpId];
+      return !(v && v.verdict);
+    });
+    if (pend.length) { count += pend.length; rows.push(ci); }
+  });
+  return { count: count, rows: rows };
 }
 // 검토 제안 카운트(미판정 필수·판정 완료·부속서류·별첨참조) — 헤더 앵커 툴팁·부재 알람 블록 부제 공용.
 function considerCountText() {
@@ -1808,6 +1841,21 @@ function refreshClauseCounts() {
     anchor.classList.toggle("consider-anchor-done", !pendingN);
     anchor.title = considerCountText();
   }
+  // 요약 스트립(2026-08-03): 살펴볼 앵커·형식 경고·완료 CTA — 판정 변경 시마다 갱신.
+  var va = document.getElementById("verify-anchor");
+  if (va) {
+    var vp = verifyPendingInfo();
+    va.hidden = !vp.count;
+    va.textContent = "△ 함께 살펴볼 " + vp.count + "건";
+  }
+  var ff = document.getElementById("formal-flag");
+  if (ff) {
+    var fwN = (state.formal || []).filter(function (f) { return f.status === "warn"; }).length;
+    ff.hidden = !fwN;
+    ff.textContent = "형식 경고 " + fwN + "건";
+  }
+  var cta = document.getElementById("review-done-cta");
+  if (cta) cta.hidden = !(state.result && pendingReviewCount() === 0);
   document.querySelectorAll("#clause-rows .clause-row").forEach(function (row) {
     var g = _clauseGroups[Number(row.dataset.ci)] || { addressed: [], verify: [] };
     row.classList.remove("row-vd-comment", "row-vd-done");
@@ -1835,6 +1883,35 @@ function scrollToClauseEl(el) {
   if (a) a.addEventListener("click", function () {
     var block = document.getElementById("consider-block");
     if (block) scrollToClauseEl(block);
+  });
+})();
+
+// 리포트 특정 섹션으로 이동 — 리포트 탭 활성 후 스크롤(스트립 형식 경고·타일 외부 진입용).
+function gotoReportSection(id) {
+  document.querySelector('.tab[data-tab="report"]').click();
+  var sec = document.getElementById(id);
+  if (!sec) return;
+  if (sec.tagName === "DETAILS") sec.open = true;
+  sec.scrollIntoView({ block: "start" });
+}
+
+// 요약 스트립 정적 바인딩(2026-08-03) — 살펴볼 앵커는 미검토 verify 조항 행을 순환 점프,
+// 형식 경고는 리포트 형식 섹션으로, 완료 CTA는 종합 리포트로.
+(function () {
+  var va = document.getElementById("verify-anchor");
+  var cycleAt = -1;
+  if (va) va.addEventListener("click", function () {
+    var rows = verifyPendingInfo().rows;
+    if (!rows.length) return;
+    cycleAt = (cycleAt + 1) % rows.length;
+    gotoClause(rows[cycleAt]);
+  });
+  var ff = document.getElementById("formal-flag");
+  if (ff) ff.addEventListener("click", function () { gotoReportSection("rpt-sec-formal"); });
+  var cta = document.getElementById("review-done-cta");
+  if (cta) cta.addEventListener("click", function () {
+    document.querySelector('.tab[data-tab="report"]').click();
+    window.scrollTo(0, 0);
   });
 })();
 
@@ -1973,7 +2050,12 @@ function renderReport() {
   var recConsider = recAll.filter(function (it) { return !_verdictOf(it.cp); });
   var alarmJudged = mustCoreAll.concat(mustCondAll, recAll).filter(function (it) { return _verdictOf(it.cp); });
   var alarmDone = alarmJudged.filter(function (it) { return _verdictOf(it.cp) !== "검토의견"; }); // 이상없음·해당없음 → 판정 완료 소구역
-  var alarmOpinN = alarmJudged.length - alarmDone.length; // 검토의견 → 개진 구역(중복 나열 안 함)
+  var alarmN = mustCoreAll.length + mustCondAll.length + recAll.length; // 전체 알람 모수(고정 분모)
+  var alarmPending = mustCore.length + mustCond.length + recConsider.length; // 미확인(미판정)
+  // 미검토 잔여(soft gate, 2026-08-03) — 알람 + 함께 살펴볼(필수·권장 verify). pendingReviewCount와 동일 규칙.
+  var verifyPend = verifyMain.filter(function (it) { return !_verdictOf(it.cp); });
+  var verifyDone = verifyMain.filter(function (it) { var v = _verdictOf(it.cp); return v && v !== "검토의견"; }); // 이상없음·해당없음 → 검토 완료 구역
+  var pendingN = alarmPending + verifyPend.length;
 
   // 형식 점검(#5) — warn만 타일·섹션 대상
   var formalWarns = (state.formal || []).filter(function (f) { return f.status === "warn"; });
@@ -2006,6 +2088,13 @@ function renderReport() {
 
   var right = '<div class="report-summary"><h3>종합 리포트</h3>';
 
+  // soft gate(2026-08-03): 미검토 잔여 시 상단 배너 — 열람·인쇄는 허용하되 중간 집계임을 명시.
+  if (pendingN) {
+    right += '<div class="report-pending-banner">검토 미완 — 미검토 ' + pendingN +
+      "건. 아래 내용은 중간 집계이며, 결론은 조항별 검토를 마친 뒤 확정됩니다. " +
+      '<button class="rpt-goto-review primary">조항별 검토로 이동 →</button></div>';
+  }
+
   // 종합 검토의견 — 기존 한 줄 결론 배너 대체. 자동 초안(판정 변경 시 즉시 재조립),
   // 사용자가 수정하면 수정본 우선 유지 + "자동 초안으로 재생성" 제공.
   var cmp = state.compare && state.compare.mapping ? state.compare : null;
@@ -2026,7 +2115,7 @@ function renderReport() {
   });
   _lastOpinionText = opText; // 내보내기(verdict JSON meta)용 캐시
   right += '<div class="report-opinion"><div class="ro-head"><span class="ro-label">종합 검토의견</span>' +
-    '<span class="ro-mode">' + (opEdited ? "수정본" : "자동 초안") + "</span>" +
+    '<span class="ro-mode">' + (opEdited ? "수정본" : (pendingN ? "자동 초안 — 검토 미완" : "자동 초안")) + "</span>" +
     (_opinionEditing ? "" :
       '<button id="opinion-edit" class="ghost">수정</button>' +
       (opEdited ? '<button id="opinion-regen" class="ghost">자동 초안으로 재생성</button>' : "")) +
@@ -2046,37 +2135,31 @@ function renderReport() {
       (sub ? '<span class="tile-sub">' + sub + "</span>" : "") + "</button>";
   }
   // 타일 문구 풀어쓰기(팀 피드백 2026-07): 압축어 라벨 폐기 — 설명형 라벨 + 한 줄 부연(작은 글씨).
-  // 순서(피드백 2차): 반영 → 확인 안 됨 → 함께 살펴볼 — 하단 섹션 배치와 동일 논리(보완 필요가 상단).
-  // N/M 분모 병기(피드백 5차 → 6차 축소): M/N 진행 표기는 "확인 안 된 항목"(판정 완료 M /
-  //   전체 알람 N — 모수가 닫혀 있고 판정으로 채워지는 진행 시맨틱)에만 유지.
-  //   반영 타일의 "N / 활성 검사 수"는 "58개 중 1개만 이상없음"으로 오독됨(피드백 6차) —
-  //   활성 항목 대부분은 이 계약과 무관한 quiet라 전수 대비 뉘앙스가 생기면 안 됨 → 단독 수 복귀.
-  //   형식 타일도 같은 오독 소지("0/4 = 4개 중 0개만 통과")로 분수 제거 — 점검 모수는 부연에만.
-  //   함께 살펴볼 항목은 자체 모집단이라 의미 있는 분모가 없어 단일 수 유지.
-  var alarmN = mustCoreAll.length + mustCondAll.length + recAll.length; // 전체 알람 모수(고정 분모)
-  var alarmPending = mustCore.length + mustCond.length + recConsider.length; // 미확인(미판정)
+  // 타일 재구성(2026-08-03 재설계): 결론 중심 — 진행률 첫자리 승격(미검토 시 클릭=조항별 검토로 유도),
+  //   검토 결과 분포 신설(이상없음·검토의견·해당없음). '함께 살펴볼' 타일은 폐지 — 검토 행위가
+  //   조항별 검토 탭으로 일원화되며 잔여분은 진행률 부연으로 흡수.
+  // N/M 분모 시맨틱(피드백 5~6차)은 유지: 진행형 분수는 진행률·확인 안 됨 타일만,
+  //   반영·형식은 단독 수(전수 대비 오독 방지 — 모수는 부연에만).
   var formalN = (state.formal || []).length;
   right += '<div class="report-tiles">' +
+    _tile("__review__", "tile-progress" + (pendingN ? " tile-pending" : ""), "검토 진행률", judged + " / " + judgeable,
+      (pendingN ? "미검토 " + pendingN + "건 — 클릭하면 조항별 검토로 이동" : "검토 필요 항목 전부 완료")) +
+    _tile("rpt-sec-opinions", "tile-verdict", "검토 결과", vsum.total,
+      "이상없음 " + vsum["이상없음"] + " · 검토의견 " + vsum["검토의견"] + " · 해당없음 " + vsum["해당없음"]) +
     _tile("rpt-sec-addressed", "tile-addressed", "✓ 계약서에 반영된 항목", addressed.length,
       "확인 필요 사항이 계약서 조항에서 확인됨") +
     _tile("rpt-sec-must", "tile-consider", "! 계약서에서 확인 안 된 항목", (alarmN - alarmPending) + " / " + alarmN,
       (alarmN === 0 ? "이번 분석에서 부재알람 없음"
         : alarmPending ? "알람 " + alarmN + "건 중 검토 완료 " + (alarmN - alarmPending) + " — 미확인 " + alarmPending + "건 검토 필요"
         : "알람 " + alarmN + "건 전부 검토 완료")) +
-    _tile("rpt-sec-suggest", "tile-verify", "△ 함께 살펴볼 항목", verifyMain.length,
-      "관련 조항이 있어 보임 — 참고 제안") +
     _tile("rpt-sec-formal", "tile-formal", "형식 확인 필요", formalWarns.length,
       "경고 " + formalWarns.length + "건 (형식 " + formalN + "개 항목 점검) — 상호·대표자·주소 오기") +
-    _tile("rpt-sec-opinions", "tile-progress", "검토 진행률", judged + " / " + judgeable,
-      "검토 완료한 항목 / 검토 대상") +
     "</div>";
 
+  // 결론 화면(2026-08-03): 항목명+딥링크만 — 근거·표준문안 등 작업용 상세는 조항별 검토 탭이 담당.
   function _mustItem(it) {
     return '<div class="report-item consider-item"><div class="ri-head"><span class="sev sev-필수">필수</span>' +
-      '<span class="ri-q">' + labelQ(it.cp) + "</span>" + _gotoBtn("consider") + "</div>" +
-      (it.cp.severity_basis ? '<p class="ri-why">' + esc(it.cp.severity_basis) + "</p>" : "") +
-      stdRefsHtml(it.cp) + // 표시 전용 — 판정·severity 무영향
-      "</div>";
+      '<span class="ri-q">' + labelQ(it.cp) + "</span>" + _gotoBtn("consider") + "</div></div>";
   }
   // 1. 확인 안 된 필수(core) — 계약 본질상 필요한 필수인데 계약서에서 미확인·미검토. 항상 최상단.
   // 제목 옆에 미확인·검토 완료 진행 병기 — 검토 결과를 남기면 알람이 줄어드는 게 보이게(피드백 3차).
@@ -2085,7 +2168,7 @@ function renderReport() {
       " · 검토 완료 " + alarmJudged.length + "</span>" : "";
   if (mustCore.length) {
     right += '<section id="rpt-sec-must" class="report-sec-block sec-consider"><h4 class="h4-alert">계약서에서 확인 안 된 필수 항목 (' + mustCore.length + ")" + alarmProg + "</h4>";
-    right += '<p class="sec-hint">이 유형 계약에 통상 필요한 항목인데 계약서에서 매칭 조항을 못 찾음 — 실제로 빠진 것인지 확인 요. 검토 결과를 남기면 아래 "검토 완료"로 이동함.</p>';
+    right += '<p class="sec-hint">이 유형 계약에 통상 필요한 항목인데 계약서에서 매칭 조항을 못 찾음 — 실제로 빠진 것인지 확인 요. 검토는 조항별 검토 탭 하단 "계약서에서 확인 안 됨" 블록에서 진행 — 결과를 남기면 아래 "검토 완료"로 이동함.</p>';
     right += mustCore.map(_mustItem).join("") + "</section>";
   } else if (alarmJudged.length) {
     // 알람이 전부 검토됨 — "남은 게 있나?" 불안 제거(완료색 한 줄).
@@ -2096,21 +2179,22 @@ function renderReport() {
       '<p class="report-none">없음 — 필수(본질) 항목은 관련 조항·부속서류에 닿음.</p></section>';
   }
 
-  // 1-1. 검토 완료 소구역 — 알람에 떴던 항목 중 검토자가 이상없음·해당없음으로 확인을 마친 것.
-  // 알람색(노랑)이 아닌 완료색(초록). 검토 버튼 유지 — 같은 결과를 다시 누르면 취소되어 알람으로 복귀.
-  if (alarmDone.length) {
-    right += '<section class="report-sec-block sec-done"><h4 class="h4-done">검토 완료 — 검토자가 확인을 마친 항목 (' + alarmDone.length + ")</h4>";
+  // 1-1. 검토 완료 소구역 — 알람·함께 살펴볼에 떴던 항목 중 검토자가 이상없음·해당없음으로
+  // 확인을 마친 것(2026-08-03: verify 판정분도 흡수 — 표면화된 전 항목의 종착지를 리포트에서 추적).
+  // 판정 버튼은 두지 않음 — 검토 결과의 취소·변경은 조항별 검토 탭에서(검토 행위 일원화).
+  var doneItems = alarmDone.concat(verifyDone);
+  if (doneItems.length) {
+    right += '<section class="report-sec-block sec-done"><h4 class="h4-done">검토 완료 — 검토자가 확인을 마친 항목 (' + doneItems.length + ")</h4>";
     right += '<p class="sec-hint">판단 내용을 부기하고 이상없음·해당없음으로 처리한 항목' +
-      (alarmOpinN ? ' — 검토의견 ' + alarmOpinN + '건은 아래 "검토의견 개진" 구역에 있음' : "") +
-      ". 검토 결과를 취소하면 다시 알람으로 돌아감.</p>";
-    right += alarmDone.map(function (it) {
+      (flagged.length ? ' — 검토의견 ' + flagged.length + '건은 아래 "검토의견 개진" 구역에 있음' : "") +
+      ". 검토 결과의 취소·변경은 조항별 검토 탭에서.</p>";
+    right += doneItems.map(function (it) {
       var v = verdictStore[it.cp.id] || {};
       return '<div class="report-item done-item"><div class="ri-head">' +
         '<span class="vd-badge ' + (VERDICT_CLS[v.verdict] || "") + '">' + esc(v.verdict || "") + "</span>" +
         '<span class="sev sev-' + it.cp.severity + '">' + esc(it.cp.severity) + "</span>" +
         '<span class="ri-q">' + labelQ(it.cp) + "</span></div>" +
-        (v.comment ? '<p class="oi-comment">' + esc(v.comment) + "</p>" : "") +
-        verdictControlHtml(it.cp.id, true) + "</div>";
+        (v.comment ? '<p class="oi-comment">' + esc(v.comment) + "</p>" : "") + "</div>";
     }).join("") + "</section>";
   }
 
@@ -2135,25 +2219,20 @@ function renderReport() {
     right += "</section>";
   }
 
-  // 2. 함께 살펴볼 항목 — 항목명·근거조항·원문발췌 + 판정 버튼(P1): 가벼운 계약은 리포트만으로 검토 완결.
-  // (섹션 순서는 타일 순서와 동일 논리 — 확인 안 됨 → 함께 살펴볼 → 형식 → 검토의견, 반영은 하단 접힘)
+  // 2. 함께 살펴볼 항목 — 요약만(2026-08-03 재설계): 근거 대조·판정은 조항별 검토 탭에서.
+  // 구 P1의 인라인 목록(발췌+판정 버튼)은 단편 근거만 보고 판정하는 샛길이라 철수 —
+  // 리포트는 잔여·완료 현황 집계와 이동 동선만 제공.
   right += '<section id="rpt-sec-suggest" class="report-sec-block sec-verify"><h4>함께 살펴볼 항목 (' + verifyMain.length + ")" +
     (recConsider.length ? " · 확인 안 된 항목(권장) (" + recConsider.length + ")" : "") + "</h4>";
-  right += '<p class="sec-hint">계약서 검토 시 이 부분들도 함께 살펴보시길 제안합니다 — 여기서 바로 검토 결과를 남길 수 있습니다.</p>';
-  right += verifyMain.map(function (it) {
-    return '<div class="report-item verify-item"><span class="sev sev-' + it.cp.severity + '">' + esc(it.cp.severity) +
-      '</span> <span class="ri-q">' + labelQ(it.cp) + "</span>" +
-      (it.res.best ? ' <span class="ri-loc-inline">(' + esc(_clauseHeading(it.res.best.clauseIndex)) + ")</span>" +
-        _gotoBtn(it.res.best.clauseIndex) : "") +
-      evidenceLineHtml(it.cp, it.res) + verdictControlHtml(it.cp.id) + "</div>";
-  }).join("");
-  right += recConsider.map(function (it) {
-    return '<div class="report-item consider-item"><span class="sev sev-권장">권장</span> <span class="ri-q">' + labelQ(it.cp) + "</span>" +
-      _gotoBtn("consider") +
-      (it.cp.severity_basis ? '<p class="ri-why">' + esc(it.cp.severity_basis) + "</p>" : "") +
-      stdRefsHtml(it.cp) + // 표시 전용 — 판정·severity 무영향
-      verdictControlHtml(it.cp.id) + "</div>";
-  }).join("");
+  var verifyJudgedN = verifyMain.length - verifyPend.length;
+  if (verifyPend.length || recConsider.length) {
+    right += '<p class="sec-hint">미검토 ' + (verifyPend.length + recConsider.length) +
+      "건 — 계약서 원문과 나란히 확인하도록 조항별 검토 탭에서 진행하세요. " +
+      '<button class="rpt-goto-review ghost">조항별 검토로 이동 →</button></p>';
+  }
+  if (verifyJudgedN) {
+    right += '<p class="sec-hint">검토 완료 ' + verifyJudgedN + '건 — 결과는 위 "검토 완료"·아래 "검토의견 개진" 구역에 집계됨.</p>';
+  }
   if (!verifyMain.length && !recConsider.length) right += '<p class="report-none">해당 없음.</p>';
   right += "</section>";
 
@@ -2240,11 +2319,14 @@ function renderReport() {
   // 개별 저장 버튼(내보내기·아카이브·지식 반영)과 관리 액션(골드셋 저장·판정파일 반영·
   // 코퍼스 백업/복원·정규화 후보)은 "팀·지식 관리" 접힘으로 격리(전문가용, 동작 불변).
   // 인쇄 시 접힘은 자동 펼침 대상에서 제외(admin-fold).
+  // 검토 마치기 게이트(soft gate의 마감선): 미검토 잔여 시 비활성 — 내보내기·인쇄는 항상 가능.
   right += '<div class="report-actions">' +
-    '<button id="report-finish" class="primary">검토 마치기</button>' +
+    '<button id="report-finish" class="primary"' + (pendingN ? " disabled" : "") + '>검토 마치기</button>' +
     '<button id="report-export-file" class="ghost">검토의견 파일로 내보내기 (공유·회신용)</button>' +
     '<button id="report-print" class="ghost">인쇄</button>' +
-    '<span id="finish-msg" class="report-actions-note">마치기 = 지식 반영 + 브라우저에 아카이브 등록 — 파일이 필요하면 내보내기 사용</span></div>';
+    '<span id="finish-msg" class="report-actions-note">' +
+    (pendingN ? "미검토 " + pendingN + "건 — 조항별 검토를 마치면 [검토 마치기]가 활성화됩니다"
+      : "마치기 = 지식 반영 + 브라우저에 아카이브 등록 — 파일이 필요하면 내보내기 사용") + "</span></div>";
   right += '<details class="report-sec admin-fold"><summary>팀·지식 관리</summary>';
   right += '<div class="report-actions">' +
     '<button id="report-verdict-export" class="ghost">검토의견 내보내기</button>' +
@@ -2268,9 +2350,15 @@ function renderReport() {
   var body = document.getElementById("report-body");
   body.innerHTML = right;
   // 수치 타일 앵커(P1): 클릭 시 해당 섹션으로 페이지 스크롤 — 접힘 섹션은 먼저 펼침.
+  // 진행률 타일(__review__)은 미검토 잔여 시 조항별 검토 탭으로 이동(작업 유도), 완료 시 결과 구역으로.
   body.querySelectorAll(".tile[data-anchor]").forEach(function (t) {
     t.addEventListener("click", function () {
-      var sec = document.getElementById(t.getAttribute("data-anchor"));
+      var a = t.getAttribute("data-anchor");
+      if (a === "__review__") {
+        if (pendingN) { document.querySelector('.tab[data-tab="clauses"]').click(); window.scrollTo(0, 0); return; }
+        a = "rpt-sec-opinions";
+      }
+      var sec = document.getElementById(a);
       if (!sec) return;
       if (sec.tagName === "DETAILS") sec.open = true;
       sec.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -2280,8 +2368,13 @@ function renderReport() {
   body.querySelectorAll(".rpt-goto").forEach(function (btn) {
     btn.addEventListener("click", function () { gotoClause(btn.getAttribute("data-ci")); });
   });
-  // 제안 섹션 판정(P1): 리포트에서 바로 판정 — 저장 후 리포트(타일 수치 포함)·다른 뷰 갱신.
-  bindVerdictControls(body, function () { renderReport(); renderClauses(); renderSuggestions(); });
+  // 조항별 검토 이동(soft gate 배너·함께 살펴볼 요약 공용) — 리포트엔 판정 컨트롤이 없음(검토 일원화).
+  body.querySelectorAll(".rpt-goto-review").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      document.querySelector('.tab[data-tab="clauses"]').click();
+      window.scrollTo(0, 0);
+    });
+  });
   // 종합 검토의견 — 수정(편집 모드 전환)·저장(persist)·취소·자동 초안 재생성.
   var oedit = document.getElementById("opinion-edit");
   if (oedit) oedit.addEventListener("click", function () { _opinionEditing = true; renderReport(); });

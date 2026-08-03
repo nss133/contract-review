@@ -9,9 +9,12 @@
 <body>
 <header class="topbar">
   <h1>계약서 리뷰 가이드</h1>
+  <!-- 탭 순서 = 검토 흐름(2026-08-03 재설계): ① 계약서 입력 → ② 조항별 검토(모든 검토·판정) → ③ 리포트(결론).
+       리포트는 검토 결과의 집계·종합의견 화면 — 검토 행위는 조항별 검토에 일원화 -->
   <nav>
-    <button data-tab="report" class="tab active">리포트</button>
+    <button data-tab="input" class="tab active">계약서 입력</button>
     <button data-tab="clauses" class="tab">조항별 검토</button>
+    <button data-tab="report" class="tab">리포트</button>
     <button data-tab="checklist" class="tab">체크리스트</button>
     <!-- 관리 그룹(P1) — 매 검토 사용 탭과 위계 분리(우측·회색 톤). 큐레이터·회귀 채점용 -->
     <span class="nav-admin">
@@ -23,10 +26,13 @@
 </header>
 
 <main>
-  <!-- 리포트 (첫 탭·P1) — 분석 전엔 입력 화면, 분석 후엔 요약 바 + 검토 개요 -->
-  <section id="pane-report" class="pane active">
-    <details id="input-panel" open>
-      <summary>계약서 입력</summary>
+  <!-- 전년 검토 자동 안내 — 어느 탭에서든 보이게 전역 배치(분석 랜딩이 조항별 검토라도 노출) -->
+  <div id="archive-banner" class="archive-banner" hidden></div>
+
+  <!-- 계약서 입력 (첫 탭) — 분석 전 전용 화면. 분석 후에도 탭으로 돌아와 본문·부속서류 수정 가능 -->
+  <section id="pane-input" class="pane active">
+    <div id="input-panel">
+      <h2 class="input-title">계약서 입력</h2>
       <div id="analyze-input">
         <div id="drop-zone" class="drop-zone">
           <textarea id="contract-text" aria-label="계약서 텍스트 입력" placeholder="계약서 텍스트를 붙여넣거나, 파일(PDF·DOCX·DOC·HWP·HWPX)을 여기로 끌어다 놓으세요"></textarea>
@@ -49,9 +55,15 @@
           <span id="compare-load-msg" class="report-actions-note"></span>
         </div>
       </div>
-    </details>
+    </div>
+  </section>
 
-    <!-- 분석 후 요약 바(P1) — 입력부가 한 줄로 축소. 유형·모듈 조정은 펼침 안 -->
+  <!-- 리포트 — 결론 화면: 검토 결과의 집계·종합 검토의견·내보내기. 검토(판정) 행위는 조항별 검토 탭 담당.
+       미검토 잔여 시에도 열람 가능(soft gate) — 상단 배너로 중간 집계임을 표시 -->
+  <section id="pane-report" class="pane">
+    <p id="report-empty" class="empty-note">계약서 입력 탭에서 분석을 시작하세요.</p>
+
+    <!-- 분석 후 요약 바(P1) — 계약명·조항수 한 줄. 유형·모듈 조정은 펼침 안 -->
     <div id="report-summary-bar" class="report-summary-bar" hidden>
       <span id="summary-line" class="summary-line"></span>
       <button id="btn-reanalyze" class="ghost">다시 분석</button>
@@ -67,20 +79,20 @@
       </details>
     </div>
 
-    <!-- 전년 검토 자동 안내 — 레지스트리에서 이 계약의 이전 검토 후보를 찾으면 표시 -->
-    <div id="archive-banner" class="archive-banner" hidden></div>
-
     <div id="report-body"></div>
   </section>
 
   <!-- 조항별 검토(P2) — 삼단 연속 스크롤: 조항 행(row) 단위 grid, 클릭 탐색 없음 -->
   <section id="pane-clauses" class="pane">
-    <p id="clauses-empty" class="empty-note">리포트 탭에서 계약서를 분석하세요.</p>
+    <p id="clauses-empty" class="empty-note">계약서 입력 탭에서 분석을 시작하세요.</p>
     <div id="analyze-result" hidden>
-      <!-- 상단 고정 헤더: 검토 진행률 · 검토제안 앵커 · 일괄 검토(드롭다운) · 내보내기/불러오기 -->
+      <!-- 상단 고정 헤더 = 검토 필요 요약 스트립: 진행률 · 확인 안 됨 앵커 · 살펴볼 앵커(순환 점프) ·
+           형식 경고 · 일괄 검토(드롭다운) · 내보내기/불러오기 · 완료 CTA(미검토 0일 때) -->
       <div id="clause-header" class="clause-header">
         <span id="clause-progress" class="clause-progress"></span>
         <button id="consider-anchor" class="ghost consider-anchor" hidden>⚠ 확인 안 된 항목 0건</button>
+        <button id="verify-anchor" class="ghost verify-anchor" hidden title="클릭하면 미검토 항목이 있는 조항으로 차례로 이동">△ 함께 살펴볼 0건</button>
+        <button id="formal-flag" class="ghost formal-flag" hidden title="당사 고유명사(상호·대표자·주소) 근사 오기 — 클릭하면 리포트 형식 점검으로 이동">형식 경고 0건</button>
         <!-- 일괄 검토(통과계약 모드): 예외를 먼저 개별 검토한 뒤 나머지를 한 번에 채움 — 기존 검토 결과는 보존됨.
              절차상 후행 도구라 드롭다운으로 접어 1차 노출을 줄임 -->
         <details id="bulk-dropdown" class="bulk-dropdown">
@@ -95,6 +107,7 @@
         </details>
         <button id="verdict-export" class="ghost">검토의견 내보내기</button>
         <label class="filebtn ghost">불러오기<input id="verdict-import" type="file" accept=".json" hidden></label>
+        <button id="review-done-cta" class="primary review-done-cta" hidden>검토 완료 — 종합 리포트 →</button>
       </div>
       <!-- 비교 모드 헤더 — 전년 검토 대비 동일·변경·신설·삭제 카운트 + 일괄 수용 + 해제 -->
       <div id="compare-header" class="compare-header" hidden></div>
@@ -112,7 +125,7 @@
 
   <!-- 체크리스트 (전 항목 감사 뷰) -->
   <section id="pane-checklist" class="pane">
-    <p id="checklist-empty" class="empty-note">리포트 탭에서 계약서를 분석하세요.</p>
+    <p id="checklist-empty" class="empty-note">계약서 입력 탭에서 분석을 시작하세요.</p>
     <div id="checklist-content" hidden>
     <div class="controls" id="checklist-toolbar">
       <label>모듈 <select id="filter-module"><option value="">전체</option></select></label>

@@ -98,8 +98,8 @@ textarea#contract-text { width: 100%; height: 200px; }
 .subdoc-use .subdoc-use-hint { color: #7a8ba3; font-size: 11.5px; }
 
 #input-panel { background: #fff; border: 1px solid #e0e2ee; border-radius: 8px;
-               padding: 4px 16px 16px; margin-bottom: 16px; }
-#input-panel summary { cursor: pointer; padding: 10px 0; font-weight: 600; }
+               padding: 12px 16px 16px; margin-bottom: 16px; }
+#input-panel .input-title { margin: 0 0 10px; font-size: 16px; font-weight: 600; }
 .input-actions { display: flex; gap: 10px; align-items: center; margin-top: 8px; }
 #analyze-setup { margin-top: 12px; }
 
@@ -643,3 +643,17 @@ td.empty { text-align: center; color: var(--ink-faint); padding: var(--sp-4); }
 .consider-done-head { margin: var(--sp-3) 0 4px; }
 .consider-done-line { color: var(--c-green-fg); font-weight: 600; font-size: var(--fs-body-sub); margin: var(--sp-1) 0; }
 .consider-anchor.consider-anchor-done { color: var(--c-green-fg); border-color: var(--c-green-line); background: var(--c-green-bg); }
+
+/* ── 검토 흐름 재설계(2026-08-03): 요약 스트립·soft gate 배너·결론 타일 ── */
+.verify-anchor { color: var(--c-blue-fg); border-color: var(--c-blue-line); background: #f6fbfe; }
+.verify-anchor:hover { background: var(--c-blue-bg); }
+.formal-flag { color: var(--c-red-fg); border-color: var(--c-red-line); background: #fffafa; }
+.formal-flag:hover { background: var(--c-red-bg); }
+.review-done-cta { margin-left: auto; }
+.report-pending-banner { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-1) var(--sp-2);
+  background: var(--c-amber-bg); border: 1px solid var(--c-amber-line); border-radius: 8px;
+  color: #9a6a10; padding: 10px 14px; margin-bottom: var(--sp-2); font-weight: 600; }
+.tile-verdict .tile-num { color: var(--c-blue-fg); }
+.tile-pending { border-color: var(--c-amber-line); background: #fffdf7; }
+.tile-pending .tile-num { color: var(--c-amber-fg); }
+.primary[disabled] { opacity: .45; cursor: not-allowed; }
