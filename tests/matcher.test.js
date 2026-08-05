@@ -995,3 +995,27 @@ test("scoreClauseCheck: 조 표제 직접 대응이 점수를 유의미하게 �
   const b = scoreClauseCheck(noTitle, entry, model).score;
   assert.ok(a > b, "표제가 체크를 지시하면 더 높은 점수(" + a.toFixed(1) + " > " + b.toFixed(1) + ")");
 });
+
+// ── 당사자 축(주어) 매칭 — 11.6차 ────────────────────────────────
+const { subjectBonus } = require("../src/matcher.js");
+
+test("subjectBonus: 조항 주어가 체크 주체와 일치하면 가산, 불일치면 감산", () => {
+  const cl = { index: 0, heading: "제35조(반대수익자의 수익증권매수청구권)",
+    body: "① 수익자는 결의에 반대하는 경우 수익증권의 매수를 청구할 수 있다." };
+  const forBenef = { id: "A", subject_roles: ["수익자", "투자자"] };
+  const forMgr = { id: "B", subject_roles: ["집합투자업자", "위탁회사"] };
+  assert.ok(subjectBonus(cl, forBenef) > 0, "수익자 권리 체크는 가산");
+  assert.ok(subjectBonus(cl, forMgr) < 0, "운용사 의무 체크는 감산");
+});
+
+test("subjectBonus: 주어 미상·미선언이면 중립(0) — 모름을 근거로 깎지 않음", () => {
+  const noSubj = { index: 0, heading: "제1조(목적)", body: "본 계약의 목적을 정한다." };
+  assert.strictEqual(subjectBonus(noSubj, { subject_roles: ["수익자"] }), 0, "주어 미상 → 중립");
+  const cl = { index: 0, heading: "제2조", body: "수익자는 청구할 수 있다." };
+  assert.strictEqual(subjectBonus(cl, { id: "X" }), 0, "subject_roles 미선언 → 비활성");
+});
+
+test("subjectBonus: 지위어 변형도 부분 포함으로 흡수", () => {
+  const cl = { index: 0, heading: "제3조", body: "일반사모집합투자업자는 운용하여야 한다." };
+  assert.ok(subjectBonus(cl, { subject_roles: ["집합투자업자"] }) > 0);
+});

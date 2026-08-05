@@ -88,7 +88,35 @@ var ClauseRole = (function () {
     return null;
   }
 
-  return { parseTitle: parseTitle, clauseRole: clauseRole, normType: normType };
+  /* 조항 주어(의무·권리의 주체) 추출 — 11.6차.
+     "집합투자업자는 …하여야 한다" / "수익자는 …할 수 있다"처럼 한국어 계약 조항은
+     주체를 문두에 '지위어+은/는'으로 명시하는 것이 표준. 이 주체가 누구인지에 따라
+     같은 문언이라도 우리 검토항목인지가 갈린다(사용자 지적: '당사자' 축).
+     조항 본문 각 항(①②…)의 첫머리를 훑어 주어 후보를 수집. 최대 3개(항마다 주체가
+     바뀌는 조항이 있음). 못 찾으면 빈 배열 — 이 경우 게이트는 걸지 않는다. */
+  var SUBJ_RE = /(?:^|\n|[①-⑮]\s*|\d+\.\s*)\s*([가-힣]{2,12}?)(?:은|는)\s/g;
+  // 주어가 될 수 없는 어휘(문장 부사·비인격 명사) — 오추출 차단.
+  var SUBJ_STOP = ["다음", "이에", "그에", "본조", "본항", "전항", "해당", "각각", "이하",
+    "위의", "상기", "다만", "또한", "기타", "이때", "그때", "본건", "이건"];
+  function clauseSubjects(body, limit) {
+    var t = String(body || "");
+    var out = [], seen = {};
+    var m, re = new RegExp(SUBJ_RE.source, "g");
+    while ((m = re.exec(t)) !== null) {
+      var s = m[1];
+      if (SUBJ_STOP.indexOf(s) !== -1) continue;
+      // 용언 어간 배제 — "…을 변경하는 경우에는"의 '변경하'처럼 동사가 잘려 들어오는 것 차단.
+      // 한국어 지위어는 명사이므로 '하/되/시키/받' 등으로 끝나면 주어가 아님.
+      if (/(하|되|시키|받|주|지|이|가)$/.test(s) && s.length <= 4) continue;
+      // 조사가 붙은 형태에서 어간만: "집합투자업자" 그대로 사용(지위어는 명사형)
+      if (!seen[s]) { seen[s] = 1; out.push(s); }
+      if (out.length >= (limit || 3)) break;
+    }
+    return out;
+  }
+
+  return { parseTitle: parseTitle, clauseRole: clauseRole, normType: normType,
+    clauseSubjects: clauseSubjects };
 })();
 
 if (typeof module !== "undefined") module.exports = ClauseRole;

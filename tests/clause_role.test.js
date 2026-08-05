@@ -1,7 +1,7 @@
 "use strict";
 const { test } = require("node:test");
 const assert = require("node:assert");
-const { parseTitle, clauseRole, normType } = require("../src/clause_role.js");
+const { parseTitle, clauseRole, normType, clauseSubjects } = require("../src/clause_role.js");
 
 // ── parseTitle ──────────────────────────────────────────────
 test("parseTitle: 정상 — 표제 괄호 내용을 추출한다", () => {
@@ -125,4 +125,20 @@ test("normType: '할 수 없다'가 '할 수 있다'(권한)보다 우선 매칭
   assert.strictEqual(normType("을은 재위탁할 수 없다."), "금지");
   // 순수 권한 표현은 여전히 권한
   assert.strictEqual(normType("갑은 계약을 즉시 해지할 수 있다."), "권한");
+});
+
+// ── 조항 주어 추출(11.6차) ───────────────────────────────────────
+test("clauseSubjects: 항별 주어를 순서대로 수집", () => {
+  const body = "① 집합투자업자는 신탁계약을 변경하여야 한다.\n② 수익자는 이의를 제기할 수 있다.";
+  assert.deepStrictEqual(clauseSubjects(body), ["집합투자업자", "수익자"]);
+});
+
+test("clauseSubjects: 비인격 주어·문장부사는 제외", () => {
+  assert.deepStrictEqual(clauseSubjects("다음 각 호의 사항은 별도로 정한다."), []);
+  assert.deepStrictEqual(clauseSubjects("다만 그에 대하여는 별도 합의한다."), []);
+});
+
+test("clauseSubjects: 주어 없으면 빈 배열(게이트 비활성 신호)", () => {
+  assert.deepStrictEqual(clauseSubjects(""), []);
+  assert.deepStrictEqual(clauseSubjects("본 계약의 목적을 정한다."), []);
 });

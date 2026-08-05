@@ -196,6 +196,7 @@ checks:
     # 사모 신탁계약서가 수익자총회를 두지 않는 것이 정상인데 이 체크를 붙이면 틀린 지적이 됨
     # (2026-08-05 사용자 지적 — 사모 신탁계약서에 공모 기준 체크가 매칭됨).
     fund_scope: [public]
+    subject_roles: [집합투자업자, 위탁회사]
     severity: 필수
     severity_basis: 강행규정(의무) — 자본시장법 제188조 제2항 후단(수익자 이익 관련 중요사항 변경은 미리 수익자총회 결의)
     norm_type: 강행
@@ -219,6 +220,7 @@ checks:
     # §249-8⑤가 사모의 집합투자자총회를 배제하므로 사모에서는 성립 자체가 불가.
     # 사모 신탁계약서가 매수청구권을 배제·부존재로 두는 것이 정상.
     fund_scope: [public]
+    subject_roles: [수익자, 집합투자업자]
     severity: 필수
     severity_basis: 강행규정(권리 보장·비용전가 금지) — 자본시장법 제191조 제1항·제2항(반대수익자의 수익증권매수청구권)
     norm_type: 강행
@@ -243,6 +245,7 @@ checks:
     check: 집합투자업자의 선관주의·충실의무(투자자 이익 보호)를 배제·완화하는 면책조항이 없는가
     label: "운용사 면책조항 과도 여부"
     module: M-BENEF
+    subject_roles: [집합투자업자, 위탁회사]
     severity: 필수
     severity_basis: 강행규정(의무) — 자본시장법 제79조(집합투자업자의 선관의무·충실의무). 이를 배제하는 약정은 수익자에게 불리
     norm_type: 강행
@@ -271,6 +274,7 @@ checks:
     # "집합투자규약에서 정한 방법으로 전체 투자자에게 통지"하면 공시·공고를 갈음함
     # → 사모용 대체 항목은 INV-BEN-07.
     fund_scope: [public]
+    subject_roles: [집합투자업자, 위탁회사]
     severity: 필수
     severity_basis: 강행규정(의무) — 자본시장법 제188조 제3항(변경 시 공시, 총회 결의사항 변경 시 수익자 통지)
     norm_type: 강행
@@ -309,6 +313,7 @@ checks:
     check: 집합투자업자·신탁업자가 받는 보수·수수료의 계산방법과 지급시기·방법이 명확히 특정되어 있는가
     label: "보수·수수료 산정 명확성"
     module: M-BENEF
+    subject_roles: [집합투자업자, 신탁업자, 위탁회사, 수탁회사]
     severity: 필수
     severity_basis: 강행규정(의무) — 자본시장법 제188조 제1항 제5호(보수·수수료 계산방법·지급시기·방법 기재 의무)
     norm_type: 강행
@@ -332,6 +337,7 @@ checks:
     label: "규약상 투자자 통지 절차"
     module: M-BENEF
     fund_scope: [private]
+    subject_roles: [집합투자업자, 위탁회사]
     severity: 권장
     severity_basis: 임의규정(갈음 요건) — 자본시장법 제249조의8 제6항. 사모는 총회·공시 의무가 배제되므로 규약상 통지가 실질적 정보접근 수단이 됨
     norm_type: 임의
@@ -351,6 +357,7 @@ checks:
     label: "적격투자자 양도 제한"
     module: M-BENEF
     fund_scope: [private]
+    subject_roles: [수익자, 투자자]
     severity: 필수
     severity_basis: 강행규정(금지) — 자본시장법 제249조의8 제3항(일반 사모집합투자기구의 투자자는 적격투자자가 아닌 자에게 양도 금지). 당사가 보유분을 처분할 때 직접 적용되는 제약
     norm_type: 강행
@@ -370,6 +377,7 @@ checks:
     check: 신탁업자(수탁회사)가 집합투자업자의 계열회사가 아니며, 신탁재산을 고유재산과 분별하여 관리하도록 되어 있는가
     label: "수탁 독립성·분별관리"
     module: M-BENEF
+    subject_roles: [신탁업자, 수탁회사]
     severity: 필수
     severity_basis: 강행규정(금지·의무) — 자본시장법 제246조 제1항(신탁업자는 집합투자업자의 계열회사 금지)·제2항(분별관리). §249-8 배제 목록에 없어 사모에도 적용
     norm_type: 강행

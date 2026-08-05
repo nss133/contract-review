@@ -451,6 +451,29 @@ function overlapFeatures(clause, check) {
   return { uniq: uniq, titleStrong: titleStrong };
 }
 
+// ── 당사자 축(주어) 매칭 — 11.6차 ────────────────────────────────
+// 조항의 주어(의무·권리 주체)가 그 체크가 겨냥하는 주체와 맞는지로 가감.
+// 체크는 subject_roles로 "이 항목의 수범자/주체"를 선언한다(미선언이면 이 축 비활성).
+//   일치   → +SUBJECT_BONUS
+//   불일치 → -SUBJECT_PENALTY (주어가 읽혔는데 전혀 다른 주체인 경우만)
+//   주어 미상 → 0 (모름을 근거로 깎지 않음 — 게이트 공통 원칙)
+// 예: "수익자는 …매수를 청구할 수 있다"(주어=수익자)에 수익자 권리 체크는 가산되고,
+//     운용사 의무 체크(주어=집합투자업자)는 감산되어 엉뚱한 부착이 줄어든다.
+function subjectBonus(clause, check) {
+  var want = check && check.subject_roles;
+  if (!want || !want.length) return 0;
+  var subs = ClauseRole.clauseSubjects(clause.body);
+  if (!subs.length) return 0; // 주어 미상 → 중립
+  for (var i = 0; i < subs.length; i++) {
+    for (var j = 0; j < want.length; j++) {
+      // 부분 포함 허용 — "집합투자업자"와 "일반사모집합투자업자" 같은 변형 흡수.
+      if (subs[i].indexOf(want[j]) !== -1 || want[j].indexOf(subs[i]) !== -1)
+        return MatcherConfig.SUBJECT_BONUS;
+    }
+  }
+  return -MatcherConfig.SUBJECT_PENALTY;
+}
+
 // 노출 게이트: 명시 인용 · 복수 핵심어 겹침 · 표제 강일치 중 하나면 통과.
 function passesOverlapGate(clause, check, citation) {
   if (citation) return true;
@@ -527,7 +550,10 @@ function scoreClauseCheck(clause, checkEntry, model) {
   var fit = titleFitRatio(clause, checkEntry.cp);
   var fitBonus = fit >= MatcherConfig.TITLE_STRONG_RATIO
     ? fit * MatcherConfig.CLAUSE_TITLE_BONUS_MAX : 0;
-  var raw = tw * tfidf + jw * jaccard + nBonus + tBonus + fitBonus;
+  // 당사자 축(11.6차 사용자 요청) — 조항의 주어가 그 체크가 겨냥하는 주체와 맞는지.
+  // 같은 문언이라도 "집합투자업자는 …" 조항과 "수익자는 …" 조항은 검토 의미가 다름.
+  var subjBonus = subjectBonus(clause, checkEntry.cp);
+  var raw = tw * tfidf + jw * jaccard + nBonus + tBonus + fitBonus + subjBonus;
   var score = Math.max(0, Math.min(100, raw));
   var signals = (tfidf > 0 ? 1 : 0) + (jaccard > 0 ? 1 : 0);
   return {
@@ -854,6 +880,7 @@ if (typeof module !== "undefined")
     moduleAllowedInStance: moduleAllowedInStance,
     checkAllowedInStance: checkAllowedInStance,
     STANCES: STANCES,
+    subjectBonus: subjectBonus,
     detectFundKind: detectFundKind,
     fundScopeAllows: fundScopeAllows,
     titleHits: titleHits,
