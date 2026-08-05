@@ -30,17 +30,35 @@ function detectType(text, types, docTitle) {
   var t = String(text || "");
   var head = t.slice(0, MatcherConfig.DETECT_HEAD_LEN);
   var title = String(docTitle || "");
+  // 제목 점수는 유형당 **가장 특정한 키워드 1건**만 인정한다(11.4차).
+  // 겹치는 키워드('위탁' ⊂ '위탁계약서')가 같은 글자를 중복 계상해 점수를 부풀리면,
+  // 범용어를 여러 개 가진 유형이 특정어 하나를 가진 유형을 이겨버림
+  // ("보험회사-보험대리점 표준위탁계약서" → channel이어야 하는데 outsourcing 승리).
+  function bestTitleKw(kws) {
+    var best = null;
+    (kws || []).forEach(function (kw) {
+      if (title.indexOf(kw) === -1) return;
+      if (!best || String(kw).length > String(best).length) best = kw;
+    });
+    return best;
+  }
   var scored = types.map(function (ty) {
     var score = 0, hits = [], titleHit = false;
+    var titleKw = bestTitleKw(ty.meta.detect_keywords);
+    if (titleKw) {
+      var spec0 = Math.min(String(titleKw).length / 2, MatcherConfig.DETECT_SPEC_CAP);
+      score += MatcherConfig.DETECT_DOCTITLE_W * spec0;
+      titleHit = true;
+      hits.push(titleKw);
+    }
     (ty.meta.detect_keywords || []).forEach(function (kw) {
       var titleN = _countOcc(title, kw);
       // 제목 적중분은 head 카운트에서 빼서 이중계산 방지(제목은 보통 head 안에 있음).
       var headN = Math.max(_countOcc(head, kw) - titleN, 0);
       var bodyN = Math.min(_countOcc(t, kw) - headN - titleN, MatcherConfig.DETECT_BODY_CAP);
-      var s = titleN * MatcherConfig.DETECT_DOCTITLE_W +
-        headN * MatcherConfig.DETECT_TITLE_W + Math.max(bodyN, 0);
-      if (s > 0) { score += s; hits.push(kw); }
-      if (titleN > 0) titleHit = true;
+      // 제목 가중은 위에서 유형당 1건만 이미 반영 — 여기서는 표제부·본문만 계산.
+      var s = headN * MatcherConfig.DETECT_TITLE_W + Math.max(bodyN, 0);
+      if (s > 0) { score += s; if (hits.indexOf(kw) === -1) hits.push(kw); }
     });
     return { typeId: ty.meta.type_id, score: score, hits: hits, titleHit: titleHit };
   });

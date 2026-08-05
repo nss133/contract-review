@@ -73,3 +73,27 @@ test("extractDocTitle: 제목 없이 바로 조문이면 빈 문자열", () => {
   assert.strictEqual(extractDocTitle("제1조(목적) 바로 시작"), "");
   assert.strictEqual(extractDocTitle(""), "");
 });
+
+// ── 제목 인식 실패 케이스 보강(11.4차) ────────────────────────────
+test("extractDocTitle: 자간 벌린 제목도 인식", () => {
+  // 한글 계약서 표지에 흔한 조판 — 그대로 두면 유형어 매칭이 전부 실패.
+  assert.strictEqual(extractDocTitle("신 탁 계 약 서\n제1조(목적)"), "신탁계약서");
+  assert.strictEqual(extractDocTitle("업 무 위 탁 계 약 서\n제1조"), "업무위탁계약서");
+});
+
+test("extractDocTitle: 유형어 뒤 꼬리표가 붙어도 인식", () => {
+  assert.strictEqual(extractDocTitle("업무위탁계약서(개정)\n제1조"), "업무위탁계약서(개정)");
+  assert.strictEqual(extractDocTitle("근질권설정계약서 (안)\n제1조"), "근질권설정계약서 (안)");
+  assert.strictEqual(extractDocTitle("물품구매계약서 제2안\n제1조"), "물품구매계약서 제2안");
+});
+
+test("extractDocTitle: 따옴표·괄호 장식은 벗겨서 반환", () => {
+  assert.strictEqual(extractDocTitle('"위수탁계약서"\n제1조'), "위수탁계약서");
+  assert.strictEqual(extractDocTitle("「신탁계약서」\n제1조"), "신탁계약서");
+});
+
+test("extractDocTitle: 마지막 유형어 기준 판정 — 복합 제목 회귀", () => {
+  // "신탁계약 변경합의서"에서 첫 유형어('계약')를 쓰면 꼬리가 '변경합의서'가 되어 탈락하던 버그.
+  assert.strictEqual(extractDocTitle("제3호 신탁계약 변경합의서\n제1조"), "제3호 신탁계약 변경합의서");
+  assert.strictEqual(extractDocTitle("업무위탁계약 변경합의서\n제1조"), "업무위탁계약 변경합의서");
+});
