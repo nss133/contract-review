@@ -130,6 +130,37 @@ function checkAllowedInStance(cp, stance) {
   return _stanceAllows(cp && cp.stance_scope, stance);
 }
 
+// ── 펀드 성격 판별(사모/공모) — 11.5차 ───────────────────────────
+// 일반사모집합투자기구는 자본시장법 §249-8에서 §188②③(수익자총회 결의·변경 공시통지)이
+// 적용 배제되고, ⑤항으로 "집합투자자총회 및 그와 관련된 사항" 전체가 배제됨.
+// 따라서 사모 신탁계약서가 수익자총회·매수청구권을 두지 않는 것이 **정상**이며,
+// 공모 기준 체크를 그대로 붙이면 법적으로 틀린 지적이 됨(2026-08-05 사용자 지적).
+// 검토자에게 묻지 않고 계약서 문언으로 자동 판별한다.
+var PRIVATE_FUND_SIGNALS = [
+  "일반 사모집합투자기구", "일반사모집합투자기구", "사모집합투자기구", "전문투자형 사모",
+  "일반사모", "사모펀드", "사모투자신탁", "적격투자자", "전문투자자만"
+];
+var PUBLIC_FUND_SIGNALS = [
+  "공모집합투자기구", "공모펀드", "증권신고서", "투자설명서를 교부", "공모의 방법"
+];
+// 반환: "private" | "public" | "" (판별 불가 — 게이트 비활성)
+function detectFundKind(text) {
+  var t = _stripStatuteCitations(String(text || ""));
+  var pv = 0, pb = 0;
+  PRIVATE_FUND_SIGNALS.forEach(function (s) { if (t.indexOf(s) !== -1) pv++; });
+  PUBLIC_FUND_SIGNALS.forEach(function (s) { if (t.indexOf(s) !== -1) pb++; });
+  if (pv > pb) return "private";
+  if (pb > pv) return "public";
+  return "";
+}
+// check.fund_scope 미선언 = 전 펀드 적용. 판별 불가(빈 문자열)면 게이트 비활성(누락검출 우선).
+function fundScopeAllows(check, kind) {
+  var sc = check && check.fund_scope;
+  if (!sc || !sc.length) return true;
+  if (!kind) return true;
+  return sc.indexOf(kind) !== -1;
+}
+
 // 국면 자동 추정 — 계약서 문언에서 당사의 지위를 읽음. 입력 단계 프리필용이며
 // 최종 결정은 검토자가 함(추정은 근거와 함께 노출).
 // 수익자 신호: 투자신탁·집합투자 구조에서 당사가 수익자/투자자로만 등장하는 형태.
@@ -211,10 +242,29 @@ function detectPartyRoles(text) {
 // 브랜드가 들어간 펀드명("미래에셋맵스일반사모부동산투자신탁제3호")은 상대방이 아니라
 // 상품명이므로 제외 — 이를 세지 않으면 비계열 운용사 펀드까지 계열 거래로 오판.
 var AFFILIATE_ENTITY_RE = /미래에셋[가-힣A-Za-z]*(자산운용|증권|생명|화재|캐피탈|벤처투자|컨설팅|파트너스|자산관리|저축은행|금융서비스|글로벌|투자운용)/;
-function hasAffiliateParty(text) {
+// ⚠️ 본문 전체를 훑으면 안 됨(11.5차 교정) — "제10조 계열회사와의 거래는 별도 승인" 같은
+// 일반 조항이나 예시 언급까지 계열 상대방으로 오판해, 비계열 계약서에 계열사 체크가 붙음
+// (2026-08-05 사용자 지적: "엉뚱한 계약서에서 계열사인지 여부를 묻고 있어").
+// 계약 당사자는 ① 전문(앞부분 당사자 소개) ② 서명란(뒷부분) ③ "○○: 법인명" 표기에만 나타남 —
+// 그 구간에서 당사 상호를 제거하고도 계열 법인명이 남는지로 판정한다.
+var PARTY_ZONE_HEAD = 600;  // 전문·당사자 소개 구간(자)
+var PARTY_ZONE_TAIL = 600;  // 서명란 구간(자)
+function _partyZones(text) {
   var t = String(text || "");
-  OUR_NAMES.forEach(function (n) { t = t.split(n).join(""); }); // 당사 자신은 제외
-  return AFFILIATE_ENTITY_RE.test(t);
+  var zones = [t.slice(0, PARTY_ZONE_HEAD), t.slice(Math.max(0, t.length - PARTY_ZONE_TAIL))];
+  // "집합투자업자: ○○자산운용" 처럼 **지위어** 뒤에 법인명을 적는 줄은 위치와 무관하게 당사자 표기.
+  // 지위어를 요구해야 함 — 아무 짧은 접두어나 허용하면 "제50조 …: …" 같은 본문 줄까지 들어옴.
+  var roleAlt = ROLE_TERMS.join("|");
+  var partyLineRe = new RegExp("^\\s*(?:" + roleAlt + ")\\s*[:：]");
+  t.split(/\r?\n/).forEach(function (line) {
+    if (partyLineRe.test(line)) zones.push(line);
+  });
+  return zones.join("\n");
+}
+function hasAffiliateParty(text) {
+  var zone = _partyZones(text);
+  OUR_NAMES.forEach(function (n) { zone = zone.split(n).join(""); }); // 당사 자신은 제외
+  return AFFILIATE_ENTITY_RE.test(zone);
 }
 // 체크가 요구하는 당사 지위를 충족하는가. party_roles 미선언이면 전 지위 적용(하위호환).
 // 지위를 **못 읽은 경우(빈 배열)는 통과**시킨다 — 갑·을만 쓰고 당사 상호를 적지 않은 계약서가
@@ -278,9 +328,10 @@ function suggestModules(text, modules, opts) {
   return { on: on, ask: ask };
 }
 
-function activeCheckpoints(doc, activeModules, stance) {
+function activeCheckpoints(doc, activeModules, stance, fundKind) {
   return doc.checkpoints.filter(function (cp) {
     if (!checkAllowedInStance(cp, stance)) return false;
+    if (!fundScopeAllows(cp, fundKind)) return false;
     return !cp.module || activeModules.indexOf(cp.module) !== -1;
   });
 }
@@ -326,10 +377,10 @@ function clauseQuery(clause) {
 }
 
 // 활성 check 코퍼스로 IDF 빌드 → {idf, checks:[{cp, text, doc}]}
-function buildModel(docs, activeModules, stance) {
+function buildModel(docs, activeModules, stance, fundKind) {
   var checks = [];
   docs.forEach(function (d) {
-    activeCheckpoints(d, activeModules, stance).forEach(function (cp) {
+    activeCheckpoints(d, activeModules, stance, fundKind).forEach(function (cp) {
       checks.push({ cp: cp, text: checkText(cp), doc: d });
     });
   });
@@ -469,7 +520,14 @@ function scoreClauseCheck(clause, checkEntry, model) {
   var nBonus = nMatch ? MatcherConfig.NORM_BONUS : 0;
   var tBonus = titleBonus(clause, checkEntry.text);
   var citation = citationHit(String(clause.heading || "") + " " + String(clause.body || ""), checkEntry.cp);
-  var raw = tw * tfidf + jw * jaccard + nBonus + tBonus;
+  // 조 표제 직접 대응 보너스(11.5차 사용자 요청) — "제35조(반대수익자 매수청구권)"처럼
+  // 표제가 그 체크를 정면으로 지시하면 강한 신호. 기존 titleBonus(상한 5)는 어휘 겹침
+  // 개수 기반이라 복합어 표제에서 거의 작동하지 않았음(한국어 법령 표제는 한 덩어리).
+  // titleFitRatio(부분문자열 기반)에 비례해 최대 CLAUSE_TITLE_BONUS_MAX까지 가산.
+  var fit = titleFitRatio(clause, checkEntry.cp);
+  var fitBonus = fit >= MatcherConfig.TITLE_STRONG_RATIO
+    ? fit * MatcherConfig.CLAUSE_TITLE_BONUS_MAX : 0;
+  var raw = tw * tfidf + jw * jaccard + nBonus + tBonus + fitBonus;
   var score = Math.max(0, Math.min(100, raw));
   var signals = (tfidf > 0 ? 1 : 0) + (jaccard > 0 ? 1 : 0);
   return {
@@ -657,7 +715,11 @@ function analyze(clauses, docs, opts) {
   var baseClauses = o.baseClauses || [];
   var docTitle = o.docTitle;
   var partyRoles = o.partyRoles;
-  var model = buildModel(docs, activeModules, stance);
+  // 펀드 성격(사모/공모) — 미전달 시 본문에서 자동 판별(검토자 선택 아님, 11.5차).
+  var fundKind = o.fundKind !== undefined ? o.fundKind
+    : detectFundKind((clauses || []).map(function (cl) {
+        return String(cl.heading || "") + " " + String(cl.body || ""); }).join("\n"));
+  var model = buildModel(docs, activeModules, stance, fundKind);
   var results = [];
   var matches = [];
   var missing = [];
@@ -792,6 +854,8 @@ if (typeof module !== "undefined")
     moduleAllowedInStance: moduleAllowedInStance,
     checkAllowedInStance: checkAllowedInStance,
     STANCES: STANCES,
+    detectFundKind: detectFundKind,
+    fundScopeAllows: fundScopeAllows,
     titleHits: titleHits,
     titleFitRatio: titleFitRatio,
     computeClauseOwners: computeClauseOwners,

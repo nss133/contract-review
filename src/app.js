@@ -1164,28 +1164,37 @@ function curationPanelHtml() {
 // skipLoop: 같은 행 ③ 카드처럼 loop 힌트 중복 노출이 소음인 곳에서 생략.
 function verdictControlHtml(cpId, skipLoop) {
   var cur = verdictStore[cpId] || {};
-  var btns = Verdict.VERDICTS.map(function (v) {
+  // 2행 배치(11.5차 사용자 요청): 판정 1건이 한 줄을 차지하고, 그 줄에 딸린 입력(사유·메모)이
+  // 옆에 붙음. 종전 1행 나열은 어느 입력이 어느 판정에 딸린 것인지 읽히지 않았음.
+  //   [이상없음] [사유 선택 ▾] [확인 메모]
+  //   [검토의견] [검토의견 메모]
+  var rows = Verdict.VERDICTS.map(function (v) {
     var on = cur.verdict === v ? " active " + VERDICT_CLS[v] : "";
-    return '<button class="vd-btn' + on + '" data-vcp="' + esc(cpId) + '" data-vd="' + esc(v) + '">' + esc(v) + "</button>";
+    var btn = '<button class="vd-btn' + on + '" data-vcp="' + esc(cpId) + '" data-vd="' + esc(v) + '">' + esc(v) + "</button>";
+    var side = "";
+    if (v === "이상없음") {
+      // 사유 선택 — 구 '해당없음' 독립 판정을 대체. 이상없음 선택 시에만 활성.
+      var disabled = cur.verdict === "이상없음" ? "" : " disabled";
+      side += '<select class="vd-reason" data-vcp="' + esc(cpId) + '" name="vd-reason-' + esc(cpId) +
+        '" aria-label="이상없음 사유"' + disabled + ">" +
+        '<option value="">사유 선택(선택사항)</option>' +
+        Verdict.OK_REASONS.map(function (rs) {
+          return '<option value="' + esc(rs) + '"' + (cur.reason === rs ? " selected" : "") + ">" + esc(rs) + "</option>";
+        }).join("") + "</select>";
+      side += '<input class="vd-note' + (cur.verdict === "이상없음" ? " show" : "") + '" data-vcp="' + esc(cpId) +
+        '" data-vfor="이상없음" name="vd-note-ok-' + esc(cpId) + '" aria-label="확인 메모"' +
+        ' placeholder="확인 메모(선택)" value="' +
+        esc(cur.verdict === "이상없음" ? (cur.comment || "") : "") + '"' + disabled + ">";
+    } else {
+      var dis2 = cur.verdict === "검토의견" ? "" : " disabled";
+      side += '<input class="vd-note' + (cur.verdict === "검토의견" ? " show" : "") + '" data-vcp="' + esc(cpId) +
+        '" data-vfor="검토의견" name="vd-note-op-' + esc(cpId) + '" aria-label="검토의견 메모"' +
+        ' placeholder="검토의견 메모" value="' +
+        esc(cur.verdict === "검토의견" ? (cur.comment || "") : "") + '"' + dis2 + ">";
+    }
+    return '<div class="vd-row">' + btn + '<span class="vd-side">' + side + "</span></div>";
   }).join("");
-  // 이상없음 사유(11.3차): "반영되어 있음 / 해당사항 없음" 중 선택(미선택 허용).
-  // 구 '해당없음' 독립 판정을 폐기하고 여기로 격하 — "우리 케이스와 해당사항이 없어서
-  // 이상없다"는 경우를 '해당없음'으로 찍으면 체크 자체가 부적절하다는 뜻으로 오독됨.
-  var reasonSel = "";
-  if (cur.verdict === "이상없음") {
-    reasonSel = '<select class="vd-reason" data-vcp="' + esc(cpId) + '" name="vd-reason-' + esc(cpId) +
-      '" aria-label="이상없음 사유">' +
-      '<option value="">사유 선택(선택사항)</option>' +
-      Verdict.OK_REASONS.map(function (rs) {
-        return '<option value="' + esc(rs) + '"' + (cur.reason === rs ? " selected" : "") + ">" + esc(rs) + "</option>";
-      }).join("") + "</select>";
-  }
-  // 판정이 있으면 코멘트 입력 노출. 이상없음도 "확인 근거"를 남길 수 있어야 함.
-  var showComment = !!cur.verdict;
-  var ph = cur.verdict === "이상없음" ? "확인 메모(선택)" : "검토의견 메모";
-  var comment = '<input class="vd-note' + (showComment ? " show" : "") + '" data-vcp="' + esc(cpId) +
-    '" name="vd-note-' + esc(cpId) + '" aria-label="' + esc(ph) + '" placeholder="' + esc(ph) + '" value="' + esc(cur.comment || "") + '">';
-  return '<div class="verdict-ctl">' + btns + reasonSel + comment + "</div>" + (skipLoop ? "" : loopInfoHtml(cpId));
+  return '<div class="verdict-ctl vc-rows">' + rows + "</div>" + (skipLoop ? "" : loopInfoHtml(cpId));
 }
 // 조항별 보기·리포트 공용 — 판정 버튼 클릭·코멘트 저장 바인딩. reRender: 저장 후 호출.
 function bindVerdictControls(root, reRender) {
@@ -1195,7 +1204,10 @@ function bindVerdictControls(root, reRender) {
       var cur = verdictStore[cp] || {};
       // 같은 판정 다시 누르면 취소(토글)
       var next = cur.verdict === v ? "" : v;
-      applyVerdict(cp, next, cur.comment || "");
+      // 다른 판정으로 전환하면 그 판정의 메모가 따로 있으므로 코멘트는 승계하지 않음.
+      // 같은 판정 재선택(취소)이거나 동일 판정 유지면 기존 코멘트·사유 보존.
+      var keep = (next === cur.verdict);
+      applyVerdict(cp, next, keep ? (cur.comment || "") : "", keep ? cur.reason : "");
       if (reRender) reRender();
     });
   });
@@ -1209,9 +1221,10 @@ function bindVerdictControls(root, reRender) {
     inp.addEventListener("change", function () {
       var cp = inp.getAttribute("data-vcp");
       var cur = verdictStore[cp] || {};
-      // 코멘트만 입력하면 검토의견으로 자동 설정
-      var v = cur.verdict || "검토의견";
-      applyVerdict(cp, v, inp.value);
+      // 행별 메모(11.5차): 각 입력은 자기 행의 판정에 속함 — 코멘트만 입력해도
+      // 그 행의 판정으로 확정된다(이상없음 줄 메모 → 이상없음).
+      var v = inp.getAttribute("data-vfor") || cur.verdict || "검토의견";
+      applyVerdict(cp, v, inp.value, v === "이상없음" ? cur.reason : "");
       if (reRender) reRender();
     });
   });
@@ -2245,7 +2258,10 @@ function _clauseHeading(idx) {
 function _verdictBadge(cpId) {
   var v = verdictStore[cpId];
   if (!v || !v.verdict) return "";
-  return ' <span class="vd-badge ' + VERDICT_CLS[v.verdict] + '">' + esc(v.verdict) + "</span>";
+  // 사유가 있으면 함께 노출(11.5차) — 같은 '이상없음'이라도 반영되어 있어서인지
+  // 우리 케이스에 해당사항이 없어서인지가 리포트에서 구분되어야 함.
+  return ' <span class="vd-badge ' + VERDICT_CLS[v.verdict] + '">' + esc(v.verdict) + "</span>" +
+    (v.reason ? ' <span class="vd-reason-badge">' + esc(v.reason) + "</span>" : "");
 }
 // 리포트 = 2단 구성(#5 재구성): 좌=계약서 문안+검토의견 코멘트 / 우=종합 서술형 리포트.
 function renderReport() {
@@ -2449,8 +2465,11 @@ function renderReport() {
       ". 검토 결과의 취소·변경은 조항별 검토 탭에서.</p>";
     right += doneItems.map(function (it) {
       var v = verdictStore[it.cp.id] || {};
+      // 사유 노출(11.5차 사용자 요청): "왜 이상없음으로 찍었는지"가 리포트에서 보여야 함 —
+      // 반영되어 있어서인지, 우리 케이스에 해당사항이 없어서인지는 결론이 같아도 의미가 다름.
       return '<div class="report-item done-item"><div class="ri-head">' +
         '<span class="vd-badge ' + (VERDICT_CLS[v.verdict] || "") + '">' + esc(v.verdict || "") + "</span>" +
+        (v.reason ? '<span class="vd-reason-badge">' + esc(v.reason) + "</span>" : "") +
         '<span class="sev sev-' + it.cp.severity + '">' + esc(it.cp.severity) + "</span>" +
         '<span class="ri-q">' + labelQ(it.cp) + "</span></div>" +
         (v.comment ? '<p class="oi-comment">' + esc(v.comment) + "</p>" : "") + "</div>";

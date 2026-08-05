@@ -948,3 +948,50 @@ test("analyze: 본문 근거가 실질적이면 표제가 달라도 살아남는
   assert.notStrictEqual(r.results.find((x) => x.cpId === "ACCESS").coverage, "quiet",
     "표제는 PROT를 가리키지만 ACCESS도 본문 실질 근거가 있으므로 유지");
 });
+
+// ── 사모/공모 자동 판별(11.5차) ──────────────────────────────────
+const { detectFundKind, fundScopeAllows } = require("../src/matcher.js");
+
+test("detectFundKind: 계약서 문언으로 자동 판별(검토자 선택 아님)", () => {
+  assert.strictEqual(detectFundKind("본 투자신탁은 일반 사모집합투자기구로서 적격투자자를 대상으로 한다"), "private");
+  assert.strictEqual(detectFundKind("본 투자신탁은 공모집합투자기구로서 증권신고서를 제출한다"), "public");
+  assert.strictEqual(detectFundKind("일반 신탁계약서"), "", "판별 불가면 빈 문자열");
+});
+
+test("fundScopeAllows: 사모면 공모 전용 체크 제외 / 판별 불가면 게이트 비활성", () => {
+  const pub = { fund_scope: ["public"] };
+  const pri = { fund_scope: ["private"] };
+  assert.strictEqual(fundScopeAllows(pub, "private"), false, "사모에 공모 전용 체크 금지");
+  assert.strictEqual(fundScopeAllows(pub, "public"), true);
+  assert.strictEqual(fundScopeAllows(pri, "private"), true);
+  assert.strictEqual(fundScopeAllows(pub, ""), true, "판별 불가면 누락검출 우선");
+  assert.strictEqual(fundScopeAllows({}, "private"), true, "미선언은 전 펀드 적용");
+});
+
+test("hasAffiliateParty: 본문 일반 조항의 계열사 언급은 상대방이 아님", () => {
+  // 실사고(2026-08-05): 비계열 계약서인데 계열사 체크가 붙던 문제.
+  const body = "업무위탁계약서\n위탁자 ○○보험과 수탁자 ○○데이터는 다음과 같이 체결한다.\n" +
+    "제N조 일반 조항 내용이 이어진다.\n".repeat(40) +
+    "제50조 미래에셋증권 등 계열회사와의 거래는 별도 승인을 받는다.\n" +
+    "제N조 후속 조항 내용이 이어진다.\n".repeat(40) +
+    "\n위탁자: ○○보험 주식회사\n수탁자: ○○데이터 주식회사";
+  assert.strictEqual(hasAffiliateParty(body), false, "본문 언급만으로는 계열 상대방 아님");
+  // 당사자 표기 구간에 있으면 인정
+  assert.strictEqual(hasAffiliateParty("신탁계약서\n집합투자업자: 미래에셋자산운용 주식회사"), true);
+});
+
+test("scoreClauseCheck: 조 표제 직접 대응이 점수를 유의미하게 올린다", () => {
+  const CHECK = { id: "BUY", severity: "필수", norm_type: "강행", basis: "statute",
+    check: "반대수익자에게 수익증권매수청구권이 보장되어 있는가", label: "반대수익자 매수청구권",
+    triggers: { keywords: ["매수청구"] }, sources: [] };
+  const OTHER = { id: "X", severity: "필수", norm_type: "강행", basis: "statute",
+    check: "보수 산정방법이 명확한가", label: "보수 산정", triggers: { keywords: ["보수"] }, sources: [] };
+  const docs = [{ checkpoints: [CHECK, OTHER] }];
+  const model = buildModel(docs, [], "party");
+  const entry = model.checks.find((e) => e.cp.id === "BUY");
+  const withTitle = { index: 0, heading: "제35조(반대수익자의 수익증권매수청구권)", body: "매수를 청구할 수 있다." };
+  const noTitle = { index: 1, heading: "제40조(기타)", body: "매수를 청구할 수 있다." };
+  const a = scoreClauseCheck(withTitle, entry, model).score;
+  const b = scoreClauseCheck(noTitle, entry, model).score;
+  assert.ok(a > b, "표제가 체크를 지시하면 더 높은 점수(" + a.toFixed(1) + " > " + b.toFixed(1) + ")");
+});

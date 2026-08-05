@@ -4,7 +4,10 @@
 id: pledge-missing-perfection
 desc: 질권 설정 언급만 있는 대출계약 — 대항요건(FIN-SEC-02) 누락검출 유지
 detect_expected: finance
-consider_must_include: [FIN-SEC-02]
+# 11.5차: 조 표제 가중 도입 후 "제2조(질권)" 표제가 이 체크와 정면 일치하게 되어
+# tier=review(=coverage verify)로 잡힘 — 조항이 실재하므로 "없다"(consider)보다
+# "이 조항을 보라"(verify)가 정확함. 항목이 검토자 눈에 들어오는지를 shown으로 고정.
+shown_must_include: [FIN-SEC-02]
 text: |
   대출 및 질권설정 계약서
 
