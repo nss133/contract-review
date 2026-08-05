@@ -69,11 +69,55 @@ function pickType(ranked) {
 function _stripStatuteCitations(text) {
   return text.replace(/「[^」]*」/g, "");
 }
-function suggestModules(text, modules) {
+// ── 검토 국면(stance) 게이트 ─────────────────────────────────────
+// 당사가 규범의 수범자인지에 따라 모듈·체크의 유효성이 갈림. 문언 검출은 정확해도
+// 의무주체가 제3자면 그 규제는 당사 검토항목이 아님(2026-08-04 투자신탁 사고).
+//   party       = 당사가 의무를 부담·이행하는 국면(기본)
+//   beneficiary = 당사가 수익자·투자자로 참여, 의무주체는 운용사·수탁회사 등 제3자
+var STANCES = ["party", "beneficiary"];
+var DEFAULT_STANCE = "party";
+function normalizeStance(stance) {
+  return STANCES.indexOf(stance) !== -1 ? stance : DEFAULT_STANCE;
+}
+// scope(배열)가 없으면 전 국면 허용. 있으면 현재 국면 포함 여부.
+function _stanceAllows(scope, stance) {
+  if (!scope || !scope.length) return true;
+  return scope.indexOf(normalizeStance(stance)) !== -1;
+}
+function moduleAllowedInStance(m, stance) {
+  return _stanceAllows(m && m.requires_stance, stance);
+}
+function checkAllowedInStance(cp, stance) {
+  return _stanceAllows(cp && cp.stance_scope, stance);
+}
+
+// 국면 자동 추정 — 계약서 문언에서 당사의 지위를 읽음. 입력 단계 프리필용이며
+// 최종 결정은 검토자가 함(추정은 근거와 함께 노출).
+// 수익자 신호: 투자신탁·집합투자 구조에서 당사가 수익자/투자자로만 등장하는 형태.
+var BENEFICIARY_SIGNALS = [
+  "수익자", "수익증권", "수익권", "집합투자업자", "신탁업자", "판매회사",
+  "집합투자규약", "투자신탁", "일반사모집합투자기구", "신탁원본", "수익자총회"
+];
+// 당사자 신호: 당사가 직접 의무를 지는 전형 문언(위탁자로서의 발주·수탁 등).
+var PARTY_SIGNALS = ["위탁업무", "수탁자는 위탁자에게", "용역대금", "납품", "하도급"];
+var STANCE_MIN = 3;
+function detectStance(text) {
+  var t = _stripStatuteCitations(String(text || ""));
+  var bHits = [], pHits = [];
+  BENEFICIARY_SIGNALS.forEach(function (kw) { if (t.indexOf(kw) !== -1) bHits.push(kw); });
+  PARTY_SIGNALS.forEach(function (kw) { if (t.indexOf(kw) !== -1) pHits.push(kw); });
+  // 수익자 구조 신호가 복수이고 당사자 신호보다 우세할 때만 beneficiary 제안.
+  // 확신 없으면 기본(party) — 게이트를 함부로 걸지 않는다는 공통 원칙.
+  if (bHits.length >= STANCE_MIN && bHits.length > pHits.length)
+    return { stance: "beneficiary", hits: bHits, confident: true };
+  return { stance: DEFAULT_STANCE, hits: pHits, confident: bHits.length === 0 };
+}
+
+function suggestModules(text, modules, stance) {
   var t = _stripStatuteCitations(String(text || ""));
   var on = [], ask = [];
   modules
-    .filter(function (m) { return !m.always_on; })
+    .filter(function (m) { return !m.always_on && moduleAllowedInStance(m, stance); })
     .forEach(function (m) {
       var kws = m.suggest_keywords || [];
       var distinct = 0, occ = 0;
@@ -95,8 +139,9 @@ function suggestModules(text, modules) {
   return { on: on, ask: ask };
 }
 
-function activeCheckpoints(doc, activeModules) {
+function activeCheckpoints(doc, activeModules, stance) {
   return doc.checkpoints.filter(function (cp) {
+    if (!checkAllowedInStance(cp, stance)) return false;
     return !cp.module || activeModules.indexOf(cp.module) !== -1;
   });
 }
@@ -142,10 +187,10 @@ function clauseQuery(clause) {
 }
 
 // 활성 check 코퍼스로 IDF 빌드 → {idf, checks:[{cp, text, doc}]}
-function buildModel(docs, activeModules) {
+function buildModel(docs, activeModules, stance) {
   var checks = [];
   docs.forEach(function (d) {
-    activeCheckpoints(d, activeModules).forEach(function (cp) {
+    activeCheckpoints(d, activeModules, stance).forEach(function (cp) {
       checks.push({ cp: cp, text: checkText(cp), doc: d });
     });
   });
@@ -396,13 +441,23 @@ function detectSubdocRefs(fullText, defs) {
   return out;
 }
 
-function analyze(clauses, docs, activeModules) {
-  var model = buildModel(docs, activeModules);
+// analyze(clauses, docs, activeModules) — 하위호환(3번째 인자 배열)
+// analyze(clauses, docs, { modules, stance, baseClauses }) — 확장형
+//   stance      : 검토 국면(party|beneficiary) — 수범자가 당사가 아닌 규제를 배제
+//   baseClauses : 원계약 조항(변경합의서 검토 시). 부재 판정을 원계약+변경본 합본으로 수행해
+//                 "원계약에 이미 있는 조항"이 누락으로 잡히는 오탐을 차단.
+function analyze(clauses, docs, opts) {
+  var o = (opts && !Array.isArray(opts)) ? opts : { modules: opts || [] };
+  var activeModules = o.modules || [];
+  var stance = normalizeStance(o.stance);
+  var baseClauses = o.baseClauses || [];
+  var model = buildModel(docs, activeModules, stance);
   var results = [];
   var matches = [];
   var missing = [];
   // 전제신호 게이트용 본문 전체(표제+본문). 조건부 부재체크가 여기서 전제어휘를 찾음.
-  var fullText = (clauses || []).map(function (cl) {
+  // 변경합의서 국면에서는 원계약 본문도 합산 — 전제어휘가 원계약에만 있어도 게이트가 열려야 함.
+  var fullText = (clauses || []).concat(baseClauses).map(function (cl) {
     return String(cl.heading || "") + " " + String(cl.body || "");
   }).join("\n");
 
@@ -441,6 +496,21 @@ function analyze(clauses, docs, activeModules) {
       }
     }
 
+    // 원계약 커버(변경합의서 국면): 변경본에 없더라도 원계약에 해당 조항이 있으면
+    // 부재 알람이 아님 — 원계약이 적법하게 존재한다는 전제이므로 "원계약에 반영됨"으로 분류.
+    // 검토 포커스는 변경된 내용에 두고, 원계약 커버분은 별도 표시로 접는다.
+    var inBase = null;
+    if (coverage === "consider" && baseClauses.length) {
+      var baseScored = baseClauses.map(function (cl) {
+        return { clause: cl, s: scoreClauseCheck(cl, entry, model) };
+      }).sort(function (a, b) { return b.s.score - a.s.score; });
+      var baseCand = baseScored.filter(function (r) { return r.s.score >= MatcherConfig.REVIEW_FLOOR; });
+      if (decideTier(baseCand, cp) !== "none") {
+        coverage = "base_covered";
+        inBase = { clauseIndex: baseScored[0].clause.index, score: baseScored[0].s.score };
+      }
+    }
+
     var reasons = _reasons(tier, candidates.length ? candidates : scored, cp);
     var rankedTop = scored.slice(0, 3).map(function (r) {
       return { clauseIndex: r.clause.index, score: r.s.score };
@@ -451,7 +521,8 @@ function analyze(clauses, docs, activeModules) {
       tier: tier,
       coverage: coverage,
       best: top ? { clauseIndex: top.clause.index, score: top.s.score, reasons: reasons, gate: gate } : null,
-      ranked: rankedTop
+      ranked: rankedTop,
+      inBase: inBase   // 원계약에서 커버된 위치(변경합의서 국면) — 없으면 null
     });
 
     // 노출 매칭: 게이트 통과(coverage가 quiet로 강등되지 않은 조항 매칭)만.
@@ -480,6 +551,11 @@ if (typeof module !== "undefined")
   module.exports = {
     detectType: detectType,
     pickType: pickType,
+    detectStance: detectStance,
+    normalizeStance: normalizeStance,
+    moduleAllowedInStance: moduleAllowedInStance,
+    checkAllowedInStance: checkAllowedInStance,
+    STANCES: STANCES,
     suggestModules: suggestModules,
     activeCheckpoints: activeCheckpoints,
     normMatches: normMatches,

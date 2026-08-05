@@ -2,7 +2,9 @@
 /* UI 오케스트레이션. segmenter.js·matcher.js·docx.js가 먼저 인라인되어 전역 함수 사용 가능 */
 
 var CR = JSON.parse(document.getElementById("cr-data").textContent);
-var state = { text: "", clauses: [], typeId: null, activeModules: [], result: null };
+// stance = 검토 국면(party 기본 | beneficiary 수익자·투자자), baseClauses = 원계약 조항(변경합의서 검토 시)
+var state = { text: "", clauses: [], typeId: null, activeModules: [], result: null,
+  stance: "party", baseText: "", baseClauses: [] };
 
 function esc(s) {
   return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
@@ -89,12 +91,14 @@ var COVERAGE_LABEL = {
   addressed: "✓ 계약서에 반영",
   verify: "△ 함께 살펴볼 항목",
   consider: "! 계약서에서 확인 안 됨",
+  base_covered: "✓ 원계약에 반영",   // 변경합의서 국면 — 변경본엔 없으나 원계약이 다룸
   quiet: "·"
 };
 var COVERAGE_CLS = {
   addressed: "cov-addressed",
   verify: "cov-verify",
   consider: "cov-consider",
+  base_covered: "cov-base",
   quiet: "cov-quiet"
 };
 function coverageBadgeHtml(coverage) {
@@ -410,21 +414,40 @@ function renderSuggestions() {
   bindVerdictControls(box, function () { renderSuggestions(); renderReport(); });
 }
 
-function initChecklistType() {
-  var sel = document.getElementById("checklist-type");
+// 유형 select는 입력 탭(input-type)과 리포트 조정부(checklist-type) 두 곳에 있음 —
+// 어느 쪽을 바꾸든 같은 상태를 가리키도록 값을 미러링한다(11차: 입력 단계 선택 노출).
+var TYPE_SELECT_IDS = ["checklist-type", "input-type"];
+function _typeOptionsHtml() {
   // 맨 앞 미확정 옵션(P3): 감지 점수 임계 미달 시 자동선택하지 않고 공통 검토만 — 오유형 체크리스트 로드 방지.
-  sel.innerHTML = '<option value="">— 유형 미확정 (직접 선택) —</option>' + CR.types.map(function (t) {
+  return '<option value="">— 유형 미확정 (직접 선택) —</option>' + CR.types.map(function (t) {
     return '<option value="' + esc(t.meta.type_id) + '">' + esc(t.meta.type_name) + "</option>";
   }).join("");
-  sel.addEventListener("change", function () {
-    state.typeId = sel.value;
-    if (!document.getElementById("analyze-setup").hidden) {
-      renderScreening();
-      if (_analyzedOnce) { runAnalysis(); return; } // 유형 변경 시 즉시 재검토
-    }
-    renderChecklist();
+}
+function syncTypeSelects(value) {
+  TYPE_SELECT_IDS.forEach(function (id) {
+    var el = document.getElementById(id);
+    if (el && el.value !== value) el.value = value;
   });
-  state.typeId = sel.value;
+}
+// 유형 변경 단일 처리 — 두 select와 입력 탭 모듈 칩까지 함께 갱신.
+function onTypeChanged(value) {
+  state.typeId = value;
+  syncTypeSelects(value);
+  renderInputScreening();
+  if (!document.getElementById("analyze-setup").hidden) {
+    renderScreening();
+    if (_analyzedOnce) { runAnalysis(); return; } // 유형 변경 시 즉시 재검토
+  }
+  renderChecklist();
+}
+function initChecklistType() {
+  TYPE_SELECT_IDS.forEach(function (id) {
+    var sel = document.getElementById(id);
+    if (!sel) return;
+    sel.innerHTML = _typeOptionsHtml();
+    sel.addEventListener("change", function () { onTypeChanged(sel.value); });
+  });
+  state.typeId = document.getElementById("checklist-type").value;
 }
 
 ["filter-module", "filter-severity", "filter-match"].forEach(function (id) {
@@ -442,6 +465,7 @@ function loadContractFile(f) {
   extractFileText(f).then(function (text) {
     document.getElementById("contract-text").value = text;
     err.hidden = true;
+    refreshInputSetup(); // 파일 적재 즉시 국면·유형·모듈 추정 프리필(11차)
   }).catch(function (ex) {
     err.textContent = "파일 파싱 실패(" + ex.message + ") — 원본에서 텍스트를 복사해 붙여넣으세요. " +
       "(스캔 PDF·암호 문서·구형 hwp는 자동 추출이 안 됩니다)";
@@ -450,6 +474,100 @@ function loadContractFile(f) {
 }
 document.getElementById("docx-file").addEventListener("change", function (e) {
   loadContractFile(e.target.files[0]);
+});
+
+/* ---------- 입력 단계 검토 설정(11차) ---------- */
+// 본문이 바뀌면 국면·유형·모듈 추정을 다시 돌려 프리필. 검토자가 이미 국면을 손댔으면
+// 자동 추정으로 덮지 않음(사람의 지정이 기계 추정보다 우선).
+var _stanceTouched = false;
+function refreshInputSetup() {
+  state.text = document.getElementById("contract-text").value;
+  var note = document.getElementById("stance-auto");
+  if (!state.text.trim()) {
+    if (note) note.hidden = true;
+    document.getElementById("input-type-auto").textContent = "";
+    renderInputScreening();
+    return;
+  }
+  // ① 국면 추정
+  var st = detectStance(state.text);
+  if (!_stanceTouched && st.stance !== state.stance) {
+    state.stance = st.stance;
+    var radio = document.querySelector('input[name="stance"][value="' + st.stance + '"]');
+    if (radio) radio.checked = true;
+  }
+  if (note) {
+    if (st.stance === "beneficiary") {
+      note.innerHTML = '자동 추정: <strong>수익자·투자자</strong> 국면 ' +
+        '<span class="detect-basis">(근거어: ' + esc(st.hits.slice(0, 5).join("·")) + ')</span> — ' +
+        '이 국면에서는 보험업 자산운용·모집 등 <em>당사가 수범자가 아닌</em> 규제 체크가 빠집니다. 다르면 위에서 바꾸세요.';
+      note.hidden = false;
+    } else if (_stanceTouched) {
+      note.hidden = true;
+    } else {
+      note.textContent = "자동 추정: 계약 당사자 국면 — 당사 준수사항을 점검합니다.";
+      note.hidden = false;
+    }
+  }
+  // ② 유형 추정 — 프리필만, 확정은 검토자 몫
+  var ranked = detectType(state.text, CR.types);
+  state.detectRanked = ranked;
+  var picked = pickType(ranked) || "";
+  if (!_analyzedOnce) {
+    state.typeId = picked;
+    syncTypeSelects(picked);
+  }
+  var auto = document.getElementById("input-type-auto");
+  if (auto) {
+    var top = ranked[0];
+    auto.textContent = picked
+      ? "자동 감지 (근거어: " + (top.hits || []).slice(0, 4).join("·") + ")"
+      : "자동 감지 실패 — 유형을 직접 고르면 해당 체크리스트가 붙습니다";
+  }
+  // ③ 모듈 칩
+  renderInputScreening();
+}
+document.getElementById("contract-text").addEventListener("input", function () {
+  clearTimeout(refreshInputSetup._t);
+  refreshInputSetup._t = setTimeout(refreshInputSetup, 300); // 타이핑 중 과호출 방지
+});
+document.querySelectorAll('input[name="stance"]').forEach(function (r) {
+  r.addEventListener("change", function () {
+    if (!r.checked) return;
+    _stanceTouched = true;
+    state.stance = r.value;
+    document.getElementById("stance-auto").hidden = true;
+    renderInputScreening();
+    if (_analyzedOnce) { renderScreening(); runAnalysis(); } // 국면 변경 = 적용 규제 변경 → 즉시 재검토
+  });
+});
+
+// 원계약 첨부(11차) — 변경합의서 검토 시 원계약을 전제로 삼음.
+document.getElementById("base-file").addEventListener("change", function (e) {
+  var f = e.target.files[0];
+  if (!f) return;
+  var st = document.getElementById("base-status");
+  st.textContent = "원계약에서 텍스트 추출 중… (" + f.name + ")";
+  extractFileText(f).then(function (text) {
+    state.baseText = text;
+    state.baseClauses = segmentContract(text);
+    st.innerHTML = '원계약 <strong>' + esc(f.name) + "</strong> (" + state.baseClauses.length +
+      "개 조항) — 이 내용을 전제로 검토하며, 변경된 부분에 의견을 집중합니다.";
+    document.getElementById("base-clear").hidden = false;
+    e.target.value = "";
+    if (_analyzedOnce) runAnalysis();
+  }).catch(function (ex) {
+    st.textContent = "원계약 추출 실패(" + ex.message + ") — 원본에서 텍스트를 복사해 본문에 함께 넣어주세요.";
+    e.target.value = "";
+  });
+});
+document.getElementById("base-clear").addEventListener("click", function () {
+  state.baseText = "";
+  state.baseClauses = [];
+  document.getElementById("base-status").textContent =
+    "변경합의서·개정합의서를 검토할 때 원계약을 넣으면, 원계약에 이미 있는 조항을 “빠진 항목”으로 잡지 않습니다.";
+  document.getElementById("base-clear").hidden = true;
+  if (_analyzedOnce) runAnalysis();
 });
 
 // 부속 서류(#3) — 검토 대상 아닌 별도 서류. 필수 항목 커버 확인용.
@@ -513,16 +631,15 @@ document.getElementById("subdoc-file").addEventListener("change", function (e) {
 
 // 한 번의 "분석 시작"으로 유형 감지 → 모듈 스크리닝 → 검토까지 실행(군더더기 제거).
 // 이후 유형·모듈을 조정하면 즉시 재검토됨(btn-run 없음).
+// 11차: 입력 단계에서 검토자가 지정한 국면·유형·모듈이 있으면 그것을 그대로 사용 —
+// 자동 감지로 덮어쓰지 않음(사람의 지정이 기계 추정보다 우선).
 document.getElementById("btn-analyze").addEventListener("click", function () {
   state.text = document.getElementById("contract-text").value;
   if (!state.text.trim()) return;
   state.clauses = segmentContract(state.text);
-  // 유형 감지 v2(P3): 표제 가중·본문 캡 점수 + 임계(pickType). 미달이면 미확정("") — 오유형 체크리스트 로드 방지.
-  var ranked = detectType(state.text, CR.types);
-  state.detectRanked = ranked;
-  var sel = document.getElementById("checklist-type");
-  sel.value = pickType(ranked) || "";
-  state.typeId = sel.value;
+  if (!state.detectRanked) refreshInputSetup(); // 입력 설정을 한 번도 안 돌린 경우(붙여넣기 직후 즉시 클릭)
+  state.typeId = document.getElementById("input-type").value;
+  syncTypeSelects(state.typeId);
   renderScreening();
   renderTags();
   document.getElementById("analyze-setup").hidden = false;
@@ -589,19 +706,86 @@ function subdocAutoComment(def) {
 }
 
 /* ---------- 분석 모드: 모듈 스크리닝 ---------- */
+// 현재 유형·국면에서 스크리닝 대상이 되는 모듈 목록.
+// 횡단모듈(Phase C): common.meta.modules(X-* 풀)는 유형과 무관하게 스크리닝 —
+// 유형 미확정 계약에도 PII·하도급 등 횡단 검토가 실질 신호로 붙음.
+function currentModuleList() {
+  var doc = typeDoc(state.typeId);
+  return (CR.common.meta.modules || []).concat(doc ? doc.meta.modules : [])
+    // 국면 게이트(11차): 당사가 수범자가 아닌 국면에서는 그 규제 모듈 자체를 후보에서 제외.
+    // 본문에 문구가 있어도(신탁계약의 "자산운용"·"모집") 의무주체가 제3자면 당사 검토항목이 아님.
+    .filter(function (m) { return moduleAllowedInStance(m, state.stance); });
+}
+// 입력 탭 모듈 칩(11차) — 분석 전에 자동 추정값을 보여주고 검토자가 조정.
+// 상태(state.activeModules)는 리포트 조정부와 공유하므로 양쪽 표시가 항상 일치.
+function renderInputScreening() {
+  var box = document.getElementById("input-screening");
+  if (!box) return;
+  var modList = currentModuleList();
+  if (!state.text.trim() || !modList.length) {
+    box.innerHTML = '<span class="setup-auto">계약서 본문을 넣으면 적용 모듈이 자동 추정됩니다.</span>';
+    return;
+  }
+  var suggested = suggestModules(state.text, modList, state.stance);
+  // 아직 분석 전이면 자동 추정값으로 초기화, 분석 후엔 검토자가 조정한 현재값을 유지.
+  if (!_analyzedOnce) {
+    state.activeModules = modList
+      .filter(function (m) { return m.always_on || suggested.on.indexOf(m.id) !== -1; })
+      .map(function (m) { return m.id; });
+  }
+  box.innerHTML = modList.map(function (m) {
+    if (m.always_on)
+      return '<span class="module-chip fixed">' + esc(m.name) + " (기본)</span>";
+    var on = state.activeModules.indexOf(m.id) !== -1;
+    var sug = suggested.on.indexOf(m.id) !== -1;
+    var askMode = suggested.ask.indexOf(m.id) !== -1;
+    return '<label class="module-chip' + (on ? " on" : "") + (sug ? " suggested" : "") + (askMode ? " ask" : "") +
+      '" data-mid="' + esc(m.id) + '" title="' + esc(m.screening_question || "") + '">' +
+      esc(m.name) + (sug ? " ⚡본문 검출" : "") + (askMode ? " ? 확인 필요" : "") + "</label>";
+  }).join("");
+  box.querySelectorAll(".module-chip[data-mid]").forEach(function (chip) {
+    chip.addEventListener("click", function () {
+      toggleModule(chip.dataset.mid);
+      chip.classList.toggle("on");
+      renderScreening(); // 리포트 조정부 칩 상태 동기화
+    });
+  });
+}
+// 모듈 토글 단일 처리 — 두 패널이 공유.
+function toggleModule(mid) {
+  var i = state.activeModules.indexOf(mid);
+  if (i === -1) state.activeModules.push(mid); else state.activeModules.splice(i, 1);
+  if (_analyzedOnce) runAnalysis(); // 모듈 조정 시 즉시 재검토
+}
+// 직전 렌더의 모듈 후보 id — 국면·유형 변경으로 후보 집합이 바뀐 것을 감지해
+// 사라진 모듈은 끄고 새로 생긴 모듈은 자동 제안을 적용하는 데 쓴다.
+var _prevModuleIds = [];
 function renderScreening() {
-  var doc = typeDoc(document.getElementById("checklist-type").value);
-  // 횡단모듈(Phase C): common.meta.modules(X-* 풀)는 유형과 무관하게 스크리닝 —
-  // 유형 미확정 계약에도 PII·하도급 등 횡단 검토가 실질 신호로 붙음.
-  var modList = (CR.common.meta.modules || []).concat(doc ? doc.meta.modules : []);
+  var modList = currentModuleList();
   var chips = "", askQs = "";
   if (!modList.length) {
     state.activeModules = [];
   } else {
-    var suggested = suggestModules(state.text, modList);
-    state.activeModules = modList
-      .filter(function (m) { return m.always_on || suggested.on.indexOf(m.id) !== -1; })
-      .map(function (m) { return m.id; });
+    var suggested = suggestModules(state.text, modList, state.stance);
+    // 분석 전(입력 단계 지정 포함)에만 자동값으로 덮음 — 분석 후 조정값은 보존.
+    if (!_analyzedOnce) {
+      state.activeModules = modList
+        .filter(function (m) { return m.always_on || suggested.on.indexOf(m.id) !== -1; })
+        .map(function (m) { return m.id; });
+    } else {
+      // 분석 후라도 국면·유형이 바뀌면 모듈 집합 자체가 달라짐 — 후보에서 사라진 모듈은
+      // 활성 목록에서 제거하고, 새로 후보가 된 모듈은 자동 제안값을 따른다.
+      // (검토자가 손댄 토글은 후보로 남아 있는 한 그대로 보존)
+      var ids = modList.map(function (m) { return m.id; });
+      var kept = state.activeModules.filter(function (id) { return ids.indexOf(id) !== -1; });
+      modList.forEach(function (m) {
+        var wasCandidate = _prevModuleIds.indexOf(m.id) !== -1;
+        if (!wasCandidate && (m.always_on || suggested.on.indexOf(m.id) !== -1) && kept.indexOf(m.id) === -1)
+          kept.push(m.id);
+      });
+      state.activeModules = kept;
+    }
+    _prevModuleIds = modList.map(function (m) { return m.id; });
     chips = modList.map(function (m) {
       if (m.always_on)
         return '<span class="module-chip fixed">' + esc(m.name) + " (기본)</span>";
@@ -629,11 +813,9 @@ function renderScreening() {
   document.getElementById("screening").innerHTML = chips + askQs + subRows;
   document.querySelectorAll("#screening .module-chip[data-mid]").forEach(function (chip) {
     chip.addEventListener("click", function () {
-      var mid = chip.dataset.mid;
-      var i = state.activeModules.indexOf(mid);
-      if (i === -1) state.activeModules.push(mid); else state.activeModules.splice(i, 1);
+      toggleModule(chip.dataset.mid);
       chip.classList.toggle("on");
-      if (_analyzedOnce) runAnalysis(); // 모듈 조정 시 즉시 재검토
+      renderInputScreening(); // 입력 탭 칩 상태 동기화
     });
   });
   document.querySelectorAll("#screening .subdoc-use-cb").forEach(function (cb) {
@@ -655,7 +837,11 @@ function runAnalysis() {
     { checkpoints: CR.common.checks },
     { checkpoints: doc ? doc.checks : [] },
   ];
-  state.result = analyze(state.clauses, docs, state.activeModules);
+  state.result = analyze(state.clauses, docs, {
+    modules: state.activeModules,
+    stance: state.stance,
+    baseClauses: state.baseClauses || []
+  });
 
   // 부속 서류 커버리지(#3): consider(필수 부재)로 뜬 항목이 부속서류에서 다뤄지는지.
   state.subDocCov = {};
@@ -665,7 +851,7 @@ function runAnalysis() {
       .map(function (x) { return _cpById(x.cpId); })
       .filter(Boolean);
     if (considerCps.length) {
-      var model = buildModel(docs, state.activeModules);
+      var model = buildModel(docs, state.activeModules, state.stance);
       var subs = state.subDocs.map(function (d) {
         return { name: d.name, clauses: segmentContract(d.text) };
       });
@@ -742,8 +928,13 @@ function renderSummaryBar() {
   var line = document.getElementById("summary-line");
   if (!line || !state.clauses.length) return;
   var doc = typeDoc(state.typeId);
-  line.textContent = _contractName() + " · " + state.clauses.length + "조항 · 감지: " +
-    (doc ? doc.meta.type_name : "유형 미확정");
+  // 검토 국면·원계약 전제는 결과 해석의 전제조건이라 요약 줄에 항상 노출(11차).
+  var parts = [_contractName(), state.clauses.length + "조항",
+    "유형: " + (doc ? doc.meta.type_name : "미확정")];
+  if (state.stance === "beneficiary") parts.push("국면: 수익자·투자자");
+  if (state.baseClauses && state.baseClauses.length)
+    parts.push("원계약 전제(" + state.baseClauses.length + "조항)");
+  line.textContent = parts.join(" · ");
 }
 
 /* ---------- 종합 검토의견(P1 추가) — 결론 배너 대체 축 ----------
@@ -2012,7 +2203,7 @@ function renderReport() {
   var r = state.result;
 
   // 분류
-  var addressed = [], verify = [], consider = [];
+  var addressed = [], verify = [], consider = [], baseCovered = [];
   r.results.forEach(function (res) {
     var cp = _cpById(res.cpId);
     if (!cp) return;
@@ -2020,8 +2211,10 @@ function renderReport() {
     if (res.coverage === "addressed") addressed.push(it);
     else if (res.coverage === "verify") verify.push(it);
     else if (res.coverage === "consider") consider.push(it);
+    // 변경합의서 국면(11차): 원계약이 다루는 항목 — 알람 아님. 별도 접힘 구역으로만 표시.
+    else if (res.coverage === "base_covered") baseCovered.push(it);
   });
-  addressed.sort(_sevSort); verify.sort(_sevSort); consider.sort(_sevSort);
+  addressed.sort(_sevSort); verify.sort(_sevSort); consider.sort(_sevSort); baseCovered.sort(_sevSort);
   // 확인 권장(verify) 중 참고는 하단 별첨(ref-fold)으로 — 결론·본문 카운트는 필수·권장(verifyMain) 기준.
   var verifyMain = verify.filter(function (it) { return it.severity !== "참고"; });
   var verifyRef = verify.filter(function (it) { return it.severity === "참고"; });
@@ -2262,6 +2455,20 @@ function renderReport() {
         '<span class="ri-q">' + labelQ(it.cp) + "</span>" +
         '<span class="refdoc-src" title="' + esc(rv.quote) + '">◇ ' + esc(rv.title) + "</span></div>";
     }).join("") + "</section>";
+  }
+
+  // 원계약에서 커버됨(11차) — 변경합의서 검토 시, 변경본엔 없으나 원계약이 다루는 항목.
+  // 알람이 아니므로 접힘 구역으로만 두고 검토 포커스는 변경된 내용에 남긴다.
+  if (baseCovered.length) {
+    right += '<details class="report-sec sec-covered"><summary>원계약에서 다루는 항목 (' + baseCovered.length +
+      ") — 이번 변경 대상 아님</summary>";
+    right += '<p class="sec-hint">첨부한 원계약에 해당 조항이 있어 누락이 아님. 이번 검토의 초점은 변경된 내용입니다.</p>';
+    right += baseCovered.map(function (it) {
+      var pos = it.res.inBase && state.baseClauses[it.res.inBase.clauseIndex];
+      return '<div class="report-item covered-item"><span class="sev sev-' + esc(it.severity) + '">' + esc(it.severity) + "</span> " +
+        '<span class="ri-q">' + labelQ(it.cp) + "</span>" +
+        (pos ? '<span class="covered-src">📄 원계약 ' + esc(String(pos.heading || "").slice(0, 30)) + "</span>" : "");
+    }).join("") + "</details>";
   }
 
   // 4. 형식 점검 — warn 항목만 표시

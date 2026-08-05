@@ -43,6 +43,48 @@
           <button id="btn-analyze" class="primary">분석 시작</button>
         </div>
         <p id="input-error" class="error" hidden></p>
+
+        <!-- 검토 설정(11차) — 분석 전에 검토자가 국면·유형·모듈을 직접 지정.
+             본문을 넣으면 자동 추정값이 프리필되고, 검토자가 그 위에서 정밀 조정함. -->
+        <div id="input-setup" class="input-setup">
+          <h3 class="setup-title">검토 설정 <span class="setup-hint-inline">— 본문을 넣으면 자동 추정되며, 검토자가 바꿀 수 있습니다</span></h3>
+
+          <!-- ① 검토 국면: 당사가 누구인가. 준수주체가 아니면 규제 체크가 통째로 빠짐 -->
+          <div class="setup-row">
+            <span class="setup-label">당사 지위</span>
+            <div class="stance-opts">
+              <label class="stance-opt"><input type="radio" name="stance" value="party" checked>
+                <span class="stance-name">계약 당사자</span>
+                <span class="stance-desc">당사가 의무를 부담·이행 — 당사 준수사항을 점검</span></label>
+              <label class="stance-opt"><input type="radio" name="stance" value="beneficiary">
+                <span class="stance-name">수익자·투자자</span>
+                <span class="stance-desc">펀드·신탁 등에 투자자로 참여 — 당사에 불리한 조항이 없는지 점검</span></label>
+            </div>
+          </div>
+          <p id="stance-auto" class="setup-auto" hidden></p>
+
+          <!-- ② 계약 유형 + 적용 모듈 — 분석 전 지정(분석 후에도 리포트에서 조정 가능) -->
+          <div class="setup-row">
+            <span class="setup-label">계약 유형</span>
+            <select id="input-type" aria-label="계약 유형 선택"></select>
+            <span id="input-type-auto" class="setup-auto-inline"></span>
+          </div>
+          <div class="setup-row setup-row-modules">
+            <span class="setup-label">적용 모듈</span>
+            <div id="input-screening" class="module-bar"></div>
+          </div>
+
+          <!-- ③ 변경합의서 — 원계약을 넣으면 그 내용을 전제로, 없으면 변경내용에 포커스 -->
+          <div class="setup-row setup-row-base">
+            <span class="setup-label">원계약</span>
+            <div class="base-area">
+              <label class="filebtn">원계약 첨부<input id="base-file" type="file" accept=".docx,.pdf,.doc,.hwp,.hwpx,.txt" hidden></label>
+              <span id="base-status" class="subdoc-hint">변경합의서·개정합의서를 검토할 때 원계약을 넣으면, 원계약에 이미 있는 조항을 “빠진 항목”으로 잡지 않습니다.</span>
+              <button id="base-clear" class="ghost" hidden>원계약 해제</button>
+            </div>
+          </div>
+        </div>
+
         <div class="subdoc-area">
           <label class="filebtn subdoc-add">＋ 부속 서류 추가<input id="subdoc-file" type="file" accept=".docx,.pdf,.doc,.hwp,.hwpx,.txt" multiple hidden></label>
           <span class="subdoc-hint">검토 대상 아님 — 보안관리약정서 등 별도 서류를 넣으면 “필수 항목이 부속서류에서 커버되는지” 확인해 오탐을 줄입니다.</span>

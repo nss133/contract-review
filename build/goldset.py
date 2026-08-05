@@ -56,6 +56,9 @@ def score(cases, results):
         # detect_expected: null(미확정 기대)도 유효한 라벨 — 키 존재로 판정.
         if "detect_expected" in c and r["detected"] != c["detect_expected"]:
             errs.append(f"유형감지: 기대 {c['detect_expected']} ≠ 실제 {r['detected']}")
+        # stance_expected: 검토 국면 자동추정 라벨(11차). 지정 없으면 채점 안 함.
+        if "stance_expected" in c and r.get("stance") != c["stance_expected"]:
+            errs.append(f"국면추정: 기대 {c['stance_expected']} ≠ 실제 {r.get('stance')}")
         active = set(r.get("activeModules") or [])
         for mid in c.get("active_must_include") or []:
             if mid not in active:
@@ -89,6 +92,10 @@ def score(cases, results):
         for cid in c.get("refcover_must_include") or []:
             if cid not in refcov:
                 errs.append(f"별첨참조 실패: {cid}가 ref_covered에 없음")
+        basecov = set(r.get("base_covered") or [])
+        for cid in c.get("base_must_cover") or []:
+            if cid not in basecov:
+                errs.append(f"원계약커버 실패: {cid}가 base_covered에 없음")
         rows.append({
             "id": c["id"], "desc": c.get("desc", ""), "ok": not errs, "errors": errs,
             "detected": r["detected"], "consider_n": len(consider),

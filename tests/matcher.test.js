@@ -590,3 +590,161 @@ test("coverageOf: 전제 불충족 부재체크는 consider가 아니라 quiet",
   // text 미전달(하위호환): 게이트 비활성 → consider.
   assert.strictEqual(coverageOf("none", CHECK_PLEDGE), "consider");
 });
+
+// ── 검토 국면(stance) 게이트 — 11차 ──────────────────────────────
+const {
+  detectStance, normalizeStance, moduleAllowedInStance, checkAllowedInStance,
+  activeCheckpoints,
+} = require("../src/matcher.js");
+
+const MOD_PARTY_ONLY = { id: "X-ASSET", name: "보험업 자산운용", suggest_keywords: ["자산운용", "대주주"], requires_stance: ["party"] };
+const MOD_ANY = { id: "X-PII", name: "개인정보", suggest_keywords: ["개인정보", "신용정보"] };
+const MOD_BENEF_ONLY = { id: "M-BENEF", name: "수익자 보호", suggest_keywords: ["수익자", "수익증권"], requires_stance: ["beneficiary"] };
+
+test("normalizeStance: 미지정·이상값은 party(기본)", () => {
+  assert.strictEqual(normalizeStance(undefined), "party");
+  assert.strictEqual(normalizeStance(""), "party");
+  assert.strictEqual(normalizeStance("이상값"), "party");
+  assert.strictEqual(normalizeStance("beneficiary"), "beneficiary");
+});
+
+test("moduleAllowedInStance: requires_stance 없으면 전 국면 허용", () => {
+  assert.strictEqual(moduleAllowedInStance(MOD_ANY, "party"), true);
+  assert.strictEqual(moduleAllowedInStance(MOD_ANY, "beneficiary"), true);
+});
+
+test("moduleAllowedInStance: party 전용 모듈은 수익자 국면에서 차단", () => {
+  assert.strictEqual(moduleAllowedInStance(MOD_PARTY_ONLY, "party"), true);
+  assert.strictEqual(moduleAllowedInStance(MOD_PARTY_ONLY, "beneficiary"), false);
+  assert.strictEqual(moduleAllowedInStance(MOD_BENEF_ONLY, "party"), false);
+  assert.strictEqual(moduleAllowedInStance(MOD_BENEF_ONLY, "beneficiary"), true);
+});
+
+test("suggestModules: 수익자 국면에서는 party 전용 모듈이 본문 검출돼도 켜지지 않는다", () => {
+  // 실사고 재현(2026-08-04): 신탁계약 본문의 '자산운용·대주주' 문구로 X-ASSET이 오활성했던 건.
+  const text = "제5조 집합투자업자는 신탁재산의 자산운용을 하며 대주주와의 거래를 제한한다. 수익자는 수익증권을 소유한다.";
+  const asParty = suggestModules(text, [MOD_PARTY_ONLY, MOD_ANY], "party");
+  assert.ok(asParty.on.indexOf("X-ASSET") !== -1, "당사자 국면에서는 종전대로 활성");
+
+  const asBenef = suggestModules(text, [MOD_PARTY_ONLY, MOD_ANY], "beneficiary");
+  assert.strictEqual(asBenef.on.indexOf("X-ASSET"), -1, "수익자 국면에서는 문구가 있어도 비활성");
+  assert.strictEqual(asBenef.ask.indexOf("X-ASSET"), -1, "질문으로도 노출되지 않음");
+});
+
+test("suggestModules: stance 미전달 시 종전 동작(하위호환)", () => {
+  const text = "자산운용 및 대주주 거래";
+  assert.ok(suggestModules(text, [MOD_PARTY_ONLY]).on.indexOf("X-ASSET") !== -1);
+});
+
+test("checkAllowedInStance: stance_scope로 체크 단위 노출 제어", () => {
+  const cpBenef = { id: "INV-BEN-01", stance_scope: ["beneficiary"] };
+  const cpAny = { id: "CMN-01" };
+  assert.strictEqual(checkAllowedInStance(cpBenef, "beneficiary"), true);
+  assert.strictEqual(checkAllowedInStance(cpBenef, "party"), false);
+  assert.strictEqual(checkAllowedInStance(cpAny, "party"), true);
+  assert.strictEqual(checkAllowedInStance(cpAny, "beneficiary"), true);
+});
+
+test("activeCheckpoints: 국면 게이트가 모듈 게이트와 함께 적용", () => {
+  const doc = { checkpoints: [
+    { id: "A", module: "X-ASSET" },
+    { id: "B", stance_scope: ["beneficiary"] },
+    { id: "C" },
+  ] };
+  const party = activeCheckpoints(doc, ["X-ASSET"], "party").map((c) => c.id);
+  assert.deepStrictEqual(party, ["A", "C"], "party 국면: beneficiary 전용 체크 제외");
+  const benef = activeCheckpoints(doc, ["X-ASSET"], "beneficiary").map((c) => c.id);
+  assert.deepStrictEqual(benef, ["A", "B", "C"], "beneficiary 국면: 전용 체크 노출");
+});
+
+test("detectStance: 투자신탁 수익자 구조를 수익자 국면으로 추정", () => {
+  const trust = "이 투자신탁의 수익자는 수익증권을 보유하며, 집합투자업자와 신탁업자가 집합투자규약에 따라 신탁원본을 관리한다.";
+  const r = detectStance(trust);
+  assert.strictEqual(r.stance, "beneficiary");
+  assert.ok(r.hits.length >= 3, "근거어가 함께 반환되어야 함(사용자에게 추정 근거 노출)");
+});
+
+test("detectStance: 일반 위탁계약은 기본(party) — 확신 없으면 게이트 안 검", () => {
+  assert.strictEqual(detectStance("수탁자는 위탁업무를 성실히 수행한다").stance, "party");
+  assert.strictEqual(detectStance("").stance, "party");
+  // 수익자 어휘가 1~2개 스치듯 나오는 정도로는 국면을 바꾸지 않음
+  assert.strictEqual(detectStance("보험금의 수익자를 지정한다").stance, "party");
+});
+
+// ── 변경합의서 모드(원계약 전제) — 11차 ──────────────────────────
+test("analyze: 원계약이 다루는 항목은 부재알람이 아니라 '원계약에 반영'", () => {
+  const docs = [{ checkpoints: [CHECK_REWI] }];
+  // 변경합의서 본문 — 재위탁 조항이 없음(원계약에 있으므로 변경합의서엔 불필요)
+  const amend = [
+    { index: 0, heading: "제1조(목적)", body: "원계약 제5조의 계약기간을 다음과 같이 변경한다." },
+    { index: 1, heading: "제2조(계약기간)", body: "계약기간을 2027년 12월 31일까지로 연장한다." },
+  ];
+  // 원계약 첨부 없음 → 종전대로 부재알람(consider)
+  const alone = analyze(amend, docs, { modules: ["M-CORE"] });
+  assert.strictEqual(alone.results[0].coverage, "consider", "원계약 없으면 종전대로 누락 알람");
+
+  // 원계약 첨부 → 원계약이 재위탁을 다루므로 알람이 아님
+  const base = [
+    { index: 0, heading: "제7조(재위탁)", body: "수탁자는 위탁자의 사전 동의 없이 위탁받은 업무를 제3자에게 재위탁하지 못한다." },
+  ];
+  const withBase = analyze(amend, docs, { modules: ["M-CORE"], baseClauses: base });
+  assert.strictEqual(withBase.results[0].coverage, "base_covered", "원계약 커버분은 알람 이탈");
+  assert.ok(withBase.results[0].inBase, "원계약 내 위치가 기록되어야 함");
+  assert.strictEqual(withBase.missing.length, 0, "부재 목록에서 제외");
+});
+
+test("analyze: 원계약에도 없으면 부재알람 유지(누락검출 보존)", () => {
+  const docs = [{ checkpoints: [CHECK_REWI] }];
+  const amend = [{ index: 0, heading: "제1조(목적)", body: "계약기간을 변경한다." }];
+  const base = [{ index: 0, heading: "제3조(대금)", body: "대금은 매월 말일 지급한다." }];
+  const r = analyze(amend, docs, { modules: ["M-CORE"], baseClauses: base });
+  assert.strictEqual(r.results[0].coverage, "consider", "원계약에도 없으면 알람 유지");
+  assert.strictEqual(r.results[0].inBase, null);
+});
+
+test("analyze: 하위호환 — 3번째 인자에 모듈 배열을 넘기던 종전 호출 유지", () => {
+  const docs = [{ checkpoints: [CHECK_REWI] }];
+  const clauses = [{ index: 0, heading: "제7조(재위탁)", body: "수탁자는 위탁자의 사전 동의 없이 재위탁하지 못한다." }];
+  const legacy = analyze(clauses, docs, ["M-CORE"]);
+  const modern = analyze(clauses, docs, { modules: ["M-CORE"] });
+  assert.strictEqual(legacy.results[0].coverage, modern.results[0].coverage);
+  assert.strictEqual(legacy.results[0].tier, modern.results[0].tier);
+});
+
+test("analyze: 국면 게이트가 체크 단위로 결과에 반영", () => {
+  const cpBenef = Object.assign({}, CHECK_REWI, { id: "BEN-X", stance_scope: ["beneficiary"] });
+  const docs = [{ checkpoints: [CHECK_REWI, cpBenef] }];
+  const clauses = [{ index: 0, heading: "제1조", body: "재위탁 금지" }];
+  const party = analyze(clauses, docs, { modules: ["M-CORE"], stance: "party" });
+  assert.deepStrictEqual(party.checkpoints.map((c) => c.id), ["CORE-07"]);
+  const benef = analyze(clauses, docs, { modules: ["M-CORE"], stance: "beneficiary" });
+  assert.deepStrictEqual(benef.checkpoints.map((c) => c.id), ["CORE-07", "BEN-X"]);
+});
+
+// ── 성격 게이트 과잉발동 회귀(11차 발견) ─────────────────────────
+// nature_signals에 "위탁자·수탁자"(신탁·업무위탁 공유 어휘)가 있어 전형적 업무위탁계약의
+// 유형감지가 통째로 죽던 잠복 버그. 신호는 신탁 전용어로 한정되어야 함.
+test("detectType: 전형적 업무위탁계약이 신탁 성격게이트에 눌리지 않는다", () => {
+  const types = [
+    { meta: { type_id: "outsourcing", detect_keywords: ["위탁", "수탁", "업무위탁"] }, checkpoints: [] },
+    { meta: { type_id: "investment", detect_keywords: ["신탁계약", "투자신탁"],
+      nature_signals: ["신탁계약", "신탁재산", "신탁업자", "수익증권"], suppresses: ["outsourcing"] }, checkpoints: [] },
+  ];
+  const t = "업무위탁계약서 제1조(목적) 위탁자는 수탁자에게 콜센터 업무를 위탁하고 수탁자는 이를 수탁한다.";
+  const r = detectType(t, types);
+  const out = r.find((x) => x.typeId === "outsourcing");
+  assert.ok(out.score > 0, "위탁자·수탁자 어휘만으로 outsourcing이 억제되면 안 됨");
+  assert.strictEqual(pickType(r), "outsourcing");
+});
+
+test("detectType: 진짜 신탁계약서는 여전히 outsourcing을 억제", () => {
+  const types = [
+    { meta: { type_id: "outsourcing", detect_keywords: ["위탁", "수탁", "업무위탁"] }, checkpoints: [] },
+    { meta: { type_id: "investment", detect_keywords: ["신탁계약", "투자신탁"],
+      nature_signals: ["신탁계약", "신탁재산", "신탁업자", "수익증권"], suppresses: ["outsourcing"] }, checkpoints: [] },
+  ];
+  const t = "투자신탁 신탁계약서 — 집합투자업자와 신탁업자는 신탁재산의 운용에 관하여 다음과 같이 신탁계약을 체결한다. 수익증권을 발행한다.";
+  const r = detectType(t, types);
+  assert.ok(r.find((x) => x.typeId === "outsourcing").suppressed, "신탁 전용어 복수 검출 시 억제 유지");
+  assert.strictEqual(pickType(r), "investment");
+});

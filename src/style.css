@@ -660,3 +660,31 @@ td.empty { text-align: center; color: var(--ink-faint); padding: var(--sp-4); }
 .tile-pending { border-color: var(--c-amber-line); background: #fffdf7; }
 .tile-pending .tile-num { color: var(--c-amber-fg); }
 .primary[disabled] { opacity: .45; cursor: not-allowed; }
+
+/* ---------- 입력 단계 검토 설정(11차) ---------- */
+/* 분석 전에 국면·유형·모듈을 지정하는 패널. 입력 본문 아래 카드로 두어
+   "본문 넣기 → 설정 확인 → 분석" 흐름이 위에서 아래로 읽히게 함. */
+.input-setup { margin-top: var(--sp-3); padding: var(--sp-3); background: var(--bg-page);
+  border: 1px solid var(--border-card); border-radius: 8px; }
+.setup-title { font-size: var(--fs-body); margin: 0 0 var(--sp-2); color: var(--ink); }
+.setup-hint-inline { font-weight: 400; font-size: var(--fs-meta); color: var(--ink-mute); }
+.setup-row { display: flex; align-items: flex-start; gap: var(--sp-2); margin-bottom: var(--sp-2); }
+.setup-row-modules, .setup-row-base { align-items: flex-start; }
+.setup-label { flex: 0 0 72px; font-size: var(--fs-body-sub); color: var(--ink-soft);
+  font-weight: 600; padding-top: 5px; }
+.setup-auto { font-size: var(--fs-meta); color: var(--ink-mute); margin: 0 0 var(--sp-2) 84px; }
+.setup-auto-inline { font-size: var(--fs-meta); color: var(--ink-mute); align-self: center; }
+/* 국면 선택 — 두 선택지를 나란히 두고 각각 무엇을 보는 관점인지 부제로 설명 */
+.stance-opts { display: flex; gap: var(--sp-2); flex-wrap: wrap; }
+.stance-opt { display: flex; flex-direction: column; gap: 2px; padding: var(--sp-1) var(--sp-2);
+  border: 1px solid #bbc; border-radius: 6px; background: var(--bg-card); cursor: pointer;
+  max-width: 300px; }
+.stance-opt:has(input:checked) { border-color: var(--accent); box-shadow: 0 0 0 2px #2456e622; }
+.stance-opt input { margin-right: 6px; }
+.stance-name { font-size: var(--fs-body-sub); font-weight: 600; color: var(--ink); }
+.stance-desc { font-size: var(--fs-meta); color: var(--ink-mute); line-height: 1.45; }
+.base-area { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-1); flex: 1; }
+.input-setup .module-bar { margin-bottom: 0; flex: 1; }
+
+/* 원계약 커버(변경합의서 국면) — 부속서류 커버와 같은 "누락 아님" 계열 톤 */
+.badge.cov-base { background: var(--c-slate-bg); color: var(--c-slate-fg); }
