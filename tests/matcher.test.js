@@ -1019,3 +1019,12 @@ test("subjectBonus: 지위어 변형도 부분 포함으로 흡수", () => {
   const cl = { index: 0, heading: "제3조", body: "일반사모집합투자업자는 운용하여야 한다." };
   assert.ok(subjectBonus(cl, { subject_roles: ["집합투자업자"] }) > 0);
 });
+
+test("titleFitRatio/overlapFeatures: 이형어 표제도 인식(기밀유지→비밀 체크)", () => {
+  const cl = { index: 0, heading: "제8조(기밀유지)", body: "기밀정보를 제3자에게 누설하여서는 아니 된다." };
+  // 실제 CMN-15와 동일하게 triggers에 '비밀유지'를 포함(checkText가 이를 대표텍스트에 넣음)
+  const cp = { id: "CONF", check: "비밀정보의 정의·범위 조항이 있는가", label: "비밀정보 정의·범위",
+    triggers: { keywords: ["비밀정보", "비밀유지", "기밀", "영업비밀"] }, sources: [] };
+  assert.ok(titleFitRatio(cl, cp) > 0.5, "기밀유지 표제가 비밀 체크와 일치로 인식");
+  assert.ok(overlapFeatures(cl, cp).uniq > 0, "본문 겹침도 정규화 후 잡힘");
+});

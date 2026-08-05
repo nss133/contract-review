@@ -78,3 +78,18 @@ test("jaccard: 빈 문자열/키워드 없음에도 안전하게 0을 반환한�
   assert.strictEqual(Sim.jaccard("", ""), 0);
   assert.strictEqual(Sim.jaccard("a b c", "d e f"), 0); // 2글자+ 한글 키워드 없음
 });
+
+// ── 이형어 정규화(11.7차) ────────────────────────────────────────
+test("preprocess: 기밀↔비밀 이형어를 통일한다", () => {
+  // 실사고(2026-08-05): "제8조(기밀유지)" 조항에 '비밀정보' 체크가 토큰 겹침 0으로 안 붙음.
+  assert.strictEqual(Sim.preprocess("기밀유지 의무"), Sim.preprocess("비밀유지 의무"));
+  assert.strictEqual(Sim.preprocess("기밀정보를 누설"), Sim.preprocess("비밀정보를 누설"));
+  assert.strictEqual(Sim.preprocess("비밀보장 약정"), Sim.preprocess("비밀유지 약정"));
+});
+
+test("preprocess: 법적 효과가 다른 낱말은 통합하지 않는다", () => {
+  // 해제↔해지(소급효), 배상↔보상(위법성), 협의↔합의(구속력)는 서로 다른 개념 — 합치면 안 됨.
+  assert.notStrictEqual(Sim.preprocess("계약을 해제한다"), Sim.preprocess("계약을 해지한다"));
+  assert.notStrictEqual(Sim.preprocess("손해를 배상한다"), Sim.preprocess("손해를 보상한다"));
+  assert.notStrictEqual(Sim.preprocess("협의하여 정한다"), Sim.preprocess("합의하여 정한다"));
+});

@@ -9,8 +9,10 @@ desc: 업무위탁 변경합의서 + 원계약 첨부 — 원계약 커버분 �
 detect_expected: outsourcing
 base_must_cover: [CORE-07, CORE-09]
 consider_must_exclude: [CORE-07, CORE-09]
-# 원계약에도 없는 항목은 계속 확인 대상으로 남아야 함
-consider_must_include: [CORE-06]
+# 원계약에도 없는 항목은 계속 확인 대상으로 남아야 함.
+# ⚠️ 11.7차: 이형어 정규화(기밀↔비밀) 도입 후 CORE-06(법령준수)이 원계약 제9조(비밀유지)에
+# 매칭되어 base_covered로 이탈함 — 원계약이 실제로 다루므로 정확한 동작. 다른 항목으로 교체.
+consider_must_include: [CORE-10]
 text: |
   업무위탁계약 변경합의서
 

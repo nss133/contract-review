@@ -715,3 +715,12 @@ td.empty { text-align: center; color: var(--ink-faint); padding: var(--sp-4); }
 /* 리포트의 '이상없음' 사유 배지 — 왜 이상없음인지 구분 */
 .vd-reason-badge { display: inline-block; font-size: var(--fs-meta); padding: 1px 7px;
   border-radius: 10px; background: var(--c-slate-bg); color: var(--c-slate-fg); }
+
+/* 체크 위치 재지정(11.7차) — 오부착 시 검토자가 올바른 조항을 지목 */
+.reassign-ctl { display: flex; align-items: center; gap: 6px; margin: 6px 0 4px;
+  font-size: var(--fs-meta); color: var(--ink-mute); flex-wrap: wrap; }
+.reassign-lbl { flex: 0 0 auto; }
+.reassign-sel { flex: 1; min-width: 120px; max-width: 100%; font-size: var(--fs-meta);
+  padding: 2px 6px; border: 1px solid var(--border-card); border-radius: 4px;
+  background: var(--bg-card); color: var(--ink-soft); }
+.reassign-mark { color: var(--c-blue-fg); font-weight: 600; }

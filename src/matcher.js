@@ -436,9 +436,11 @@ function titleBonus(clause, checkTextStr) {
 //   uniq         = (조항 표제어 ∪ 본문어) ∩ check 대표텍스트 핵심어 개수(중복 제거).
 //   titleStrong  = 조항 표제 핵심어 중 check와 겹친 비율 ≥ TITLE_STRONG_RATIO && 겹침 ≥ 1.
 function overlapFeatures(clause, check) {
+  // 이형어 정규화 후 겹침 계산(11.7차) — "기밀정보"와 "비밀정보"가 서로 다른 토큰으로
+  // 잡혀 겹침 0이 되던 문제(노출 게이트에서 탈락). checkText는 이미 preprocess를 거침.
   var ck = Sim.keywords(checkText(check));
-  var body = Sim.keywords(String(clause.body || ""));
-  var titleKw = Sim.keywords(ClauseRole.parseTitle(clause.heading || ""));
+  var body = Sim.keywords(Sim.preprocess(String(clause.body || "")));
+  var titleKw = Sim.keywords(Sim.preprocess(ClauseRole.parseTitle(clause.heading || "")));
   var all = {};
   var k;
   for (k in body) all[k] = 1;
@@ -498,8 +500,10 @@ function passesOverlapGate(clause, check, citation) {
 function titleFitRatio(clause, check) {
   var title = ClauseRole.parseTitle(clause.heading || "");
   if (!title) return 0;
+  // 이형어 정규화 후 비교(11.7차) — "기밀유지" 표제에 "비밀정보" 체크가 0점 나오던 문제.
+  title = Sim.preprocess(title);
   var ck = checkText(check) + " " + String(check.check || "") + " " + String(check.label || "");
-  ck = ck.replace(/\s+/g, "");
+  ck = Sim.preprocess(ck).replace(/\s+/g, "");
   // 표제를 어절 단위로 자르고, 각 어절에서 조사·접미를 떼어 핵심부만 비교.
   var parts = title.split(/[\s·ㆍ,()（）]+/).filter(function (p) { return p.length >= 2; });
   if (!parts.length) return 0;

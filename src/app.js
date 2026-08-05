@@ -5,7 +5,10 @@ var CR = JSON.parse(document.getElementById("cr-data").textContent);
 // stance = 검토 국면(party 기본 | beneficiary 수익자·투자자), baseClauses = 원계약 조항(변경합의서 검토 시)
 // docTitle = 문서 제목(유형·모듈·체크 게이트의 최상위 신호), partyRoles = 당사가 계약에서 갖는 지위
 var state = { text: "", clauses: [], typeId: null, activeModules: [], result: null,
-  stance: "party", baseText: "", baseClauses: [], docTitle: "", partyRoles: [] };
+  stance: "party", baseText: "", baseClauses: [], docTitle: "", partyRoles: [],
+  // 수동 재지정(11.7차): cpId → clauseIndex. 자동 매칭이 엉뚱한 조항에 붙었을 때
+  // 검토자가 올바른 조항으로 옮긴 기록. 재분석해도 유지되도록 계약서 해시별 저장.
+  reassign: {} };
 
 function esc(s) {
   return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
@@ -909,6 +912,7 @@ function runAnalysis() {
   state.formal = Formal.checkFormal(state.text);
 
   loadVerdicts();
+  loadReassign(); // 수동 재지정 맵(11.7차)
   _opinionEditing = false; // 재분석·해시 변경 시 종합 검토의견 편집 모드 해제
   applySubdocVerdicts();
   applyCompare(); // 아카이브 로드 상태면 현재 조항 기준 정렬·이관 후보 재산출
@@ -1828,6 +1832,7 @@ function renderCompareItem(r, showEvidence) {
     '<p class="ci-src">' + evidenceCell(cp) + "</p>" +
     (showEvidence ? evidenceLineHtml(cp, r) : "") +
     carryHintHtml(cp.id) + // 비교 모드: 전년 검토 인용 프리필(동일 조항) 또는 참고 표시(변경 조항)
+    reassignControlHtml(r) + // 오부착 대응(11.7차): 이 항목이 실제로 반영된 조항을 지정
     verdictControlHtml(cp.id) +
     "</div>";
 }
@@ -1849,6 +1854,9 @@ function renderConsiderItem(r) {
     '<p class="ci-src">근거 ' + evidenceCell(cp) + "</p>" +
     stdRefsHtml(cp) + // 표시 전용 — 부재를 짚을 때 표준 문서의 대응 문안을 함께 보여줌(판정 무영향)
     carryHintHtml(cp.id) + // 비교 모드: 부재 알람도 체크 id 기준 전년 판정 인용(스펙 §판정 이관)
+    // 부재 알람에도 재지정 제공(11.7차) — "없다"고 떴지만 실제로는 어느 조항에 있는 경우,
+    // 그 조항을 지정하면 알람이 해소되고 해당 조항 아래로 이동한다.
+    reassignControlHtml(r) +
     verdictControlHtml(cp.id) +
     "</div>";
 }
@@ -2017,6 +2025,7 @@ function clauseRowHtml(c) {
 // 행 안 판정 컨트롤 바인딩 — 판정 변경 시 그 행만 재렌더(전체 재렌더 금지: 성능·스크롤 위치 보존).
 function bindRowControls(rowEl) {
   var ci = Number(rowEl.getAttribute("data-ci"));
+  bindReassign(rowEl); // 오부착 재지정(11.7차)
   bindVerdictControls(rowEl, function () {
     rerenderRow(ci);
     refreshClauseCounts();
@@ -2074,6 +2083,7 @@ function renderConsiderBlock() {
     '<span class="consider-sub">' + esc(considerCountText()) + "</span></h3>" +
     '<p class="consider-hint">각 항목이 실제로 빠진 것인지(오류) 아니면 해당 없는지 검토하고 의견을 남기세요 — 검토 결과를 남기면 하단 "검토 완료"로 이동함.</p>' +
     items + coveredHtml + referencedHtml + judgedHtml + "</div>";
+  bindReassign(block); // 오부착 재지정(11.7차) — 부재 알람에서도 실제 조항 지정 가능
   bindVerdictControls(block, function () {
     renderConsiderBlock();
     refreshClauseCounts();
@@ -2184,7 +2194,76 @@ function gotoClause(ci) {
   el.classList.add("row-flash");
 }
 
+/* ---------- 체크 위치 재지정(11.7차) ----------
+   자동 매칭이 엉뚱한 조항에 붙었을 때의 절차적 난점 해소(사용자 피드백 2026-08-05):
+   "다른 조항에 반영된 것 같은데 엉뚱한 조항에 체크가 붙어 있으니 확인이 어렵다".
+   → 검토자가 그 자리에서 올바른 조항으로 옮길 수 있게 한다. 옮긴 기록은 계약서별로
+   저장되어 재분석해도 유지되고, 지식 개선 신호(loop)로도 회수 가능. */
+function reassignKey(hash) { return "cr-reassign-" + hash; }
+function loadReassign() {
+  try { state.reassign = JSON.parse(localStorage.getItem(reassignKey(verdictHash)) || "{}") || {}; }
+  catch (e) { state.reassign = {}; }
+}
+function saveReassign() {
+  try { localStorage.setItem(reassignKey(verdictHash), JSON.stringify(state.reassign || {})); } catch (e) {}
+}
+// 재지정된 체크의 best를 그 조항으로 교체. coverage가 quiet이었어도 검토자가 지목했으므로
+// verify(함께 살펴볼)로 올려 화면에 세운다 — 사람이 "여기 있다"고 한 것이 기계 점수보다 우선.
+function applyReassign() {
+  var map = state.reassign || {};
+  (state.result ? state.result.results : []).forEach(function (r) {
+    var ci = map[r.cpId];
+    if (ci === undefined || ci === null) return;
+    if (!state.clauses[ci]) return;
+    r.best = { clauseIndex: ci, score: (r.best && r.best.score) || 0,
+      reasons: ["검토자가 이 조항으로 지정함"], gate: (r.best && r.best.gate) || null };
+    if (r.coverage === "quiet" || r.coverage === "consider") r.coverage = "verify";
+    r.reassigned = true;
+  });
+}
+// 재지정 UI — 체크 카드에 붙는 "다른 조항으로" 선택. 후보(자동 상위 3개)를 앞에 노출하고
+// 전체 조항 목록도 제공. 원위치 복귀도 가능.
+function reassignControlHtml(r) {
+  var cp = _cpById(r.cpId);
+  if (!cp) return "";
+  var cur = (state.reassign || {})[r.cpId];
+  var ranked = (r.ranked || []).map(function (rk) { return rk.clauseIndex; });
+  var opts = ['<option value="">이 조항이 맞음</option>'];
+  // 자동 후보 먼저(왜 이 조항들이 후보인지 점수와 함께)
+  (r.ranked || []).forEach(function (rk) {
+    var c = state.clauses[rk.clauseIndex];
+    if (!c) return;
+    opts.push('<option value="' + rk.clauseIndex + '"' + (cur === rk.clauseIndex ? " selected" : "") + ">" +
+      "후보 · " + esc(String(c.heading || "").slice(0, 24)) + " (" + rk.score.toFixed(0) + ")</option>");
+  });
+  // 전체 조항(후보 제외)
+  state.clauses.forEach(function (c, i) {
+    if (ranked.indexOf(i) !== -1) return;
+    opts.push('<option value="' + i + '"' + (cur === i ? " selected" : "") + ">" +
+      esc(String(c.heading || ("조항#" + i)).slice(0, 28)) + "</option>");
+  });
+  return '<label class="reassign-ctl" title="이 항목이 실제로 반영된 조항을 지정합니다">' +
+    '<span class="reassign-lbl">조항 지정</span>' +
+    '<select class="reassign-sel" data-rcp="' + esc(r.cpId) + '" name="reassign-' + esc(r.cpId) + '">' +
+    opts.join("") + "</select>" +
+    (r.reassigned ? ' <span class="reassign-mark">검토자 지정</span>' : "") + "</label>";
+}
+function bindReassign(root) {
+  root.querySelectorAll(".reassign-sel").forEach(function (sel) {
+    sel.addEventListener("change", function () {
+      var cp = sel.getAttribute("data-rcp");
+      if (sel.value === "") delete state.reassign[cp];
+      else state.reassign[cp] = Number(sel.value);
+      saveReassign();
+      var y = window.scrollY;
+      runAnalysis();
+      window.scrollTo(0, y);
+    });
+  });
+}
+
 function renderClauses() {
+  applyReassign(); // 수동 재지정 반영(11.7차) — 자동 매칭 위에 검토자 지정을 덮어씀
   // results를 best.clauseIndex로 역인덱싱 — coverage별 그룹
   var byClause = {};
   var considerList = [];
