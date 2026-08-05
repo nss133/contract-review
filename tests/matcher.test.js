@@ -748,3 +748,117 @@ test("detectType: 진짜 신탁계약서는 여전히 outsourcing을 억제", ()
   assert.ok(r.find((x) => x.typeId === "outsourcing").suppressed, "신탁 전용어 복수 검출 시 억제 유지");
   assert.strictEqual(pickType(r), "investment");
 });
+
+// ── 제목 가중·문서 성격 게이트·당사 지위(11.1차) ──────────────────
+const { titleHits, docTitleAllows, detectPartyRoles, hasAffiliateParty,
+  partyRoleAllows } = require("../src/matcher.js");
+
+test("detectType: 문서 제목이 최상위 신호 — 제목 1회로 유형 확정", () => {
+  const types = [
+    { meta: { type_id: "outsourcing", detect_keywords: ["위탁", "업무위탁"] }, checkpoints: [] },
+    { meta: { type_id: "nda", detect_keywords: ["비밀유지"] }, checkpoints: [] },
+  ];
+  // 본문엔 비밀유지가 여러 번, 제목엔 업무위탁 — 제목이 이겨야 함
+  const t = "업무위탁계약서\n제5조 비밀유지 의무를 진다. 비밀유지 대상은 다음과 같다. 비밀유지 기간은 3년.";
+  const ranked = detectType(t, types, "업무위탁계약서");
+  assert.strictEqual(pickType(ranked), "outsourcing");
+  assert.ok(ranked[0].titleHit, "제목 적중 표시");
+});
+
+test("detectType: docTitle 미전달 시 종전 동작(하위호환)", () => {
+  const types = [{ meta: { type_id: "nda", detect_keywords: ["비밀유지"] }, checkpoints: [] }];
+  assert.strictEqual(pickType(detectType("비밀유지계약서\n제1조", types)), "nda");
+});
+
+test("titleHits: 제목에 성격어가 있는지", () => {
+  assert.deepStrictEqual(titleHits("근질권설정계약서", ["질권", "저당"]), ["질권"]);
+  assert.deepStrictEqual(titleHits("신탁계약 변경합의서", ["질권", "저당"]), []);
+  assert.deepStrictEqual(titleHits("", ["질권"]), []);
+});
+
+test("suggestModules: title_required 모듈은 제목에 없으면 본문 언급만으로 안 켜짐", () => {
+  const MOD = { id: "X-SEC", suggest_keywords: ["질권", "근질권"],
+    title_signals: ["질권", "담보설정"], title_required: true,
+    screening_question: "담보를 설정하는가?" };
+  // 실사고 재현: 신탁계약서 본문의 "질권을 설정하는 경우 전자등록" 한 문장
+  const trust = "수익증권에 질권을 설정하는 경우에는 전자등록의 방법으로 하여야 한다.";
+  const r1 = suggestModules(trust, [MOD], { docTitle: "신탁계약 변경합의서" });
+  assert.strictEqual(r1.on.indexOf("X-SEC"), -1, "제목에 담보 성격 없으면 자동 활성 안 함");
+  assert.ok(r1.ask.indexOf("X-SEC") !== -1, "대신 질문으로 노출(사람이 판단)");
+
+  // 진짜 담보설정계약서는 제목만으로 활성
+  const r2 = suggestModules("예금채권에 근질권을 설정한다", [MOD], { docTitle: "근질권설정계약서" });
+  assert.ok(r2.on.indexOf("X-SEC") !== -1, "제목이 담보계약이면 활성");
+});
+
+test("docTitleAllows: requires_doc_title 체크는 그 성격 문서에서만 적용", () => {
+  const cp = { id: "FIN-SEC-02", requires_doc_title: ["질권", "담보설정"] };
+  assert.strictEqual(docTitleAllows(cp, "근질권설정계약서"), true);
+  assert.strictEqual(docTitleAllows(cp, "신탁계약 변경합의서"), false);
+  assert.strictEqual(docTitleAllows(cp, ""), false, "제목 미상이면 근거 없음 → 미적용");
+  assert.strictEqual(docTitleAllows({ id: "X" }, "아무 제목"), true, "미선언은 전 문서 적용");
+});
+
+test("coverageOf: 문서 성격 불일치면 매칭돼도 quiet", () => {
+  const cp = { id: "FIN-SEC-02", requires_doc_title: ["질권"], absence_check: true, severity: "필수" };
+  assert.strictEqual(coverageOf("confirmed", cp, "본문", "신탁계약 변경합의서"), "quiet");
+  assert.strictEqual(coverageOf("confirmed", cp, "본문", "근질권설정계약서"), "addressed");
+  assert.strictEqual(coverageOf("none", cp, "본문", "신탁계약 변경합의서"), "quiet", "부재알람도 안 뜸");
+  // docTitle 미전달 = 하위호환(게이트 비활성)
+  assert.strictEqual(coverageOf("confirmed", cp, "본문"), "addressed");
+});
+
+test("detectPartyRoles: 당사 상호 주변 지위어를 읽는다", () => {
+  const t = "질권자 미래에셋생명보험 주식회사(이하 \"질권자\")와 설정자 ○○산업은...";
+  assert.ok(detectPartyRoles(t).indexOf("질권자") !== -1);
+  // 당사 상호가 없으면 빈 배열(= 지위 미상)
+  assert.deepStrictEqual(detectPartyRoles("갑은 을에게 대출한다"), []);
+});
+
+test("partyRoleAllows: 지위 미상(빈 배열)은 통과 — 모름을 근거로 접지 않음", () => {
+  const cp = { party_roles: ["질권자", "담보권자"] };
+  assert.strictEqual(partyRoleAllows(cp, []), true, "갑·을만 쓰는 계약서 회귀 방지");
+  assert.strictEqual(partyRoleAllows(cp, ["질권자"]), true);
+  assert.strictEqual(partyRoleAllows(cp, ["수익자"]), false, "지위가 읽혔고 불일치면 접음");
+  assert.strictEqual(partyRoleAllows({}, ["수익자"]), true, "미선언은 전 지위 적용");
+});
+
+test("hasAffiliateParty: 계열 법인명만 인정 — 펀드 브랜드명은 제외", () => {
+  assert.strictEqual(hasAffiliateParty("집합투자업자 미래에셋자산운용 주식회사"), true);
+  assert.strictEqual(hasAffiliateParty("미래에셋증권과 체결한다"), true);
+  // 펀드 상품명에 브랜드가 들어간 것은 상대방이 아님(비계열 운용사 오판 방지)
+  assert.strictEqual(hasAffiliateParty("미래에셋맵스일반사모부동산투자신탁제3호\n집합투자업자 삼성자산운용"), false);
+  // 당사 자신은 계열 상대방이 아님
+  assert.strictEqual(hasAffiliateParty("수익자 미래에셋생명보험 주식회사"), false);
+});
+
+test("moduleAllowedInStance: stance_exempt_if 사유 성립 시 국면 게이트 통과", () => {
+  const MOD = { id: "X-RELATED", requires_stance: ["party"], stance_exempt_if: ["affiliate_party"] };
+  assert.strictEqual(moduleAllowedInStance(MOD, "beneficiary", {}), false);
+  assert.strictEqual(moduleAllowedInStance(MOD, "beneficiary", { affiliate_party: true }), true);
+  assert.strictEqual(moduleAllowedInStance(MOD, "party", {}), true);
+});
+
+test("suggestModules: 예외사유로 살아난 모듈은 본문 어휘 없이도 활성", () => {
+  // 상대방 상호가 미래에셋자산운용이면 본문에 "계열사"라는 단어가 없어도 계열 거래임
+  const MOD = { id: "X-RELATED", requires_stance: ["party"], stance_exempt_if: ["affiliate_party"],
+    activation: "confirm", suggest_keywords: ["계열사", "대주주"] };
+  const t = "집합투자업자 미래에셋자산운용 주식회사와 신탁업자는 다음과 같이 합의한다.";
+  const r = suggestModules(t, [MOD], { stance: "beneficiary", stanceCtx: { affiliate_party: true } });
+  assert.ok(r.on.indexOf("X-RELATED") !== -1);
+});
+
+test("analyze: 문서 성격·당사 지위 게이트가 결과에 반영", () => {
+  const cp = Object.assign({}, CHECK_REWI, { id: "SEC-X", requires_doc_title: ["질권"] });
+  const docs = [{ checkpoints: [cp] }];
+  const clauses = [{ index: 0, heading: "제1조", body: "수탁자는 위탁자의 사전 동의 없이 재위탁하지 못한다" }];
+  const off = analyze(clauses, docs, { modules: ["M-CORE"], docTitle: "신탁계약 변경합의서" });
+  assert.strictEqual(off.results[0].coverage, "quiet");
+  const on = analyze(clauses, docs, { modules: ["M-CORE"], docTitle: "근질권설정계약서" });
+  assert.notStrictEqual(on.results[0].coverage, "quiet");
+});
+
+test("detectPartyRoles: 서명란은 같은 줄만 — 남의 지위를 당사 것으로 읽지 않는다", () => {
+  const sign = "집합투자업자: 미래에셋자산운용 주식회사\n신탁업자: ○○은행 주식회사\n수익자: 미래에셋생명보험 주식회사";
+  assert.deepStrictEqual(detectPartyRoles(sign), ["수익자"]);
+});

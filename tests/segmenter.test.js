@@ -50,3 +50,26 @@ test("패턴 미검출 시 전체를 단일 블록으로 반환한다", () => {
   assert.strictEqual(clauses[0].heading, "(전체)");
   assert.match(clauses[0].body, /둘째 줄/);
 });
+
+// ── 문서 제목 추출(11.1차) ───────────────────────────────────────
+const { extractDocTitle } = require("../src/segmenter.js");
+
+test("extractDocTitle: 표제 줄을 뽑는다", () => {
+  assert.strictEqual(extractDocTitle("근질권설정계약서\n\n갑과 을은...\n제1조(목적)"), "근질권설정계약서");
+  assert.strictEqual(extractDocTitle("업무위탁계약서\n제1조"), "업무위탁계약서");
+  assert.strictEqual(
+    extractDocTitle("미래에셋맵스일반사모부동산투자신탁제3호 신탁계약 변경합의서\n제1조"),
+    "미래에셋맵스일반사모부동산투자신탁제3호 신탁계약 변경합의서");
+});
+
+test("extractDocTitle: 당사자 소개문·날짜·법인명 줄은 제목이 아님", () => {
+  assert.strictEqual(extractDocTitle("갑과 을은 다음과 같이 합의한다\n제1조"), "");
+  assert.strictEqual(extractDocTitle("2026. 3. 1.\n주식회사 ○○\n제1조"), "");
+  // 앞에 날짜·법인명이 있어도 진짜 제목 줄은 찾아냄
+  assert.strictEqual(extractDocTitle("2026. 3. 1.\n비밀유지약정서\n제1조"), "비밀유지약정서");
+});
+
+test("extractDocTitle: 제목 없이 바로 조문이면 빈 문자열", () => {
+  assert.strictEqual(extractDocTitle("제1조(목적) 바로 시작"), "");
+  assert.strictEqual(extractDocTitle(""), "");
+});

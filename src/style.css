@@ -688,3 +688,15 @@ td.empty { text-align: center; color: var(--ink-faint); padding: var(--sp-4); }
 
 /* 원계약 커버(변경합의서 국면) — 부속서류 커버와 같은 "누락 아님" 계열 톤 */
 .badge.cov-base { background: var(--c-slate-bg); color: var(--c-slate-fg); }
+
+/* ---------- 검토 관점 배너·문서 제목 표시(11.1차) ---------- */
+/* 수익자 국면은 "준수 점검"이 아니라 "우리에게 불리하지 않은가"를 보는 검토 —
+   결과 해석의 전제이므로 리포트 첫머리에 고정 노출 */
+.report-stance-banner { background: var(--c-blue-bg); border-left: 4px solid var(--c-blue-line);
+  color: var(--ink); padding: var(--sp-2) var(--sp-3); margin-bottom: var(--sp-3);
+  border-radius: 0 6px 6px 0; font-size: var(--fs-body-sub); line-height: 1.6; }
+.report-stance-banner em { font-style: normal; font-weight: 600; color: var(--c-blue-fg); }
+.stance-roles { display: inline-block; margin-top: 4px; font-size: var(--fs-meta); color: var(--ink-mute); }
+.setup-doctitle { margin-left: 0; padding: 6px var(--sp-1); background: var(--bg-card);
+  border: 1px solid var(--border-hair); border-radius: 4px; }
+.setup-warn { color: var(--c-amber-fg); font-weight: 600; }

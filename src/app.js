@@ -3,8 +3,9 @@
 
 var CR = JSON.parse(document.getElementById("cr-data").textContent);
 // stance = 검토 국면(party 기본 | beneficiary 수익자·투자자), baseClauses = 원계약 조항(변경합의서 검토 시)
+// docTitle = 문서 제목(유형·모듈·체크 게이트의 최상위 신호), partyRoles = 당사가 계약에서 갖는 지위
 var state = { text: "", clauses: [], typeId: null, activeModules: [], result: null,
-  stance: "party", baseText: "", baseClauses: [] };
+  stance: "party", baseText: "", baseClauses: [], docTitle: "", partyRoles: [] };
 
 function esc(s) {
   return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
@@ -489,12 +490,25 @@ function refreshInputSetup() {
     renderInputScreening();
     return;
   }
+  // ⓪ 문서 제목·당사 지위 — 이후 모든 게이트의 입력(11.1차)
+  state.docTitle = extractDocTitle(state.text);
+  state.partyRoles = detectPartyRoles(state.text);
   // ① 국면 추정
   var st = detectStance(state.text);
   if (!_stanceTouched && st.stance !== state.stance) {
     state.stance = st.stance;
     var radio = document.querySelector('input[name="stance"][value="' + st.stance + '"]');
     if (radio) radio.checked = true;
+  }
+  // 읽어낸 문서 제목·당사 지위를 노출 — 게이트가 이 값들로 동작하므로 검토자가 확인할 수 있어야 함.
+  var dt = document.getElementById("doc-title-info");
+  if (dt) {
+    var bits = [];
+    if (state.docTitle) bits.push("문서 제목: <strong>" + esc(state.docTitle) + "</strong>");
+    else bits.push('<span class="setup-warn">문서 제목을 못 읽음</span> — 제목 줄이 있으면 유형·체크 분류가 정확해집니다');
+    if (state.partyRoles.length) bits.push("계약상 당사 지위: <strong>" + esc(state.partyRoles.join("·")) + "</strong>");
+    dt.innerHTML = bits.join(" · ");
+    dt.hidden = false;
   }
   if (note) {
     if (st.stance === "beneficiary") {
@@ -509,8 +523,8 @@ function refreshInputSetup() {
       note.hidden = false;
     }
   }
-  // ② 유형 추정 — 프리필만, 확정은 검토자 몫
-  var ranked = detectType(state.text, CR.types);
+  // ② 유형 추정 — 프리필만, 확정은 검토자 몫. 제목이 최상위 신호로 가산됨.
+  var ranked = detectType(state.text, CR.types, state.docTitle);
   state.detectRanked = ranked;
   var picked = pickType(ranked) || "";
   if (!_analyzedOnce) {
@@ -709,12 +723,20 @@ function subdocAutoComment(def) {
 // 현재 유형·국면에서 스크리닝 대상이 되는 모듈 목록.
 // 횡단모듈(Phase C): common.meta.modules(X-* 풀)는 유형과 무관하게 스크리닝 —
 // 유형 미확정 계약에도 PII·하도급 등 횡단 검토가 실질 신호로 붙음.
+// 국면 예외 사유(11.1차) — 상대방이 미래에셋 계열사면 수익자 국면에서도 계열사 이슈를 살림.
+function stanceCtx() {
+  return { affiliate_party: hasAffiliateParty(state.text) };
+}
+// 스크리닝 공용 옵션 — 국면·문서 제목·예외사유를 한 번에 전달.
+function screenOpts() {
+  return { stance: state.stance, docTitle: state.docTitle || "", stanceCtx: stanceCtx() };
+}
 function currentModuleList() {
   var doc = typeDoc(state.typeId);
   return (CR.common.meta.modules || []).concat(doc ? doc.meta.modules : [])
     // 국면 게이트(11차): 당사가 수범자가 아닌 국면에서는 그 규제 모듈 자체를 후보에서 제외.
     // 본문에 문구가 있어도(신탁계약의 "자산운용"·"모집") 의무주체가 제3자면 당사 검토항목이 아님.
-    .filter(function (m) { return moduleAllowedInStance(m, state.stance); });
+    .filter(function (m) { return moduleAllowedInStance(m, state.stance, stanceCtx()); });
 }
 // 입력 탭 모듈 칩(11차) — 분석 전에 자동 추정값을 보여주고 검토자가 조정.
 // 상태(state.activeModules)는 리포트 조정부와 공유하므로 양쪽 표시가 항상 일치.
@@ -726,7 +748,7 @@ function renderInputScreening() {
     box.innerHTML = '<span class="setup-auto">계약서 본문을 넣으면 적용 모듈이 자동 추정됩니다.</span>';
     return;
   }
-  var suggested = suggestModules(state.text, modList, state.stance);
+  var suggested = suggestModules(state.text, modList, screenOpts());
   // 아직 분석 전이면 자동 추정값으로 초기화, 분석 후엔 검토자가 조정한 현재값을 유지.
   if (!_analyzedOnce) {
     state.activeModules = modList
@@ -766,7 +788,7 @@ function renderScreening() {
   if (!modList.length) {
     state.activeModules = [];
   } else {
-    var suggested = suggestModules(state.text, modList, state.stance);
+    var suggested = suggestModules(state.text, modList, screenOpts());
     // 분석 전(입력 단계 지정 포함)에만 자동값으로 덮음 — 분석 후 조정값은 보존.
     if (!_analyzedOnce) {
       state.activeModules = modList
@@ -840,7 +862,9 @@ function runAnalysis() {
   state.result = analyze(state.clauses, docs, {
     modules: state.activeModules,
     stance: state.stance,
-    baseClauses: state.baseClauses || []
+    baseClauses: state.baseClauses || [],
+    docTitle: state.docTitle || "",     // 문서 성격 게이트(requires_doc_title)
+    partyRoles: state.partyRoles || []  // 당사 지위 게이트(party_roles)
   });
 
   // 부속 서류 커버리지(#3): consider(필수 부재)로 뜬 항목이 부속서류에서 다뤄지는지.
@@ -2283,6 +2307,19 @@ function renderReport() {
   }
 
   var right = '<div class="report-summary"><h3>종합 리포트</h3>';
+
+  // 검토 관점 명시(11.1차): 국면에 따라 "무엇을 보는 검토인지"가 달라지므로 리포트 첫머리에 고정.
+  // 수익자 국면은 준수 점검이 아니라 "우리에게 불리하지 않은가"를 보는 검토임.
+  if (state.stance === "beneficiary") {
+    right += '<div class="report-stance-banner">' +
+      "<strong>수익자·투자자 관점 검토</strong> — 당사는 이 계약의 의무주체가 아니라 " +
+      "수익자로 참여함. 따라서 “당사가 규제를 준수하는가”가 아니라 " +
+      "<em>“계약 내용이 수익자인 당사에게 불리하게 구성되어 있지 않은가”</em>를 봅니다. " +
+      "운용사·판매회사가 준수 주체인 항목은 반영 여부 확인 수준으로만 표시됩니다." +
+      (state.partyRoles && state.partyRoles.length
+        ? ' <span class="stance-roles">계약상 당사 지위: ' + esc(state.partyRoles.join("·")) + "</span>" : "") +
+      "</div>";
+  }
 
   // soft gate(2026-08-03): 미검토 잔여 시 상단 배너 — 열람·인쇄는 허용하되 중간 집계임을 명시.
   if (pendingN) {
