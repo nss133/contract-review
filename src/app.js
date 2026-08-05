@@ -1061,7 +1061,7 @@ function restoreCorpusBackup(file, done) {
 }
 
 /* ---------- 조항별 검토의견(verdict) — 계약서 건별 판정 축 ----------
-   '검수'(verified: 지식 정확성)와 별개. 이 계약서의 이 항목이 이상없음/검토의견/해당없음.
+   '검수'(verified: 지식 정확성)와 별개. 이 계약서의 이 항목이 이상없음(사유 선택)/검토의견.
    저장키 cr-verdict-<계약서해시>. */
 var verdictStore = {};
 var verdictHash = "";
@@ -1069,12 +1069,19 @@ function loadVerdicts() {
   verdictHash = hashText(state.text || "");
   try { verdictStore = JSON.parse(localStorage.getItem(Verdict.verdictKey(verdictHash)) || "{}"); }
   catch (e) { verdictStore = {}; }
+  // 구 '해당없음' 판정 자동 이관(11.3차) — 이상없음 + 사유 '해당사항 없음'.
+  verdictStore = Verdict.migrateStore(verdictStore);
 }
 function saveVerdicts() {
   localStorage.setItem(Verdict.verdictKey(verdictHash), JSON.stringify(verdictStore));
 }
-function applyVerdict(cpId, verdict, comment) {
-  verdictStore = Verdict.setVerdict(verdictStore, cpId, verdict, comment, verdictToday());
+function applyVerdict(cpId, verdict, comment, reason) {
+  verdictStore = Verdict.setVerdict(verdictStore, cpId, verdict, comment, verdictToday(), reason);
+  saveVerdicts();
+}
+// 이상없음의 사유만 변경(판정 유지).
+function applyReason(cpId, reason) {
+  verdictStore = Verdict.setReason(verdictStore, cpId, reason);
   saveVerdicts();
 }
 // 사용 체크 상태를 검토의견에 반영(#B): ON → covers 중 현재 분석에 존재하는 미판정 항목에
@@ -1102,7 +1109,7 @@ function verdictToday() {
   var d = new Date();
   return d.getFullYear() + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + "-" + ("0" + d.getDate()).slice(-2);
 }
-var VERDICT_CLS = { "이상없음": "vd-ok", "검토의견": "vd-comment", "해당없음": "vd-na" };
+var VERDICT_CLS = { "이상없음": "vd-ok", "검토의견": "vd-comment" };
 // 지식 루프(#4) — 이 cpId의 과거 판정 분포 + 추천 코멘트. 없으면 빈 문자열.
 // P2: 카드 높이 절약을 위해 1줄 요약(최빈 판정·비율)으로 접힘 — 접기 금지 원칙의 예외 허용 대상(spec §4.3).
 function loopInfoHtml(cpId) {
@@ -1161,14 +1168,24 @@ function verdictControlHtml(cpId, skipLoop) {
     var on = cur.verdict === v ? " active " + VERDICT_CLS[v] : "";
     return '<button class="vd-btn' + on + '" data-vcp="' + esc(cpId) + '" data-vd="' + esc(v) + '">' + esc(v) + "</button>";
   }).join("");
-  // 판정이 있으면(이상없음·검토의견·해당없음 어느 것이든) 코멘트 입력 노출.
-  // 해당없음도 "왜 해당 없는지", 이상없음도 "확인 근거"를 남길 수 있어야 함.
+  // 이상없음 사유(11.3차): "반영되어 있음 / 해당사항 없음" 중 선택(미선택 허용).
+  // 구 '해당없음' 독립 판정을 폐기하고 여기로 격하 — "우리 케이스와 해당사항이 없어서
+  // 이상없다"는 경우를 '해당없음'으로 찍으면 체크 자체가 부적절하다는 뜻으로 오독됨.
+  var reasonSel = "";
+  if (cur.verdict === "이상없음") {
+    reasonSel = '<select class="vd-reason" data-vcp="' + esc(cpId) + '" name="vd-reason-' + esc(cpId) +
+      '" aria-label="이상없음 사유">' +
+      '<option value="">사유 선택(선택사항)</option>' +
+      Verdict.OK_REASONS.map(function (rs) {
+        return '<option value="' + esc(rs) + '"' + (cur.reason === rs ? " selected" : "") + ">" + esc(rs) + "</option>";
+      }).join("") + "</select>";
+  }
+  // 판정이 있으면 코멘트 입력 노출. 이상없음도 "확인 근거"를 남길 수 있어야 함.
   var showComment = !!cur.verdict;
-  var ph = cur.verdict === "해당없음" ? "해당 없는 이유(선택)"
-    : cur.verdict === "이상없음" ? "확인 메모(선택)" : "검토의견 메모";
+  var ph = cur.verdict === "이상없음" ? "확인 메모(선택)" : "검토의견 메모";
   var comment = '<input class="vd-note' + (showComment ? " show" : "") + '" data-vcp="' + esc(cpId) +
     '" name="vd-note-' + esc(cpId) + '" aria-label="' + esc(ph) + '" placeholder="' + esc(ph) + '" value="' + esc(cur.comment || "") + '">';
-  return '<div class="verdict-ctl">' + btns + comment + "</div>" + (skipLoop ? "" : loopInfoHtml(cpId));
+  return '<div class="verdict-ctl">' + btns + reasonSel + comment + "</div>" + (skipLoop ? "" : loopInfoHtml(cpId));
 }
 // 조항별 보기·리포트 공용 — 판정 버튼 클릭·코멘트 저장 바인딩. reRender: 저장 후 호출.
 function bindVerdictControls(root, reRender) {
@@ -1179,6 +1196,12 @@ function bindVerdictControls(root, reRender) {
       // 같은 판정 다시 누르면 취소(토글)
       var next = cur.verdict === v ? "" : v;
       applyVerdict(cp, next, cur.comment || "");
+      if (reRender) reRender();
+    });
+  });
+  root.querySelectorAll(".vd-reason").forEach(function (sel) {
+    sel.addEventListener("change", function () {
+      applyReason(sel.getAttribute("data-vcp"), sel.value);
       if (reRender) reRender();
     });
   });
@@ -1393,8 +1416,8 @@ function bindBulkVerdict() {
       .filter(function (r) { return coverages.indexOf(r.coverage) !== -1; })
       .map(function (r) { return r.cpId; });
   }
-  function apply(coverages, verdict) {
-    var r = Verdict.bulkVerdict(verdictStore, ids(coverages), verdict, verdictToday());
+  function apply(coverages, verdict, reason) {
+    var r = Verdict.bulkVerdict(verdictStore, ids(coverages), verdict, verdictToday(), reason);
     verdictStore = r.store; saveVerdicts();
     // 전체 재렌더로 content-visibility 높이 추정이 초기화돼 스크롤이 튐 — 위치 복원(rAF로 확정 높이 반영 후 재보정).
     var y = window.scrollY;
@@ -1402,10 +1425,12 @@ function bindBulkVerdict() {
     window.scrollTo(0, y);
     requestAnimationFrame(function () { window.scrollTo(0, y); });
     var msg = document.getElementById("bulk-msg");
-    if (msg) msg.textContent = r.applied + "건 " + verdict + " 처리(기존 검토 결과 보존)";
+    if (msg) msg.textContent = r.applied + "건 " + verdict + (reason ? "(" + reason + ")" : "") +
+      " 처리(기존 검토 결과 보존)";
   }
   var b1 = document.getElementById("bulk-consider-na");
-  if (b1) b1.addEventListener("click", function () { apply(["consider"], "해당없음"); });
+  // 11.3차: 구 "전부 해당없음"을 "이상없음 + 사유 해당사항 없음"으로 대체.
+  if (b1) b1.addEventListener("click", function () { apply(["consider"], "이상없음", "해당사항 없음"); });
   var b2 = document.getElementById("bulk-consider-ok");
   if (b2) b2.addEventListener("click", function () { apply(["consider"], "이상없음"); });
   var b3 = document.getElementById("bulk-matched-ok");
@@ -2032,7 +2057,7 @@ function renderConsiderBlock() {
       judgedList.map(renderConsiderItem).join("")
     : "";
   block.innerHTML =
-    '<div class="consider-panel"><h3><span class="badge cov-consider">! 계약서에서 확인 안 됨</span> 누락인지 해당없음인지 판단이 필요한 항목' +
+    '<div class="consider-panel"><h3><span class="badge cov-consider">! 계약서에서 확인 안 됨</span> 누락인지 해당사항 없음인지 판단이 필요한 항목' +
     '<span class="consider-sub">' + esc(considerCountText()) + "</span></h3>" +
     '<p class="consider-hint">각 항목이 실제로 빠진 것인지(오류) 아니면 해당 없는지 검토하고 의견을 남기세요 — 검토 결과를 남기면 하단 "검토 완료"로 이동함.</p>' +
     items + coveredHtml + referencedHtml + judgedHtml + "</div>";
@@ -2245,7 +2270,7 @@ function renderReport() {
   // 필수 consider를 부속서류 커버 여부로 분리(#3).
   // 판정 반영(팀 피드백 3차): 판정을 찍은 항목은 검토를 마친 것 — 알람(확인 안 된 항목)에서 이탈.
   // coverage(매칭 결과)는 불변, 표시·집계 레이어에서만 분리. 검토의견 판정분은 "검토의견 개진"
-  // 구역이 담당하고, 이상없음·해당없음 판정분은 "판정 완료" 소구역으로 이동.
+  // 구역이 담당하고, 이상없음 판정분은 "판정 완료" 소구역으로 이동.
   // (구 #① 해당없음 선제 제외(_isNA)는 폐기 — 지금은 모든 판정이 알람에서 이탈시키므로 중복이고,
   //  해당없음 판정분이 "판정 완료" 소구역·타일 M/N 집계에서 사라지는 불일치만 만들었음. 피드백 5차)
   function _verdictOf(cp) { var v = verdictStore[cp.id]; return (v && v.verdict) || ""; }
@@ -2269,12 +2294,12 @@ function renderReport() {
   var mustCond = mustCondAll.filter(function (it) { return !_verdictOf(it.cp); });
   var recConsider = recAll.filter(function (it) { return !_verdictOf(it.cp); });
   var alarmJudged = mustCoreAll.concat(mustCondAll, recAll).filter(function (it) { return _verdictOf(it.cp); });
-  var alarmDone = alarmJudged.filter(function (it) { return _verdictOf(it.cp) !== "검토의견"; }); // 이상없음·해당없음 → 판정 완료 소구역
+  var alarmDone = alarmJudged.filter(function (it) { return _verdictOf(it.cp) !== "검토의견"; }); // 이상없음 → 판정 완료 소구역
   var alarmN = mustCoreAll.length + mustCondAll.length + recAll.length; // 전체 알람 모수(고정 분모)
   var alarmPending = mustCore.length + mustCond.length + recConsider.length; // 미확인(미판정)
   // 미검토 잔여(soft gate, 2026-08-03) — 알람 + 함께 살펴볼(필수·권장 verify). pendingReviewCount와 동일 규칙.
   var verifyPend = verifyMain.filter(function (it) { return !_verdictOf(it.cp); });
-  var verifyDone = verifyMain.filter(function (it) { var v = _verdictOf(it.cp); return v && v !== "검토의견"; }); // 이상없음·해당없음 → 검토 완료 구역
+  var verifyDone = verifyMain.filter(function (it) { var v = _verdictOf(it.cp); return v && v !== "검토의견"; }); // 이상없음 → 검토 완료 구역
   var pendingN = alarmPending + verifyPend.length;
 
   // 형식 점검(#5) — warn만 타일·섹션 대상
@@ -2369,7 +2394,7 @@ function renderReport() {
   }
   // 타일 문구 풀어쓰기(팀 피드백 2026-07): 압축어 라벨 폐기 — 설명형 라벨 + 한 줄 부연(작은 글씨).
   // 타일 재구성(2026-08-03 재설계): 결론 중심 — 진행률 첫자리 승격(미검토 시 클릭=조항별 검토로 유도),
-  //   검토 결과 분포 신설(이상없음·검토의견·해당없음). '함께 살펴볼' 타일은 폐지 — 검토 행위가
+  //   검토 결과 분포 신설(이상없음·검토의견). '함께 살펴볼' 타일은 폐지 — 검토 행위가
   //   조항별 검토 탭으로 일원화되며 잔여분은 진행률 부연으로 흡수.
   // N/M 분모 시맨틱(피드백 5~6차)은 유지: 진행형 분수는 진행률·확인 안 됨 타일만,
   //   반영·형식은 단독 수(전수 대비 오독 방지 — 모수는 부연에만).
@@ -2378,7 +2403,8 @@ function renderReport() {
     _tile("__review__", "tile-progress" + (pendingN ? " tile-pending" : ""), "검토 진행률", judged + " / " + judgeable,
       (pendingN ? "미검토 " + pendingN + "건 — 클릭하면 조항별 검토로 이동" : "검토 필요 항목 전부 완료")) +
     _tile("rpt-sec-opinions", "tile-verdict", "검토 결과", vsum.total,
-      "이상없음 " + vsum["이상없음"] + " · 검토의견 " + vsum["검토의견"] + " · 해당없음 " + vsum["해당없음"]) +
+      "이상없음 " + vsum["이상없음"] + " · 검토의견 " + vsum["검토의견"] +
+      (vsum.reasons["해당사항 없음"] ? " (해당사항 없음 " + vsum.reasons["해당사항 없음"] + ")" : "")) +
     _tile("rpt-sec-addressed", "tile-addressed", "✓ 계약서에 반영된 항목", addressed.length,
       "확인 필요 사항이 계약서 조항에서 확인됨") +
     _tile("rpt-sec-must", "tile-consider", "! 계약서에서 확인 안 된 항목", (alarmN - alarmPending) + " / " + alarmN,
@@ -2412,13 +2438,13 @@ function renderReport() {
       '<p class="report-none">없음 — 필수(본질) 항목은 관련 조항·부속서류에 닿음.</p></section>';
   }
 
-  // 1-1. 검토 완료 소구역 — 알람·함께 살펴볼에 떴던 항목 중 검토자가 이상없음·해당없음으로
+  // 1-1. 검토 완료 소구역 — 알람·함께 살펴볼에 떴던 항목 중 검토자가 이상없음으로
   // 확인을 마친 것(2026-08-03: verify 판정분도 흡수 — 표면화된 전 항목의 종착지를 리포트에서 추적).
   // 판정 버튼은 두지 않음 — 검토 결과의 취소·변경은 조항별 검토 탭에서(검토 행위 일원화).
   var doneItems = alarmDone.concat(verifyDone);
   if (doneItems.length) {
     right += '<section class="report-sec-block sec-done"><h4 class="h4-done">검토 완료 — 검토자가 확인을 마친 항목 (' + doneItems.length + ")</h4>";
-    right += '<p class="sec-hint">판단 내용을 부기하고 이상없음·해당없음으로 처리한 항목' +
+    right += '<p class="sec-hint">판단 내용을 부기하고 이상없음으로 처리한 항목' +
       (flagged.length ? ' — 검토의견 ' + flagged.length + '건은 아래 "검토의견 개진" 구역에 있음' : "") +
       ". 검토 결과의 취소·변경은 조항별 검토 탭에서.</p>";
     right += doneItems.map(function (it) {
@@ -2524,7 +2550,8 @@ function renderReport() {
     right += '<div class="report-verdict-summary">검토의견 기록: ' +
       '<span class="vd-badge vd-ok">이상없음 ' + vsum["이상없음"] + "</span>" +
       '<span class="vd-badge vd-comment">검토의견 ' + vsum["검토의견"] + "</span>" +
-      '<span class="vd-badge vd-na">해당없음 ' + vsum["해당없음"] + "</span></div>";
+      (vsum.reasons["해당사항 없음"]
+        ? '<span class="vd-badge vd-na">해당사항 없음 ' + vsum.reasons["해당사항 없음"] + "</span>" : "") + "</div>";
   }
   right += flagged.map(function (o) {
     return '<div class="opinion-item"><div class="ri-head"><span class="sev sev-' + o.cp.severity + '">' +

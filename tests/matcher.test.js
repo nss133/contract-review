@@ -880,3 +880,71 @@ test("detectPartyRoles: 물상보증인도 지위어로 인식", () => {
   const t = "물상보증인 미래에셋생명보험 주식회사는 채무자의 채무를 담보하기 위하여";
   assert.ok(detectPartyRoles(t).indexOf("물상보증인") !== -1);
 });
+
+// ── 조항 귀속(11.3차) — 타 조항 참조로 인한 오매칭 차단 ────────────
+const { titleFitRatio, computeClauseOwners } = require("../src/matcher.js");
+
+test("titleFitRatio: 표제가 그 체크를 정면으로 지시하는지 (복합어 부분일치)", () => {
+  const cl = { index: 0, heading: "제35조(반대수익자의 수익증권매수청구권)", body: "" };
+  const own = { id: "A", check: "반대하는 수익자에게 수익증권매수청구권이 보장되어 있는가", label: "반대수익자 매수청구권" };
+  const other = { id: "B", check: "신탁계약 변경 시 수익자총회 결의를 거쳤는가", label: "변경 시 수익자총회 결의" };
+  assert.ok(titleFitRatio(cl, own) > 0.5, "자기 조항이면 높은 적합도");
+  assert.strictEqual(titleFitRatio(cl, other), 0, "다른 체크는 표제 근거 0");
+});
+
+test("computeClauseOwners: 표제 강일치 체크가 그 조항의 소유자", () => {
+  const clauses = [
+    { index: 0, heading: "제34조(수익자총회)", body: "수익자총회는 집합투자업자가 소집한다." },
+    { index: 1, heading: "제35조(반대수익자의 수익증권매수청구권)", body: "매수를 청구할 수 있다." },
+  ];
+  const checks = [
+    { id: "TOTAL", check: "수익자총회 결의를 거쳤는가", label: "수익자총회" },
+    { id: "BUY", check: "반대수익자의 수익증권매수청구권이 보장되는가", label: "반대수익자 매수청구권" },
+  ];
+  const owners = computeClauseOwners(clauses, checks);
+  assert.strictEqual(owners[1], "BUY");
+});
+
+test("analyze: 타 조항 참조 언급만으로는 그 체크가 붙지 않는다", () => {
+  // 실사고 재현(2026-08-05): 매수청구권 조항이 요건을 적으며 "수익자총회의 결의에 반대하는
+  // 경우"라고 다른 제도를 참조 → 총회 체크가 함께 붙던 오탐.
+  const clauses = [
+    { index: 0, heading: "제35조(반대수익자의 수익증권매수청구권)",
+      body: "수익자는 신탁계약의 변경에 대한 수익자총회의 결의에 반대하는 경우 그 결의일부터 20일 이내에 수익증권의 매수를 청구할 수 있다." },
+    { index: 1, heading: "제36조(보수)", body: "보수는 연 0.7퍼센트로 한다." },
+  ];
+  // check 문구를 조항 문언에 가깝게 둠 — 2건짜리 소형 코퍼스는 IDF가 달라 노출게이트(uniq)가
+  // 실제와 다르게 동작하므로, 겹침이 충분히 나오도록 실제 지식 수준의 문장을 쓴다.
+  const BUY = { id: "BUY", severity: "필수", norm_type: "강행", basis: "statute",
+    check: "수익자총회의 결의에 반대하는 수익자가 결의일부터 20일 이내에 수익증권의 매수를 청구할 수 있도록 보장되어 있는가",
+    label: "반대수익자 매수청구권",
+    triggers: { keywords: ["매수청구", "매수를 청구", "반대"] }, sources: [] };
+  const TOTAL = { id: "TOTAL", severity: "필수", norm_type: "강행", basis: "statute",
+    check: "신탁계약의 변경에 대하여 수익자총회의 결의를 거쳤는가", label: "변경 시 수익자총회 결의",
+    triggers: { keywords: ["수익자총회", "변경", "결의"] }, sources: [] };
+  const r = analyze(clauses, [{ checkpoints: [BUY, TOTAL] }], { modules: [] });
+  const buy = r.results.find((x) => x.cpId === "BUY");
+  const total = r.results.find((x) => x.cpId === "TOTAL");
+  assert.notStrictEqual(buy.coverage, "quiet", "자기 조항엔 정상 부착");
+  assert.strictEqual(total.coverage, "quiet", "참조 언급만으로는 부착 안 됨");
+  assert.strictEqual(total.best.gate.ownedBy, "BUY", "접힌 사유가 기록됨");
+});
+
+test("analyze: 본문 근거가 실질적이면 표제가 달라도 살아남는다(과잉억제 방지)", () => {
+  // 한 조항이 여러 체크를 정당하게 충족하는 경우 — 표제어가 다르다고 접으면 안 됨.
+  const clauses = [
+    { index: 0, heading: "제6조(기술적·관리적 보호조치)",
+      body: "수탁자는 개인정보의 안전한 처리를 위하여 접근권한의 제한, 접근통제 장치의 설치, 접속기록의 보관, 암호화 조치, 침입차단시스템 설치 등 기술적·관리적 보호조치를 하여야 한다." },
+    { index: 1, heading: "제7조(손해배상)", body: "손해를 배상한다." },
+  ];
+  const PROT = { id: "PROT", severity: "필수", norm_type: "강행", basis: "statute",
+    check: "기술적·관리적 보호조치가 규정되어 있는가", label: "기술적·관리적 보호조치",
+    triggers: { keywords: ["보호조치", "안전성 확보"] }, sources: [] };
+  const ACCESS = { id: "ACCESS", severity: "필수", norm_type: "강행", basis: "statute",
+    check: "접근권한의 제한·접근통제·접속기록 보관·암호화 등 안전성 확보 조치가 포함되어 있는가",
+    label: "접근 제한 안전성 조치",
+    triggers: { keywords: ["접근권한", "접근통제", "접속기록", "암호화"] }, sources: [] };
+  const r = analyze(clauses, [{ checkpoints: [PROT, ACCESS] }], { modules: [] });
+  assert.notStrictEqual(r.results.find((x) => x.cpId === "ACCESS").coverage, "quiet",
+    "표제는 PROT를 가리키지만 ACCESS도 본문 실질 근거가 있으므로 유지");
+});

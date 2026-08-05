@@ -700,3 +700,7 @@ td.empty { text-align: center; color: var(--ink-faint); padding: var(--sp-4); }
 .setup-doctitle { margin-left: 0; padding: 6px var(--sp-1); background: var(--bg-card);
   border: 1px solid var(--border-hair); border-radius: 4px; }
 .setup-warn { color: var(--c-amber-fg); font-weight: 600; }
+
+/* 이상없음 사유 선택(11.3차) — 판정 버튼 옆 인라인. 구 '해당없음' 독립 판정을 대체 */
+.vd-reason { margin-left: 6px; font-size: var(--fs-meta); padding: 3px 6px;
+  border: 1px solid #ccd; border-radius: 4px; background: var(--bg-card); color: var(--ink-soft); }

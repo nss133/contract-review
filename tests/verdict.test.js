@@ -7,8 +7,9 @@ test("verdictKey: 계약서 해시별 저장키", () => {
   assert.strictEqual(V.verdictKey("cr-abc"), "cr-verdict-cr-abc");
 });
 
-test("VERDICTS: 3택 상수", () => {
-  assert.deepStrictEqual(V.VERDICTS, ["이상없음", "검토의견", "해당없음"]);
+test("VERDICTS: 2택 상수 — 해당없음은 이상없음의 사유로 격하(11.3차)", () => {
+  assert.deepStrictEqual(V.VERDICTS, ["이상없음", "검토의견"]);
+  assert.deepStrictEqual(V.OK_REASONS, ["반영되어 있음", "해당사항 없음"]);
 });
 
 test("setVerdict: 판정 추가(불변 — 원본 미변경)", () => {
@@ -37,21 +38,23 @@ test("setVerdict: 잘못된 verdict 값이면 무시(원본 유지)", () => {
   assert.deepStrictEqual(s2, s1);
 });
 
-test("verdictSummary: 판정 집계", () => {
+test("verdictSummary: 판정 집계 + 사유별 집계", () => {
   let s = {};
-  s = V.setVerdict(s, "A", "이상없음", "", "d");
+  s = V.setVerdict(s, "A", "이상없음", "", "d", "반영되어 있음");
   s = V.setVerdict(s, "B", "이상없음", "", "d");
   s = V.setVerdict(s, "C", "검토의견", "x", "d");
-  s = V.setVerdict(s, "D", "해당없음", "", "d");
+  s = V.setVerdict(s, "D", "이상없음", "", "d", "해당사항 없음");
   const sum = V.verdictSummary(s);
-  assert.strictEqual(sum["이상없음"], 2);
+  assert.strictEqual(sum["이상없음"], 3);
   assert.strictEqual(sum["검토의견"], 1);
-  assert.strictEqual(sum["해당없음"], 1);
   assert.strictEqual(sum.total, 4);
+  assert.strictEqual(sum.reasons["반영되어 있음"], 1);
+  assert.strictEqual(sum.reasons["해당사항 없음"], 1);
 });
 
 test("verdictSummary: 빈 store", () => {
-  assert.deepStrictEqual(V.verdictSummary({}), { "이상없음": 0, "검토의견": 0, "해당없음": 0, total: 0 });
+  assert.deepStrictEqual(V.verdictSummary({}),
+    { "이상없음": 0, "검토의견": 0, total: 0, reasons: { "반영되어 있음": 0, "해당사항 없음": 0 } });
 });
 
 test("exportVerdicts: meta + verdicts 구조", () => {
@@ -81,11 +84,12 @@ test("importVerdicts: verdicts 없거나 잘못된 값 방어", () => {
 // ── 일괄 판정(통과계약 모드) ─────────────────────────────────────
 test("bulkVerdict: 미판정만 채우고 기판정(예외)은 보존한다", () => {
   let store = V.setVerdict({}, "A-1", "검토의견", "예외 코멘트", "d1"); // 예외 먼저 지정
-  const r = V.bulkVerdict(store, ["A-1", "B-2", "C-3"], "해당없음", "d2");
+  const r = V.bulkVerdict(store, ["A-1", "B-2", "C-3"], "이상없음", "d2", "해당사항 없음");
   assert.strictEqual(r.applied, 2);                       // B-2, C-3만
   assert.strictEqual(r.store["A-1"].verdict, "검토의견");  // 예외 보존
   assert.strictEqual(r.store["A-1"].comment, "예외 코멘트");
-  assert.strictEqual(r.store["B-2"].verdict, "해당없음");
+  assert.strictEqual(r.store["B-2"].verdict, "이상없음");
+  assert.strictEqual(r.store["B-2"].reason, "해당사항 없음");
 });
 
 test("bulkVerdict: 잘못된 verdict는 무시(원본 반환)", () => {
@@ -252,4 +256,41 @@ test("composeOpinion: compare 미지정이면 기존 출력 불변(무영향)", 
     mustCoreLabels: [], opinions: [], formalWarnTitles: []
   });
   assert.strictEqual(t.indexOf("전년"), -1);
+});
+
+// ── 구 판정값 이관(11.3차) ───────────────────────────────────────
+test("migrateStore: 구 '해당없음' → 이상없음 + 사유 '해당사항 없음'", () => {
+  const legacy = {
+    A: { verdict: "해당없음", comment: "우리 케이스 아님", date: "d" },
+    B: { verdict: "이상없음", comment: "", date: "d" },
+    C: { verdict: "검토의견", comment: "수정 요청", date: "d" },
+    D: { verdict: "없는판정" },
+  };
+  const m = V.migrateStore(legacy);
+  assert.strictEqual(m.A.verdict, "이상없음");
+  assert.strictEqual(m.A.reason, "해당사항 없음");
+  assert.strictEqual(m.A.comment, "우리 케이스 아님", "코멘트 보존");
+  assert.strictEqual(m.B.reason, "", "원래 이상없음은 사유 없음");
+  assert.strictEqual(m.C.verdict, "검토의견");
+  assert.strictEqual(m.D, undefined, "유효하지 않은 판정은 버림");
+});
+
+test("importVerdicts: 구 버전 회신 파일도 자동 이관해 받는다", () => {
+  const file = { meta: {}, verdicts: { X: { verdict: "해당없음", comment: "" } } };
+  const got = V.importVerdicts(file);
+  assert.strictEqual(got.X.verdict, "이상없음");
+  assert.strictEqual(got.X.reason, "해당사항 없음");
+});
+
+test("setReason: 이상없음일 때만 사유가 붙는다", () => {
+  let s = V.setVerdict({}, "A", "이상없음", "", "d");
+  s = V.setReason(s, "A", "반영되어 있음");
+  assert.strictEqual(s.A.reason, "반영되어 있음");
+  // 검토의견에는 사유가 붙지 않음
+  let s2 = V.setVerdict({}, "B", "검토의견", "메모", "d");
+  s2 = V.setReason(s2, "B", "반영되어 있음");
+  assert.strictEqual(s2.B.reason || "", "");
+  // 허용되지 않은 사유는 빈값
+  let s3 = V.setVerdict({}, "C", "이상없음", "", "d", "아무말");
+  assert.strictEqual(s3.C.reason, "");
 });

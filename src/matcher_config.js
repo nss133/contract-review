@@ -18,6 +18,11 @@ var MatcherConfig = {
   NORM_BONUS: 3,        // 규범유형 일치 가산
   TITLE_BONUS_MAX: 5,   // 표제 용어 겹침 가산 상한
   OVERLAP_MIN: 2,       // 노출(verify/addressed) 자격 최소 고유 핵심어 겹침 — 단일 겹침은 quiet 강등
+  // 조항 귀속 게이트(11.3차): 표제가 다른 체크를 정면으로 지시하는 조항에서, 표제 근거가 없는
+  // 체크가 살아남으려면 요구되는 본문 겹침 수. 미만이면 "참조 언급 수준"으로 보고 접음.
+  // 실측 캘리브레이션: 오탐(제35조 매수청구권에 붙은 총회·공시 체크)은 겹침 2~3,
+  // 정탐(제6조 보호조치 조항의 접근제한 체크)은 겹침 5 — 4를 경계로 둠.
+  OWNED_CLAUSE_MIN_OVERLAP: 4,
   TITLE_STRONG_RATIO: 0.5, // 표제 강일치 예외: 조항 표제 핵심어 중 check와 겹친 비율 하한
   ALARM_SEVERITIES: ["필수", "권장"], // 검토 제안(consider) 알람 게이트 — 참고 부재는 조용(quiet)
 

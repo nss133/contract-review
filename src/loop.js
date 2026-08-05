@@ -4,7 +4,11 @@
    코멘트 추천·판정 분포·큐레이션 신호를 산출한다. LLM·외부요청 0.
    브라우저 전역 Loop + node require 겸용. */
 var Loop = (function () {
+  // 11.3차: 판정 체계가 2종으로 재구성됨(해당없음 → 이상없음의 사유로 격하).
+  // 코퍼스는 과거 회신분에 '해당없음'이 남아 있을 수 있어 집계 키는 유지하되,
+  // 신규 집계는 reason('해당사항 없음')을 같은 칸에 합산한다.
   var VERDICTS = ["이상없음", "검토의견", "해당없음"];
+  var NA_REASON = "해당사항 없음";
 
   function emptyCorpus() {
     return { meta: { updated: "", contract_count: 0, hashes: [] }, byCheck: {} };
@@ -32,9 +36,12 @@ var Loop = (function () {
     var verdicts = exportObj.verdicts || {};
     Object.keys(verdicts).forEach(function (cpId) {
       var v = verdicts[cpId];
-      if (!v || VERDICTS.indexOf(v.verdict) === -1) return;
+      if (!v) return;
+      // 이상없음 + 사유 '해당사항 없음' = 구 '해당없음'과 동일 신호로 집계(연속성 유지).
+      var vv = (v.verdict === "이상없음" && v.reason === NA_REASON) ? "해당없음" : v.verdict;
+      if (VERDICTS.indexOf(vv) === -1) return;
       var slot = _ensureCheck(next, cpId);
-      slot.counts[v.verdict]++;
+      slot.counts[vv]++;
       slot.lastSeen = date || slot.lastSeen;
       var text = (v.comment || "").trim();
       if (text) {

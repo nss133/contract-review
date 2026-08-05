@@ -389,6 +389,55 @@ function passesOverlapGate(clause, check, citation) {
   return f.uniq >= MatcherConfig.OVERLAP_MIN || f.titleStrong;
 }
 
+// ── 조항 귀속(clause ownership) — 11.3차 ─────────────────────────
+// 조항 표제가 특정 체크를 정면으로 지시하면 그 조항은 그 체크의 것이다.
+// 다른 체크가 같은 조항을 best로 집어가면 "엉뚱한 체크가 붙는" 오탐이 됨.
+//
+// 실사고(2026-08-05): "제35조(반대수익자의 수익증권매수청구권)" 조항에 매수청구권 체크(INV-BEN-02)
+// 말고도 수익자총회 결의(INV-BEN-01)·변경 공시(INV-BEN-04)가 함께 붙음. 원인은 매수청구권 조항이
+// 요건을 적으면서 "신탁계약의 변경에 대한 수익자총회의 결의에 반대하는 경우"라고 **다른 제도를
+// 전제로 언급**하기 때문 — 그 언급은 참조이지 그 제도를 규정한 것이 아님.
+//
+// 표제 적합도 — 조항 표제가 이 체크를 얼마나 정면으로 지시하는가(0~1).
+// ⚠️ Sim.keywords 토큰 비교는 쓸 수 없음: 한국어 법령 표제는 "수익증권매수청구권"처럼
+// 복합어 한 덩어리로 나와, check 문장의 분리된 어절("수익증권", "매수를 청구")과 토큰이
+// 절대 일치하지 않아 항상 0이 됨(11.3차 실측). 부분문자열 포함으로 판정한다.
+// 표제를 2글자 이상 조각으로 나눠, check 대표텍스트에 포함되는 조각의 길이 비중을 본다.
+function titleFitRatio(clause, check) {
+  var title = ClauseRole.parseTitle(clause.heading || "");
+  if (!title) return 0;
+  var ck = checkText(check) + " " + String(check.check || "") + " " + String(check.label || "");
+  ck = ck.replace(/\s+/g, "");
+  // 표제를 어절 단위로 자르고, 각 어절에서 조사·접미를 떼어 핵심부만 비교.
+  var parts = title.split(/[\s·ㆍ,()（）]+/).filter(function (p) { return p.length >= 2; });
+  if (!parts.length) return 0;
+  var totLen = 0, hitLen = 0;
+  parts.forEach(function (p) {
+    var core = p.replace(/(의|을|를|이|가|은|는|에|과|와|및|등)$/, "");
+    if (core.length < 2) core = p;
+    totLen += core.length;
+    // 복합어는 그대로 또는 앞부분(4글자+)이 포함되면 적중으로 봄
+    if (ck.indexOf(core) !== -1) hitLen += core.length;
+    else if (core.length >= 6 && ck.indexOf(core.slice(0, 4)) !== -1) hitLen += core.length * 0.5;
+  });
+  return totLen > 0 ? hitLen / totLen : 0;
+}
+// clauseIndex → 소유 체크 id. 소유자가 없는 조항은 키 자체가 없음.
+function computeClauseOwners(clauses, checks) {
+  var owners = {};
+  (clauses || []).forEach(function (cl) {
+    var best = null, bestRatio = 0, tie = false;
+    checks.forEach(function (cp) {
+      var r = titleFitRatio(cl, cp);
+      if (r < MatcherConfig.TITLE_STRONG_RATIO) return;
+      if (r > bestRatio) { bestRatio = r; best = cp.id; tie = false; }
+      else if (r === bestRatio && best !== null && cp.id !== best) tie = true;
+    });
+    if (best && !tie) owners[cl.index] = best;
+  });
+  return owners;
+}
+
 // ── 조항×체크 점수 ───────────────────────────────────────────────
 function scoreClauseCheck(clause, checkEntry, model) {
   var cq = clauseQuery(clause);
@@ -599,6 +648,8 @@ function analyze(clauses, docs, opts) {
   var fullText = (clauses || []).concat(baseClauses).map(function (cl) {
     return String(cl.heading || "") + " " + String(cl.body || "");
   }).join("\n");
+  // 조항 귀속(11.3차): 표제가 특정 체크를 정면으로 지시하는 조항을 미리 확정.
+  var owners = computeClauseOwners(clauses, model.checks.map(function (e) { return e.cp; }));
 
   model.checks.forEach(function (entry) {
     var cp = entry.cp;
@@ -630,6 +681,26 @@ function analyze(clauses, docs, opts) {
       var passed = passesOverlapGate(bestClause, cp, cited);
       gate = { uniq: f.uniq, titleStrong: f.titleStrong, passed: passed };
       if (!passed) coverage = "quiet";
+      // 조항 귀속 게이트(11.3차): 이 조항의 표제가 **다른 체크**를 정면으로 지시하는데,
+      // 이 체크는 그 조항에 자기 근거(표제 적합·명시 인용)가 없으면 붙이지 않는다.
+      // 매수청구권 조항이 요건 서술에서 "수익자총회의 결의에 반대하는 경우"라고 다른 제도를
+      // 참조한 것만으로 총회 체크가 함께 붙던 오탐 차단.
+      //
+      // ⚠️ 한 조항이 여러 체크를 정당하게 충족하는 경우가 많음 — "제6조(물리적·기술적·관리적
+      // 보호조치)" 하나가 보호조치 체크와 접근제한 체크를 함께 충족하고, 담보권 실행 조항이
+      // 실행 체크와 유질 체크를 동시에 담는 식. 표제어가 다르다고 그 조항의 것이 아닌 게 아님.
+      // 따라서 접는 조건을 좁게 잡는다:
+      //   표제가 남을 정면으로 가리키고(owner) + 내 표제 근거 0 + **본문 근거도 빈약**(겹침 최소치 미만).
+      // 사용자 사례(제35조 매수청구권에 총회·공시 체크 부착)는 본문 겹침이 참조 언급 수준이라
+      // 이 조건에 걸리고, PRIV-06처럼 본문에 실질 근거(겹침 5개)가 있으면 살아남는다.
+      if (coverage !== "quiet" && !cited && !f.titleStrong) {
+        var owner = owners[bestClause.index];
+        if (owner && owner !== cp.id && titleFitRatio(bestClause, cp) === 0 &&
+            f.uniq < MatcherConfig.OWNED_CLAUSE_MIN_OVERLAP) {
+          coverage = "quiet";
+          gate.ownedBy = owner;
+        }
+      }
       // weak-role 강등(실사용 피드백): 전문·목적·정의 등 weak 조항에는 구체 검토항목을 붙이지 않음 —
       // 모든 내용이 목적에 닿는 건 논리 필연이라 정보가치 0. 예외: 명시 인용, 또는 그 조항을
       // 직접 겨냥한 체크(표제 강일치 — 예: '계약의 목적' 체크). 강등돼도 tier는 보존(매칭 존재 자체는 기록).
@@ -704,6 +775,8 @@ if (typeof module !== "undefined")
     checkAllowedInStance: checkAllowedInStance,
     STANCES: STANCES,
     titleHits: titleHits,
+    titleFitRatio: titleFitRatio,
+    computeClauseOwners: computeClauseOwners,
     docTitleAllows: docTitleAllows,
     detectPartyRoles: detectPartyRoles,
     hasAffiliateParty: hasAffiliateParty,
