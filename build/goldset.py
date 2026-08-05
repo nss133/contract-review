@@ -92,6 +92,16 @@ def score(cases, results):
         for cid in c.get("refcover_must_include") or []:
             if cid not in refcov:
                 errs.append(f"별첨참조 실패: {cid}가 ref_covered에 없음")
+        # shown = 화면에 표면화된 항목(반영·살펴볼·확인안됨). "어떤 형태로든 검토자 눈에
+        # 들어왔는가"를 고정할 때 사용 — addressed/consider 중 어느 쪽인지는 매칭 강도에
+        # 따라 갈리므로, 노출 자체가 요점인 항목은 이 축으로 라벨링한다(11.2차).
+        shown = set(r.get("shown") or [])
+        for cid in c.get("shown_must_include") or []:
+            if cid not in shown:
+                errs.append(f"노출 실패: {cid}가 표면화되지 않음(quiet로 접힘)")
+        for cid in c.get("shown_must_exclude") or []:
+            if cid in shown:
+                errs.append(f"노출 오탐: {cid}가 표면화됨")
         basecov = set(r.get("base_covered") or [])
         for cid in c.get("base_must_cover") or []:
             if cid not in basecov:

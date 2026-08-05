@@ -46,6 +46,10 @@ const results = cases.map(function (c) {
     docTitle: docTitle, partyRoles: partyRoles });
   const consider = r.results.filter(function (x) { return x.coverage === "consider"; }).map(function (x) { return x.cpId; });
   const addressed = r.results.filter(function (x) { return x.coverage === "addressed"; }).map(function (x) { return x.cpId; });
+  // shown = 화면에 어떤 형태로든 표면화된 항목(반영·살펴볼·확인안됨) — 강등되어 조용해진 것과 구별.
+  const shown = r.results
+    .filter(function (x) { return ["addressed", "verify", "consider"].indexOf(x.coverage) !== -1; })
+    .map(function (x) { return x.cpId; });
   // subdoc_text(선택): 부속서류 커버리지(#3) 재현 — app.js runAnalysis와 동일 경로.
   let subdocCovered = [];
   if (c.subdoc_text) {
@@ -75,6 +79,7 @@ const results = cases.map(function (c) {
     activeModules: active,
     consider: consider,
     addressed: addressed,
+    shown: shown,
     base_covered: r.results.filter(function (x) { return x.coverage === "base_covered"; }).map(function (x) { return x.cpId; }),
     subdoc_covered: subdocCovered,
     ref_covered: refCovered,

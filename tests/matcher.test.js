@@ -862,3 +862,21 @@ test("detectPartyRoles: 서명란은 같은 줄만 — 남의 지위를 당사 �
   const sign = "집합투자업자: 미래에셋자산운용 주식회사\n신탁업자: ○○은행 주식회사\n수익자: 미래에셋생명보험 주식회사";
   assert.deepStrictEqual(detectPartyRoles(sign), ["수익자"]);
 });
+
+// ── 담보제공자 관점(11.2차) ──────────────────────────────────────
+test("partyRoleAllows: 담보권자용 체크와 담보제공자용 체크가 지위로 갈린다", () => {
+  const holder = { party_roles: ["질권자", "담보권자", "채권자"] };       // 담보를 잡는 쪽
+  const giver = { party_roles: ["담보제공자", "설정자", "물상보증인"] };  // 담보를 주는 쪽
+  assert.strictEqual(partyRoleAllows(holder, ["질권자"]), true);
+  assert.strictEqual(partyRoleAllows(giver, ["질권자"]), false);
+  assert.strictEqual(partyRoleAllows(giver, ["설정자"]), true);
+  assert.strictEqual(partyRoleAllows(holder, ["설정자"]), false);
+  // 지위 미상이면 양쪽 다 통과(모름을 근거로 접지 않음)
+  assert.strictEqual(partyRoleAllows(holder, []), true);
+  assert.strictEqual(partyRoleAllows(giver, []), true);
+});
+
+test("detectPartyRoles: 물상보증인도 지위어로 인식", () => {
+  const t = "물상보증인 미래에셋생명보험 주식회사는 채무자의 채무를 담보하기 위하여";
+  assert.ok(detectPartyRoles(t).indexOf("물상보증인") !== -1);
+});

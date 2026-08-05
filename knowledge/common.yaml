@@ -2050,6 +2050,95 @@ checks:
         quote: 전항의 통지나 승낙은 확정일자있는 증서에 의하지 아니하면 채무자 이외의 제삼자에게 대항하지 못한다
         verified: true
         source_type: law
+  # ── X-SEC 담보제공자 관점 (11.2차 신설) ─────────────────────────
+  # 위 FIN-SEC-01~05는 담보권자(질권자·채권자) 지위 전제 — "대항요건을 갖추었는가"는
+  # 담보를 잡는 쪽의 관심사임. 당사가 **담보를 제공하는 쪽**(설정자·물상보증인)이면
+  # 관점이 뒤집혀 "제공 조건이 과도하지 않은가"를 봄.
+  # 빈도는 낮음(사용자 확인 2026-08-05) — 과설계하지 않고 원문 근거가 분명한 항목만 둠.
+  - id: FIN-SEC-P01
+    check: 변제기 전에 담보물의 소유권을 채권자에게 이전하거나 법정 절차 외의 방법으로 처분하도록 하는 유질(流質) 약정이 없는가
+    label: "유질계약 금지 위반 여부"
+    module: X-SEC
+    requires_doc_title: [질권, 근질권, 저당, 근저당, 양도담보, 담보설정, 담보 설정, 담보권, 담보제공, 담보 제공]
+    party_roles: [담보제공자, 설정자, 질권설정자, 채무자, 물상보증인]
+    severity: 필수
+    severity_basis: 강행규정(금지) — 민법 제339조(유질계약의 금지). 위반 약정은 무효이므로 담보제공자 보호의 핵심
+    norm_type: 강행
+    basis: statute
+    triggers:
+      keywords: [유질, 변제에 갈음, 소유권을 취득, 임의처분, 임의 처분, 귀속정산]
+    absence_check: false
+    sources:
+      - law: 민법
+        article: 제339조
+        clause: ""
+        quote: 질권설정자는 채무변제기전의 계약으로 질권자에게 변제에 갈음하여 질물의 소유권을 취득하게 하거나 법률에 정한 방법에 의하지 아니하고 질물을 처분할 것을 약정하지 못한다
+        verified: true
+        source_type: law
+    note: "부재알람 아님(absence_check:false) — 조항이 '없어야 정상'인 금지형 항목이라 매칭될 때만 표면화"
+  - id: FIN-SEC-P02
+    check: 타인의 채무를 담보하는 경우(물상보증) 채무자에 대한 구상권이 제한·포기되지 않는가
+    label: "물상보증 구상권 보전"
+    module: X-SEC
+    requires_doc_title: [질권, 근질권, 저당, 근저당, 양도담보, 담보설정, 담보 설정, 담보권, 담보제공, 담보 제공]
+    party_roles: [담보제공자, 설정자, 질권설정자, 물상보증인]
+    severity: 권장
+    severity_basis: 임의규정 — 민법 제341조(물상보증인의 구상권). 법정 구상권이나 약정으로 배제·제한될 수 있어 확인 필요
+    norm_type: 임의
+    basis: statute
+    triggers:
+      keywords: [물상보증, 구상권, 타인의 채무, 제3자 담보, 구상]
+    absence_check: false
+    sources:
+      - law: 민법
+        article: 제341조
+        clause: ""
+        quote: 타인의 채무를 담보하기 위한 질권설정자가 그 채무를 변제하거나 질권의 실행으로 인하여 질물의 소유권을 잃은 때에는 보증채무에 관한 규정에 의하여 채무자에 대한 구상권이 있다
+        verified: true
+        source_type: law
+  - id: FIN-SEC-P03
+    check: 근담보(근질권·근저당)인 경우 피담보채무의 범위와 채권최고액이 특정되어 과도하게 포괄적이지 않은가
+    label: "피담보채무 범위·최고액 특정"
+    module: X-SEC
+    requires_doc_title: [질권, 근질권, 저당, 근저당, 양도담보, 담보설정, 담보 설정, 담보권, 담보제공, 담보 제공]
+    party_roles: [담보제공자, 설정자, 질권설정자, 채무자, 물상보증인]
+    severity: 권장
+    severity_basis: 임의규정 — 민법 제357조 제1항(근저당은 담보할 채무의 최고액을 정하여 설정). 최고액·범위가 불특정하면 담보제공자의 부담이 무한정 확대
+    norm_type: 임의
+    basis: statute
+    triggers:
+      keywords: [채권최고액, 최고액, 피담보채무, 피담보채권, 근질권, 근저당, 장래의 채무]
+    absence_check: true
+    # 조건부 부재체크: 근담보 어휘가 있을 때만 — 확정채무 담보에는 최고액 개념이 없음.
+    absence_precondition: [근질권, 근저당, 최고액, 장래의 채무, 장래 발생]
+    sources:
+      - law: 민법
+        article: 제357조
+        clause: 제1항
+        quote: 저당권은 그 담보할 채무의 최고액만을 정하고 채무의 확정을 장래에 보류하여 이를 설정할 수 있다
+        verified: true
+        source_type: law
+  - id: FIN-SEC-P04
+    check: 담보제공자의 목적물 사용·처분 제한이 담보 보전에 필요한 범위를 넘어 과도하지 않은가
+    label: "처분 제한 범위 적정성"
+    module: X-SEC
+    requires_doc_title: [질권, 근질권, 저당, 근저당, 양도담보, 담보설정, 담보 설정, 담보권, 담보제공, 담보 제공]
+    party_roles: [담보제공자, 설정자, 질권설정자, 채무자, 물상보증인]
+    severity: 참고
+    severity_basis: 선언규정 — 민법 제352조(질권설정자의 권리처분제한)가 정하는 범위는 "질권자의 이익을 해하는 변경"까지이며, 그를 넘는 포괄적 제한은 약정 사항이므로 개별 검토
+    norm_type: 선언
+    basis: statute
+    triggers:
+      keywords: [처분제한, 처분 제한, 현상변경, 현상 변경, 사용·수익, 사용수익, 담보목적물, 목적물의 처분]
+    absence_check: false
+    sources:
+      - law: 민법
+        article: 제352조
+        clause: ""
+        quote: 질권설정자는 질권자의 동의없이 질권의 목적된 권리를 소멸하게 하거나 질권자의 이익을 해하는 변경을 할 수 없다
+        verified: true
+        source_type: law
+
   # ── X-SUB: 하도급법(대금·부당특약) (횡단 — Phase C2 통합) ──
   - id: SP-PAY-01
     module: X-SUB
