@@ -18,6 +18,7 @@ test("setVerdict: 판정 추가(불변 — 원본 미변경)", () => {
   assert.deepStrictEqual(s0, {});
   assert.strictEqual(s1["CMN-12"].verdict, "이상없음");
   assert.strictEqual(s1["CMN-12"].date, "2026-07-09");
+  assert.strictEqual(s1["CMN-12"].origin, "manual");
 });
 
 test("setVerdict: 검토의견 + 코멘트", () => {
@@ -63,6 +64,20 @@ test("exportVerdicts: meta + verdicts 구조", () => {
   assert.strictEqual(out.meta.type_id, "nda");
   assert.strictEqual(out.meta.contract_hash, "cr-abc");
   assert.strictEqual(out.verdicts["CMN-12"].verdict, "이상없음");
+});
+
+test("exportVerdicts: 시스템 평가 원장을 선택적으로 함께 내보낸다", () => {
+  const assessments = { format: "cr-system-assessment-v1", items: { A: {} } };
+  const out = V.exportVerdicts({}, { contract_hash: "cr-abc" }, assessments);
+  assert.strictEqual(out.system_assessments, assessments);
+});
+
+test("판정 출처: 일괄·부속서류 출처를 구분해 보존한다", () => {
+  const bulk = V.bulkVerdict({}, ["A"], "이상없음", "d");
+  assert.strictEqual(bulk.store.A.origin, "bulk");
+  const subdoc = V.bulkVerdictComment({}, ["B"], "이상없음", "별첨", "d", "", "subdoc");
+  assert.strictEqual(subdoc.store.B.origin, "subdoc");
+  assert.strictEqual(V.migrateStore({ C: { verdict: "이상없음" } }).C.origin, "legacy");
 });
 
 test("importVerdicts: 정상 구조 파싱", () => {
@@ -151,10 +166,10 @@ test("composeOpinion: 특이사항 없음 — 전반 상태 1문장 + 특이사�
     mustCoreLabels: [], opinions: [], formalWarnTitles: []
   });
   assert.strictEqual(t,
-    "업무위탁계약서(24개 조항, 조달 유형) 검토 결과 필수 확인사항은 관련 조항에 반영되어 있음. 전반적으로 특이사항 없음.");
+    "업무위탁계약서(24개 조항, 조달 유형) 검토 결과 추가 판단이 필요한 필수 항목 없음. 전반적으로 특이사항 없음.");
 });
 
-test("composeOpinion: 검토의견 인용 — 코멘트 ‘…’ 인용·80자 말줄임·필수 우선 정렬·외 N건", () => {
+test("composeOpinion: 검토의견 인용 — 코멘트 전체 인용·필수 우선 정렬·외 N건", () => {
   const long = "가".repeat(100);
   const t = V.composeOpinion({
     name: "계약서", clauseCount: 10, typeName: "조달",
@@ -167,8 +182,8 @@ test("composeOpinion: 검토의견 인용 — 코멘트 ‘…’ 인용·80자 
     ],
     formalWarnTitles: []
   });
-  // 필수 먼저 인용, 80자 초과 말줄임
-  assert.ok(t.indexOf("다만, 제8조(지체상금) 관련 「필수B」에 대하여 ‘" + "가".repeat(80) + "…’ 의견이 있어 보완 필요함.") !== -1);
+  // 필수 먼저 인용하고 긴 코멘트도 자르지 않음
+  assert.ok(t.indexOf("다만, 제8조(지체상금) 관련 「필수B」에 대하여 ‘" + long + "’ 의견이 있어 보완 필요함.") !== -1);
   // 권장은 "또한"으로 이어짐, 코멘트 없으면 인용부 생략
   assert.ok(t.indexOf("또한 제3조(대금) 관련 「권장A」에 대하여 ‘지급기일 명시 필요’ 의견이 있어 보완 필요함.") !== -1);
   // 조항 미귀속 의견은 "계약서 전체를 기준으로 볼 때"로 지칭(2026-07-30 피드백 — "(전문)" 내부 라벨 노출 금지)
@@ -190,18 +205,18 @@ test("composeOpinion: 조항 위치 축약 — 표제 뒤 본문이 붙어도 �
   assert.ok(t.indexOf("지체일수당") === -1);
 });
 
-test("composeOpinion: 필수 미확인 — 조항 신설 검토 문장 + 1문장 상태 반영", () => {
+test("composeOpinion: 추가 판단 필수 항목 — 적용·보완 판단 문장 + 1문장 상태 반영", () => {
   const one = V.composeOpinion({
     name: "계약서", clauseCount: 5, typeName: "업무위탁",
     mustCoreLabels: ["재위탁 사전동의"], opinions: [], formalWarnTitles: []
   });
-  assert.ok(one.indexOf("검토 결과 필수 확인사항 중 1건이 계약서에서 확인되지 않음.") !== -1);
-  assert.ok(one.indexOf("「재위탁 사전동의」 항목은 계약서에서 확인되지 않아 조항 신설 검토 요함.") !== -1);
+  assert.ok(one.indexOf("검토 결과 추가 판단이 필요한 필수 항목이 1건 있음.") !== -1);
+  assert.ok(one.indexOf("「재위탁 사전동의」 항목은 해당 여부 또는 계약 내용 보완 필요성 판단 요함.") !== -1);
   const many = V.composeOpinion({
     name: "계약서", clauseCount: 5, typeName: "업무위탁",
     mustCoreLabels: ["재위탁 사전동의", "손해배상"], opinions: [], formalWarnTitles: []
   });
-  assert.ok(many.indexOf("「재위탁 사전동의」 등 2건은 계약서에서 확인되지 않아 조항 신설 검토 요함.") !== -1);
+  assert.ok(many.indexOf("「재위탁 사전동의」 등 2건은 해당 여부 또는 계약 내용 보완 필요성 판단 요함.") !== -1);
 });
 
 test("composeOpinion: 형식 경고 1줄 + 유형 미확정 표기", () => {
@@ -239,7 +254,7 @@ test("composeOpinion: compare 지정 시 전년 대비 요지 문장이 1문장 
   });
   assert.ok(t.indexOf("전년(2025-07-30) 검토 대비 변경 4·신설 2·삭제 1개 조항이 달라짐.") !== -1, t);
   // 1문장(전반 상태) 바로 뒤에 위치
-  assert.ok(t.indexOf("반영되어 있음. 전년(") !== -1, t);
+  assert.ok(t.indexOf("필수 항목 없음. 전년(") !== -1, t);
 });
 
 test("composeOpinion: compare 변동 0건이면 '조항 구성 변동 없음' 문장", () => {

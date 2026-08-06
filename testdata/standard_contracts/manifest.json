@@ -1,0 +1,51 @@
+{
+  "format": "cr-public-contract-corpus-v1",
+  "retrieved": "2026-08-06",
+  "documents": [
+    {
+      "id": "GOV-SVC-2024",
+      "kind": "contract",
+      "title": "지방자치단체 용역 표준계약서",
+      "raw": "raw/local-government-service-standard.pdf",
+      "text": "text/local-government-service-standard.txt",
+      "sha256": "f9b8ef51d9bf60acb016bbd4c71475f4832f75559cdf1e17958e623d2fd1f02b",
+      "source": "https://www.law.go.kr/LSW/flDownload.do?flSeq=146054401"
+    },
+    {
+      "id": "PERF-SHARE",
+      "kind": "contract",
+      "title": "성과공유제 표준계약서 전문",
+      "raw": "raw/performance-sharing-standard.pdf",
+      "text": "text/performance-sharing-standard.txt",
+      "sha256": "9c85af08ddeaff58223fb161ef456dfb06bb4c044536c07db95e34bcbdebbbfd",
+      "source": "https://www.law.go.kr/LSW/flDownload.do?bylClsCd=200203&flSeq=141426447"
+    },
+    {
+      "id": "POP-TRAINEE-2025",
+      "kind": "contract",
+      "title": "대중문화예술분야 연습생 표준계약서",
+      "raw": "raw/pop-culture-trainee-standard.pdf",
+      "text": "text/pop-culture-trainee-standard.txt",
+      "sha256": "53d2c22efef9444997522ad0200ca65893cfaa70afe66b5c7bd570c3f356ca01",
+      "source": "https://www.law.go.kr/LSW/flDownload.do?bylClsCd=200201&flSeq=159682555"
+    },
+    {
+      "id": "WORK-ATHLETE-2024",
+      "kind": "contract",
+      "title": "직장운동경기부 선수 표준계약서",
+      "raw": "raw/workplace-athlete-standard.pdf",
+      "text": "text/workplace-athlete-standard.txt",
+      "sha256": "fc4557d1744770daf8d17d59931561cc8451b4f4ac68bfbc053eae64725eefc4",
+      "source": "https://www.law.go.kr/LSW/flDownload.do?bylClsCd=200201&flSeq=153785783"
+    },
+    {
+      "id": "ESPORTS-GUIDE",
+      "kind": "guideline_with_contract_sample",
+      "title": "e스포츠 선수 표준계약서 사용지침",
+      "raw": "raw/esports-standard-guideline.pdf",
+      "text": "text/esports-standard-guideline.txt",
+      "sha256": "5d7f56e4f4c3652ae4a15772b64ee84109ed5285c5ad77c65a7745e03d5a6b63",
+      "source": "https://mcst.go.kr/servlets/eduport/front/upload/UplDownloadFile?pFileName=%EC%9D%B4%EC%8A%A4%ED%8F%AC%EC%B8%A0+%EC%84%A0%EC%88%98+%ED%91%9C%EC%A4%80%EA%B3%84%EC%95%BD%EC%84%9C+%EC%82%AC%EC%9A%A9%EC%A7%80%EC%B9%A8.pdf&pPath=0405050000&pRealName=StdContract20210209060000076036.pdf"
+    }
+  ]
+}

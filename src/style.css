@@ -210,6 +210,13 @@ td.empty { text-align: center; color: var(--ink-faint); padding: var(--sp-4); }
 .clause-cols-head { display: grid; grid-template-columns: 2fr 1.2fr 1.2fr; gap: 0;
   font-size: var(--fs-meta); color: var(--ink-mute); font-weight: 600; padding: 0 2px 6px; }
 .clause-cols-head span { padding: 0 14px; }
+.quick-review-btn { border: 1px solid #27734f; background: #edf8f2; color: #16583a; font-weight: 700; }
+.review-route { display: inline-flex; align-items: center; min-height: 20px; padding: 1px 6px; border-radius: 4px;
+  font-size: 11px; font-weight: 700; border: 1px solid transparent; }
+.route-detailed { color: #8b2d1f; background: #fff1ee; border-color: #e8b7ad; }
+.route-applicability { color: #72520c; background: #fff8df; border-color: #dfc775; }
+.route-quick { color: #17603f; background: #edf8f2; border-color: #a9d2bd; }
+.consider-item.consider-judged { border-left: 3px solid #72a98d; background: #fbfefc; }
 
 /* 조항 행 — grid 3셀(① 원문 ② 검토된 내용 ③ 제안 사항). 한 스크롤로 정렬 동기화를 구조적으로 보장.
    content-visibility: 오프스크린 행의 렌더 비용 제거(§4.2) — 외부 의존성 0. */
@@ -334,7 +341,7 @@ td.empty { text-align: center; color: var(--ink-faint); padding: var(--sp-4); }
 .summary-adjust .summary-type { display: inline-block; font-size: var(--fs-body-sub); margin: var(--sp-1) 0 4px; }
 
 /* 수치 타일(P1) — 기존 coverage 색 체계 그대로. 클릭=해당 섹션 앵커 */
-.report-tiles { display: grid; grid-template-columns: repeat(5, 1fr); gap: var(--sp-2); margin: 4px 0 var(--sp-3); }
+.report-tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--sp-2); margin: 4px 0 var(--sp-3); }
 .tile { border: 1px solid var(--border-card); border-radius: 8px; background: var(--bg-card); padding: var(--sp-2) var(--sp-2);
   text-align: left; cursor: pointer; font: inherit; }
 .tile:hover { border-color: #b9c2d8; background: #f7f9ff; }
@@ -468,7 +475,7 @@ td.empty { text-align: center; color: var(--ink-faint); padding: var(--sp-4); }
 .report-opinion .ro-mode { font-size: 11.5px; color: var(--ink-ghost); margin-right: auto; }
 .report-opinion .ro-text { margin: 0; font-size: var(--fs-heading); line-height: 1.7; color: var(--ink); }
 .report-opinion .ro-text mark { background: #ffe08a; padding: 0 2px; border-radius: 3px; }
-.report-opinion .ro-edit { width: 100%; min-height: 100px; font: 14px/1.6 inherit; }
+.report-opinion .ro-edit { width: 100%; min-height: 180px; resize: vertical; font: 14px/1.6 inherit; }
 .report-opinion .ro-edit-actions { display: flex; gap: 8px; margin-top: var(--sp-1); }
 
 /* 부재 알람(검토 제안) 전용 블록 */
@@ -580,12 +587,20 @@ td.empty { text-align: center; color: var(--ink-faint); padding: var(--sp-4); }
 .curation-panel { margin-top: var(--sp-3); padding: 10px var(--sp-2); border: 1px solid #e4e8f2;
   border-radius: 8px; background: #fafbfe; font-size: var(--fs-body-sub); }
 .curation-panel > summary { cursor: pointer; font-weight: 600; color: var(--ink-soft); }
+.corpus-metrics { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px;
+  margin: var(--sp-2) 0; border: 1px solid #e4e8f2; background: #e4e8f2; }
+.corpus-metrics > div { min-width: 0; padding: 8px 10px; background: #fff; }
+.corpus-metrics b { display: block; font-size: 16px; color: var(--ink); }
+.corpus-metrics span { display: block; margin-top: 2px; color: var(--ink-ghost); font-size: 11.5px; }
+.matching-metrics { padding: 7px 9px; background: var(--c-slate-bg); color: var(--ink-soft); line-height: 1.5; }
 .curation-hint { margin: var(--sp-1) 0; font-size: var(--fs-meta); color: #778; }
+.curation-empty { margin: var(--sp-1) 0 0; color: var(--ink-ghost); }
 .curation-group { margin-top: var(--sp-1); }
 .curation-group h5 { margin: 6px 0 4px; font-size: 12.5px; color: #556; }
 .curation-group ul { margin: 0; padding-left: 18px; }
 .curation-group li { margin: 2px 0; color: var(--ink-soft); }
 .cur-stat { color: var(--ink-ghost); font-size: 11.5px; margin-left: 4px; }
+@media (max-width: 620px) { .corpus-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 
 /* 앱 내장 골드셋(폐쇄망) */
 .goldset-bar { display: flex; gap: var(--sp-2); align-items: center; margin: var(--sp-3) 0; flex-wrap: wrap; }
@@ -685,6 +700,20 @@ td.empty { text-align: center; color: var(--ink-faint); padding: var(--sp-4); }
 .stance-desc { font-size: var(--fs-meta); color: var(--ink-mute); line-height: 1.45; }
 .base-area { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-1); flex: 1; }
 .input-setup .module-bar { margin-bottom: 0; flex: 1; }
+.setup-row-ai { align-items: center; }
+.local-ai-toggle { display: inline-flex; align-items: center; gap: 6px; font-size: var(--fs-body-sub);
+  color: var(--ink); cursor: pointer; }
+.local-ai-toggle input { width: 16px; height: 16px; accent-color: var(--accent); }
+.local-ai-status { font-size: var(--fs-meta); color: var(--ink-mute); }
+.local-ai-status.running { color: var(--c-blue-fg); }
+.local-ai-status.ready { color: var(--c-green-fg); }
+.local-ai-status.error { color: var(--c-amber-fg); }
+.local-ai-rerun { color: var(--c-blue-fg); border-color: var(--c-blue-line); }
+.local-ai-note { margin: 5px 0; padding: 5px 7px; border-left: 3px solid var(--c-green-line);
+  background: #f6fbf7; color: var(--ink-soft); font-size: var(--fs-meta); line-height: 1.5; }
+.local-ai-note.review { border-left-color: var(--c-amber-line); background: #fffaf0; color: #795b17; }
+.local-ai-badge { font-weight: 600; margin-right: 5px; }
+.experiment-actions { border-left: 3px solid var(--c-blue-line); padding-left: var(--sp-2); }
 
 /* 원계약 커버(변경합의서 국면) — 부속서류 커버와 같은 "누락 아님" 계열 톤 */
 .badge.cov-base { background: var(--c-slate-bg); color: var(--c-slate-fg); }

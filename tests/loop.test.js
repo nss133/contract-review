@@ -62,6 +62,75 @@ test("mergeIntoCorpus: 같은 계약서(hash) 재적재는 중복 카운트 안 
   assert.strictEqual(c.meta.contract_count, 1);
 });
 
+test("mergeIntoCorpus: 시스템평가×사람판정과 판정 출처를 별도 집계", () => {
+  const e = exp("h-auto", "손", {
+    "CORE-07": { verdict: "이상없음", comment: "", date: "d", origin: "manual" },
+  });
+  e.system_assessments = {
+    format: "cr-system-assessment-v1",
+    items: { "CORE-07": { system_assessment: "evidence_found", advisory: {
+      kind: "local_llm", relation: "direct", completeness: "complete"
+    } } },
+  };
+  const c = L.mergeIntoCorpus(L.emptyCorpus(), e);
+  const st = L.automationStats(c, "CORE-07");
+  assert.strictEqual(st.pairs["evidence_found::이상없음"], 1);
+  assert.strictEqual(st.llmPairs["direct/complete::이상없음"], 1);
+  assert.strictEqual(st.origins.manual, 1);
+});
+
+test("automationStats: 구 판정은 legacy 출처로 집계", () => {
+  const c = L.mergeIntoCorpus(L.emptyCorpus(), exp("h-old", "손", {
+    X: { verdict: "검토의견", comment: "", date: "d" },
+  }));
+  assert.strictEqual(L.automationStats(c, "X").origins.legacy, 1);
+});
+
+test("mergeIntoCorpus: 사람 조항 확인·재지정을 매칭 정밀도 원자료로 누적", () => {
+  const e1 = exp("m1", "손", { X: { verdict: "이상없음", comment: "", date: "d" } });
+  e1.matching_observations = { items: { X: { rule_clause_index: 2, human_clause_index: 2,
+    human_evidence_source: "confirmed_match", candidate_clauses: [{ clause_index: 2 }] } } };
+  const e2 = exp("m2", "손", { X: { verdict: "이상없음", comment: "", date: "d" } });
+  e2.matching_observations = { items: { X: { rule_clause_index: 2, human_clause_index: 4,
+    human_evidence_source: "reassigned", candidate_clauses: [{ clause_index: 2 }, { clause_index: 4 }] } } };
+  let c = L.mergeIntoCorpus(L.emptyCorpus(), e1);
+  c = L.mergeIntoCorpus(c, e2);
+  const m = L.matchingStats(c);
+  assert.deepStrictEqual([m.observed, m.confirmed, m.reassigned], [2, 1, 1]);
+  assert.strictEqual(m.top1_accuracy, 0.5);
+  assert.strictEqual(m.top3_recall, 1);
+});
+
+test("corpusSummary: 판정·라우팅·매칭 상태를 한 번에 요약", () => {
+  const c = { meta: { contract_count: 2 }, byCheck: {
+    X: { counts: { "이상없음": 4, "검토의견": 1, "해당없음": 0 }, matching_counts: { observed: 2, top1_correct: 1 } },
+    Y: { counts: { "이상없음": 0, "검토의견": 0, "해당없음": 4 } }
+  } };
+  const s = L.corpusSummary(c);
+  assert.strictEqual(s.verdicts, 9);
+  assert.strictEqual(s.issues, 1);
+  assert.strictEqual(s.route_checks.detailed, 1);
+  assert.strictEqual(s.route_checks.applicability, 1);
+});
+
+test("reviewRoute: 과거 검토의견이 있으면 정밀 검토가 최우선", () => {
+  const c = { meta: {}, byCheck: { X: { counts: { "이상없음": 8, "검토의견": 1, "해당없음": 3 },
+    system_verdict_pairs: { "evidence_found::이상없음": 8 } } } };
+  assert.strictEqual(L.reviewRoute(c, "X", "evidence_found").route, "detailed");
+});
+
+test("reviewRoute: 반복 해당없음은 적용성 확인", () => {
+  const c = { meta: {}, byCheck: { X: { counts: { "이상없음": 2, "검토의견": 0, "해당없음": 3 } } } };
+  assert.strictEqual(L.reviewRoute(c, "X", "evidence_not_found").route, "applicability");
+});
+
+test("reviewRoute: 직접근거와 이상없음이 5건 이상 일치해야 빠른 확인", () => {
+  const c = { meta: {}, byCheck: { X: { counts: { "이상없음": 6, "검토의견": 0, "해당없음": 0 },
+    system_verdict_pairs: { "evidence_found::이상없음": 6 } } } };
+  assert.strictEqual(L.reviewRoute(c, "X", "evidence_found").route, "quick");
+  assert.strictEqual(L.reviewRoute(c, "X", "possible_evidence").route, "standard");
+});
+
 test("checkStats: 분포 비율 + 표본수", () => {
   let c = L.emptyCorpus();
   ["h1", "h2", "h3", "h4"].forEach((h, i) => {

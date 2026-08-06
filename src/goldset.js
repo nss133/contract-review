@@ -24,6 +24,7 @@ var Goldset = (function () {
         detected: input.typeId || null,
         activeModules: (input.activeModules || []).slice().sort(),
         consider: ids("consider"),
+        verify: ids("verify"),
         addressed: ids("addressed")
       },
       context: {
@@ -54,7 +55,8 @@ var Goldset = (function () {
       return r.results.filter(function (x) { return x.coverage === cov; })
         .map(function (x) { return x.cpId; }).sort();
     }
-    return { detected: detected, activeModules: active.slice().sort(), consider: ids("consider"), addressed: ids("addressed") };
+    return { detected: detected, activeModules: active.slice().sort(), consider: ids("consider"),
+      verify: ids("verify"), addressed: ids("addressed") };
   }
 
   function _diffSet(expected, observed) {
@@ -74,13 +76,17 @@ var Goldset = (function () {
     var detectOk = (observed.detected || null) === (ex.detected || null);
     var mods = _diffSet(ex.activeModules, observed.activeModules);
     var cons = _diffSet(ex.consider, observed.consider);
+    // 구 v1 케이스에는 verify 기대값이 없으므로 그 경우는 채점하지 않는다.
+    var veri = Object.prototype.hasOwnProperty.call(ex, "verify")
+      ? _diffSet(ex.verify, observed.verify) : _diffSet([], []);
     var addr = _diffSet(ex.addressed, observed.addressed);
     var changed = mods.added.length || mods.removed.length || cons.added.length ||
-      cons.removed.length || addr.added.length || addr.removed.length;
+      cons.removed.length || veri.added.length || veri.removed.length ||
+      addr.added.length || addr.removed.length;
     return {
       id: caseObj.id, desc: caseObj.desc,
       detectOk: detectOk, expectedType: ex.detected || null, observedType: observed.detected || null,
-      modules: mods, consider: cons, addressed: addr,
+      modules: mods, consider: cons, verify: veri, addressed: addr,
       status: !detectOk ? "실패" : (changed ? "변화" : "통과")
     };
   }
@@ -98,6 +104,7 @@ var Goldset = (function () {
         detected: observed.detected || null,
         activeModules: (observed.activeModules || []).slice().sort(),
         consider: (observed.consider || []).slice().sort(),
+        verify: (observed.verify || []).slice().sort(),
         addressed: (observed.addressed || []).slice().sort()
       },
       context: caseObj.context
@@ -122,6 +129,8 @@ var Goldset = (function () {
       if (d.modules.removed.length) L.push("  모듈 비활성화: " + d.modules.removed.join(", "));
       if (d.consider.added.length) L.push("  부재알람 신규: " + d.consider.added.join(", "));
       if (d.consider.removed.length) L.push("  부재알람 사라짐: " + d.consider.removed.join(", "));
+      if (d.verify.added.length) L.push("  확인권장 신규: " + d.verify.added.join(", "));
+      if (d.verify.removed.length) L.push("  확인권장 사라짐: " + d.verify.removed.join(", "));
       if (d.addressed.added.length) L.push("  반영 신규: " + d.addressed.added.join(", "));
       if (d.addressed.removed.length) L.push("  반영 사라짐: " + d.addressed.removed.join(", "));
     });

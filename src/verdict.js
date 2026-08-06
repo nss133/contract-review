@@ -15,6 +15,7 @@ var Verdict = (function () {
   // 이상없음의 사유(선택). 빈 문자열 = 미선택.
   var OK_REASONS = ["반영되어 있음", "해당사항 없음"];
   var LEGACY_NA = "해당없음"; // 구 판정값 — 이상없음 + '해당사항 없음'으로 이관
+  var ORIGINS = ["manual", "bulk", "subdoc", "prior_review", "legacy"];
 
   function verdictKey(hash) { return "cr-verdict-" + hash; }
 
@@ -33,7 +34,8 @@ var Verdict = (function () {
     if (VERDICTS.indexOf(v) === -1) return null;
     if (v !== "이상없음") reason = ""; // 사유는 이상없음 전용
     if (reason && OK_REASONS.indexOf(reason) === -1) reason = "";
-    return { verdict: v, reason: reason, comment: item.comment || "", date: item.date || "" };
+    var origin = ORIGINS.indexOf(item.origin) !== -1 ? item.origin : "legacy";
+    return { verdict: v, reason: reason, comment: item.comment || "", date: item.date || "", origin: origin };
   }
   // 저장소 전체 정규화(로드 직후 1회).
   function migrateStore(store) {
@@ -48,10 +50,11 @@ var Verdict = (function () {
 
   // verdict가 빈값/null이면 판정 취소(삭제). 허용 안 되는 값이면 원본 유지.
   // reason은 이상없음일 때만 유효(그 외에는 무시).
-  function setVerdict(store, cpId, verdict, comment, date, reason) {
+  function setVerdict(store, cpId, verdict, comment, date, reason, origin) {
     var next = _clone(store || {});
     if (!verdict) { delete next[cpId]; return next; }
-    var m = migrateItem({ verdict: verdict, reason: reason, comment: comment, date: date });
+    var m = migrateItem({ verdict: verdict, reason: reason, comment: comment, date: date,
+      origin: origin || "manual" });
     if (!m) return store || {};
     next[cpId] = m;
     return next;
@@ -62,7 +65,7 @@ var Verdict = (function () {
     if (!cur || cur.verdict !== "이상없음") return store || {};
     var next = _clone(store);
     next[cpId] = { verdict: cur.verdict, reason: OK_REASONS.indexOf(reason) !== -1 ? reason : "",
-      comment: cur.comment || "", date: cur.date || "" };
+      comment: cur.comment || "", date: cur.date || "", origin: cur.origin || "legacy" };
     return next;
   }
 
@@ -81,8 +84,10 @@ var Verdict = (function () {
     return sum;
   }
 
-  function exportVerdicts(store, meta) {
-    return { meta: meta || {}, verdicts: _clone(store || {}) };
+  function exportVerdicts(store, meta, systemAssessments) {
+    var out = { meta: meta || {}, verdicts: _clone(store || {}) };
+    if (systemAssessments && systemAssessments.format) out.system_assessments = systemAssessments;
+    return out;
   }
 
   // 구조 검증: verdicts dict만 신뢰, 각 항목의 verdict 값이 유효한 것만 통과.
@@ -96,13 +101,14 @@ var Verdict = (function () {
 
   // 일괄 판정(코멘트 포함): cpIds 중 '미판정'인 것만 verdict+comment로 채움 — 이미 찍은 판정(예외 지정분)은 보존.
   // 반환: { store, applied } — applied는 실제 채워진 개수.
-  function bulkVerdictComment(store, cpIds, verdict, comment, date, reason) {
+  function bulkVerdictComment(store, cpIds, verdict, comment, date, reason, origin) {
     if (VERDICTS.indexOf(verdict) === -1) return { store: store || {}, applied: 0 };
     var next = _clone(store || {});
     var applied = 0;
     (cpIds || []).forEach(function (id) {
       if (next[id] && next[id].verdict) return; // 기판정 보존
-      var m = migrateItem({ verdict: verdict, reason: reason, comment: comment, date: date });
+      var m = migrateItem({ verdict: verdict, reason: reason, comment: comment, date: date,
+        origin: origin || "bulk" });
       if (!m) return;
       next[id] = m;
       applied++;
@@ -112,7 +118,7 @@ var Verdict = (function () {
 
   // 일괄 판정(통과계약 모드) — 코멘트 없는 bulkVerdictComment.
   function bulkVerdict(store, cpIds, verdict, date, reason) {
-    return bulkVerdictComment(store, cpIds, verdict, "", date, reason);
+    return bulkVerdictComment(store, cpIds, verdict, "", date, reason, "bulk");
   }
 
   // 일괄 판정 해제(자동 기재 취소용): cpIds 중 verdict·comment가 '원형 그대로'인 항목만 제거 —
@@ -144,13 +150,13 @@ var Verdict = (function () {
     d = d || {};
     var SEV = { "필수": 0, "권장": 1, "참고": 2 };
     var sents = [];
-    // 1문장: 전반 상태 — 계약명·조항수·유형 + 필수 확인 상태
+    // 1문장: 전반 상태 — 시스템의 원문 검색 결과가 아니라 사람의 추가 판단 필요 여부를 기술.
     var mustLabels = d.mustCoreLabels || [];
     sents.push((d.name || "계약서") + "(" + (d.clauseCount || 0) + "개 조항, " +
       (d.typeName ? d.typeName + " 유형" : "유형 미확정") + ") 검토 결과 " +
       (mustLabels.length
-        ? "필수 확인사항 중 " + mustLabels.length + "건이 계약서에서 확인되지 않음."
-        : "필수 확인사항은 관련 조항에 반영되어 있음."));
+        ? "추가 판단이 필요한 필수 항목이 " + mustLabels.length + "건 있음."
+        : "추가 판단이 필요한 필수 항목 없음."));
     // 비교 모드(재검토): 전년 대비 요지 1문장 — 정렬은 보조 도구이므로 "확인됨" 단정 대신 기술식 유지.
     if (d.compare) {
       var c = d.compare;
@@ -161,7 +167,7 @@ var Verdict = (function () {
       sents.push("전년(" + (c.date || "일자 미상") + ") 검토 대비 " +
         (diffs.length ? diffs.join("·") + "개 조항이 달라짐." : "조항 구성 변동 없음."));
     }
-    // 2문장~: 검토의견 코멘트 인용 — 필수·권장 순 최대 3건 + "외 N건"
+    // 2문장~: 검토의견 코멘트 인용 — 코멘트는 사용자 판단 기록이므로 글자 수를 자르지 않음.
     var ops = (d.opinions || []).slice().sort(function (a, b) {
       var ra = SEV[a.severity]; if (ra === undefined) ra = 3;
       var rb = SEV[b.severity]; if (rb === undefined) rb = 3;
@@ -179,7 +185,6 @@ var Verdict = (function () {
     }
     ops.slice(0, 3).forEach(function (o, i) {
       var c = String(o.comment || "").trim();
-      if (c.length > 80) c = c.slice(0, 80) + "…";
       var loc = _shortLoc(o.loc);
       sents.push((i === 0 ? "다만, " : "또한 ") +
         (loc ? loc + " 관련 " : "계약서 전체를 기준으로 볼 때 ") +
@@ -190,7 +195,7 @@ var Verdict = (function () {
     // 필수 미확인: 조항 신설 검토
     if (mustLabels.length) {
       sents.push("「" + mustLabels[0] + "」" + (mustLabels.length > 1 ? " 등 " + mustLabels.length + "건은" : " 항목은") +
-        " 계약서에서 확인되지 않아 조항 신설 검토 요함.");
+        " 해당 여부 또는 계약 내용 보완 필요성 판단 요함.");
     }
     // 형식 경고 1줄
     var fw = d.formalWarnTitles || [];
@@ -206,6 +211,7 @@ var Verdict = (function () {
   return {
     VERDICTS: VERDICTS,
     OK_REASONS: OK_REASONS,
+    ORIGINS: ORIGINS,
     migrateStore: migrateStore,
     setReason: setReason,
     verdictKey: verdictKey,

@@ -9,6 +9,7 @@ from pathlib import Path
 import yaml
 
 import config
+from build_team_guide_docx import build_guide
 from enrich import enrich
 from validate import load_knowledge
 
@@ -18,7 +19,7 @@ SRC = ROOT / "src"
 JS_ORDER = [
     "sim.js", "clause_role.js", "matcher_config.js", "segmenter.js", "matcher.js",
     "pf.js", "cfb.js", "extract-pdf.js", "extract-doc.js", "extract-hwp.js", "extract-zip.js", "extract.js",
-    "verify.js", "verdict.js", "loop.js", "goldset.js", "tags.js", "formal.js", "evidence.js", "compare.js", "app.js",
+    "verify.js", "assessment.js", "local_llm.js", "experiment.js", "verdict.js", "loop.js", "goldset.js", "tags.js", "formal.js", "evidence.js", "compare.js", "app.js",
 ]
 
 
@@ -100,8 +101,11 @@ def build(knowledge_dir, out_path, law_dbs=None, news_db=None, corpus_path=None)
     for old in out.parent.glob("contract-review*.zip"):
         old.unlink()
     zpath = out.parent / f"contract-review-v{version}.zip"
+    guide_path = out.parent / f"contract-review-user-guide-v{version}.docx"
+    build_guide(version, guide_path)
     with zipfile.ZipFile(zpath, "w", zipfile.ZIP_DEFLATED) as zf:
         zf.write(out, out.name)
+        zf.write(guide_path, guide_path.name)
     print(f"배포 zip: {zpath.name} ({zpath.stat().st_size // 1024}KB)")
     return out
 

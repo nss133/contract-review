@@ -1,0 +1,20 @@
+{
+  "n": 35,
+  "documents": 2,
+  "baseline_correct": 24,
+  "hybrid_correct": 20,
+  "baseline_accuracy": 0.6857142857142857,
+  "hybrid_accuracy": 0.5714285714285714,
+  "delta_accuracy": -0.11428571428571428,
+  "delta_accuracy_ci95_document_bootstrap": [
+    -0.3333333333333333,
+    0.0
+  ],
+  "improved": 1,
+  "harmed": 5,
+  "net_improved": -4,
+  "rule_recall_at_3": 0.9714285714285714,
+  "mcnemar_exact_p": 0.21875,
+  "baseline_reference_false_positive": 0,
+  "hybrid_reference_false_positive": 0
+}

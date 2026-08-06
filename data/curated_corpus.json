@@ -1,20 +1,257 @@
 {
   "meta": {
-    "updated": "2026-07-15",
-    "contract_count": 8,
+    "updated": "2026-08-06",
+    "contract_count": 14,
     "hashes": [
-      "cr-17rdikw",
-      "cr-6x1851",
-      "cr-17tbu8u",
-      "cr-1ru0nu4",
+      "cr-1rirz6l",
+      "cr-11lcxrg",
+      "cr-1lcei42",
+      "cr-1y1ljbi",
+      "cr-1i0piy0",
+      "cr-de01ml",
+      "cr-nl4mn0",
+      "cr-1jndemd",
+      "cr-1v0yayd",
       "cr-1679ek6",
-      "cr-tgws8p",
-      "cr-10ofj3r",
-      "cr-10fwfdt"
+      "cr-a6bhmu",
+      "cr-1fohvd4",
+      "cr-bqd3n2",
+      "cr-14bvemz"
     ]
   },
   "byCheck": {
-    "SP-DEL-08": {
+    "SOL-03": {
+      "counts": {
+        "이상없음": 1,
+        "검토의견": 0,
+        "해당없음": 1
+      },
+      "comments": [],
+      "lastSeen": "2026-08-06",
+      "origin_counts": {
+        "legacy": 1,
+        "manual": 1
+      },
+      "system_verdict_pairs": {
+        "evidence_not_found::해당없음": 1
+      },
+      "llm_verdict_pairs": {}
+    },
+    "INV-FUND-02": {
+      "counts": {
+        "이상없음": 1,
+        "검토의견": 0,
+        "해당없음": 0
+      },
+      "comments": [],
+      "lastSeen": "2026-08-06",
+      "origin_counts": {
+        "legacy": 1
+      },
+      "system_verdict_pairs": {
+        "possible_evidence::이상없음": 1
+      },
+      "llm_verdict_pairs": {}
+    },
+    "REL-02": {
+      "counts": {
+        "이상없음": 1,
+        "검토의견": 0,
+        "해당없음": 1
+      },
+      "comments": [],
+      "lastSeen": "2026-08-06",
+      "origin_counts": {
+        "legacy": 1,
+        "manual": 1
+      },
+      "system_verdict_pairs": {
+        "evidence_not_found::해당없음": 1
+      },
+      "llm_verdict_pairs": {}
+    },
+    "FIN-SEC-01": {
+      "counts": {
+        "이상없음": 0,
+        "검토의견": 0,
+        "해당없음": 1
+      },
+      "comments": [],
+      "lastSeen": "2026-08-06",
+      "origin_counts": {
+        "legacy": 1
+      },
+      "system_verdict_pairs": {},
+      "llm_verdict_pairs": {}
+    },
+    "FIN-SEC-05": {
+      "counts": {
+        "이상없음": 0,
+        "검토의견": 0,
+        "해당없음": 2
+      },
+      "comments": [
+        {
+          "text": "예금에 대한 질권 설정 방식임",
+          "verdict": "이상없음",
+          "count": 1,
+          "reviewers": [
+            "손남수"
+          ],
+          "date": "2026-08-06"
+        }
+      ],
+      "lastSeen": "2026-08-06",
+      "origin_counts": {
+        "legacy": 2
+      },
+      "system_verdict_pairs": {
+        "not_surfaced::해당없음": 1
+      },
+      "llm_verdict_pairs": {}
+    },
+    "REL-07": {
+      "counts": {
+        "이상없음": 0,
+        "검토의견": 0,
+        "해당없음": 1
+      },
+      "comments": [],
+      "lastSeen": "2026-08-06",
+      "origin_counts": {
+        "legacy": 1
+      },
+      "system_verdict_pairs": {},
+      "llm_verdict_pairs": {}
+    },
+    "REL-09": {
+      "counts": {
+        "이상없음": 0,
+        "검토의견": 1,
+        "해당없음": 1
+      },
+      "comments": [
+        {
+          "text": "와이케이디벨롭먼트는 계열회사이므로 관련 제한 준수 필요",
+          "verdict": "검토의견",
+          "count": 1,
+          "reviewers": [
+            "손남수"
+          ],
+          "date": "2026-08-06"
+        }
+      ],
+      "lastSeen": "2026-08-06",
+      "origin_counts": {
+        "legacy": 1,
+        "manual": 1
+      },
+      "system_verdict_pairs": {
+        "evidence_not_found::검토의견": 1
+      },
+      "llm_verdict_pairs": {}
+    },
+    "INV-SP-01": {
+      "counts": {
+        "이상없음": 0,
+        "검토의견": 0,
+        "해당없음": 1
+      },
+      "comments": [],
+      "lastSeen": "2026-08-06",
+      "origin_counts": {
+        "legacy": 1
+      },
+      "system_verdict_pairs": {},
+      "llm_verdict_pairs": {}
+    },
+    "FIN-ASSET-03": {
+      "counts": {
+        "이상없음": 0,
+        "검토의견": 0,
+        "해당없음": 1
+      },
+      "comments": [],
+      "lastSeen": "2026-08-06",
+      "origin_counts": {
+        "legacy": 1
+      },
+      "system_verdict_pairs": {},
+      "llm_verdict_pairs": {}
+    },
+    "SOL-05": {
+      "counts": {
+        "이상없음": 0,
+        "검토의견": 0,
+        "해당없음": 2
+      },
+      "comments": [],
+      "lastSeen": "2026-08-06",
+      "origin_counts": {
+        "legacy": 1,
+        "manual": 1
+      },
+      "system_verdict_pairs": {
+        "evidence_not_found::해당없음": 1
+      },
+      "llm_verdict_pairs": {}
+    },
+    "REL-03": {
+      "counts": {
+        "이상없음": 0,
+        "검토의견": 0,
+        "해당없음": 1
+      },
+      "comments": [],
+      "lastSeen": "2026-08-06",
+      "origin_counts": {
+        "legacy": 1
+      },
+      "system_verdict_pairs": {},
+      "llm_verdict_pairs": {}
+    },
+    "FIN-ASSET-04": {
+      "counts": {
+        "이상없음": 1,
+        "검토의견": 0,
+        "해당없음": 1
+      },
+      "comments": [
+        {
+          "text": "대주주에 대한 신용공여 아님",
+          "verdict": "이상없음",
+          "count": 1,
+          "reviewers": [
+            "손남수"
+          ],
+          "date": "2026-08-06"
+        }
+      ],
+      "lastSeen": "2026-08-06",
+      "origin_counts": {
+        "legacy": 2
+      },
+      "system_verdict_pairs": {},
+      "llm_verdict_pairs": {}
+    },
+    "SOL-04": {
+      "counts": {
+        "이상없음": 2,
+        "검토의견": 0,
+        "해당없음": 0
+      },
+      "comments": [],
+      "lastSeen": "2026-08-06",
+      "origin_counts": {
+        "legacy": 1,
+        "manual": 1
+      },
+      "system_verdict_pairs": {
+        "evidence_not_found::이상없음": 1
+      },
+      "llm_verdict_pairs": {}
+    },
+    "CMN-19": {
       "counts": {
         "이상없음": 7,
         "검토의견": 0,
@@ -22,119 +259,444 @@
       },
       "comments": [
         {
-          "text": "제7조, 제8조에서 정하고 있음",
+          "text": "분쟁해결, 관할 조항이 있는데 왜 검토된 항목으로 표시되지 않고 함께 살펴볼 항목으로 되는거지?",
           "verdict": "이상없음",
           "count": 1,
           "reviewers": [
             "손남수"
           ],
-          "date": "2026-07-15"
-        },
-        {
-          "text": "하자보수, 하자보수서비스 조항으로 충분히 담보됨",
-          "verdict": "이상없음",
-          "count": 1,
-          "reviewers": [
-            "손남수"
-          ],
-          "date": "2026-07-15"
-        },
-        {
-          "text": "무상보증 및 하자보수기간을 정하고 있음",
-          "verdict": "이상없음",
-          "count": 1,
-          "reviewers": [
-            "손남수"
-          ],
-          "date": "2026-07-15"
+          "date": "2026-08-06"
         }
       ],
-      "lastSeen": "2026-07-15"
+      "lastSeen": "2026-08-06",
+      "origin_counts": {
+        "legacy": 3,
+        "manual": 4
+      },
+      "system_verdict_pairs": {
+        "possible_evidence::이상없음": 2,
+        "evidence_found::이상없음": 5
+      },
+      "llm_verdict_pairs": {}
     },
-    "SP-DEL-05": {
+    "SOL-01": {
       "counts": {
-        "이상없음": 7,
+        "이상없음": 0,
+        "검토의견": 0,
+        "해당없음": 2
+      },
+      "comments": [],
+      "lastSeen": "2026-08-06",
+      "origin_counts": {
+        "legacy": 1,
+        "manual": 1
+      },
+      "system_verdict_pairs": {
+        "evidence_not_found::해당없음": 1
+      },
+      "llm_verdict_pairs": {}
+    },
+    "FIN-SEC-02": {
+      "counts": {
+        "이상없음": 1,
+        "검토의견": 0,
+        "해당없음": 1
+      },
+      "comments": [],
+      "lastSeen": "2026-08-06",
+      "origin_counts": {
+        "legacy": 2
+      },
+      "system_verdict_pairs": {
+        "not_surfaced::이상없음": 1
+      },
+      "llm_verdict_pairs": {}
+    },
+    "INV-MAN-02": {
+      "counts": {
+        "이상없음": 1,
+        "검토의견": 0,
+        "해당없음": 0
+      },
+      "comments": [],
+      "lastSeen": "2026-08-06",
+      "origin_counts": {
+        "legacy": 1
+      },
+      "system_verdict_pairs": {},
+      "llm_verdict_pairs": {}
+    },
+    "INV-FUND-03": {
+      "counts": {
+        "이상없음": 1,
+        "검토의견": 0,
+        "해당없음": 0
+      },
+      "comments": [],
+      "lastSeen": "2026-08-06",
+      "origin_counts": {
+        "legacy": 1
+      },
+      "system_verdict_pairs": {
+        "not_surfaced::이상없음": 1
+      },
+      "llm_verdict_pairs": {}
+    },
+    "INV-BEN-02": {
+      "counts": {
+        "이상없음": 1,
+        "검토의견": 0,
+        "해당없음": 0
+      },
+      "comments": [],
+      "lastSeen": "2026-08-06",
+      "origin_counts": {
+        "legacy": 1
+      },
+      "system_verdict_pairs": {},
+      "llm_verdict_pairs": {}
+    },
+    "REL-05": {
+      "counts": {
+        "이상없음": 1,
+        "검토의견": 0,
+        "해당없음": 0
+      },
+      "comments": [],
+      "lastSeen": "2026-08-06",
+      "origin_counts": {
+        "legacy": 1
+      },
+      "system_verdict_pairs": {},
+      "llm_verdict_pairs": {}
+    },
+    "INV-BEN-04": {
+      "counts": {
+        "이상없음": 1,
+        "검토의견": 0,
+        "해당없음": 0
+      },
+      "comments": [],
+      "lastSeen": "2026-08-06",
+      "origin_counts": {
+        "legacy": 1
+      },
+      "system_verdict_pairs": {},
+      "llm_verdict_pairs": {}
+    },
+    "INV-BEN-06": {
+      "counts": {
+        "이상없음": 1,
+        "검토의견": 0,
+        "해당없음": 0
+      },
+      "comments": [],
+      "lastSeen": "2026-08-06",
+      "origin_counts": {
+        "legacy": 1
+      },
+      "system_verdict_pairs": {
+        "possible_evidence::이상없음": 1
+      },
+      "llm_verdict_pairs": {}
+    },
+    "INV-BEN-01": {
+      "counts": {
+        "이상없음": 1,
+        "검토의견": 0,
+        "해당없음": 0
+      },
+      "comments": [],
+      "lastSeen": "2026-08-06",
+      "origin_counts": {
+        "legacy": 1
+      },
+      "system_verdict_pairs": {},
+      "llm_verdict_pairs": {}
+    },
+    "INV-BEN-03": {
+      "counts": {
+        "이상없음": 1,
+        "검토의견": 0,
+        "해당없음": 0
+      },
+      "comments": [],
+      "lastSeen": "2026-08-06",
+      "origin_counts": {
+        "legacy": 1
+      },
+      "system_verdict_pairs": {
+        "evidence_found::이상없음": 1
+      },
+      "llm_verdict_pairs": {}
+    },
+    "INV-BEN-05": {
+      "counts": {
+        "이상없음": 1,
+        "검토의견": 0,
+        "해당없음": 0
+      },
+      "comments": [],
+      "lastSeen": "2026-08-06",
+      "origin_counts": {
+        "legacy": 1
+      },
+      "system_verdict_pairs": {
+        "evidence_found::이상없음": 1
+      },
+      "llm_verdict_pairs": {}
+    },
+    "REL-01": {
+      "counts": {
+        "이상없음": 0,
+        "검토의견": 0,
+        "해당없음": 1
+      },
+      "comments": [],
+      "lastSeen": "2026-08-06",
+      "origin_counts": {
+        "legacy": 1
+      },
+      "system_verdict_pairs": {},
+      "llm_verdict_pairs": {}
+    },
+    "CMN-02": {
+      "counts": {
+        "이상없음": 8,
+        "검토의견": 0,
+        "해당없음": 0
+      },
+      "comments": [],
+      "lastSeen": "2026-08-06",
+      "origin_counts": {
+        "legacy": 3,
+        "manual": 5
+      },
+      "system_verdict_pairs": {
+        "possible_evidence::이상없음": 8
+      },
+      "llm_verdict_pairs": {}
+    },
+    "INV-BEN-08": {
+      "counts": {
+        "이상없음": 1,
         "검토의견": 0,
         "해당없음": 0
       },
       "comments": [
         {
-          "text": "신품 교체에 대한 조항 있음",
+          "text": "전문투자자에게 양도해야 한다는 제약사항 있음",
           "verdict": "이상없음",
           "count": 1,
           "reviewers": [
             "손남수"
           ],
-          "date": "2026-07-15"
-        },
-        {
-          "text": "무상보증 및 하자보수기간을 정하고 있음",
-          "verdict": "이상없음",
-          "count": 1,
-          "reviewers": [
-            "손남수"
-          ],
-          "date": "2026-07-15"
+          "date": "2026-08-06"
         }
       ],
-      "lastSeen": "2026-07-15"
+      "lastSeen": "2026-08-06",
+      "origin_counts": {
+        "manual": 1
+      },
+      "system_verdict_pairs": {
+        "evidence_found::이상없음": 1
+      },
+      "llm_verdict_pairs": {}
     },
-    "CMN-11": {
+    "INV-BEN-09": {
       "counts": {
-        "이상없음": 7,
+        "이상없음": 1,
         "검토의견": 0,
         "해당없음": 0
       },
       "comments": [
         {
-          "text": "조항 있고, 당사에 불리하지 않음",
+          "text": "계열사 아님.",
           "verdict": "이상없음",
           "count": 1,
           "reviewers": [
             "손남수"
           ],
-          "date": "2026-07-15"
+          "date": "2026-08-06"
         }
       ],
-      "lastSeen": "2026-07-15"
+      "lastSeen": "2026-08-06",
+      "origin_counts": {
+        "manual": 1
+      },
+      "system_verdict_pairs": {
+        "evidence_found::이상없음": 1
+      },
+      "llm_verdict_pairs": {}
     },
-    "CMN-12": {
+    "INV-BEN-07": {
       "counts": {
-        "이상없음": 5,
+        "이상없음": 1,
+        "검토의견": 0,
+        "해당없음": 0
+      },
+      "comments": [],
+      "lastSeen": "2026-08-06",
+      "origin_counts": {
+        "manual": 1
+      },
+      "system_verdict_pairs": {
+        "evidence_found::이상없음": 1
+      },
+      "llm_verdict_pairs": {}
+    },
+    "INV-FUND-01": {
+      "counts": {
+        "이상없음": 1,
+        "검토의견": 0,
+        "해당없음": 0
+      },
+      "comments": [],
+      "lastSeen": "2026-08-06",
+      "origin_counts": {
+        "manual": 1
+      },
+      "system_verdict_pairs": {
+        "possible_evidence::이상없음": 1
+      },
+      "llm_verdict_pairs": {}
+    },
+    "CMN-06": {
+      "counts": {
+        "이상없음": 6,
+        "검토의견": 0,
+        "해당없음": 0
+      },
+      "comments": [],
+      "lastSeen": "2026-08-06",
+      "origin_counts": {
+        "legacy": 1,
+        "manual": 5
+      },
+      "system_verdict_pairs": {
+        "possible_evidence::이상없음": 6
+      },
+      "llm_verdict_pairs": {}
+    },
+    "CMN-18": {
+      "counts": {
+        "이상없음": 3,
+        "검토의견": 0,
+        "해당없음": 0
+      },
+      "comments": [],
+      "lastSeen": "2026-08-06",
+      "origin_counts": {
+        "legacy": 1,
+        "manual": 2
+      },
+      "system_verdict_pairs": {
+        "evidence_found::이상없음": 1,
+        "possible_evidence::이상없음": 2
+      },
+      "llm_verdict_pairs": {}
+    },
+    "CMN-15": {
+      "counts": {
+        "이상없음": 4,
         "검토의견": 0,
         "해당없음": 0
       },
       "comments": [
         {
-          "text": "한도를 제한하지 않음. '모든 손해' 라는 표현이 통상손해를 확장하는 취지로 해석될 수 있으나, 당사에 유리한 사항이라 수정할 실익 없음",
+          "text": "비밀 개념 구체화되어 있지는 않음. 다만, 임의사항으로 이해",
           "verdict": "이상없음",
           "count": 1,
           "reviewers": [
             "손남수"
           ],
-          "date": "2026-07-15"
+          "date": "2026-08-06"
         }
       ],
-      "lastSeen": "2026-07-15"
+      "lastSeen": "2026-08-06",
+      "origin_counts": {
+        "manual": 4
+      },
+      "system_verdict_pairs": {
+        "evidence_found::이상없음": 2,
+        "possible_evidence::이상없음": 2
+      },
+      "llm_verdict_pairs": {}
+    },
+    "CMN-16": {
+      "counts": {
+        "이상없음": 6,
+        "검토의견": 0,
+        "해당없음": 0
+      },
+      "comments": [],
+      "lastSeen": "2026-08-06",
+      "origin_counts": {
+        "legacy": 2,
+        "manual": 4
+      },
+      "system_verdict_pairs": {
+        "evidence_found::이상없음": 2,
+        "possible_evidence::이상없음": 3,
+        "not_surfaced::이상없음": 1
+      },
+      "llm_verdict_pairs": {}
+    },
+    "SP-UNF-09": {
+      "counts": {
+        "이상없음": 3,
+        "검토의견": 0,
+        "해당없음": 0
+      },
+      "comments": [],
+      "lastSeen": "2026-08-06",
+      "origin_counts": {
+        "legacy": 1,
+        "manual": 2
+      },
+      "system_verdict_pairs": {
+        "evidence_found::이상없음": 2
+      },
+      "llm_verdict_pairs": {}
     },
     "SP-DEL-07": {
       "counts": {
-        "이상없음": 7,
-        "검토의견": 0,
-        "해당없음": 0
+        "이상없음": 6,
+        "검토의견": 1,
+        "해당없음": 1
       },
       "comments": [
         {
-          "text": "계약 내용상 특별히 삽입해야 할 실익은 없음",
+          "text": "위탁계약 해지 등의 형태로 반영",
           "verdict": "이상없음",
           "count": 1,
           "reviewers": [
             "손남수"
           ],
-          "date": "2026-07-15"
+          "date": "2026-08-06"
+        },
+        {
+          "text": "완성물 하자를 이유로 한 해지 조항 없음. 삽입 필요한지는 의사결정사항",
+          "verdict": "검토의견",
+          "count": 1,
+          "reviewers": [
+            "손남수"
+          ],
+          "date": "2026-08-06"
         }
       ],
-      "lastSeen": "2026-07-15"
+      "lastSeen": "2026-08-06",
+      "origin_counts": {
+        "legacy": 1,
+        "manual": 7
+      },
+      "system_verdict_pairs": {
+        "possible_evidence::이상없음": 2,
+        "evidence_found::이상없음": 3,
+        "evidence_found::검토의견": 1,
+        "possible_evidence::해당없음": 1
+      },
+      "llm_verdict_pairs": {}
     },
     "CMN-08": {
       "counts": {
@@ -143,221 +705,74 @@
         "해당없음": 0
       },
       "comments": [],
-      "lastSeen": "2026-07-15"
+      "lastSeen": "2026-08-06",
+      "origin_counts": {
+        "legacy": 2,
+        "manual": 5
+      },
+      "system_verdict_pairs": {
+        "possible_evidence::이상없음": 5,
+        "evidence_found::이상없음": 2
+      },
+      "llm_verdict_pairs": {}
+    },
+    "SP-UNF-08": {
+      "counts": {
+        "이상없음": 3,
+        "검토의견": 0,
+        "해당없음": 0
+      },
+      "comments": [],
+      "lastSeen": "2026-08-06",
+      "origin_counts": {
+        "legacy": 1,
+        "manual": 2
+      },
+      "system_verdict_pairs": {
+        "evidence_found::이상없음": 1,
+        "possible_evidence::이상없음": 1
+      },
+      "llm_verdict_pairs": {}
     },
     "SP-DEL-02": {
       "counts": {
-        "이상없음": 7,
-        "검토의견": 0,
+        "이상없음": 4,
+        "검토의견": 2,
         "해당없음": 0
       },
       "comments": [
         {
-          "text": "지체상금을 요구할 실익은 없을 것",
-          "verdict": "이상없음",
+          "text": "지체상금 등 용역 불이행에 대한 조항 없음. 의사결정 필요한 사항",
+          "verdict": "검토의견",
           "count": 1,
           "reviewers": [
             "손남수"
           ],
-          "date": "2026-07-15"
+          "date": "2026-08-06"
         },
         {
-          "text": "있음. 구체적인 비율이 기재되어 있지 않으나 계약검토 목적상 특이사항 아님",
-          "verdict": "이상없음",
+          "text": "지체상금 규정 없음. 필요 여부 현업 의사결정바람",
+          "verdict": "검토의견",
           "count": 1,
           "reviewers": [
             "손남수"
           ],
-          "date": "2026-07-15"
+          "date": "2026-08-06"
         }
       ],
-      "lastSeen": "2026-07-15"
-    },
-    "SP-DEL-04": {
-      "counts": {
-        "이상없음": 4,
-        "검토의견": 0,
-        "해당없음": 0
+      "lastSeen": "2026-08-06",
+      "origin_counts": {
+        "legacy": 1,
+        "manual": 5
       },
-      "comments": [
-        {
-          "text": "없음. 리스크 소지 적음",
-          "verdict": "이상없음",
-          "count": 2,
-          "reviewers": [
-            "손남수"
-          ],
-          "date": "2026-07-15"
-        }
-      ],
-      "lastSeen": "2026-07-15"
-    },
-    "SP-DEL-10": {
-      "counts": {
-        "이상없음": 6,
-        "검토의견": 0,
-        "해당없음": 1
+      "system_verdict_pairs": {
+        "possible_evidence::검토의견": 1,
+        "evidence_found::이상없음": 1,
+        "possible_evidence::이상없음": 1,
+        "evidence_not_found::이상없음": 1,
+        "evidence_not_found::검토의견": 1
       },
-      "comments": [
-        {
-          "text": "신품 요구할 수 있음",
-          "verdict": "이상없음",
-          "count": 1,
-          "reviewers": [
-            "손남수"
-          ],
-          "date": "2026-07-15"
-        },
-        {
-          "text": "용역 제공을 약정한 것으로 해당사항 없음",
-          "verdict": "해당없음",
-          "count": 1,
-          "reviewers": [
-            "손남수"
-          ],
-          "date": "2026-07-15"
-        }
-      ],
-      "lastSeen": "2026-07-15"
-    },
-    "CMN-19": {
-      "counts": {
-        "이상없음": 4,
-        "검토의견": 0,
-        "해당없음": 0
-      },
-      "comments": [],
-      "lastSeen": "2026-07-15"
-    },
-    "SP-DEL-09": {
-      "counts": {
-        "이상없음": 2,
-        "검토의견": 0,
-        "해당없음": 0
-      },
-      "comments": [
-        {
-          "text": "있음.",
-          "verdict": "이상없음",
-          "count": 1,
-          "reviewers": [
-            "손남수"
-          ],
-          "date": "2026-07-15"
-        }
-      ],
-      "lastSeen": "2026-07-15"
-    },
-    "ITDL-06": {
-      "counts": {
-        "이상없음": 0,
-        "검토의견": 0,
-        "해당없음": 1
-      },
-      "comments": [
-        {
-          "text": "해당없음",
-          "verdict": "해당없음",
-          "count": 1,
-          "reviewers": [
-            "손남수"
-          ],
-          "date": "2026-07-15"
-        }
-      ],
-      "lastSeen": "2026-07-15"
-    },
-    "CMN-02": {
-      "counts": {
-        "이상없음": 6,
-        "검토의견": 0,
-        "해당없음": 0
-      },
-      "comments": [],
-      "lastSeen": "2026-07-15"
-    },
-    "CMN-05": {
-      "counts": {
-        "이상없음": 2,
-        "검토의견": 0,
-        "해당없음": 0
-      },
-      "comments": [],
-      "lastSeen": "2026-07-15"
-    },
-    "CMN-05-2": {
-      "counts": {
-        "이상없음": 4,
-        "검토의견": 0,
-        "해당없음": 0
-      },
-      "comments": [],
-      "lastSeen": "2026-07-15"
-    },
-    "CMN-06": {
-      "counts": {
-        "이상없음": 4,
-        "검토의견": 0,
-        "해당없음": 0
-      },
-      "comments": [
-        {
-          "text": "계약검토 실무상 날짜가 특정되지 않은 계약서를 검토하는 것은 충분히 가능한 것. 이상없음.",
-          "verdict": "이상없음",
-          "count": 1,
-          "reviewers": [
-            "손남수"
-          ],
-          "date": "2026-07-15"
-        }
-      ],
-      "lastSeen": "2026-07-15"
-    },
-    "CMN-16": {
-      "counts": {
-        "이상없음": 2,
-        "검토의견": 0,
-        "해당없음": 0
-      },
-      "comments": [
-        {
-          "text": "비밀유지기간을 정하지 아니함. 당사 입장에서는 비밀 유지에 따른 부담이 크지 않은바 특별히 코멘트하지 않음",
-          "verdict": "이상없음",
-          "count": 1,
-          "reviewers": [
-            "손남수"
-          ],
-          "date": "2026-07-15"
-        }
-      ],
-      "lastSeen": "2026-07-15"
-    },
-    "CMN-17": {
-      "counts": {
-        "이상없음": 2,
-        "검토의견": 0,
-        "해당없음": 0
-      },
-      "comments": [],
-      "lastSeen": "2026-07-15"
-    },
-    "CMN-20": {
-      "counts": {
-        "이상없음": 2,
-        "검토의견": 0,
-        "해당없음": 0
-      },
-      "comments": [],
-      "lastSeen": "2026-07-15"
-    },
-    "CMN-21": {
-      "counts": {
-        "이상없음": 2,
-        "검토의견": 0,
-        "해당없음": 0
-      },
-      "comments": [],
-      "lastSeen": "2026-07-15"
+      "llm_verdict_pairs": {}
     },
     "SP-DEL-06": {
       "counts": {
@@ -367,16 +782,670 @@
       },
       "comments": [
         {
-          "text": "하자보수를 갈음하는 손해배상청구권 행사를 정하고 있지 않음. 다만, 계약의 목적 및 내용상 필요한 사항은 아니라고 판단됨",
+          "text": "손해배상청구권을 정하고 있음",
+          "verdict": "이상없음",
+          "count": 2,
+          "reviewers": [
+            "손남수"
+          ],
+          "date": "2026-08-06"
+        }
+      ],
+      "lastSeen": "2026-08-06",
+      "origin_counts": {
+        "legacy": 1,
+        "manual": 5
+      },
+      "system_verdict_pairs": {
+        "evidence_found::이상없음": 2,
+        "possible_evidence::이상없음": 3
+      },
+      "llm_verdict_pairs": {}
+    },
+    "CMN-11": {
+      "counts": {
+        "이상없음": 6,
+        "검토의견": 0,
+        "해당없음": 0
+      },
+      "comments": [],
+      "lastSeen": "2026-08-06",
+      "origin_counts": {
+        "legacy": 2,
+        "manual": 4
+      },
+      "system_verdict_pairs": {
+        "evidence_found::이상없음": 1,
+        "possible_evidence::이상없음": 5
+      },
+      "llm_verdict_pairs": {}
+    },
+    "RISK-02": {
+      "counts": {
+        "이상없음": 2,
+        "검토의견": 1,
+        "해당없음": 0
+      },
+      "comments": [
+        {
+          "text": "해당하는 조항 없음. 민법 일반 법리로 해결해야 할 사항으로, 조항이 꼭 필요한지는 의사결정사항",
+          "verdict": "검토의견",
+          "count": 1,
+          "reviewers": [
+            "손남수"
+          ],
+          "date": "2026-08-06"
+        },
+        {
+          "text": "구상을 직접 정하지는 않았으나 전 손해 배상청구 가능하다고 정하고 있음",
           "verdict": "이상없음",
           "count": 1,
           "reviewers": [
             "손남수"
           ],
-          "date": "2026-07-15"
+          "date": "2026-08-06"
         }
       ],
-      "lastSeen": "2026-07-15"
+      "lastSeen": "2026-08-06",
+      "origin_counts": {
+        "manual": 3
+      },
+      "system_verdict_pairs": {
+        "evidence_found::검토의견": 1,
+        "possible_evidence::이상없음": 2
+      },
+      "llm_verdict_pairs": {}
+    },
+    "SP-UNF-07": {
+      "counts": {
+        "이상없음": 2,
+        "검토의견": 0,
+        "해당없음": 0
+      },
+      "comments": [],
+      "lastSeen": "2026-08-06",
+      "origin_counts": {
+        "legacy": 1,
+        "manual": 1
+      },
+      "system_verdict_pairs": {
+        "evidence_found::이상없음": 1
+      },
+      "llm_verdict_pairs": {}
+    },
+    "CMN-20": {
+      "counts": {
+        "이상없음": 4,
+        "검토의견": 0,
+        "해당없음": 1
+      },
+      "comments": [],
+      "lastSeen": "2026-08-06",
+      "origin_counts": {
+        "legacy": 2,
+        "manual": 3
+      },
+      "system_verdict_pairs": {
+        "possible_evidence::이상없음": 3,
+        "not_surfaced::해당없음": 1,
+        "evidence_found::이상없음": 1
+      },
+      "llm_verdict_pairs": {}
+    },
+    "CMN-21": {
+      "counts": {
+        "이상없음": 6,
+        "검토의견": 0,
+        "해당없음": 0
+      },
+      "comments": [
+        {
+          "text": "완전합의 조항이 있는데 왜 함께 검토해볼 항목으로 뜨는 건지",
+          "verdict": "이상없음",
+          "count": 1,
+          "reviewers": [
+            "손남수"
+          ],
+          "date": "2026-08-06"
+        },
+        {
+          "text": "합의로 변경하도록 되어 있음",
+          "verdict": "이상없음",
+          "count": 1,
+          "reviewers": [
+            "손남수"
+          ],
+          "date": "2026-08-06"
+        }
+      ],
+      "lastSeen": "2026-08-06",
+      "origin_counts": {
+        "legacy": 2,
+        "manual": 4
+      },
+      "system_verdict_pairs": {
+        "possible_evidence::이상없음": 4,
+        "evidence_found::이상없음": 1,
+        "not_surfaced::이상없음": 1
+      },
+      "llm_verdict_pairs": {}
+    },
+    "SP-DEL-05": {
+      "counts": {
+        "이상없음": 6,
+        "검토의견": 1,
+        "해당없음": 1
+      },
+      "comments": [
+        {
+          "text": "정상적인 용역제공을 청구할 수 있음.",
+          "verdict": "이상없음",
+          "count": 1,
+          "reviewers": [
+            "손남수"
+          ],
+          "date": "2026-08-06"
+        },
+        {
+          "text": "시정조치 요구 및 불이행 시 해지권 보유",
+          "verdict": "이상없음",
+          "count": 1,
+          "reviewers": [
+            "손남수"
+          ],
+          "date": "2026-08-06"
+        },
+        {
+          "text": "하자보수청구에 대한 조항 없음. 필요 여부 판단바람",
+          "verdict": "검토의견",
+          "count": 1,
+          "reviewers": [
+            "손남수"
+          ],
+          "date": "2026-08-06"
+        }
+      ],
+      "lastSeen": "2026-08-06",
+      "origin_counts": {
+        "legacy": 1,
+        "manual": 7
+      },
+      "system_verdict_pairs": {
+        "possible_evidence::해당없음": 1,
+        "possible_evidence::이상없음": 4,
+        "evidence_not_found::검토의견": 1,
+        "evidence_not_found::이상없음": 1
+      },
+      "llm_verdict_pairs": {}
+    },
+    "CMN-09": {
+      "counts": {
+        "이상없음": 3,
+        "검토의견": 0,
+        "해당없음": 0
+      },
+      "comments": [
+        {
+          "text": "서면통보.",
+          "verdict": "이상없음",
+          "count": 1,
+          "reviewers": [
+            "손남수"
+          ],
+          "date": "2026-08-06"
+        }
+      ],
+      "lastSeen": "2026-08-06",
+      "origin_counts": {
+        "manual": 2,
+        "legacy": 1
+      },
+      "system_verdict_pairs": {
+        "possible_evidence::이상없음": 2,
+        "not_surfaced::이상없음": 1
+      },
+      "llm_verdict_pairs": {}
+    },
+    "CRS-06": {
+      "counts": {
+        "이상없음": 1,
+        "검토의견": 0,
+        "해당없음": 0
+      },
+      "comments": [
+        {
+          "text": "꼭 넣어야 할 필요는 없는 사항으로 이해",
+          "verdict": "이상없음",
+          "count": 1,
+          "reviewers": [
+            "손남수"
+          ],
+          "date": "2026-08-06"
+        }
+      ],
+      "lastSeen": "2026-08-06",
+      "origin_counts": {
+        "manual": 1
+      },
+      "system_verdict_pairs": {
+        "possible_evidence::이상없음": 1
+      },
+      "llm_verdict_pairs": {}
+    },
+    "ITCL-07": {
+      "counts": {
+        "이상없음": 0,
+        "검토의견": 1,
+        "해당없음": 0
+      },
+      "comments": [
+        {
+          "text": "별도 확인 필요",
+          "verdict": "검토의견",
+          "count": 1,
+          "reviewers": [
+            "손남수"
+          ],
+          "date": "2026-08-06"
+        }
+      ],
+      "lastSeen": "2026-08-06",
+      "origin_counts": {
+        "manual": 1
+      },
+      "system_verdict_pairs": {
+        "possible_evidence::검토의견": 1
+      },
+      "llm_verdict_pairs": {}
+    },
+    "ITCL-03": {
+      "counts": {
+        "이상없음": 0,
+        "검토의견": 1,
+        "해당없음": 0
+      },
+      "comments": [
+        {
+          "text": "별도 확인 필요",
+          "verdict": "검토의견",
+          "count": 1,
+          "reviewers": [
+            "손남수"
+          ],
+          "date": "2026-08-06"
+        }
+      ],
+      "lastSeen": "2026-08-06",
+      "origin_counts": {
+        "manual": 1
+      },
+      "system_verdict_pairs": {
+        "possible_evidence::검토의견": 1
+      },
+      "llm_verdict_pairs": {}
+    },
+    "ITCL-05": {
+      "counts": {
+        "이상없음": 0,
+        "검토의견": 1,
+        "해당없음": 0
+      },
+      "comments": [
+        {
+          "text": "구체적인 내용 없음.",
+          "verdict": "검토의견",
+          "count": 1,
+          "reviewers": [
+            "손남수"
+          ],
+          "date": "2026-08-06"
+        }
+      ],
+      "lastSeen": "2026-08-06",
+      "origin_counts": {
+        "manual": 1
+      },
+      "system_verdict_pairs": {
+        "possible_evidence::검토의견": 1
+      },
+      "llm_verdict_pairs": {}
+    },
+    "CMN-14": {
+      "counts": {
+        "이상없음": 3,
+        "검토의견": 1,
+        "해당없음": 0
+      },
+      "comments": [
+        {
+          "text": "손해배상액 제한 있음. 수용 여부 의사결정 필요",
+          "verdict": "검토의견",
+          "count": 1,
+          "reviewers": [
+            "손남수"
+          ],
+          "date": "2026-08-06"
+        }
+      ],
+      "lastSeen": "2026-08-06",
+      "origin_counts": {
+        "manual": 3,
+        "legacy": 1
+      },
+      "system_verdict_pairs": {
+        "possible_evidence::검토의견": 1,
+        "possible_evidence::이상없음": 2,
+        "not_surfaced::이상없음": 1
+      },
+      "llm_verdict_pairs": {}
+    },
+    "ITCL-06": {
+      "counts": {
+        "이상없음": 0,
+        "검토의견": 1,
+        "해당없음": 0
+      },
+      "comments": [
+        {
+          "text": "해당하는 조항 없음. 협조할 의무를 부여할 필요 있는지는 의사결정바람",
+          "verdict": "검토의견",
+          "count": 1,
+          "reviewers": [
+            "손남수"
+          ],
+          "date": "2026-08-06"
+        }
+      ],
+      "lastSeen": "2026-08-06",
+      "origin_counts": {
+        "manual": 1
+      },
+      "system_verdict_pairs": {
+        "possible_evidence::검토의견": 1
+      },
+      "llm_verdict_pairs": {}
+    },
+    "ITCL-01": {
+      "counts": {
+        "이상없음": 0,
+        "검토의견": 1,
+        "해당없음": 0
+      },
+      "comments": [
+        {
+          "text": "관련 내용 없음",
+          "verdict": "검토의견",
+          "count": 1,
+          "reviewers": [
+            "손남수"
+          ],
+          "date": "2026-08-06"
+        }
+      ],
+      "lastSeen": "2026-08-06",
+      "origin_counts": {
+        "manual": 1
+      },
+      "system_verdict_pairs": {
+        "evidence_not_found::검토의견": 1
+      },
+      "llm_verdict_pairs": {}
+    },
+    "ITCL-02": {
+      "counts": {
+        "이상없음": 0,
+        "검토의견": 1,
+        "해당없음": 0
+      },
+      "comments": [
+        {
+          "text": "관련 내용 없음",
+          "verdict": "검토의견",
+          "count": 1,
+          "reviewers": [
+            "손남수"
+          ],
+          "date": "2026-08-06"
+        }
+      ],
+      "lastSeen": "2026-08-06",
+      "origin_counts": {
+        "manual": 1
+      },
+      "system_verdict_pairs": {
+        "evidence_not_found::검토의견": 1
+      },
+      "llm_verdict_pairs": {}
+    },
+    "CMN-03": {
+      "counts": {
+        "이상없음": 3,
+        "검토의견": 0,
+        "해당없음": 1
+      },
+      "comments": [],
+      "lastSeen": "2026-08-06",
+      "origin_counts": {
+        "manual": 3,
+        "legacy": 1
+      },
+      "system_verdict_pairs": {
+        "possible_evidence::해당없음": 1,
+        "possible_evidence::이상없음": 2,
+        "not_surfaced::이상없음": 1
+      },
+      "llm_verdict_pairs": {}
+    },
+    "SP-DEL-08": {
+      "counts": {
+        "이상없음": 3,
+        "검토의견": 0,
+        "해당없음": 1
+      },
+      "comments": [
+        {
+          "text": "현재 기준으로 리스크 없음",
+          "verdict": "이상없음",
+          "count": 1,
+          "reviewers": [
+            "손남수"
+          ],
+          "date": "2026-08-06"
+        }
+      ],
+      "lastSeen": "2026-08-06",
+      "origin_counts": {
+        "manual": 4
+      },
+      "system_verdict_pairs": {
+        "possible_evidence::이상없음": 2,
+        "possible_evidence::해당없음": 1,
+        "evidence_found::이상없음": 1
+      },
+      "llm_verdict_pairs": {}
+    },
+    "CMN-12": {
+      "counts": {
+        "이상없음": 6,
+        "검토의견": 0,
+        "해당없음": 0
+      },
+      "comments": [
+        {
+          "text": "통상손해 범위에서 배상",
+          "verdict": "이상없음",
+          "count": 1,
+          "reviewers": [
+            "손남수"
+          ],
+          "date": "2026-08-06"
+        }
+      ],
+      "lastSeen": "2026-08-06",
+      "origin_counts": {
+        "manual": 5,
+        "legacy": 1
+      },
+      "system_verdict_pairs": {
+        "possible_evidence::이상없음": 5,
+        "evidence_found::이상없음": 1
+      },
+      "llm_verdict_pairs": {}
+    },
+    "ITDL-06": {
+      "counts": {
+        "이상없음": 4,
+        "검토의견": 0,
+        "해당없음": 1
+      },
+      "comments": [],
+      "lastSeen": "2026-08-06",
+      "origin_counts": {
+        "manual": 5
+      },
+      "system_verdict_pairs": {
+        "possible_evidence::이상없음": 4,
+        "possible_evidence::해당없음": 1
+      },
+      "llm_verdict_pairs": {}
+    },
+    "SP-DEL-04": {
+      "counts": {
+        "이상없음": 4,
+        "검토의견": 0,
+        "해당없음": 1
+      },
+      "comments": [
+        {
+          "text": "없으나 당사에 불리하지 않음",
+          "verdict": "이상없음",
+          "count": 1,
+          "reviewers": [
+            "손남수"
+          ],
+          "date": "2026-08-06"
+        },
+        {
+          "text": "당사에 불리하지 않음",
+          "verdict": "이상없음",
+          "count": 1,
+          "reviewers": [
+            "손남수"
+          ],
+          "date": "2026-08-06"
+        },
+        {
+          "text": "해당 조항 없음. 당사에 불리하지 않으므로 생략 가능",
+          "verdict": "이상없음",
+          "count": 2,
+          "reviewers": [
+            "손남수"
+          ],
+          "date": "2026-08-06"
+        }
+      ],
+      "lastSeen": "2026-08-06",
+      "origin_counts": {
+        "manual": 5
+      },
+      "system_verdict_pairs": {
+        "possible_evidence::해당없음": 1,
+        "possible_evidence::이상없음": 4
+      },
+      "llm_verdict_pairs": {}
+    },
+    "SP-DEL-11": {
+      "counts": {
+        "이상없음": 1,
+        "검토의견": 0,
+        "해당없음": 1
+      },
+      "comments": [],
+      "lastSeen": "2026-08-06",
+      "origin_counts": {
+        "manual": 2
+      },
+      "system_verdict_pairs": {
+        "possible_evidence::이상없음": 1,
+        "possible_evidence::해당없음": 1
+      },
+      "llm_verdict_pairs": {}
+    },
+    "SP-UNF-10": {
+      "counts": {
+        "이상없음": 2,
+        "검토의견": 0,
+        "해당없음": 0
+      },
+      "comments": [],
+      "lastSeen": "2026-08-06",
+      "origin_counts": {
+        "manual": 2
+      },
+      "system_verdict_pairs": {
+        "evidence_found::이상없음": 1,
+        "possible_evidence::이상없음": 1
+      },
+      "llm_verdict_pairs": {}
+    },
+    "SP-UNF-11": {
+      "counts": {
+        "이상없음": 1,
+        "검토의견": 0,
+        "해당없음": 0
+      },
+      "comments": [],
+      "lastSeen": "2026-08-06",
+      "origin_counts": {
+        "manual": 1
+      },
+      "system_verdict_pairs": {
+        "possible_evidence::이상없음": 1
+      },
+      "llm_verdict_pairs": {}
+    },
+    "SP-DEL-10": {
+      "counts": {
+        "이상없음": 2,
+        "검토의견": 0,
+        "해당없음": 1
+      },
+      "comments": [],
+      "lastSeen": "2026-08-06",
+      "origin_counts": {
+        "manual": 3
+      },
+      "system_verdict_pairs": {
+        "evidence_found::해당없음": 1,
+        "possible_evidence::이상없음": 2
+      },
+      "llm_verdict_pairs": {}
+    },
+    "SP-DEL-03": {
+      "counts": {
+        "이상없음": 2,
+        "검토의견": 0,
+        "해당없음": 0
+      },
+      "comments": [
+        {
+          "text": "쌍방귀책없는 경우의 처리방안 없음. 당사에 불리하지 않으므로 추가 수정 불필요",
+          "verdict": "이상없음",
+          "count": 1,
+          "reviewers": [
+            "손남수"
+          ],
+          "date": "2026-08-06"
+        }
+      ],
+      "lastSeen": "2026-08-06",
+      "origin_counts": {
+        "manual": 2
+      },
+      "system_verdict_pairs": {
+        "possible_evidence::이상없음": 2
+      },
+      "llm_verdict_pairs": {}
     },
     "CMN-04": {
       "counts": {
@@ -385,89 +1454,580 @@
         "해당없음": 0
       },
       "comments": [],
-      "lastSeen": "2026-07-15"
+      "lastSeen": "2026-08-06",
+      "origin_counts": {
+        "manual": 1,
+        "legacy": 1
+      },
+      "system_verdict_pairs": {
+        "possible_evidence::이상없음": 1,
+        "evidence_found::이상없음": 1
+      },
+      "llm_verdict_pairs": {}
     },
-    "SP-DEL-03": {
+    "SP-UNF-12": {
       "counts": {
-        "이상없음": 2,
-        "검토의견": 1,
+        "이상없음": 1,
+        "검토의견": 0,
+        "해당없음": 0
+      },
+      "comments": [],
+      "lastSeen": "2026-08-06",
+      "origin_counts": {
+        "manual": 1
+      },
+      "system_verdict_pairs": {
+        "possible_evidence::이상없음": 1
+      },
+      "llm_verdict_pairs": {}
+    },
+    "CH-03": {
+      "counts": {
+        "이상없음": 1,
+        "검토의견": 0,
+        "해당없음": 0
+      },
+      "comments": [],
+      "lastSeen": "2026-08-06",
+      "origin_counts": {
+        "manual": 1
+      },
+      "system_verdict_pairs": {
+        "evidence_not_found::이상없음": 1
+      },
+      "llm_verdict_pairs": {}
+    },
+    "CH-01": {
+      "counts": {
+        "이상없음": 1,
+        "검토의견": 0,
+        "해당없음": 0
+      },
+      "comments": [],
+      "lastSeen": "2026-08-06",
+      "origin_counts": {
+        "manual": 1
+      },
+      "system_verdict_pairs": {
+        "evidence_not_found::이상없음": 1
+      },
+      "llm_verdict_pairs": {}
+    },
+    "CH-02": {
+      "counts": {
+        "이상없음": 0,
+        "검토의견": 0,
+        "해당없음": 1
+      },
+      "comments": [],
+      "lastSeen": "2026-08-06",
+      "origin_counts": {
+        "manual": 1
+      },
+      "system_verdict_pairs": {
+        "evidence_not_found::해당없음": 1
+      },
+      "llm_verdict_pairs": {}
+    },
+    "PRIV-02": {
+      "counts": {
+        "이상없음": 3,
+        "검토의견": 0,
+        "해당없음": 2
+      },
+      "comments": [
+        {
+          "text": "표준 개인(신용)정보 보안관리약정서(2025.01) 체결로 반영 — 별첨 체결·간인 확인",
+          "verdict": "이상없음",
+          "count": 5,
+          "reviewers": [
+            "손남수"
+          ],
+          "date": "2026-08-06"
+        }
+      ],
+      "lastSeen": "2026-08-06",
+      "origin_counts": {
+        "legacy": 2,
+        "subdoc": 3
+      },
+      "system_verdict_pairs": {
+        "not_surfaced::이상없음": 1,
+        "evidence_not_found::해당없음": 1,
+        "possible_evidence::해당없음": 1,
+        "possible_evidence::이상없음": 1
+      },
+      "llm_verdict_pairs": {}
+    },
+    "PRIV-03": {
+      "counts": {
+        "이상없음": 4,
+        "검토의견": 0,
+        "해당없음": 1
+      },
+      "comments": [
+        {
+          "text": "표준 개인(신용)정보 보안관리약정서(2025.01) 체결로 반영 — 별첨 체결·간인 확인",
+          "verdict": "이상없음",
+          "count": 5,
+          "reviewers": [
+            "손남수"
+          ],
+          "date": "2026-08-06"
+        }
+      ],
+      "lastSeen": "2026-08-06",
+      "origin_counts": {
+        "legacy": 2,
+        "subdoc": 3
+      },
+      "system_verdict_pairs": {
+        "evidence_not_found::이상없음": 3,
+        "evidence_not_found::해당없음": 1
+      },
+      "llm_verdict_pairs": {}
+    },
+    "PRIV-04": {
+      "counts": {
+        "이상없음": 5,
+        "검토의견": 0,
         "해당없음": 0
       },
       "comments": [
         {
-          "text": "불가항력 조항이 있음. 다만 계약이행 책임이 없음을 정하고 있고 나머지 사항에 대해서는 정하지 아니함. 보완 필요.",
-          "verdict": "검토의견",
+          "text": "표준 개인(신용)정보 보안관리약정서(2025.01) 체결로 반영 — 별첨 체결·간인 확인",
+          "verdict": "이상없음",
+          "count": 5,
+          "reviewers": [
+            "손남수"
+          ],
+          "date": "2026-08-06"
+        }
+      ],
+      "lastSeen": "2026-08-06",
+      "origin_counts": {
+        "legacy": 2,
+        "subdoc": 3
+      },
+      "system_verdict_pairs": {
+        "not_surfaced::이상없음": 1,
+        "evidence_not_found::이상없음": 1,
+        "possible_evidence::이상없음": 2
+      },
+      "llm_verdict_pairs": {}
+    },
+    "PRIV-05": {
+      "counts": {
+        "이상없음": 5,
+        "검토의견": 0,
+        "해당없음": 0
+      },
+      "comments": [
+        {
+          "text": "표준 개인(신용)정보 보안관리약정서(2025.01) 체결로 반영 — 별첨 체결·간인 확인",
+          "verdict": "이상없음",
+          "count": 5,
+          "reviewers": [
+            "손남수"
+          ],
+          "date": "2026-08-06"
+        }
+      ],
+      "lastSeen": "2026-08-06",
+      "origin_counts": {
+        "legacy": 2,
+        "subdoc": 3
+      },
+      "system_verdict_pairs": {
+        "evidence_not_found::이상없음": 4
+      },
+      "llm_verdict_pairs": {}
+    },
+    "PRIV-06": {
+      "counts": {
+        "이상없음": 5,
+        "검토의견": 0,
+        "해당없음": 0
+      },
+      "comments": [
+        {
+          "text": "표준 개인(신용)정보 보안관리약정서(2025.01) 체결로 반영 — 별첨 체결·간인 확인",
+          "verdict": "이상없음",
+          "count": 5,
+          "reviewers": [
+            "손남수"
+          ],
+          "date": "2026-08-06"
+        }
+      ],
+      "lastSeen": "2026-08-06",
+      "origin_counts": {
+        "legacy": 2,
+        "subdoc": 3
+      },
+      "system_verdict_pairs": {
+        "evidence_not_found::이상없음": 4
+      },
+      "llm_verdict_pairs": {}
+    },
+    "PRIV-07": {
+      "counts": {
+        "이상없음": 4,
+        "검토의견": 0,
+        "해당없음": 1
+      },
+      "comments": [
+        {
+          "text": "표준 개인(신용)정보 보안관리약정서(2025.01) 체결로 반영 — 별첨 체결·간인 확인",
+          "verdict": "이상없음",
+          "count": 5,
+          "reviewers": [
+            "손남수"
+          ],
+          "date": "2026-08-06"
+        }
+      ],
+      "lastSeen": "2026-08-06",
+      "origin_counts": {
+        "legacy": 2,
+        "subdoc": 3
+      },
+      "system_verdict_pairs": {
+        "evidence_not_found::이상없음": 1,
+        "evidence_not_found::해당없음": 1,
+        "possible_evidence::이상없음": 2
+      },
+      "llm_verdict_pairs": {}
+    },
+    "PRIV-08": {
+      "counts": {
+        "이상없음": 5,
+        "검토의견": 0,
+        "해당없음": 0
+      },
+      "comments": [
+        {
+          "text": "표준 개인(신용)정보 보안관리약정서(2025.01) 체결로 반영 — 별첨 체결·간인 확인",
+          "verdict": "이상없음",
+          "count": 5,
+          "reviewers": [
+            "손남수"
+          ],
+          "date": "2026-08-06"
+        }
+      ],
+      "lastSeen": "2026-08-06",
+      "origin_counts": {
+        "legacy": 2,
+        "subdoc": 3
+      },
+      "system_verdict_pairs": {
+        "possible_evidence::이상없음": 1,
+        "not_surfaced::이상없음": 2,
+        "evidence_found::이상없음": 1
+      },
+      "llm_verdict_pairs": {}
+    },
+    "PRIV-13": {
+      "counts": {
+        "이상없음": 5,
+        "검토의견": 0,
+        "해당없음": 0
+      },
+      "comments": [
+        {
+          "text": "표준 개인(신용)정보 보안관리약정서(2025.01) 체결로 반영 — 별첨 체결·간인 확인",
+          "verdict": "이상없음",
+          "count": 5,
+          "reviewers": [
+            "손남수"
+          ],
+          "date": "2026-08-06"
+        }
+      ],
+      "lastSeen": "2026-08-06",
+      "origin_counts": {
+        "legacy": 2,
+        "subdoc": 3
+      },
+      "system_verdict_pairs": {
+        "possible_evidence::이상없음": 2,
+        "evidence_not_found::이상없음": 2
+      },
+      "llm_verdict_pairs": {}
+    },
+    "PRIV-14": {
+      "counts": {
+        "이상없음": 5,
+        "검토의견": 0,
+        "해당없음": 0
+      },
+      "comments": [
+        {
+          "text": "표준 개인(신용)정보 보안관리약정서(2025.01) 체결로 반영 — 별첨 체결·간인 확인",
+          "verdict": "이상없음",
+          "count": 5,
+          "reviewers": [
+            "손남수"
+          ],
+          "date": "2026-08-06"
+        }
+      ],
+      "lastSeen": "2026-08-06",
+      "origin_counts": {
+        "legacy": 2,
+        "subdoc": 3
+      },
+      "system_verdict_pairs": {
+        "possible_evidence::이상없음": 4
+      },
+      "llm_verdict_pairs": {}
+    },
+    "PRIV-15": {
+      "counts": {
+        "이상없음": 5,
+        "검토의견": 0,
+        "해당없음": 0
+      },
+      "comments": [
+        {
+          "text": "표준 개인(신용)정보 보안관리약정서(2025.01) 체결로 반영 — 별첨 체결·간인 확인",
+          "verdict": "이상없음",
+          "count": 5,
+          "reviewers": [
+            "손남수"
+          ],
+          "date": "2026-08-06"
+        }
+      ],
+      "lastSeen": "2026-08-06",
+      "origin_counts": {
+        "legacy": 2,
+        "subdoc": 3
+      },
+      "system_verdict_pairs": {
+        "possible_evidence::이상없음": 1,
+        "evidence_not_found::이상없음": 2,
+        "not_surfaced::이상없음": 1
+      },
+      "llm_verdict_pairs": {}
+    },
+    "PRIV-19": {
+      "counts": {
+        "이상없음": 5,
+        "검토의견": 0,
+        "해당없음": 0
+      },
+      "comments": [
+        {
+          "text": "표준 개인(신용)정보 보안관리약정서(2025.01) 체결로 반영 — 별첨 체결·간인 확인",
+          "verdict": "이상없음",
+          "count": 5,
+          "reviewers": [
+            "손남수"
+          ],
+          "date": "2026-08-06"
+        }
+      ],
+      "lastSeen": "2026-08-06",
+      "origin_counts": {
+        "legacy": 2,
+        "subdoc": 3
+      },
+      "system_verdict_pairs": {
+        "possible_evidence::이상없음": 1,
+        "not_surfaced::이상없음": 3
+      },
+      "llm_verdict_pairs": {}
+    },
+    "PRIV-20": {
+      "counts": {
+        "이상없음": 5,
+        "검토의견": 0,
+        "해당없음": 0
+      },
+      "comments": [
+        {
+          "text": "표준 개인(신용)정보 보안관리약정서(2025.01) 체결로 반영 — 별첨 체결·간인 확인",
+          "verdict": "이상없음",
+          "count": 5,
+          "reviewers": [
+            "손남수"
+          ],
+          "date": "2026-08-06"
+        }
+      ],
+      "lastSeen": "2026-08-06",
+      "origin_counts": {
+        "legacy": 2,
+        "subdoc": 3
+      },
+      "system_verdict_pairs": {
+        "not_surfaced::이상없음": 4
+      },
+      "llm_verdict_pairs": {}
+    },
+    "PRIV-21": {
+      "counts": {
+        "이상없음": 5,
+        "검토의견": 0,
+        "해당없음": 0
+      },
+      "comments": [
+        {
+          "text": "표준 개인(신용)정보 보안관리약정서(2025.01) 체결로 반영 — 별첨 체결·간인 확인",
+          "verdict": "이상없음",
+          "count": 5,
+          "reviewers": [
+            "손남수"
+          ],
+          "date": "2026-08-06"
+        }
+      ],
+      "lastSeen": "2026-08-06",
+      "origin_counts": {
+        "legacy": 2,
+        "subdoc": 3
+      },
+      "system_verdict_pairs": {
+        "not_surfaced::이상없음": 4
+      },
+      "llm_verdict_pairs": {}
+    },
+    "PRIV-01": {
+      "counts": {
+        "이상없음": 2,
+        "검토의견": 0,
+        "해당없음": 3
+      },
+      "comments": [],
+      "lastSeen": "2026-08-06",
+      "origin_counts": {
+        "legacy": 2,
+        "manual": 3
+      },
+      "system_verdict_pairs": {
+        "possible_evidence::이상없음": 1,
+        "evidence_not_found::이상없음": 1,
+        "evidence_not_found::해당없음": 1,
+        "possible_evidence::해당없음": 1
+      },
+      "llm_verdict_pairs": {}
+    },
+    "FIN-SEC-03": {
+      "counts": {
+        "이상없음": 0,
+        "검토의견": 0,
+        "해당없음": 1
+      },
+      "comments": [
+        {
+          "text": "근저당 아님. 질권임",
+          "verdict": "이상없음",
           "count": 1,
           "reviewers": [
             "손남수"
           ],
-          "date": "2026-07-15"
+          "date": "2026-08-06"
         }
       ],
-      "lastSeen": "2026-07-15"
+      "lastSeen": "2026-08-06",
+      "origin_counts": {
+        "legacy": 1
+      },
+      "system_verdict_pairs": {
+        "possible_evidence::해당없음": 1
+      },
+      "llm_verdict_pairs": {}
     },
-    "CORE-06": {
+    "FIN-LOAN-04": {
       "counts": {
-        "이상없음": 1,
+        "이상없음": 0,
         "검토의견": 0,
-        "해당없음": 0
+        "해당없음": 1
+      },
+      "comments": [
+        {
+          "text": "담보설정 및 실행에 관한 약정서임",
+          "verdict": "이상없음",
+          "count": 1,
+          "reviewers": [
+            "손남수"
+          ],
+          "date": "2026-08-06"
+        }
+      ],
+      "lastSeen": "2026-08-06",
+      "origin_counts": {
+        "legacy": 1
+      },
+      "system_verdict_pairs": {},
+      "llm_verdict_pairs": {}
+    },
+    "FIN-LOAN-02": {
+      "counts": {
+        "이상없음": 0,
+        "검토의견": 0,
+        "해당없음": 1
+      },
+      "comments": [
+        {
+          "text": "담보설정 및 실행에 관한 약정서임",
+          "verdict": "이상없음",
+          "count": 1,
+          "reviewers": [
+            "손남수"
+          ],
+          "date": "2026-08-06"
+        }
+      ],
+      "lastSeen": "2026-08-06",
+      "origin_counts": {
+        "legacy": 1
+      },
+      "system_verdict_pairs": {},
+      "llm_verdict_pairs": {}
+    },
+    "FIN-GUAR-01": {
+      "counts": {
+        "이상없음": 0,
+        "검토의견": 0,
+        "해당없음": 1
+      },
+      "comments": [
+        {
+          "text": "연대보증 아님",
+          "verdict": "이상없음",
+          "count": 1,
+          "reviewers": [
+            "손남수"
+          ],
+          "date": "2026-08-06"
+        }
+      ],
+      "lastSeen": "2026-08-06",
+      "origin_counts": {
+        "legacy": 1
+      },
+      "system_verdict_pairs": {},
+      "llm_verdict_pairs": {}
+    },
+    "SH-ANT-01": {
+      "counts": {
+        "이상없음": 0,
+        "검토의견": 0,
+        "해당없음": 2
       },
       "comments": [],
-      "lastSeen": "2026-07-15"
-    },
-    "CORE-07": {
-      "counts": {
-        "이상없음": 1,
-        "검토의견": 0,
-        "해당없음": 0
+      "lastSeen": "2026-08-06",
+      "origin_counts": {
+        "manual": 2
       },
-      "comments": [],
-      "lastSeen": "2026-07-15"
-    },
-    "CORE-09": {
-      "counts": {
-        "이상없음": 1,
-        "검토의견": 0,
-        "해당없음": 0
+      "system_verdict_pairs": {
+        "possible_evidence::해당없음": 1,
+        "evidence_not_found::해당없음": 1
       },
-      "comments": [],
-      "lastSeen": "2026-07-15"
-    },
-    "CORE-10": {
-      "counts": {
-        "이상없음": 1,
-        "검토의견": 0,
-        "해당없음": 0
-      },
-      "comments": [],
-      "lastSeen": "2026-07-15"
-    },
-    "CORE-11": {
-      "counts": {
-        "이상없음": 1,
-        "검토의견": 0,
-        "해당없음": 0
-      },
-      "comments": [],
-      "lastSeen": "2026-07-15"
-    },
-    "CORE-13": {
-      "counts": {
-        "이상없음": 1,
-        "검토의견": 0,
-        "해당없음": 0
-      },
-      "comments": [],
-      "lastSeen": "2026-07-15"
-    },
-    "CORE-14": {
-      "counts": {
-        "이상없음": 1,
-        "검토의견": 0,
-        "해당없음": 0
-      },
-      "comments": [],
-      "lastSeen": "2026-07-15"
+      "llm_verdict_pairs": {}
     },
     "SP-DEL-01": {
       "counts": {
@@ -475,18 +2035,211 @@
         "검토의견": 0,
         "해당없음": 0
       },
-      "comments": [
-        {
-          "text": "용역 특성상 세밀한 기준이 필요하지는 않음",
-          "verdict": "이상없음",
-          "count": 1,
-          "reviewers": [
-            "손남수"
-          ],
-          "date": "2026-07-15"
-        }
-      ],
-      "lastSeen": "2026-07-15"
+      "comments": [],
+      "lastSeen": "2026-08-06",
+      "origin_counts": {
+        "manual": 1
+      },
+      "system_verdict_pairs": {
+        "possible_evidence::이상없음": 1
+      },
+      "llm_verdict_pairs": {}
+    },
+    "CMN-05-2": {
+      "counts": {
+        "이상없음": 1,
+        "검토의견": 0,
+        "해당없음": 0
+      },
+      "comments": [],
+      "lastSeen": "2026-08-06",
+      "origin_counts": {
+        "manual": 1
+      },
+      "system_verdict_pairs": {
+        "possible_evidence::이상없음": 1
+      },
+      "llm_verdict_pairs": {}
+    },
+    "SP-DEL-08-2": {
+      "counts": {
+        "이상없음": 0,
+        "검토의견": 0,
+        "해당없음": 1
+      },
+      "comments": [],
+      "lastSeen": "2026-08-06",
+      "origin_counts": {
+        "manual": 1
+      },
+      "system_verdict_pairs": {
+        "possible_evidence::해당없음": 1
+      },
+      "llm_verdict_pairs": {}
+    },
+    "PRIV-09": {
+      "counts": {
+        "이상없음": 1,
+        "검토의견": 0,
+        "해당없음": 1
+      },
+      "comments": [],
+      "lastSeen": "2026-08-06",
+      "origin_counts": {
+        "manual": 2
+      },
+      "system_verdict_pairs": {
+        "possible_evidence::이상없음": 1,
+        "possible_evidence::해당없음": 1
+      },
+      "llm_verdict_pairs": {}
+    },
+    "ALL-PII-01": {
+      "counts": {
+        "이상없음": 1,
+        "검토의견": 0,
+        "해당없음": 1
+      },
+      "comments": [],
+      "lastSeen": "2026-08-06",
+      "origin_counts": {
+        "manual": 2
+      },
+      "system_verdict_pairs": {
+        "possible_evidence::해당없음": 1,
+        "evidence_not_found::이상없음": 1
+      },
+      "llm_verdict_pairs": {}
+    },
+    "PRIV-16": {
+      "counts": {
+        "이상없음": 2,
+        "검토의견": 0,
+        "해당없음": 0
+      },
+      "comments": [],
+      "lastSeen": "2026-08-06",
+      "origin_counts": {
+        "manual": 2
+      },
+      "system_verdict_pairs": {
+        "possible_evidence::이상없음": 1,
+        "evidence_found::이상없음": 1
+      },
+      "llm_verdict_pairs": {}
+    },
+    "ALL-PII-03": {
+      "counts": {
+        "이상없음": 0,
+        "검토의견": 0,
+        "해당없음": 4
+      },
+      "comments": [],
+      "lastSeen": "2026-08-06",
+      "origin_counts": {
+        "manual": 3,
+        "legacy": 1
+      },
+      "system_verdict_pairs": {
+        "possible_evidence::해당없음": 4
+      },
+      "llm_verdict_pairs": {}
+    },
+    "ALL-PII-02": {
+      "counts": {
+        "이상없음": 1,
+        "검토의견": 0,
+        "해당없음": 0
+      },
+      "comments": [],
+      "lastSeen": "2026-08-06",
+      "origin_counts": {
+        "legacy": 1
+      },
+      "system_verdict_pairs": {
+        "evidence_not_found::이상없음": 1
+      },
+      "llm_verdict_pairs": {}
+    },
+    "CMN-01": {
+      "counts": {
+        "이상없음": 1,
+        "검토의견": 0,
+        "해당없음": 0
+      },
+      "comments": [],
+      "lastSeen": "2026-08-06",
+      "origin_counts": {
+        "manual": 1
+      },
+      "system_verdict_pairs": {
+        "possible_evidence::이상없음": 1
+      },
+      "llm_verdict_pairs": {}
+    },
+    "SP-DEL-03-2": {
+      "counts": {
+        "이상없음": 1,
+        "검토의견": 0,
+        "해당없음": 0
+      },
+      "comments": [],
+      "lastSeen": "2026-08-06",
+      "origin_counts": {
+        "manual": 1
+      },
+      "system_verdict_pairs": {
+        "evidence_found::이상없음": 1
+      },
+      "llm_verdict_pairs": {}
+    },
+    "PRIV-10": {
+      "counts": {
+        "이상없음": 0,
+        "검토의견": 0,
+        "해당없음": 1
+      },
+      "comments": [],
+      "lastSeen": "2026-08-06",
+      "origin_counts": {
+        "manual": 1
+      },
+      "system_verdict_pairs": {
+        "possible_evidence::해당없음": 1
+      },
+      "llm_verdict_pairs": {}
+    },
+    "PRIV-12": {
+      "counts": {
+        "이상없음": 0,
+        "검토의견": 0,
+        "해당없음": 1
+      },
+      "comments": [],
+      "lastSeen": "2026-08-06",
+      "origin_counts": {
+        "manual": 1
+      },
+      "system_verdict_pairs": {
+        "possible_evidence::해당없음": 1
+      },
+      "llm_verdict_pairs": {}
+    },
+    "PRIV-17": {
+      "counts": {
+        "이상없음": 0,
+        "검토의견": 0,
+        "해당없음": 1
+      },
+      "comments": [],
+      "lastSeen": "2026-08-06",
+      "origin_counts": {
+        "manual": 1
+      },
+      "system_verdict_pairs": {
+        "possible_evidence::해당없음": 1
+      },
+      "llm_verdict_pairs": {}
     }
   }
 }

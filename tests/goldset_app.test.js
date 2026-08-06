@@ -42,6 +42,7 @@ test("buildCase: 현재 분석 상태를 기대값으로 스냅샷한다", () =>
   assert.strictEqual(c.expect.detected, "outsourcing");
   assert.deepStrictEqual(c.expect.addressed, ["CORE-07"]);
   assert.deepStrictEqual(c.expect.consider, []);
+  assert.deepStrictEqual(c.expect.verify, []);
   assert.ok(c.text.indexOf("재위탁") !== -1); // 본문은 케이스 안(폐쇄망 상주)엔 포함
 });
 
@@ -69,6 +70,20 @@ test("diffCase: 부재알람 증감은 변화(연성) — 지식 진화 허용",
   const d = Goldset.diffCase(c, { detected: "outsourcing", activeModules: [], consider: ["A-1", "B-2"], addressed: [] });
   assert.strictEqual(d.status, "변화");
   assert.deepStrictEqual(d.consider.added, ["B-2"]);
+});
+
+test("diffCase: 확인권장 증감을 별도 추적하고 구 케이스는 하위호환", () => {
+  const modern = { id: "c3", expect: { detected: "outsourcing", activeModules: [],
+    consider: [], verify: ["A-1"], addressed: [] } };
+  const obs = { detected: "outsourcing", activeModules: [], consider: [],
+    verify: ["A-1", "B-2"], addressed: [] };
+  const d = Goldset.diffCase(modern, obs);
+  assert.strictEqual(d.status, "변화");
+  assert.deepStrictEqual(d.verify.added, ["B-2"]);
+
+  const legacy = { id: "old", expect: { detected: "outsourcing", activeModules: [],
+    consider: [], addressed: [] } };
+  assert.strictEqual(Goldset.diffCase(legacy, obs).status, "통과");
 });
 
 test("summaryText: 반출 요약에 계약 본문이 포함되지 않는다", () => {
