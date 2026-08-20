@@ -10,8 +10,11 @@ var state = { text: "", clauses: [], typeId: null, activeModules: [], result: nu
   // 검토자가 올바른 조항으로 옮긴 기록. 재분석해도 유지되도록 계약서 해시별 저장.
   reassign: {} };
 var LOCAL_LLM_KEY = "cr-local-llm-enabled";
+var LOCAL_LLM_MODEL_KEY = "cr-local-llm-model";
 var _localLlmSeq = 0;
 var _localLlmTimer = null;
+var _experimentLlmRunning = false;
+var _llmAcceptedDrafts = {}; // contractHash::cpId → 채택 당시 LLM 분석. 재분석 후에도 효용 관측 보존.
 
 function esc(s) {
   return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
@@ -190,12 +193,13 @@ document.querySelectorAll(".tab").forEach(function (btn) {
    #admin으로 열면 표시 — 기능·코드는 그대로, body 클래스 + CSS로 표시만 제어.
    지식 검수 탭은 현행 유지(숨기지 않음). */
 function applyAdminMode() {
-  var on = location.hash === "#admin";
+  var on = location.hash === "#admin" || location.hash === "#admin-contribution";
   document.body.classList.toggle("admin-mode", on);
   // 관리모드 해제 시 골드셋 탭이 열려 있으면 리포트로 복귀 — 숨은 탭의 pane 잔류 방지.
   var gs = document.querySelector('.tab[data-tab="goldset"]');
   if (!on && gs && gs.classList.contains("active"))
     document.querySelector('.tab[data-tab="report"]').click();
+  if (location.hash === "#admin-contribution" && gs && !gs.classList.contains("active")) gs.click();
 }
 window.addEventListener("hashchange", applyAdminMode);
 applyAdminMode();
@@ -982,9 +986,11 @@ function scheduleLocalLlmReview() {
 }
 function runLocalLlmReview(seq) {
   if (!localLlmEnabled() || !state.result || seq !== _localLlmSeq) return;
-  var items = LocalLLM.buildBatch(state.result.results, state.result.checkpoints, state.clauses);
+  var model = LocalLLM.getModel();
+  var items = LocalLLM.buildBatch(state.result.results, state.result.checkpoints, state.clauses,
+    model === "qwen3:14b" ? 2 : 12);
   if (!items.length) { _setLocalLlmStatus("검토 후보 없음", "ready"); return; }
-  _setLocalLlmStatus("qwen3:4b 검토 중 · " + items.length + "건", "running");
+  _setLocalLlmStatus(model + " 검토 중 · " + items.length + "건", "running");
   LocalLLM.review(window.fetch.bind(window), window.location, items).then(function (response) {
     if (seq !== _localLlmSeq || !state.result) return;
     LocalLLM.attach(state.result.results, response);
@@ -1000,8 +1006,17 @@ function runLocalLlmReview(seq) {
 function initLocalLlm() {
   var cb = document.getElementById("local-llm-enabled");
   var rerun = document.getElementById("local-llm-rerun");
+  var modelSelect = document.getElementById("local-llm-model");
   if (!cb) return;
-  try { cb.checked = localStorage.getItem(LOCAL_LLM_KEY) === "1"; } catch (e) {}
+  try {
+    cb.checked = localStorage.getItem(LOCAL_LLM_KEY) === "1";
+    if (modelSelect) modelSelect.value = LocalLLM.setModel(localStorage.getItem(LOCAL_LLM_MODEL_KEY) || LocalLLM.MODEL);
+  } catch (e) {}
+  if (modelSelect) modelSelect.addEventListener("change", function () {
+    LocalLLM.setModel(modelSelect.value);
+    try { localStorage.setItem(LOCAL_LLM_MODEL_KEY, modelSelect.value); } catch (e) {}
+    if (cb.checked && state.result) scheduleLocalLlmReview();
+  });
   cb.addEventListener("change", function () {
     try { localStorage.setItem(LOCAL_LLM_KEY, cb.checked ? "1" : "0"); } catch (e) {}
     if (!cb.checked) {
@@ -1016,7 +1031,12 @@ function initLocalLlm() {
         _setLocalLlmStatus(h.reason === "local_server_required" ? "로컬 서버로 실행 필요" : "Ollama 연결 안 됨", "error");
         return;
       }
-      _setLocalLlmStatus("qwen3:4b 연결됨", "ready");
+      var available = h.available_models || [];
+      if (available.length && available.indexOf(LocalLLM.getModel()) === -1) {
+        _setLocalLlmStatus(LocalLLM.getModel() + " 다운로드 필요", "error");
+        return;
+      }
+      _setLocalLlmStatus(LocalLLM.getModel() + " 연결됨", "ready");
       if (state.result) scheduleLocalLlmReview();
     });
   });
@@ -1261,6 +1281,12 @@ function curationPanelHtml() {
     h += '<span class="curation-hint"> · 다음 검토부터 조항 확인·재지정 기록이 누적됩니다.</span>';
   }
   h += '</div><p class="curation-hint">판정 분포로 검토 경로를 조정하되 자동 확정하지 않습니다. 아래 후보는 큐레이터가 지식 조건을 조정할 때 사용하는 누적 신호입니다.</p>';
+  var la = sum.llm_assistance;
+  h += '<div class="matching-metrics"><b>로컬 AI 효용</b> · 분석 ' + la.analyzed + '건' +
+    ' · 초안 제시 ' + la.draft_offered + '건 · 채택 ' + la.draft_accepted + '건' +
+    (la.draft_offered ? ' (' + _pct(la.acceptance_rate) + ')' : '') +
+    (la.draft_accepted ? ' · 무수정 채택 ' + la.accepted_unchanged + '건 (' + _pct(la.unchanged_rate) + ')' : '') +
+    '</div>';
   if (sig.conditional.length) {
     h += '<div class="curation-group"><h5>조건부 강등 후보 (반복 해당없음)</h5><ul>' +
       sig.conditional.map(function (c) {
@@ -1316,6 +1342,19 @@ function verdictControlHtml(cpId, skipLoop) {
 }
 // 조항별 보기·리포트 공용 — 판정 버튼 클릭·코멘트 저장 바인딩. reRender: 저장 후 호출.
 function bindVerdictControls(root, reRender) {
+  root.querySelectorAll(".local-ai-use-draft").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var cpId = btn.getAttribute("data-vcp");
+      var result = ((state.result && state.result.results) || []).filter(function (r) { return r.cpId === cpId; })[0];
+      var draft = result && result.localLlm && result.localLlm.draft_comment;
+      if (!draft) return;
+      result.localLlm.draft_accepted = true;
+      result.localLlm.draft_accepted_at = verdictToday();
+      _llmAcceptedDrafts[(verdictHash || "") + "::" + cpId] = JSON.parse(JSON.stringify(result.localLlm));
+      applyVerdict(cpId, "검토의견", draft, "", "llm_draft");
+      if (reRender) reRender();
+    });
+  });
   root.querySelectorAll(".vd-btn").forEach(function (btn) {
     btn.addEventListener("click", function () {
       var cp = btn.getAttribute("data-vcp"), v = btn.getAttribute("data-vd");
@@ -1418,7 +1457,7 @@ function exportExperimentPredictions() {
   if (!state.result) return;
   var obj = Experiment.buildPredictions({
     documentId: verdictHash, contractHash: verdictHash, typeId: state.typeId,
-    generated: verdictToday(), appVersion: CR.app_version || "", model: LocalLLM.MODEL,
+    generated: verdictToday(), appVersion: CR.app_version || "", model: LocalLLM.getModel(),
     results: state.result.results, checkpoints: state.result.checkpoints, clauses: state.clauses
   });
   _experimentDownload(obj, "matching-predictions");
@@ -1438,12 +1477,14 @@ function exportExperimentGoldTemplate() {
   if (msg) msg.textContent = "블라인드 골드 템플릿 반출 완료 · 규칙·LLM 예측값 미포함";
 }
 function runFullExperimentLlmReview() {
-  if (!state.result) return;
+  if (!state.result || _experimentLlmRunning) return;
+  _experimentLlmRunning = true;
   _localLlmSeq++;
   var seq = _localLlmSeq;
   _clearLocalLlmFindings();
   var batches = LocalLLM.buildBatches(
-    state.result.results, state.result.checkpoints, state.clauses, 4
+    state.result.results, state.result.checkpoints, state.clauses,
+    LocalLLM.getModel() === "qwen3:14b" ? 2 : 4
   );
   var total = batches.reduce(function (n, batch) { return n + batch.length; }, 0);
   var completed = 0;
@@ -1451,14 +1492,13 @@ function runFullExperimentLlmReview() {
   var msg = document.getElementById("experiment-actions-msg");
   if (!total) {
     if (msg) msg.textContent = "AI 채점 후보 없음 · 규칙 Top-3가 있는 addressed/verify 항목만 대상";
+    _experimentLlmRunning = false;
     return;
   }
-  if (msg) msg.textContent = "실험 전체 AI 채점 준비 중 · 0/" + total + "건";
-  _setLocalLlmStatus("실험 채점 준비 중", "running");
+  if (msg) msg.textContent = "실험 전체 AI 채점 시작 · 첫 응답까지 약 10~30초 · 0/" + total + "건";
+  _setLocalLlmStatus("실험 전체 채점 중 · 0/" + total + "건", "running");
 
-  LocalLLM.health(window.fetch.bind(window), window.location).then(function (health) {
-    if (!health.available) throw new Error(health.reason || "unavailable");
-    return batches.reduce(function (chain, batch) {
+  batches.reduce(function (chain, batch) {
       return chain.then(function () {
         if (seq !== _localLlmSeq || !state.result) throw new Error("cancelled");
         _setLocalLlmStatus("실험 전체 채점 중 · " + completed + "/" + total + "건", "running");
@@ -1470,8 +1510,7 @@ function runFullExperimentLlmReview() {
           if (progress) progress.textContent = "실험 전체 AI 채점 중 · " + completed + "/" + total + "건";
         });
       });
-    }, Promise.resolve());
-  }).then(function () {
+    }, Promise.resolve()).then(function () {
     if (seq !== _localLlmSeq || !state.result) return;
     renderClauses();
     renderSuggestions();
@@ -1484,7 +1523,9 @@ function runFullExperimentLlmReview() {
     if (seq !== _localLlmSeq || (err && err.message === "cancelled")) return;
     _setLocalLlmStatus("실험 채점 실패", "error");
     var failed = document.getElementById("experiment-actions-msg");
-    if (failed) failed.textContent = "실험 AI 채점 실패 · localhost 서버와 Ollama qwen3:4b 상태를 확인하세요";
+    if (failed) failed.textContent = "실험 AI 채점 실패 · localhost 서버와 Ollama " + LocalLLM.getModel() + " 상태를 확인하세요";
+  }).then(function () {
+    _experimentLlmRunning = false;
   });
 }
 // 골드셋 페인 — 케이스 파일 복수 로드 → 일괄 채점 → 결과 표 + 반출 요약.
@@ -1589,6 +1630,166 @@ function renderGoldsetResults() {
 }
 initGoldsetPane();
 
+/* LLM 기여 분석 — 규칙/Hybrid 예측과 사람이 확정한 골드를 같은 document_id로 쌍대 비교. */
+var _llmContributionPredictions = [];
+var _llmContributionGolds = [];
+var _llmContributionCurrent = null;
+function _readExperimentFiles(fileList, expectedFormat, done) {
+  var files = Array.prototype.slice.call(fileList || []), objects = [], bad = 0;
+  if (!files.length) { done(objects, bad); return; }
+  var pending = files.length;
+  files.forEach(function (file) {
+    var reader = new FileReader();
+    reader.onload = function () {
+      try {
+        var obj = JSON.parse(reader.result);
+        if (obj && obj.format === expectedFormat && obj.meta && obj.meta.document_id) objects.push(obj);
+        else bad++;
+      } catch (e) { bad++; }
+      if (--pending === 0) done(objects, bad);
+    };
+    reader.onerror = function () { bad++; if (--pending === 0) done(objects, bad); };
+    reader.readAsText(file);
+  });
+}
+function _syncContributionControls(message) {
+  var btn = document.getElementById("llm-contrib-run");
+  var status = document.getElementById("llm-contrib-status");
+  if (btn) btn.disabled = !_llmContributionCurrent &&
+    (!_llmContributionPredictions.length || !_llmContributionGolds.length);
+  if (status) status.textContent = message || ("예측 " + _llmContributionPredictions.length +
+    "건 · 사람 정답 " + _llmContributionGolds.length + "건 선택");
+}
+function _renderCurrentContributionLabels() {
+  var box = document.getElementById("llm-contrib-labels");
+  if (!box || !_llmContributionCurrent) return;
+  var gold = _llmContributionCurrent.gold;
+  var reviewed = {};
+  _llmContributionCurrent.prediction.items.forEach(function (item) {
+    if (item.llm_reviewed) reviewed[item.check_id] = true;
+  });
+  var labels = gold.labels.filter(function (label) { return reviewed[label.check_id]; });
+  if (!labels.length) {
+    box.innerHTML = '<p class="curation-empty">LLM이 분석한 항목이 없습니다. 리포트에서 ‘실험 전체 AI 채점’을 먼저 실행하세요.</p>';
+    return;
+  }
+  var options = '<option value="">정답 선택</option><option value="none">관련 조항 없음</option>' +
+    gold.clauses.map(function (clause) {
+      return '<option value="' + clause.clause_index + '">#' + clause.clause_index + " " + esc(clause.heading || "표제 없음") + "</option>";
+    }).join("");
+  box.innerHTML = '<p class="verify-scope-note"><strong>사람 정답 입력:</strong> 각 항목의 직접 근거 조항 하나를 선택하세요. 해당 조항이 없으면 ‘관련 조항 없음’을 선택합니다.</p>' +
+    '<div class="llm-label-list">' + labels.map(function (label) {
+      return '<label class="llm-label-row"><span><b>' + esc(label.check_id) + '</b>' + esc(label.check) +
+        '</span><select data-contrib-check="' + esc(label.check_id) + '">' + options + '</select></label>';
+    }).join("") + "</div>";
+  box.querySelectorAll("select[data-contrib-check]").forEach(function (select) {
+    select.addEventListener("change", function () {
+      var label = gold.labels.filter(function (x) { return x.check_id === select.getAttribute("data-contrib-check"); })[0];
+      if (!label) return;
+      if (select.value === "") { label.applicable = null; label.direct_clause_indices = []; }
+      else {
+        label.applicable = true;
+        label.direct_clause_indices = select.value === "none" ? [] : [Number(select.value)];
+      }
+      var answered = labels.filter(function (x) { return x.applicable !== null; }).length;
+      _syncContributionControls("사람 정답 " + answered + "/" + labels.length + "건 입력 · 입력한 항목부터 계산할 수 있습니다.");
+    });
+  });
+}
+function _startCurrentContribution() {
+  if (!state.result) {
+    _syncContributionControls("먼저 계약서를 넣고 분석을 실행하세요.");
+    return;
+  }
+  var prediction = Experiment.buildPredictions({
+    documentId: verdictHash, contractHash: verdictHash, typeId: state.typeId,
+    generated: verdictToday(), appVersion: CR.app_version || "", model: LocalLLM.getModel(),
+    results: state.result.results, checkpoints: state.result.checkpoints, clauses: state.clauses
+  });
+  var gold = Experiment.buildGoldTemplate({
+    documentId: verdictHash, contractHash: verdictHash, typeId: state.typeId,
+    created: verdictToday(), results: state.result.results,
+    checkpoints: state.result.checkpoints, clauses: state.clauses
+  });
+  _llmContributionCurrent = { prediction: prediction, gold: gold };
+  _renderCurrentContributionLabels();
+  _syncContributionControls("각 항목에서 사람이 정답 조항을 선택하세요.");
+}
+function _contributionPairs() {
+  if (_llmContributionCurrent) {
+    return { rows: Experiment.scoreDocument(_llmContributionCurrent.prediction,
+      _llmContributionCurrent.gold), documents: 1 };
+  }
+  var goldByDoc = {}, rows = [], matchedDocs = {};
+  _llmContributionGolds.forEach(function (gold) { goldByDoc[String(gold.meta.document_id)] = gold; });
+  _llmContributionPredictions.forEach(function (prediction) {
+    var id = String(prediction.meta.document_id), gold = goldByDoc[id];
+    if (!gold) return;
+    matchedDocs[id] = true;
+    rows = rows.concat(Experiment.scoreDocument(prediction, gold));
+  });
+  return { rows: rows, documents: Object.keys(matchedDocs).length };
+}
+function renderLlmContribution(rows, documents) {
+  var box = document.getElementById("llm-contrib-results");
+  if (!box) return;
+  var sum = Experiment.summarize(rows);
+  function pct(v) { return Math.round((v || 0) * 1000) / 10 + "%"; }
+  var names = { improved: "규칙 오답 → LLM 정답", harmed: "규칙 정답 → LLM 오답",
+    same_correct: "둘 다 정답", same_wrong: "둘 다 오답" };
+  var h = '<div class="llm-contrib-grid">' +
+    '<div><b>' + documents + '</b><span>대조 문서</span></div>' +
+    '<div><b>' + sum.n + '</b><span>채점 항목</span></div>' +
+    '<div><b>' + pct(sum.delta_accuracy) + '</b><span>정확도 차이</span></div>' +
+    '<div><b>' + (sum.net_improved >= 0 ? "+" : "") + sum.net_improved + '</b><span>순개선</span></div>' +
+    '<div><b>' + pct(sum.baseline_accuracy) + '</b><span>규칙 정확도</span></div>' +
+    '<div><b>' + pct(sum.hybrid_accuracy) + '</b><span>LLM 보조 정확도</span></div>' +
+    '<div><b>' + sum.improved + '</b><span>LLM이 교정</span></div>' +
+    '<div><b>' + sum.harmed + '</b><span>LLM이 악화</span></div></div>';
+  if (!rows.length) {
+    box.innerHTML = h + '<p class="curation-empty">같은 document_id이면서 사람 판정과 LLM 분석이 모두 완료된 항목이 없습니다.</p>';
+    return;
+  }
+  h += '<table class="llm-contrib-table"><thead><tr><th>결과</th><th>문서·항목</th><th>규칙</th><th>LLM 보조</th><th>사람 정답</th></tr></thead><tbody>';
+  h += rows.map(function (row) {
+    var cls = row.outcome === "improved" ? "lc-improved" : row.outcome === "harmed" ? "lc-harmed" : "";
+    function clause(v) { return v === null || v === undefined ? "관련 조항 없음" : "조항 #" + v; }
+    var gold = row.gold_clause_indices.length ? row.gold_clause_indices.map(function (x) { return "#" + x; }).join(", ") : "관련 조항 없음";
+    return '<tr><td class="' + cls + '">' + names[row.outcome] + '</td><td><b>' + esc(row.document_id) + " · " + esc(row.check_id) +
+      '</b><br><span class="report-actions-note">' + esc(row.check) + '</span></td><td>' + clause(row.rule_clause_index) +
+      '</td><td>' + clause(row.llm_clause_index) + '</td><td>' + gold + '</td></tr>';
+  }).join("") + "</tbody></table>";
+  box.innerHTML = h;
+}
+function initLlmContribution() {
+  var predictions = document.getElementById("llm-contrib-predictions");
+  var golds = document.getElementById("llm-contrib-golds");
+  var run = document.getElementById("llm-contrib-run");
+  var current = document.getElementById("llm-contrib-current");
+  if (!predictions || !golds || !run) return;
+  predictions.addEventListener("change", function () {
+    _readExperimentFiles(predictions.files, Experiment.PREDICTION_FORMAT, function (objects, bad) {
+      _llmContributionPredictions = objects;
+      _llmContributionCurrent = null;
+      _syncContributionControls("예측 " + objects.length + "건 선택" + (bad ? " · 형식 오류 " + bad + "건" : ""));
+    });
+  });
+  golds.addEventListener("change", function () {
+    _readExperimentFiles(golds.files, Experiment.GOLD_FORMAT, function (objects, bad) {
+      _llmContributionGolds = objects;
+      _llmContributionCurrent = null;
+      _syncContributionControls("사람 정답 " + objects.length + "건 선택" + (bad ? " · 형식 오류 " + bad + "건" : ""));
+    });
+  });
+  if (current) current.addEventListener("click", _startCurrentContribution);
+  run.addEventListener("click", function () {
+    var paired = _contributionPairs();
+    renderLlmContribution(paired.rows, paired.documents);
+    _syncContributionControls("대조 완료 · 문서 " + paired.documents + "건 · 항목 " + paired.rows.length + "건");
+  });
+}
+initLlmContribution();
+
 // 파일명 금지문자 치환 — Windows·macOS 공용 안전 집합.
 function _safeFileName(s) {
   return String(s || "").replace(/[\\/:*?"<>|]/g, "_").replace(/\s+/g, " ").trim();
@@ -1629,9 +1830,42 @@ function currentMatchingObservations() {
   return { format: "cr-matching-observations-v1", contract_hash: verdictHash,
     type_id: state.typeId || null, items: items };
 }
+function currentLlmAssistance() {
+  var items = {};
+  ((state.result && state.result.results) || []).forEach(function (r) {
+    var accepted = _llmAcceptedDrafts[(verdictHash || "") + "::" + r.cpId];
+    var a = r.localLlm || accepted;
+    if (!a) return;
+    if (accepted) {
+      a = JSON.parse(JSON.stringify(a));
+      a.draft_accepted = true;
+      a.draft_comment = accepted.draft_comment || a.draft_comment;
+    }
+    var v = verdictStore[r.cpId] || {};
+    var draft = String(a.draft_comment || "");
+    items[r.cpId] = {
+      check_id: r.cpId,
+      analyzed: true,
+      model: a.model || LocalLLM.getModel(),
+      relation: a.relation || "",
+      completeness: a.completeness || "",
+      present_elements: (a.present_elements || []).slice(),
+      missing_elements: (a.missing_elements || []).slice(),
+      draft_offered: !!draft,
+      draft_comment: draft,
+      draft_accepted: !!a.draft_accepted,
+      final_verdict: v.verdict || "",
+      final_comment: v.comment || "",
+      final_comment_unchanged: !!a.draft_accepted && draft === String(v.comment || "")
+    };
+  });
+  return { format: "cr-llm-assistance-v1", contract_hash: verdictHash,
+    type_id: state.typeId || null, items: items };
+}
 function currentVerdictExport(meta) {
   var obj = Verdict.exportVerdicts(verdictStore, meta, currentSystemAssessments());
   obj.matching_observations = currentMatchingObservations();
+  obj.llm_assistance = currentLlmAssistance();
   return obj;
 }
 function exportVerdicts() {
@@ -2115,9 +2349,16 @@ function localLlmHtml(r) {
   var completeness = { complete: "핵심요소 있음", partial: "일부 요소 확인", unclear: "충족도 불명확" }[a.completeness] || "";
   var alt = a.selected_clause_index !== (r.best && r.best.clauseIndex)
     ? " · 다른 후보 " + esc((state.clauses[a.selected_clause_index] || {}).heading || ("조항#" + a.selected_clause_index)) : "";
-  return '<p class="local-ai-note' + (needsReview ? " review" : "") + '"><span class="local-ai-badge">로컬 AI' +
+  var details = "";
+  if ((a.present_elements || []).length) details += '<span class="local-ai-elements"><b>확인 요소</b> ' + esc(a.present_elements.join(" · ")) + "</span>";
+  if ((a.missing_elements || []).length) details += '<span class="local-ai-elements missing"><b>부족·확인 요소</b> ' + esc(a.missing_elements.join(" · ")) + "</span>";
+  var draft = a.draft_comment
+    ? '<span class="local-ai-draft"><b>검토의견 초안</b> ' + esc(a.draft_comment) +
+      ' <button class="ghost local-ai-use-draft" data-vcp="' + esc(r.cpId) + '">' +
+      (a.draft_accepted ? "초안 다시 적용" : "초안 사용") + "</button></span>" : "";
+  return '<div class="local-ai-note' + (needsReview ? " review" : "") + '"><span class="local-ai-badge">로컬 AI' +
     (needsReview ? " 재확인" : " 교차확인") + "</span>" + esc(relation + " · " + completeness) + alt +
-    (a.reason ? " — " + esc(a.reason) : "") + "</p>";
+    (a.reason ? " — " + esc(a.reason) : "") + details + draft + "</div>";
 }
 // 검토 제안 항목 1건 — 부재 알람이라 조항 매핑 없음. 왜 봐야 하는지 + 판정·코멘트.
 function renderConsiderItem(r) {

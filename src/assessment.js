@@ -72,6 +72,10 @@ var Assessment = (function () {
           relation: r.localLlm.relation,
           completeness: r.localLlm.completeness,
           reason: String(r.localLlm.reason || ""),
+          present_elements: (r.localLlm.present_elements || []).slice(),
+          missing_elements: (r.localLlm.missing_elements || []).slice(),
+          draft_comment: String(r.localLlm.draft_comment || ""),
+          draft_accepted: !!r.localLlm.draft_accepted,
           duration_ms: Number(r.localLlm.duration_ms || 0)
         };
       }

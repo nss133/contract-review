@@ -6,3 +6,5 @@ dist/*.zip
 .claude/
 data/verification_log.json
 verifications/*.json
+dist/contract-review-v*/
+dist/contract-review 2.html

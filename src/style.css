@@ -613,6 +613,29 @@ td.empty { text-align: center; color: var(--ink-faint); padding: var(--sp-4); }
 .gs-pass { border-left: 4px solid var(--c-green-line); } .gs-pass .gc-status { background: var(--c-green-bg); color: var(--c-green-fg); }
 .gs-change { border-left: 4px solid var(--c-amber-line); } .gs-change .gc-status { background: var(--c-amber-bg); color: var(--c-amber-fg); }
 .gs-fail { border-left: 4px solid var(--c-red-fg); } .gs-fail .gc-status { background: var(--c-red-bg); color: var(--c-red-fg); }
+.llm-contribution { margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--border-card); }
+.llm-contribution h3 { margin: 0 0 4px; font-size: 16px; }
+.llm-contrib-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px;
+  border: 1px solid #e4e8f2; background: #e4e8f2; margin: 10px 0; }
+.llm-contrib-grid > div { background: #fff; padding: 9px; min-width: 0; }
+.llm-contrib-grid b, .llm-contrib-grid span { display: block; }
+.llm-contrib-grid b { font-size: 17px; }
+.llm-contrib-grid span { color: var(--ink-ghost); font-size: 11.5px; margin-top: 2px; }
+.llm-contrib-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+.llm-contrib-table th, .llm-contrib-table td { padding: 7px; border-bottom: 1px solid #e4e8f2; text-align: left; vertical-align: top; }
+.llm-contrib-table th { color: var(--ink-soft); background: var(--c-slate-bg); }
+.lc-improved { color: var(--c-green-fg); font-weight: 600; }
+.lc-harmed { color: var(--c-red-fg); font-weight: 600; }
+.llm-label-list { display: grid; gap: 7px; margin: 10px 0; }
+.llm-label-row { display: grid; grid-template-columns: minmax(260px, 1fr) minmax(220px, 360px);
+  gap: 12px; align-items: center; padding: 9px 10px; background: #fff; border: 1px solid #e4e8f2; }
+.llm-label-row b { display: block; font-size: 12px; color: var(--ink-ghost); margin-bottom: 2px; }
+.llm-label-row select { width: 100%; min-width: 0; }
+@media (max-width: 700px) {
+  .llm-contrib-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .llm-contrib-table { display: block; overflow-x: auto; }
+  .llm-label-row { grid-template-columns: 1fr; }
+}
 
 /* 리포트 딥링크(§2.3-3) — "조항 보기 →" 텍스트 링크형 버튼 */
 .rpt-goto { border: none; background: none; color: var(--accent); font-size: var(--fs-meta);
@@ -713,6 +736,10 @@ td.empty { text-align: center; color: var(--ink-faint); padding: var(--sp-4); }
   background: #f6fbf7; color: var(--ink-soft); font-size: var(--fs-meta); line-height: 1.5; }
 .local-ai-note.review { border-left-color: var(--c-amber-line); background: #fffaf0; color: #795b17; }
 .local-ai-badge { font-weight: 600; margin-right: 5px; }
+.local-ai-elements, .local-ai-draft { display: block; margin-top: 4px; }
+.local-ai-elements b, .local-ai-draft b { color: var(--ink-soft); margin-right: 4px; }
+.local-ai-elements.missing { color: #795b17; }
+.local-ai-use-draft { margin-left: 6px; white-space: nowrap; color: var(--c-blue-fg); border-color: var(--c-blue-line); }
 .experiment-actions { border-left: 3px solid var(--c-blue-line); padding-left: var(--sp-2); }
 
 /* 원계약 커버(변경합의서 국면) — 부속서류 커버와 같은 "누락 아님" 계열 톤 */

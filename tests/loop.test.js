@@ -101,6 +101,21 @@ test("mergeIntoCorpus: 사람 조항 확인·재지정을 매칭 정밀도 원�
   assert.strictEqual(m.top3_recall, 1);
 });
 
+test("mergeIntoCorpus: LLM 분석·초안 채택은 판정 없는 항목도 별도 누적", () => {
+  const merged = L.mergeIntoCorpus(L.emptyCorpus(), {
+    meta: { contract_hash: "llm-a", date: "2026-08-06" },
+    verdicts: { A: { verdict: "검토의견", comment: "수정", origin: "llm_draft" } },
+    llm_assistance: { items: {
+      A: { analyzed: true, draft_offered: true, draft_accepted: true, final_comment_unchanged: false },
+      B: { analyzed: true, draft_offered: false, draft_accepted: false }
+    } }
+  });
+  assert.strictEqual(merged.byCheck.A.origin_counts.llm_draft, 1);
+  assert.deepStrictEqual(merged.byCheck.A.llm_assistance_counts,
+    { analyzed: 1, draft_offered: 1, draft_accepted: 1, accepted_unchanged: 0, accepted_edited: 1 });
+  assert.strictEqual(merged.byCheck.B.llm_assistance_counts.analyzed, 1);
+});
+
 test("corpusSummary: 판정·라우팅·매칭 상태를 한 번에 요약", () => {
   const c = { meta: { contract_count: 2 }, byCheck: {
     X: { counts: { "이상없음": 4, "검토의견": 1, "해당없음": 0 }, matching_counts: { observed: 2, top1_correct: 1 } },
@@ -111,6 +126,19 @@ test("corpusSummary: 판정·라우팅·매칭 상태를 한 번에 요약", () 
   assert.strictEqual(s.issues, 1);
   assert.strictEqual(s.route_checks.detailed, 1);
   assert.strictEqual(s.route_checks.applicability, 1);
+});
+
+test("llmAssistanceStats: 초안 채택률과 무수정 채택률", () => {
+  const corpus = { byCheck: {
+    A: { llm_assistance_counts: { analyzed: 5, draft_offered: 4, draft_accepted: 2,
+      accepted_unchanged: 1, accepted_edited: 1 } },
+    B: { llm_assistance_counts: { analyzed: 3, draft_offered: 2, draft_accepted: 1,
+      accepted_unchanged: 1, accepted_edited: 0 } }
+  } };
+  const st = L.llmAssistanceStats(corpus);
+  assert.strictEqual(st.analyzed, 8);
+  assert.strictEqual(st.acceptance_rate, 0.5);
+  assert.strictEqual(st.unchanged_rate, 2 / 3);
 });
 
 test("reviewRoute: 과거 검토의견이 있으면 정밀 검토가 최우선", () => {

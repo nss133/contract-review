@@ -47,6 +47,10 @@ test("scoreDocument: 규칙 오류를 Hybrid가 고친 쌍대 결과를 계산",
   assert.strictEqual(summary.n, 2);
   assert.strictEqual(summary.improved, 2);
   assert.strictEqual(summary.harmed, 0);
+  assert.strictEqual(summary.same_correct, 0);
+  assert.strictEqual(summary.same_wrong, 0);
+  assert.strictEqual(rows[0].outcome, "improved");
+  assert.deepStrictEqual(rows[0].gold_clause_indices, [2]);
   assert.strictEqual(summary.rule_recall_at_3, 1);
   assert.strictEqual(summary.baseline_reference_false_positive, 1);
   assert.strictEqual(summary.hybrid_reference_false_positive, 0);

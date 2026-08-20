@@ -398,7 +398,10 @@ def build_guide(version, out_path):
     _heading(doc, "7. 변경합의서 검토", 1)
     _body(doc, "변경합의서나 개정합의서를 검토할 때는 입력 화면의 [원계약 첨부]로 원계약도 함께 넣으세요. 원계약에 이미 있는 내용을 전제로 변경된 부분을 검토할 수 있습니다.")
 
-    _heading(doc, "8. 사용 전 마지막 확인", 1)
+    _heading(doc, "8. 로컬 AI 보조 사용", 1)
+    _callout(doc, "사용 방법", "서버가 준비된 환경에서 [로컬 AI 교차검토]를 켭니다. AI는 관련 조항과 부족한 요소를 안내하지만 판정을 자동으로 바꾸지 않습니다. 코멘트는 [초안 사용]을 누른 뒤 원문과 표현을 직접 확인하세요.", GOLD)
+
+    _heading(doc, "9. 사용 전 마지막 확인", 1)
     checklist = doc.add_table(rows=0, cols=1)
     for text in (
         "계약 유형과 당사 지위가 맞는지 확인했습니까?",

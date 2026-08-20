@@ -102,6 +102,13 @@ def _validate(common, types):
             if note is not None and not isinstance(note, str):
                 raise ValidationError(f"{cid}: note는 문자열이어야 함")
 
+            llm_elements = cp.get("llm_elements")
+            if llm_elements is not None and (
+                not isinstance(llm_elements, list) or not 1 <= len(llm_elements) <= 8
+                or any(not isinstance(x, str) or not x.strip() for x in llm_elements)
+            ):
+                raise ValidationError(f"{cid}: llm_elements는 비어 있지 않은 문자열 1~8개의 리스트여야 함")
+
             sb = cp.get("severity_basis")
             if sb is not None and (not isinstance(sb, str) or not sb.strip()):
                 raise ValidationError(f"{cid}: severity_basis는 비어 있지 않은 문자열이어야 함")

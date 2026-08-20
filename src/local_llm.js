@@ -3,6 +3,8 @@
    규칙 결과를 변경하지 않고 advisory만 부착한다. */
 var LocalLLM = (function () {
   var MODEL = "qwen3:4b";
+  var MODELS = ["qwen3:4b", "qwen3:14b"];
+  var selectedModel = MODEL;
   var MAX_ITEMS = 12;
   var MAX_CANDIDATES = 3;
   var MAX_BODY = 1800;
@@ -51,6 +53,7 @@ var LocalLLM = (function () {
         severity: String(cp.severity || ""),
         rule_coverage: r.coverage,
         rule_best_clause_index: r.best.clauseIndex,
+        required_elements: Array.isArray(cp.llm_elements) ? cp.llm_elements.slice(0, 8) : [],
         candidates: candidates
       };
     }).filter(function (item) { return item.candidates.length; });
@@ -77,12 +80,22 @@ var LocalLLM = (function () {
     var allowed = item.candidates.map(function (c) { return c.clause_index; });
     var selected = Number(f.selected_clause_index);
     if (allowed.indexOf(selected) === -1) return null;
+    function cleanList(value) {
+      if (!Array.isArray(value)) return [];
+      return value.slice(0, 8).map(function (x) { return String(x || "").trim().slice(0, 120); })
+        .filter(function (x) { return !!x; });
+    }
+    var draft = String(f.draft_comment || "").trim().slice(0, 1000);
+    if (f.relation !== "direct" || f.completeness === "complete") draft = "";
     return {
       check_id: f.check_id,
       selected_clause_index: selected,
       relation: f.relation,
       completeness: f.completeness,
-      reason: String(f.reason || "").slice(0, 500)
+      reason: String(f.reason || "").slice(0, 500),
+      present_elements: cleanList(f.present_elements),
+      missing_elements: cleanList(f.missing_elements),
+      draft_comment: draft
     };
   }
 
@@ -95,7 +108,7 @@ var LocalLLM = (function () {
       if (valid) out.push(valid);
     });
     return {
-      model: String((obj && obj.model) || MODEL),
+      model: String((obj && obj.model) || selectedModel),
       duration_ms: Number((obj && obj.duration_ms) || 0),
       findings: out
     };
@@ -114,7 +127,7 @@ var LocalLLM = (function () {
     return fetchFn("/api/llm/review", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ model: MODEL, items: items })
+      body: JSON.stringify({ model: selectedModel, items: items })
     }).then(function (res) {
       if (!res.ok) throw new Error("review " + res.status);
       return res.json();
@@ -132,7 +145,10 @@ var LocalLLM = (function () {
           selected_clause_index: byId[r.cpId].selected_clause_index,
           relation: byId[r.cpId].relation,
           completeness: byId[r.cpId].completeness,
-          reason: byId[r.cpId].reason
+          reason: byId[r.cpId].reason,
+          present_elements: byId[r.cpId].present_elements,
+          missing_elements: byId[r.cpId].missing_elements,
+          draft_comment: byId[r.cpId].draft_comment
         };
       }
     });
@@ -140,7 +156,9 @@ var LocalLLM = (function () {
   }
 
   return {
-    MODEL: MODEL, MAX_ITEMS: MAX_ITEMS, isLocalLocation: isLocalLocation,
+    MODEL: MODEL, MODELS: MODELS, getModel: function () { return selectedModel; },
+    setModel: function (model) { if (MODELS.indexOf(model) !== -1) selectedModel = model; return selectedModel; },
+    MAX_ITEMS: MAX_ITEMS, isLocalLocation: isLocalLocation,
     buildBatch: buildBatch, buildBatches: buildBatches, normalizeResponse: normalizeResponse,
     health: health, review: review, attach: attach
   };

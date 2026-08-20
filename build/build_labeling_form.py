@@ -32,11 +32,12 @@ h1{font-size:18px;margin:0}.top select,.top button{height:36px;border:1px solid 
 .progress{margin-left:auto;font-size:13px;color:#52606d}.layout{display:grid;grid-template-columns:minmax(320px,42%) 1fr;gap:16px;padding:16px;height:calc(100vh - 65px)}
 .panel{background:#fff;border:1px solid #d8dee5;border-radius:6px;overflow:auto}.checks{padding:12px}.check{border:1px solid #d8dee5;border-radius:6px;margin-bottom:10px;padding:14px;cursor:pointer}.check.active{border:2px solid #176b45;padding:13px}.check.done{background:#f0f8f4}.cid{font:12px ui-monospace;color:#667}.question{font-weight:700;margin:6px 0 12px;line-height:1.5}.fields{display:grid;grid-template-columns:1fr 1fr;gap:8px}.fields label,.note{font-size:12px;color:#52606d}.fields select,.note textarea{display:block;width:100%;margin-top:4px;border:1px solid #b7c0ca;border-radius:4px;padding:7px;background:#fff}.note{display:block;margin-top:8px}.note textarea{height:60px;resize:vertical}.clauses{padding:14px}.clauses h2{font-size:15px;margin:0 0 12px}.clause{border-top:1px solid #e3e7eb;padding:13px 0}.clause:first-of-type{border-top:0}.clause-head{display:flex;gap:8px;align-items:center;position:sticky;top:0;background:#fff;padding:3px 0}.clause-title{font-weight:700;flex:1}.choice{font-size:12px;border:1px solid #c5ccd3;border-radius:4px;padding:5px 7px;white-space:nowrap}.choice input{vertical-align:middle}.clause-body{white-space:pre-wrap;line-height:1.55;font-size:13px;color:#344050;margin-top:8px}.empty{text-align:center;padding:80px 20px;color:#667}@media(max-width:850px){.layout{display:block;height:auto}.panel{margin-bottom:12px;max-height:none}.top{flex-wrap:wrap}.progress{margin-left:0}.clauses{max-height:none}}
 </style></head><body>
-<div class="top"><h1>블라인드 매칭 라벨링</h1><select id="doc"></select><button id="export">현재 문서 JSON 저장</button><span class="progress" id="progress"></span></div>
+<div class="top"><h1>블라인드 매칭 라벨링</h1><label><input id="load" type="file" accept=".json" multiple hidden><button id="load-button" type="button">골드 템플릿 열기</button></label><select id="doc"></select><button id="export">현재 문서 JSON 저장</button><span class="progress" id="progress"></span></div>
 <main class="layout"><section class="panel checks" id="checks"></section><section class="panel clauses" id="clauses"></section></main>
 <script>
-const docs=__DATA__;let di=0,ci=0;const key="cr-matching-label-form-v1";
+let docs=__DATA__;let di=0,ci=0;const key="cr-matching-label-form-v1";
 const docEl=document.getElementById('doc'),exportBtn=document.getElementById('export');
+const loadEl=document.getElementById('load'),loadButton=document.getElementById('load-button');
 const checks=document.getElementById('checks'),clauses=document.getElementById('clauses'),progress=document.getElementById('progress');
 function saved(){try{return JSON.parse(localStorage.getItem(key)||"{}")}catch(e){return {}}}
 let edits=saved();
@@ -53,14 +54,21 @@ function renderProgress(){const d=docs[di],n=d.labels.filter(isDone).length;prog
 function esc(x){return String(x||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
 docEl.onchange=()=>{di=+docEl.value;ci=0;renderChecks();renderClauses();renderProgress()};
 exportBtn.onclick=()=>{const d=JSON.parse(JSON.stringify(docs[di]));d.labels.forEach(l=>Object.assign(l,value(l.check_id)||{}));const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(d,null,2)],{type:'application/json'}));a.download=d.meta.document_id+'.json';a.click();URL.revokeObjectURL(a.href)};
+loadButton.onclick=()=>loadEl.click();
+loadEl.onchange=()=>{const files=[...loadEl.files],loaded=[];let pending=files.length;if(!pending)return;const finish=()=>{if(!--pending&&loaded.length){docs=loaded;di=0;ci=0;renderDocs();renderChecks();renderClauses();renderProgress()}};files.forEach(f=>{const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);if(d.format==='cr-matching-gold-v1'&&d.meta&&d.meta.document_id&&Array.isArray(d.labels)&&Array.isArray(d.clauses))loaded.push(d)}catch(e){}finish()};r.onerror=finish;r.readAsText(f)})};
 renderDocs();renderChecks();renderClauses();renderProgress();
 </script></body></html>'''
 
 
-def main():
+def build():
     data = json.dumps(load_documents(), ensure_ascii=False).replace("<", "\\u003c")
     OUT.write_text(HTML.replace("__DATA__", data))
     print(OUT)
+    return OUT
+
+
+def main():
+    build()
 
 
 if __name__ == "__main__":

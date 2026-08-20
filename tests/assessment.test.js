@@ -48,9 +48,13 @@ test("build: 로컬 LLM 결과는 규칙 판정을 덮지 않는 advisory로 기
     { cpId: "A", coverage: "addressed", tier: "confirmed",
       best: { reasons: [] }, ranked: [{ clauseIndex: 1, score: 50 }],
       localLlm: { model: "qwen3:4b", selected_clause_index: 1, relation: "direct",
-        completeness: "partial", reason: "일부 요소만 있음", duration_ms: 1200 } },
+        completeness: "partial", reason: "일부 요소만 있음", duration_ms: 1200,
+        present_elements: ["사전동의"], missing_elements: ["서면 방식"],
+        draft_comment: "서면 방식 보완 필요", draft_accepted: true } },
   ], CHECKS, CLAUSES, {});
   assert.strictEqual(out.items.A.decision_source.kind, "rule");
   assert.strictEqual(out.items.A.advisory.kind, "local_llm");
   assert.strictEqual(out.items.A.advisory.completeness, "partial");
+  assert.deepStrictEqual(out.items.A.advisory.missing_elements, ["서면 방식"]);
+  assert.strictEqual(out.items.A.advisory.draft_accepted, true);
 });

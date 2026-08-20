@@ -118,12 +118,19 @@ var Experiment = (function () {
       if (!label || label.applicable === null || label.applicable === undefined || !item.llm_reviewed) return;
       var baselineCorrect = _correct(item.rule_clause_index, label);
       var hybridCorrect = _correct(item.hybrid_clause_index, label);
+      var outcome = baselineCorrect ? (hybridCorrect ? "same_correct" : "harmed") :
+        (hybridCorrect ? "improved" : "same_wrong");
       var refs = label.reference_clause_indices || [];
       var direct = label.direct_clause_indices || [];
       var top3 = (item.candidates || []).map(function (c) { return c.clause_index; });
       rows.push({
         document_id: documentId,
         check_id: item.check_id,
+        check: String(item.check || label.check || ""),
+        rule_clause_index: item.rule_clause_index,
+        llm_clause_index: item.hybrid_clause_index,
+        gold_clause_indices: (label.direct_clause_indices || []).slice(),
+        outcome: outcome,
         baseline_correct: baselineCorrect,
         hybrid_correct: hybridCorrect,
         improved: !baselineCorrect && hybridCorrect,
@@ -145,6 +152,8 @@ var Experiment = (function () {
     var hybrid = count("hybrid_correct");
     var improved = count("improved");
     var harmed = count("harmed");
+    var sameCorrect = rows.filter(function (r) { return r.outcome === "same_correct"; }).length;
+    var sameWrong = rows.filter(function (r) { return r.outcome === "same_wrong"; }).length;
     return {
       n: n,
       baseline_correct: baseline,
@@ -154,6 +163,8 @@ var Experiment = (function () {
       delta_accuracy: n ? (hybrid - baseline) / n : 0,
       improved: improved,
       harmed: harmed,
+      same_correct: sameCorrect,
+      same_wrong: sameWrong,
       net_improved: improved - harmed,
       rule_recall_at_3: n ? count("gold_in_rule_top3") / n : 0,
       baseline_reference_false_positive: count("baseline_reference_false_positive"),

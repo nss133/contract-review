@@ -4,7 +4,8 @@ const assert = require("node:assert");
 const L = require("../src/local_llm.js");
 
 const CHECKS = [
-  { id: "A", check: "재위탁 시 사전 서면동의를 받는가", severity: "필수" },
+  { id: "A", check: "재위탁 시 사전 서면동의를 받는가", severity: "필수",
+    llm_elements: ["재위탁 제한", "사전 서면동의"] },
   { id: "B", check: "손해배상 범위가 정해졌는가", severity: "권장" },
 ];
 const CLAUSES = [
@@ -18,6 +19,13 @@ test("isLocalLocation: localhost HTTP만 허용", () => {
   assert.strictEqual(L.isLocalLocation({ protocol: "https:", hostname: "example.com" }), false);
 });
 
+test("모델 선택: 4B와 14B만 허용", () => {
+  assert.strictEqual(L.setModel("qwen3:14b"), "qwen3:14b");
+  assert.strictEqual(L.getModel(), "qwen3:14b");
+  assert.strictEqual(L.setModel("unknown"), "qwen3:14b");
+  L.setModel("qwen3:4b");
+});
+
 test("buildBatch: verify 우선·Top-K 후보만 계약 본문 길이를 제한해 구성", () => {
   const batch = L.buildBatch([
     { cpId: "A", coverage: "addressed", best: { clauseIndex: 1 }, ranked: [{ clauseIndex: 1, score: 40 }] },
@@ -25,6 +33,7 @@ test("buildBatch: verify 우선·Top-K 후보만 계약 본문 길이를 제한�
   ], CHECKS, CLAUSES);
   assert.deepStrictEqual(batch.map((x) => x.check_id), ["B", "A"]);
   assert.strictEqual(batch[1].candidates[0].heading, "제5조(재위탁)");
+  assert.deepStrictEqual(batch[1].required_elements, ["재위탁 제한", "사전 서면동의"]);
 });
 
 test("buildBatches: 실험 항목 전체를 서버 제한 이하 소배치로 나눈다", () => {
@@ -42,12 +51,15 @@ test("normalizeResponse: 요청 후보 밖 조항과 잘못된 enum을 버림", 
     { cpId: "A", coverage: "addressed", best: { clauseIndex: 1 }, ranked: [{ clauseIndex: 1, score: 40 }] },
   ], CHECKS, CLAUSES);
   const out = L.normalizeResponse({ model: "qwen3:4b", findings: [
-    { check_id: "A", selected_clause_index: 1, relation: "direct", completeness: "complete", reason: "직접 규정" },
+    { check_id: "A", selected_clause_index: 1, relation: "direct", completeness: "partial", reason: "직접 규정",
+      present_elements: ["사전동의"], missing_elements: ["서면 방식"], draft_comment: "문제점: 서면 방식이 불명확함" },
     { check_id: "A", selected_clause_index: 99, relation: "direct", completeness: "complete", reason: "오류" },
     { check_id: "X", selected_clause_index: 1, relation: "direct", completeness: "complete", reason: "오류" },
   ] }, items);
   assert.strictEqual(out.findings.length, 1);
   assert.strictEqual(out.findings[0].reason, "직접 규정");
+  assert.deepStrictEqual(out.findings[0].missing_elements, ["서면 방식"]);
+  assert.strictEqual(out.findings[0].draft_comment, "문제점: 서면 방식이 불명확함");
 });
 
 test("health/review: 같은 출처 API를 사용하고 응답을 부착", async () => {

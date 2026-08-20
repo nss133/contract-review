@@ -78,6 +78,7 @@ test("판정 출처: 일괄·부속서류 출처를 구분해 보존한다", () 
   const subdoc = V.bulkVerdictComment({}, ["B"], "이상없음", "별첨", "d", "", "subdoc");
   assert.strictEqual(subdoc.store.B.origin, "subdoc");
   assert.strictEqual(V.migrateStore({ C: { verdict: "이상없음" } }).C.origin, "legacy");
+  assert.strictEqual(V.setVerdict({}, "D", "검토의견", "AI 초안", "2026-08-06", "", "llm_draft").D.origin, "llm_draft");
 });
 
 test("importVerdicts: 정상 구조 파싱", () => {

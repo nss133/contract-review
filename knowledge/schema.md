@@ -43,6 +43,9 @@ checks:
     basis: statute             # statute(법령 요건) | practice(법령 근거 없는 실무 항목)
     triggers:
       keywords: [재위탁, 재수탁]   # 조항 본문 포함 검사 (OR)
+    llm_elements:                  # 선택: 로컬 LLM 충족도 판정용, 사람이 확정한 필수 요소
+      - 재위탁 제한 또는 금지
+      - 위탁자의 사전 동의
       patterns: []                # JS 정규식 문자열 (선택)
     absence_check: true       # true: 매칭 조항 없으면 "누락 의심" 보고
     absence_precondition: [질권, 근질권]   # 선택. 조건부 부재체크 — 본문에 이 어휘가 1개+ 있을 때만

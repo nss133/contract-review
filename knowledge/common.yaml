@@ -195,6 +195,9 @@ checks:
     basis: practice
     triggers:
       keywords: [계약기간, 유효기간, 존속기간]
+    llm_elements:
+      - 계약기간 시작 시점
+      - 계약기간 종료 시점
     absence_check: true
     sources: []
   - id: CMN-07
@@ -217,6 +220,9 @@ checks:
     basis: practice
     triggers:
       keywords: [해지, 해제, 계약의 해지]
+    llm_elements:
+      - 해지 또는 해제 사유
+      - 당사자 간 해지권의 균형
     absence_check: true
     sources: []
   - id: CMN-09
@@ -228,6 +234,9 @@ checks:
     basis: practice
     triggers:
       keywords: [최고, 시정, 서면 통지]
+    llm_elements:
+      - 시정 최고 기간
+      - 서면 해지 통지
     absence_check: true
     sources: []
   - id: CMN-10
@@ -251,6 +260,10 @@ checks:
     basis: practice
     triggers:
       keywords: [손해배상, 배상책임, 배상]
+    llm_elements:
+      - 손해배상 귀책사유
+      - 손해배상 범위
+      - 당사자 간 책임의 균형
     absence_check: true
     sources: []
   - id: CMN-12
@@ -262,6 +275,10 @@ checks:
     basis: statute
     triggers:
       keywords: [통상손해, 통상의 손해, 손해배상의 범위, 특별손해, 특별한 사정, 간접손해, 일실이익]
+    llm_elements:
+      - 통상손해 범위
+      - 특별손해 또는 간접손해 포함 여부
+      - 특별손해의 예견가능성 요건
     absence_check: false
     sources:
       - law: 민법
@@ -307,6 +324,9 @@ checks:
     basis: practice
     triggers:
       keywords: [종료 후에도, 존속한다, 비밀유지]
+    llm_elements:
+      - 계약 종료 후 비밀유지의무 존속
+      - 비밀유지 존속기간
     absence_check: true
     sources: []
   - id: CMN-17
@@ -340,6 +360,9 @@ checks:
     basis: practice
     triggers:
       keywords: [관할, 분쟁, 중재, 관할법원]
+    llm_elements:
+      - 분쟁해결 방식
+      - 관할 법원 또는 중재기관
     # 결정 문구 승격(2026-08-03): 아래 문구가 조항에 그대로 있으면 법원·중재기관을 명확히
     # 지정한 것 — 점수가 확정 문턱에 못 미쳐도 confirmed 승격("확인 권장" 과잉 표시 방지)
     decisive_patterns: [전속관할, 합의관할, 관할법원으로 한다, 관할 법원으로 한다, 관할로 한다, 제1심, 대한상사중재원, 중재로 해결]

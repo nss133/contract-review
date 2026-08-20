@@ -10,6 +10,7 @@ import yaml
 
 import config
 from build_team_guide_docx import build_guide
+from build_labeling_form import build as build_labeling_form
 from enrich import enrich
 from validate import load_knowledge
 
@@ -103,9 +104,11 @@ def build(knowledge_dir, out_path, law_dbs=None, news_db=None, corpus_path=None)
     zpath = out.parent / f"contract-review-v{version}.zip"
     guide_path = out.parent / f"contract-review-user-guide-v{version}.docx"
     build_guide(version, guide_path)
+    labeling_path = build_labeling_form()
     with zipfile.ZipFile(zpath, "w", zipfile.ZIP_DEFLATED) as zf:
         zf.write(out, out.name)
         zf.write(guide_path, guide_path.name)
+        zf.write(labeling_path, "matching-labeling-form.html")
     print(f"배포 zip: {zpath.name} ({zpath.stat().st_size // 1024}KB)")
     return out
 

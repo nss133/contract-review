@@ -9,7 +9,7 @@ var Loop = (function () {
   // 신규 집계는 reason('해당사항 없음')을 같은 칸에 합산한다.
   var VERDICTS = ["이상없음", "검토의견", "해당없음"];
   var NA_REASON = "해당사항 없음";
-  var ORIGINS = ["manual", "bulk", "subdoc", "prior_review", "legacy"];
+  var ORIGINS = ["manual", "bulk", "subdoc", "prior_review", "llm_draft", "legacy"];
 
   function emptyCorpus() {
     return { meta: { updated: "", contract_count: 0, hashes: [] }, byCheck: {} };
@@ -25,6 +25,9 @@ var Loop = (function () {
     if (!slot.llm_verdict_pairs) slot.llm_verdict_pairs = {};
     if (!slot.matching_counts) slot.matching_counts = { observed: 0, confirmed: 0, reassigned: 0,
       top1_correct: 0, top1_wrong: 0, gold_in_top3: 0 };
+    if (!slot.llm_assistance_counts) slot.llm_assistance_counts = {
+      analyzed: 0, draft_offered: 0, draft_accepted: 0, accepted_unchanged: 0, accepted_edited: 0
+    };
     return slot;
   }
 
@@ -43,6 +46,7 @@ var Loop = (function () {
     var verdicts = exportObj.verdicts || {};
     var systemItems = (exportObj.system_assessments && exportObj.system_assessments.items) || {};
     var matchingItems = (exportObj.matching_observations && exportObj.matching_observations.items) || {};
+    var assistanceItems = (exportObj.llm_assistance && exportObj.llm_assistance.items) || {};
     Object.keys(verdicts).forEach(function (cpId) {
       var v = verdicts[cpId];
       if (!v) return;
@@ -89,6 +93,21 @@ var Loop = (function () {
           slot.comments.push({ text: text, verdict: v.verdict, count: 1,
             reviewers: reviewer ? [reviewer] : [], date: date });
         }
+      }
+    });
+    // LLM 보조 노출 자체와 초안 채택은 판정 유무와 별도 집계한다. 관련 원문을 찾은 항목은
+    // 최종 판정을 요구하지 않을 수 있으므로 verdicts만 순회하면 사용량이 과소계상된다.
+    Object.keys(assistanceItems).forEach(function (cpId) {
+      var assistance = assistanceItems[cpId];
+      if (!assistance || !assistance.analyzed) return;
+      var slot = _ensureCheck(next, cpId);
+      var ac = slot.llm_assistance_counts;
+      ac.analyzed++;
+      if (assistance.draft_offered) ac.draft_offered++;
+      if (assistance.draft_accepted) {
+        ac.draft_accepted++;
+        if (assistance.final_comment_unchanged) ac.accepted_unchanged++;
+        else ac.accepted_edited++;
       }
     });
     next.meta.updated = date || next.meta.updated;
@@ -164,10 +183,24 @@ var Loop = (function () {
     return total;
   }
 
+  function llmAssistanceStats(corpus) {
+    var total = { analyzed: 0, draft_offered: 0, draft_accepted: 0,
+      accepted_unchanged: 0, accepted_edited: 0 };
+    var byCheck = (corpus && corpus.byCheck) || {};
+    Object.keys(byCheck).forEach(function (cpId) {
+      var ac = byCheck[cpId].llm_assistance_counts || {};
+      Object.keys(total).forEach(function (k) { total[k] += ac[k] || 0; });
+    });
+    total.acceptance_rate = total.draft_offered ? total.draft_accepted / total.draft_offered : null;
+    total.unchanged_rate = total.draft_accepted ? total.accepted_unchanged / total.draft_accepted : null;
+    return total;
+  }
+
   function corpusSummary(corpus) {
     var out = { contracts: (corpus && corpus.meta && corpus.meta.contract_count) || 0,
       verdicts: 0, issues: 0, no_issue: 0, not_applicable: 0,
-      route_checks: { detailed: 0, applicability: 0, quick: 0, standard: 0 }, matching: matchingStats(corpus) };
+      route_checks: { detailed: 0, applicability: 0, quick: 0, standard: 0 },
+      matching: matchingStats(corpus), llm_assistance: llmAssistanceStats(corpus) };
     var byCheck = (corpus && corpus.byCheck) || {};
     Object.keys(byCheck).forEach(function (cpId) {
       var counts = byCheck[cpId].counts || {};
@@ -231,6 +264,9 @@ var Loop = (function () {
       Object.keys(src.matching_counts || {}).forEach(function (k) {
         slot.matching_counts[k] = (slot.matching_counts[k] || 0) + src.matching_counts[k];
       });
+      Object.keys(src.llm_assistance_counts || {}).forEach(function (k) {
+        slot.llm_assistance_counts[k] = (slot.llm_assistance_counts[k] || 0) + src.llm_assistance_counts[k];
+      });
       (src.comments || []).forEach(function (cm) {
         var found = null;
         for (var j = 0; j < slot.comments.length; j++)
@@ -257,6 +293,7 @@ var Loop = (function () {
     automationStats: automationStats,
     reviewRoute: reviewRoute,
     matchingStats: matchingStats,
+    llmAssistanceStats: llmAssistanceStats,
     corpusSummary: corpusSummary,
     topComments: topComments,
     curationSignals: curationSignals,
