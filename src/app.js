@@ -1194,8 +1194,20 @@ function exportCorpusBackup() {
   var blob = new Blob([JSON.stringify(loopCorpus, null, 2)], { type: "application/json" });
   var url = URL.createObjectURL(blob);
   var a = document.createElement("a");
-  a.href = url; a.download = "contract-review-corpus-backup.json";
-  a.click(); URL.revokeObjectURL(url);
+  // 폐쇄망 무반응 보고(2026-08-20): ① 파일명에 날짜·건수를 박아 "(3)" 같은 중복 사본과
+  // 구버전 혼동 방지 ② anchor를 DOM에 붙였다 떼고 revoke를 지연 — 일부 브라우저·보안환경에서
+  // 미부착 anchor 클릭/즉시 revoke가 다운로드를 조용히 무산시킴 ③ 성공 메시지 표기 —
+  // 종전엔 아무 피드백이 없어 다운로드가 조용히 저장되면 "반응 없음"으로 읽혔음.
+  a.href = url;
+  a.download = "contract-review-corpus-backup_" + verdictToday() + "_" +
+    (loopCorpus.meta.contract_count || 0) + "건.json";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(function () { URL.revokeObjectURL(url); }, 3000);
+  var msg = document.getElementById("team-actions-msg");
+  if (msg) msg.textContent = "코퍼스 백업 파일 생성됨(계약 " + (loopCorpus.meta.contract_count || 0) +
+    "건, 기준일 " + (loopCorpus.meta.updated || "-") + ") — 저장이 안 보이면 브라우저 다운로드 목록(Ctrl+J)과 차단 아이콘을 확인하세요";
 }
 // 코퍼스 백업 복원 — 형태 검증 후 통째 교체.
 function restoreCorpusBackup(file, done) {
