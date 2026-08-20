@@ -797,3 +797,10 @@ td.empty { text-align: center; color: var(--ink-faint); padding: var(--sp-4); }
 
 /* 자동 기재 표시(2026-08-19 피드백, 참고 항목 자동 완료) */
 .vd-auto-note { display: block; margin-top: 2px; font-size: var(--fs-meta); color: var(--ink-mute); }
+
+/* 3분할 재편(12차) — ② 확인 완료 칸의 접힌 요약 */
+.done-fold > summary { cursor: pointer; font-size: var(--fs-body-sub); color: #17603f;
+  background: #edf8f2; border: 1px solid #a9d2bd; border-radius: 6px; padding: 5px 10px;
+  list-style-position: inside; }
+.done-fold[open] > summary { margin-bottom: 6px; }
+.done-fold .compare-item { opacity: .85; }

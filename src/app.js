@@ -1427,7 +1427,11 @@ function withVerdictAnchor(rootSel, cpId, rerenderFn) {
   if (top === null) return;
   requestAnimationFrame(function () {
     var el2 = document.querySelector(sel);
-    if (el2) window.scrollBy(0, el2.getBoundingClientRect().top - top);
+    if (!el2) return;
+    var r2 = el2.getBoundingClientRect();
+    // 카드가 닫힌 접힘(② 확인 완료) 안으로 이동하면 rect가 0 — 보정하지 않음(현 위치 유지).
+    if (!r2.top && !r2.height) return;
+    window.scrollBy(0, r2.top - top);
   });
 }
 // 조항별 보기·리포트 공용 — 판정 버튼 클릭·코멘트 저장 바인딩.
@@ -2485,7 +2489,7 @@ function renderConsiderItem(r) {
     "</div>";
 }
 /* ---------- 조항별 검토(P2) — 삼단 연속 스크롤 ----------
-   조항 행(row) 하나 = grid 3셀(① 계약서 원문 ② 검토된 내용 ③ 제안 사항).
+   조항 행(row) 하나 = grid 3셀(① 계약서 원문 ② 확인 완료(접힘) ③ 검토할 항목·의견 — 12차 재편).
    전 행을 한 번에 렌더 — 클릭 탐색·스크롤 동기화 코드 불요(행 단위 grid가 정렬을 구조적으로 보장).
    오프스크린 렌더 비용은 CSS content-visibility로 제거(§4.2 1차 전략).
    미니맵(조항 점프 목차)은 P2 스코프 아웃 — 100+조항 실사용에서 필요해지면 추가. */
@@ -2584,31 +2588,38 @@ function rowStatusCls(g) {
 
 // ③ 제안 사항 카드 — 이 조항에서 검토의견으로 판정 기재한 항목(상대방에 개진할 내용의 압축 뷰).
 // 3버튼+코멘트는 유지하되 loop 힌트는 ② 카드에만(같은 행 중복 소음 방지).
-function renderOpinionCard(r) {
-  var cp = _cpById(r.cpId);
-  if (!cp) return "";
-  var v = verdictStore[r.cpId] || {};
-  return '<div class="opinion-card">' +
-    '<div class="ci-head"><span class="vd-badge vd-comment">검토의견</span>' +
-    '<span class="sev sev-' + cp.severity + '">' + esc(cp.severity) + '</span>' +
-    '<span class="ci-id">' + esc(cp.id) + "</span></div>" +
-    '<p class="ci-q">' + labelQ(cp) + "</p>" +
-    (v.comment ? '<p class="oc-comment">' + esc(v.comment) + "</p>" : "") +
-    verdictControlHtml(cp.id, true) +
-    "</div>";
-}
+// (renderOpinionCard는 3분할 재편(12차)으로 폐기 — 검토의견 카드는 ③ 검토할 항목 칸의
+//  본 카드(renderCompareItem)가 판정 컨트롤과 함께 담당)
 
 // 조항 행 1개 — grid 3셀. ②③이 빈 셀은 흐린 placeholder 한 줄("—")로 행 리듬 유지.
 // 검토항목이 전무한 세그먼트((전문)·표제부·서명란 등)는 접지 않고 본문을 흐리게(시각적 강등).
 // 비교 모드: 구 계약 열 prepend + ②③ 통합(검토·제안) — 3열 유지(스펙 §UI).
 function clauseRowHtml(c) {
   var g = _clauseGroups[c.index] || { addressed: [], verify: [] };
-  var cards = g.addressed.map(function (r) { return renderCompareItem(r, false); })
-    .concat(g.verify.map(function (r) { return renderCompareItem(r, true); })).join("");
-  var opinions = g.addressed.concat(g.verify).filter(function (r) {
-    var v = verdictStore[r.cpId];
-    return v && v.verdict === "검토의견";
-  }).map(renderOpinionCard).join("");
+  var all = g.addressed.map(function (r) { return { r: r, ev: false }; })
+    .concat(g.verify.map(function (r) { return { r: r, ev: true }; }));
+  // 3분할 재편(12차, 2026-08-19 사용자 결정): ② 확인 완료(이상없음 — 자동·수동)는 1줄
+  // 요약으로 접고, ③ 검토할 항목(미판정 + 검토의견)에 실제 작업 공간을 준다.
+  // 종전 ③(남긴 검토의견)이 거의 늘 빈 칸이던 문제 해소. 접기 금지 원칙(2026-07-30)의
+  // 예외 — 완료분 접힘은 사용자 본인의 제안·승인 사항.
+  var done = all.filter(function (x) {
+    var v = verdictStore[x.r.cpId];
+    return v && v.verdict === "이상없음";
+  });
+  var needs = all.filter(function (x) {
+    var v = verdictStore[x.r.cpId];
+    return !(v && v.verdict === "이상없음");
+  });
+  var autoN = done.filter(function (x) {
+    var v = verdictStore[x.r.cpId];
+    return v.origin === "auto";
+  }).length;
+  var doneCards = done.map(function (x) { return renderCompareItem(x.r, x.ev); }).join("");
+  var doneHtml = done.length
+    ? '<details class="done-fold"><summary>✓ 확인 완료 ' + done.length + "건" +
+      (autoN ? " (자동 " + autoN + "건)" : "") + " — 펼치기</summary>" + doneCards + "</details>"
+    : '<p class="cr-empty">—</p>';
+  var needCards = needs.map(function (x) { return renderCompareItem(x.r, x.ev); }).join("");
   var noItems = !g.addressed.length && !g.verify.length;
   // 검토항목 전무 세그먼트는 연속 빈 줄(표제부 여백 등)을 압축해 행 공간 확보 — 문언 자체는 불변.
   var body = noItems ? String(c.body).replace(/\n{3,}/g, "\n\n") : c.body;
@@ -2617,8 +2628,8 @@ function clauseRowHtml(c) {
     return '<div class="clause-row' + (noItems ? " row-noitems" : "") + rowStatusCls(g) +
       '" data-ci="' + c.index + '">' +
       '<div class="cr-cell cr-src"><strong>' + esc(c.heading) + "</strong><pre>" + esc(body) + "</pre></div>" +
-      '<div class="cr-cell cr-reviewed">' + (cards || '<p class="cr-empty">—</p>') + "</div>" +
-      '<div class="cr-cell cr-opinions">' + (opinions || '<p class="cr-empty">—</p>') + "</div>" +
+      '<div class="cr-cell cr-reviewed">' + doneHtml + "</div>" +
+      '<div class="cr-cell cr-opinions">' + (needCards || '<p class="cr-empty">—</p>') + "</div>" +
       "</div>";
   }
   // ── 비교 모드 행: 구 계약(전년) | 신 계약(현재, 변경분 하이라이트) | 검토·제안 ──
@@ -2648,7 +2659,7 @@ function clauseRowHtml(c) {
     '" data-ci="' + c.index + '">' +
     '<div class="cr-cell cr-old">' + oldCell + "</div>" +
     '<div class="cr-cell cr-src"><strong>' + esc(c.heading) + "</strong>" + badges + "<pre>" + newBodyHtml + "</pre></div>" +
-    '<div class="cr-cell cr-reviewed">' + ((cards + opinions) || '<p class="cr-empty">—</p>') + "</div>" +
+    '<div class="cr-cell cr-reviewed">' + ((needCards + (done.length ? doneHtml : "")) || '<p class="cr-empty">—</p>') + "</div>" +
     "</div>";
 }
 
@@ -2667,9 +2678,14 @@ function rerenderRow(ci) {
   var old = document.querySelector('#clause-rows .clause-row[data-ci="' + ci + '"]');
   var c = state.clauses[ci];
   if (!old || !c) return;
+  // 완료 접힘(② 칸)의 펼침 상태 보존 — 판정 클릭마다 접히면 흐름이 끊김.
+  var foldEl = old.querySelector(".done-fold");
+  var foldOpen = !!(foldEl && foldEl.open);
   var tmp = document.createElement("div");
   tmp.innerHTML = clauseRowHtml(c);
   var next = tmp.firstChild;
+  var nextFold = next.querySelector(".done-fold");
+  if (nextFold && foldOpen) nextFold.open = true;
   old.parentNode.replaceChild(next, old);
   bindRowControls(next);
 }
@@ -2937,7 +2953,7 @@ function renderClauses() {
     colsHead.classList.toggle("compare-mode", cmpOn);
     colsHead.innerHTML = cmpOn
       ? "<span>구 계약(전년)</span><span>신 계약(현재)</span><span>검토 내용·의견</span>"
-      : "<span>① 계약서 원문</span><span>② 검토된 내용</span><span>③ 남긴 검토의견</span>";
+      : "<span>① 계약서 원문</span><span>② 확인 완료(자동·수동)</span><span>③ 검토할 항목·의견</span>";
   }
   rowsEl.innerHTML = state.clauses.map(clauseRowHtml).join("");
   rowsEl.querySelectorAll(".clause-row").forEach(bindRowControls);
