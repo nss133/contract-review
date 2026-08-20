@@ -116,6 +116,14 @@ var Assessment = (function () {
         evidence: evidence,
         candidate_clauses: ranked,
         reasons: r.best && r.best.reasons ? r.best.reasons.slice() : [],
+        perspective: r.perspective ? {
+          rule: r.perspective.rule || "",
+          obligation_bearer: r.perspective.bearer || "unknown",
+          duration: r.perspective.duration || "unknown",
+          favorable_to_company: !!r.perspective.favorable,
+          auto_pass: !!r.perspective.auto_pass,
+          reason: String(r.perspective.reason || "")
+        } : null,
         decision_source: {
           kind: "rule",
           engine_version: String(ctx.engine_version || "")
@@ -129,6 +137,10 @@ var Assessment = (function () {
       generated: String(ctx.generated || ""),
       contract_hash: String(ctx.contract_hash || ""),
       type_id: ctx.type_id || null,
+      stance: ctx.stance || "party",
+      party_roles: (ctx.party_roles || []).slice(),
+      party_context: ctx.party_context || null,
+      active_modules: (ctx.active_modules || []).slice(),
       items: items
     };
   }

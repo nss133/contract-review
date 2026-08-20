@@ -286,6 +286,90 @@ function detectPartyRoles(text) {
   });
   return roles;
 }
+
+// 당사 상호가 계약상 어떤 호칭(갑·을·병)으로 정의됐는지 읽는다. 지위를 못 읽더라도
+// 호칭을 알면 개별 조항의 의무주체가 당사인지 상대방인지 구별할 수 있다.
+function detectPartyContext(text) {
+  var t = String(text || "");
+  var ours = [], seen = {};
+  function add(alias) {
+    if (alias && !seen[alias]) { seen[alias] = true; ours.push(alias); }
+  }
+  OUR_NAMES.forEach(function (name) {
+    var from = 0, idx;
+    while ((idx = t.indexOf(name, from)) !== -1) {
+      from = idx + name.length;
+      var scope = t.slice(Math.max(0, idx - 80), Math.min(t.length, idx + name.length + 120));
+      var after = scope.slice(scope.indexOf(name) + name.length);
+      var m = after.match(/(?:이하\s*)?["'“”‘’]?(갑|을|병)["'“”‘’]?(?:이라\s*(?:한다|칭한다)|로\s*(?:한다|칭한다)|이라고\s*한다)?/);
+      if (m) add(m[1]);
+      var before = scope.slice(0, scope.indexOf(name));
+      var all = before.match(/["'“”‘’]?(갑|을|병)["'“”‘’]?\s*(?:[:：]|은|는|이|가)/g) || [];
+      if (all.length) {
+        var bm = all[all.length - 1].match(/(갑|을|병)/);
+        if (bm) add(bm[1]);
+      }
+    }
+  });
+  var counterparts = [];
+  ["갑", "을", "병"].forEach(function (a) {
+    if (ours.indexOf(a) === -1 && new RegExp("(?:[\\\"'“”‘’]?" + a + "[\\\"'“”‘’]?\\s*(?:[:：]|은|는|이|가|에게|의))").test(t))
+      counterparts.push(a);
+  });
+  // 2자 계약은 상대 호칭이 본문에 아직 나오지 않아도 반대편을 안전하게 추론할 수 있다.
+  if (!counterparts.length && ours.length === 1 && (ours[0] === "갑" || ours[0] === "을"))
+    counterparts.push(ours[0] === "갑" ? "을" : "갑");
+  var roles = detectPartyRoles(t);
+  return {
+    ourAliases: ours,
+    counterpartyAliases: counterparts,
+    roles: roles,
+    confidence: ours.length ? "explicit_alias" : (roles.length ? "role_only" : "unknown")
+  };
+}
+
+function _aliasSubject(sentence, aliases) {
+  for (var i = 0; i < (aliases || []).length; i++) {
+    var a = aliases[i];
+    if (new RegExp("(?:^|[^가-힣])(?:[\\\"'“”‘’]?" + a + "[\\\"'“”‘’]?)(?:은|는|이|가|에게|의|\\s)").test(sentence)) return true;
+  }
+  return false;
+}
+
+// 현재 첫 적용 규칙: 비밀유지 존속기간. 문구의 존재와 유불리를 분리한다.
+// 상대방만 의무를 부담하고 종료 후 기간 제한 없이 존속하는 경우에 한해 당사에 유리하다고
+// 자동 판정한다. 당사 의무·쌍방 의무·주체 미상은 반드시 사람에게 남긴다.
+function evaluatePerspective(check, clause, partyContext) {
+  if (!check || check.perspective_rule !== "confidentiality_duration" || !clause) return null;
+  var text = String(clause.heading || "") + " " + String(clause.body || "");
+  var sentences = text.split(/(?<=[.!?。]|다\.)\s+|\n+/).filter(function (s) {
+    return /(비밀|기밀|비공개|confidential)/i.test(s) && /(종료|해지|만료|존속|유효|기간|무기한|영구)/.test(s);
+  });
+  if (!sentences.length) return { rule: check.perspective_rule, bearer: "unknown", duration: "unknown",
+    favorable: false, auto_pass: false, reason: "비밀유지 존속기간 문장의 의무주체를 확인할 수 없음" };
+  var ctx = partyContext || {};
+  var ours = false, theirs = false, mutual = false, indefinite = false, fixed = false;
+  sentences.forEach(function (s) {
+    ours = ours || _aliasSubject(s, ctx.ourAliases);
+    theirs = theirs || _aliasSubject(s, ctx.counterpartyAliases);
+    mutual = mutual || /(각\s*당사자|당사자들|쌍방|상호|갑\s*(?:과|및)\s*을|갑·을)/.test(s);
+    fixed = fixed || /\d+(?:\.\d+)?\s*(?:년|개월|월|일)/.test(s);
+    indefinite = indefinite || /(무기한|영구|기간의\s*정함이\s*없|계약\s*(?:종료|해지|만료)\s*후에도\s*(?:계속|영구|존속)|계속하여\s*존속)/.test(s);
+  });
+  var bearer = mutual || (ours && theirs) ? "mutual" : (ours ? "company" : (theirs ? "counterparty" : "unknown"));
+  var duration = fixed ? "fixed" : (indefinite ? "indefinite" : "unknown");
+  var autoPass = bearer === "counterparty" && duration === "indefinite";
+  return {
+    rule: check.perspective_rule,
+    bearer: bearer,
+    duration: duration,
+    favorable: autoPass,
+    auto_pass: autoPass,
+    reason: autoPass
+      ? "상대방만 비밀유지의무를 부담하고 종료 후에도 기간 제한 없이 존속하여 당사에 유리함"
+      : "비밀유지 존속기간의 의무주체·유불리를 사람 확인 대상으로 유지함"
+  };
+}
 // 계약 상대방에 미래에셋 계열사가 있는가 — 수익자 국면이라도 상대방이 계열사면
 // 계열사 거래 이슈가 실제 발생(사용자 지적, 2026-08-05).
 // 판정은 "미래에셋 + 법인격/업권 표기"가 붙은 **법인명** 기준. 단순히 "미래에셋"이라는
@@ -832,7 +916,7 @@ function detectSubdocRefs(fullText, defs) {
 }
 
 // analyze(clauses, docs, activeModules) — 하위호환(3번째 인자 배열)
-// analyze(clauses, docs, { modules, stance, baseClauses, docTitle, partyRoles }) — 확장형
+// analyze(clauses, docs, { modules, stance, baseClauses, docTitle, partyRoles, partyContext }) — 확장형
 //   stance      : 검토 국면(party|beneficiary) — 수범자가 당사가 아닌 규제를 배제
 //   baseClauses : 원계약 조항(변경합의서 검토 시). 부재 판정을 원계약+변경본 합본으로 수행해
 //                 "원계약에 이미 있는 조항"이 누락으로 잡히는 오탐을 차단.
@@ -863,6 +947,7 @@ function analyze(clauses, docs, opts) {
   var fullText = (clauses || []).concat(baseClauses).map(function (cl) {
     return String(cl.heading || "") + " " + String(cl.body || "");
   }).join("\n");
+  var partyContext = o.partyContext || detectPartyContext(fullText);
   // 조항 귀속(11.3차): 표제가 특정 체크를 정면으로 지시하는 조항을 미리 확정.
   var owners = computeClauseOwners(clauses, model.checks.map(function (e) { return e.cp; }));
 
@@ -965,6 +1050,9 @@ function analyze(clauses, docs, opts) {
       serviceGated = true;
     }
 
+    var perspective = null;
+    if ((coverage === "addressed" || coverage === "verify") && candidates.length)
+      perspective = evaluatePerspective(cp, candidates[0].clause, partyContext);
     var reasons = _reasons(tier, candidates.length ? candidates : eligibleScored, cp);
     var rankedTop = eligibleScored.slice(0, 3).map(function (r) {
       return { clauseIndex: r.clause.index, score: r.s.score };
@@ -979,6 +1067,7 @@ function analyze(clauses, docs, opts) {
       inBase: inBase,      // 원계약에서 커버된 위치(변경합의서 국면) — 없으면 null
       roleGated: roleGated, // 당사 지위 불일치로 접힘(11.1차) — 진단·설명용
       autoClear: acHit,    // 문장 요건 판정(12차) — {ok, sentence} 또는 null. 자동 기재·빠른 확인 근거
+      perspective: perspective, // 당사 관점 판정(13차) — 문구 존재와 회사 유불리를 분리
       serviceGated: serviceGated // 용역 성질 불일치로 부재알람 접힘(12차) — 진단·설명용
     });
 
@@ -1024,6 +1113,8 @@ if (typeof module !== "undefined")
     computeClauseOwners: computeClauseOwners,
     docTitleAllows: docTitleAllows,
     detectPartyRoles: detectPartyRoles,
+    detectPartyContext: detectPartyContext,
+    evaluatePerspective: evaluatePerspective,
     hasAffiliateParty: hasAffiliateParty,
     partyRoleAllows: partyRoleAllows,
     suggestModules: suggestModules,

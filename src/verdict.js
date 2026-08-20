@@ -5,7 +5,8 @@
    브라우저 전역 Verdict + node require 겸용.
 
    판정 체계(11.3차 재구성, 사용자 피드백):
-     이상없음 ─ 사유(reason, 선택): 반영되어 있음 | 해당사항 없음 | (미선택)
+     이상없음 ─ 사유(reason, 선택): 반영되어 있음 | 해당사항 없음 |
+       회사에 유리·불리하지 않음 | 수용 가능한 위험 | (미선택)
      검토의견 ─ 코멘트 필수 성격
    구 '해당없음'은 독립 판정에서 폐기됨 — "우리 케이스와 해당사항이 없어서 이상없다"는
    경우를 '해당없음'으로 찍게 되어 곤란했음(체크 자체가 부적절하다는 뜻으로 오독).
@@ -13,7 +14,7 @@
 var Verdict = (function () {
   var VERDICTS = ["이상없음", "검토의견"];
   // 이상없음의 사유(선택). 빈 문자열 = 미선택.
-  var OK_REASONS = ["반영되어 있음", "해당사항 없음"];
+  var OK_REASONS = ["반영되어 있음", "해당사항 없음", "회사에 유리·불리하지 않음", "수용 가능한 위험"];
   var LEGACY_NA = "해당없음"; // 구 판정값 — 이상없음 + '해당사항 없음'으로 이관
   // "auto" = 시스템 자동 기재(참고 항목 매칭 확인 등) — 사람 판정과 구분해 코퍼스 집계됨.
   var ORIGINS = ["manual", "bulk", "subdoc", "prior_review", "llm_draft", "legacy", "auto"];
@@ -92,6 +93,9 @@ var Verdict = (function () {
   // auto_verdict:false인 복합 체크는 문장 요건이 충족돼도 사람 판정을 남긴다.
   function canAutoPass(check, result) {
     if (!check || !result || result.coverage !== "addressed" || check.auto_verdict === false) return false;
+    // 당사 관점 규칙은 일반 문장요건과 별도의 보수적 통과 사유다. 현재는 참고 항목에서
+    // 상대방만 의무를 지고 당사 보호가 강화되는 경우처럼 방향이 명백할 때만 생성된다.
+    if (check.severity === "참고" && result.perspective && result.perspective.auto_pass) return true;
     // 참고 항목도 auto_clear를 명시했다면 그 보수적 문장 요건을 우회하지 않는다.
     // 미선언 참고 체크만 기존 정책(확정 매칭이면 자동 완료)을 유지한다.
     if (check.severity === "참고") return !check.auto_clear || !!(result.autoClear && result.autoClear.ok);
@@ -99,7 +103,9 @@ var Verdict = (function () {
   }
 
   function verdictSummary(store) {
-    var sum = { "이상없음": 0, "검토의견": 0, total: 0, reasons: { "반영되어 있음": 0, "해당사항 없음": 0 } };
+    var reasons = {};
+    OK_REASONS.forEach(function (r) { reasons[r] = 0; });
+    var sum = { "이상없음": 0, "검토의견": 0, total: 0, reasons: reasons };
     store = store || {};
     for (var k in store) {
       if (!Object.prototype.hasOwnProperty.call(store, k)) continue;
@@ -126,6 +132,12 @@ var Verdict = (function () {
     var v = obj.verdicts;
     if (!v || typeof v !== "object") return {};
     return migrateStore(v);
+  }
+
+  // 3분할 작업열 결정. 이상없음을 방금 선택한 카드는 사유·메모 입력을 끝낼 때까지
+  // ③ 작업열에 고정하고, 명시적으로 완료한 뒤에만 ② 확인 완료 열로 보낸다.
+  function reviewColumn(item, editPinned) {
+    return item && item.verdict === "이상없음" && !editPinned ? "done" : "needs";
   }
 
   // 일괄 판정(코멘트 포함): cpIds 중 '미판정'인 것만 verdict+comment로 채움 — 이미 찍은 판정(예외 지정분)은 보존.
@@ -245,6 +257,7 @@ var Verdict = (function () {
     setReason: setReason,
     revertAutoVerdicts: revertAutoVerdicts,
     canAutoPass: canAutoPass,
+    reviewColumn: reviewColumn,
     verdictKey: verdictKey,
     opinionKey: opinionKey,
     composeOpinion: composeOpinion,

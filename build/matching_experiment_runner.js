@@ -3,7 +3,7 @@ const fs = require("fs");
 const crypto = require("crypto");
 const { segmentContract, extractDocTitle } = require("../src/segmenter.js");
 const { detectType, pickType, suggestModules, analyze, detectStance,
-  moduleAllowedInStance, detectPartyRoles, hasAffiliateParty } = require("../src/matcher.js");
+  moduleAllowedInStance, detectPartyRoles, detectPartyContext, hasAffiliateParty } = require("../src/matcher.js");
 const Experiment = require("../src/experiment.js");
 const LocalLLM = require("../src/local_llm.js");
 
@@ -20,13 +20,14 @@ function analyzeDocument(d) {
   const doc = types.find(t => t.meta.type_id === typeId) || null;
   const stance = detectStance(text).stance;
   const partyRoles = detectPartyRoles(text);
+  const partyContext = detectPartyContext(text);
   const stanceCtx = { affiliate_party: hasAffiliateParty(text) };
   const modules = (common.meta.modules || []).concat(doc ? doc.meta.modules || [] : [])
     .filter(m => moduleAllowedInStance(m, stance, stanceCtx));
   const suggested = suggestModules(text, modules, { stance, docTitle, stanceCtx });
   const active = modules.filter(m => m.always_on || suggested.on.includes(m.id)).map(m => m.id);
   const docs = [{ checkpoints: common.checks }, { checkpoints: doc ? doc.checks : [] }];
-  const result = analyze(clauses, docs, { modules: active, stance, docTitle, partyRoles });
+  const result = analyze(clauses, docs, { modules: active, stance, docTitle, partyRoles, partyContext });
   const hash = crypto.createHash("sha256").update(text).digest("hex");
   const base = {
     documentId: d.id, contractHash: hash, typeId, generated: payload.generated,

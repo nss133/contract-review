@@ -28,6 +28,10 @@ checks:
   - id: OUT-09-1               # 전역 유일. 유형약어-번호(-원자순번), 조문 항·호 = 1 항목
     check: 위탁 문서에 "위탁업무 수행 목적 외 개인정보의 처리 금지" 사항이 포함되어 있는가   # 질문 1문장. 서술형 코멘트 금지
     label: "목적외 처리 금지"    # 선택. UI 짧은 라벨(8자 내외). 생략 시 check 전문 표시
+    decision_question: 해당 조항이 회사에 불리하지 않아 수정이 불필요한가? # 선택(13차). 사람 판정용 질문
+    pass_guidance: 문언이 명확하고 회사에 불리하지 않으면 선택            # 선택. 이상없음 기준
+    opinion_guidance: 회사 의무가 과도하거나 문언이 모호하면 선택           # 선택. 검토의견 기준
+    perspective_rule: confidentiality_duration # 선택(13차). 회사 관점 자동판정 규칙(현재 허용값 1개)
     module: M-PRIV             # 생략 시 유형 기본 (항상 포함)
     stance_scope: [beneficiary]  # 선택. 이 체크가 노출되는 검토 국면. 생략 시 전 국면. 아래 "검토 국면" 참조
     requires_doc_title: [질권, 담보설정]  # 선택. 문서 제목이 이 성격일 때만 적용(11.1차)
@@ -82,6 +86,11 @@ checks:
     note: ""                  # 선택, 1줄 이하 보충 메모. 서술형 지침 작성 금지(폐지된 guidance 대체 아님)
     jid_refs: []              # 사내 판단 선례 라벨 (예: J-2026-0496)
     news_refs: []             # briefing.sqlite3 items.id
+
+`check`는 매칭 엔진이 조항을 찾는 탐색문이므로 기존 의미를 유지한다. `decision_question`은
+사람이 `이상없음`/`검토의견`으로 답할 수 있는 UI 질문이며 매칭 점수에는 사용하지 않는다.
+`perspective_rule`은 문구 존재만으로 통과시키지 않고 당사 호칭과 의무주체를 함께 읽는다.
+의무주체가 불명확하거나 쌍방·당사 부담이면 자동판정을 하지 않는다.
 
 ## v1 → v2 변경 (breaking change)
 

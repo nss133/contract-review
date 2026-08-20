@@ -94,6 +94,13 @@ def score(cases, results):
         for cid in c.get("matched_must_include") or []:
             if cid not in matched:
                 errs.append(f"조항 부착 실패: {cid}가 addressed/verify에 없음")
+        items = r.get("items") or {}
+        for cid in c.get("auto_pass_must_include") or []:
+            if not (items.get(cid) or {}).get("auto_pass"):
+                errs.append(f"자동통과 실패: {cid}가 auto_pass가 아님")
+        for cid in c.get("auto_pass_must_exclude") or []:
+            if (items.get(cid) or {}).get("auto_pass"):
+                errs.append(f"자동통과 오탐: {cid}가 auto_pass됨")
         subcov = set(r.get("subdoc_covered") or [])
         for cid in c.get("subdoc_must_cover") or []:
             if cid not in subcov:

@@ -797,6 +797,10 @@ td.empty { text-align: center; color: var(--ink-faint); padding: var(--sp-4); }
 
 /* 자동 기재 표시(2026-08-19 피드백, 참고 항목 자동 완료) */
 .vd-auto-note { display: block; margin-top: 2px; font-size: var(--fs-meta); color: var(--ink-mute); }
+.vd-edit-done { align-self: flex-start; margin-top: 3px; color: var(--c-green-fg); }
+.decision-guide { display: flex; flex-direction: column; gap: 2px; margin: 3px 0 6px;
+  padding: 5px 7px; border-left: 2px solid var(--line); color: var(--ink-mute); font-size: var(--fs-meta); }
+.decision-guide strong { color: var(--ink-sub); margin-right: 4px; }
 
 /* 3분할 재편(12차) — ② 확인 완료 칸의 접힌 요약 */
 .done-fold > summary { cursor: pointer; font-size: var(--fs-body-sub); color: #17603f;

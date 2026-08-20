@@ -3,9 +3,9 @@
 
 var CR = JSON.parse(document.getElementById("cr-data").textContent);
 // stance = 검토 국면(party 기본 | beneficiary 수익자·투자자), baseClauses = 원계약 조항(변경합의서 검토 시)
-// docTitle = 문서 제목(유형·모듈·체크 게이트의 최상위 신호), partyRoles = 당사가 계약에서 갖는 지위
+// docTitle = 문서 제목(유형·모듈·체크 게이트의 최상위 신호), partyContext = 당사 호칭·지위
 var state = { text: "", clauses: [], typeId: null, activeModules: [], result: null,
-  stance: "party", baseText: "", baseClauses: [], docTitle: "", partyRoles: [], fileName: "",
+  stance: "party", baseText: "", baseClauses: [], docTitle: "", partyRoles: [], partyContext: null, fileName: "",
   // 수동 재지정(11.7차): cpId → clauseIndex. 자동 매칭이 엉뚱한 조항에 붙었을 때
   // 검토자가 올바른 조항으로 옮긴 기록. 재분석해도 유지되도록 계약서 해시별 저장.
   reassign: {} };
@@ -37,13 +37,21 @@ function findCheck(id) {
 function primarySource(cp) {
   return (cp.sources && cp.sources[0]) || null;
 }
-// 짧은 라벨(있으면) 우선 — 해석 부담 완화(#4). 상세 질문은 check.
-function cpLabel(cp) { return cp.label || cp.check; }
-function hasLabel(cp) { return !!(cp.label && cp.label !== cp.check); }
-// 라벨 우선 표기 HTML(cls 컨테이너 안). 라벨 없으면 check만.
+// matcher의 탐색문(check)과 사람의 판정 질문(decision_question)을 분리한다.
+function decisionQuestion(cp) { return cp.decision_question || cp.check; }
+function cpLabel(cp) { return cp.label || decisionQuestion(cp); }
+function hasLabel(cp) { return !!(cp.label && cp.label !== decisionQuestion(cp)); }
 function labelQ(cp) {
-  if (hasLabel(cp)) return '<span class="lq-label">' + esc(cp.label) + '</span><span class="lq-detail">' + esc(cp.check) + "</span>";
-  return esc(cp.check);
+  var q = decisionQuestion(cp);
+  if (hasLabel(cp)) return '<span class="lq-label">' + esc(cp.label) + '</span><span class="lq-detail">' + esc(q) + "</span>";
+  return esc(q);
+}
+function decisionGuidanceHtml(cp) {
+  if (!cp.pass_guidance && !cp.opinion_guidance) return "";
+  return '<div class="decision-guide">' +
+    (cp.pass_guidance ? '<span><strong>이상없음</strong> ' + esc(cp.pass_guidance) + '</span>' : '') +
+    (cp.opinion_guidance ? '<span><strong>검토의견</strong> ' + esc(cp.opinion_guidance) + '</span>' : '') +
+    '</div>';
 }
 
 /* ---------- 증적 배지 ----------
@@ -261,8 +269,8 @@ function renderChecklistRow(cp, st) {
     '<td class="match-cell ' + st.cls + '">' + esc(st.label) + "</td>" +
     "<td>" + esc(cp.id) + "</td>" +
     "<td>" + (hasLabel(cp)
-      ? '<span class="cp-label">' + esc(cp.label) + '</span><span class="cp-detail-q">' + esc(cp.check) + "</span>"
-      : esc(cp.check)) + "</td>" +
+      ? '<span class="cp-label">' + esc(cp.label) + '</span><span class="cp-detail-q">' + esc(decisionQuestion(cp)) + "</span>"
+      : esc(decisionQuestion(cp))) + "</td>" +
     '<td><span class="sev sev-' + cp.severity + '" title="' + esc(basis) + '">' + esc(cp.severity) + "</span>" +
     (basis ? '<span class="sev-basis-hint">' + esc(basis) + "</span>" : "") + "</td>" +
     "<td>" + esc(cp.norm_type) + "</td>" +
@@ -369,7 +377,7 @@ function renderChecklist() {
     if (matchF === "matched" && st.coverage !== "addressed") return false;
     if (q) {
       var src = primarySource(cp);
-      var hay = cp.check + " " + (src ? src.law + " " + src.article : "");
+      var hay = cp.check + " " + decisionQuestion(cp) + " " + (src ? src.law + " " + src.article : "");
       if (hay.indexOf(q) === -1) return false;
     }
     return true;
@@ -410,6 +418,7 @@ function renderSuggestionItem(r) {
     '<div class="ci-head"><span class="sev sev-' + cp.severity + '" title="' + esc(cp.severity_basis || "") + '">' +
     esc(cp.severity) + "</span><span class=\"ci-id\">" + esc(cp.id) + "</span></div>" +
     '<p class="ci-q">' + labelQ(cp) + "</p>" +
+    decisionGuidanceHtml(cp) +
     (cp.severity_basis ? '<p class="ci-basis">' + esc(cp.severity_basis) + "</p>" : "") +
     '<p class="ci-src">' + evidenceCell(cp) + "</p>" +
     evidenceLineHtml(cp, r) +
@@ -520,7 +529,8 @@ function refreshInputSetup() {
   }
   // ⓪ 문서 제목·당사 지위 — 이후 모든 게이트의 입력(11.1차)
   state.docTitle = extractDocTitle(state.text);
-  state.partyRoles = detectPartyRoles(state.text);
+  state.partyContext = detectPartyContext(state.text);
+  state.partyRoles = state.partyContext.roles;
   // ① 국면 추정
   var st = detectStance(state.text);
   if (!_stanceTouched && st.stance !== state.stance) {
@@ -536,6 +546,8 @@ function refreshInputSetup() {
     else bits.push('<span class="setup-warn">문서 제목을 못 읽음</span> — 제목 줄이 있으면 유형·체크 분류가 정확해집니다');
     if (state.fileName) bits.push("파일명: <strong>" + esc(state.fileName) + "</strong> (유형 신호로 사용)");
     if (state.partyRoles.length) bits.push("계약상 당사 지위: <strong>" + esc(state.partyRoles.join("·")) + "</strong>");
+    if (state.partyContext.ourAliases.length)
+      bits.push("계약상 당사 호칭: <strong>" + esc(state.partyContext.ourAliases.join("·")) + "</strong>");
     dt.innerHTML = bits.join(" · ");
     dt.hidden = false;
   }
@@ -910,7 +922,8 @@ function runAnalysis(opts) {
     stance: state.stance,
     baseClauses: state.baseClauses || [],
     docTitle: state.docTitle || "",     // 문서 성격 게이트(requires_doc_title)
-    partyRoles: state.partyRoles || []  // 당사 지위 게이트(party_roles)
+    partyRoles: state.partyRoles || [], // 당사 지위 게이트(party_roles)
+    partyContext: state.partyContext || null // 의무주체·회사 유불리 판정
   });
 
   // 부속 서류 커버리지(#3): consider(필수 부재)로 뜬 항목이 부속서류에서 다뤄지는지.
@@ -955,6 +968,7 @@ function runAnalysis(opts) {
   state.formal = Formal.checkFormal(state.text);
 
   loadVerdicts();
+  _verdictEditPins = {}; // 새 분석 컨텍스트에서는 저장된 이상없음 항목을 정상적으로 ②에 배치
   loadReassign(); // 수동 재지정 맵(11.7차)
   _opinionEditing = false; // 재분석·해시 변경 시 종합 검토의견 편집 모드 해제
   applySubdocVerdicts();
@@ -1165,7 +1179,8 @@ function setReviewer(name) {
 // 현재 계약서의 검토의견을 코퍼스에 적재(닫힌 루프의 ③단계).
 function ingestCurrentToCorpus() {
   var meta = { type_id: state.typeId, date: verdictToday(), contract_hash: verdictHash, reviewer: getReviewer(),
-    app_version: CR.app_version || "" };
+    app_version: CR.app_version || "", stance: state.stance, party_roles: state.partyRoles || [],
+    party_context: state.partyContext || null, active_modules: state.activeModules || [] };
   loopCorpus = Loop.mergeIntoCorpus(loopCorpus,
     currentVerdictExport(meta));
   saveCorpus();
@@ -1227,6 +1242,9 @@ function restoreCorpusBackup(file, done) {
    저장키 cr-verdict-<계약서해시>. */
 var verdictStore = {};
 var verdictHash = "";
+// 이상없음 판정 직후 사유·메모 입력을 마칠 때까지 ③ 작업 칸에 카드를 고정한다.
+// 저장 데이터가 아니라 현재 편집 세션의 UI 상태이므로 재분석·새로고침 시 초기화된다.
+var _verdictEditPins = {};
 function loadVerdicts() {
   verdictHash = hashText(state.text || "");
   try { verdictStore = JSON.parse(localStorage.getItem(Verdict.verdictKey(verdictHash)) || "{}"); }
@@ -1282,18 +1300,24 @@ function _autoClearComment(r) {
   if (s.length > 100) s = s.slice(0, 100) + "…";
   return "요건 문장 확인 — “" + s + "” (자동 기재)";
 }
+function _autoPerspectiveComment(r) {
+  return String((r.perspective && r.perspective.reason) || "당사 관점상 수정 불필요") + " (자동 기재)";
+}
 // 필수 항목의 원클릭 확인 대상 여부 — 자동 기재는 하지 않되 빠른 확인으로 제안.
 function _sentenceQuick(r) {
   var cp = _cpById(r.cpId);
   return !!(cp && cp.severity === "필수" && r.coverage === "addressed" && _autoClearOk(r));
 }
 function applyAutoVerdicts() {
-  var qualify = {}; // cpId → 자동 기재 코멘트
+  var qualify = {}; // cpId → {comment, reason}
   ((state.result && state.result.results) || []).forEach(function (r) {
     var cp = _cpById(r.cpId);
     if (!Verdict.canAutoPass(cp, r)) return;
-    if (cp.severity === "참고" && !cp.auto_clear) qualify[r.cpId] = AUTO_REF_COMMENT;
-    else qualify[r.cpId] = _autoClearComment(r);
+    if (r.perspective && r.perspective.auto_pass)
+      qualify[r.cpId] = { comment: _autoPerspectiveComment(r), reason: "회사에 유리·불리하지 않음" };
+    else if (cp.severity === "참고" && !cp.auto_clear)
+      qualify[r.cpId] = { comment: AUTO_REF_COMMENT, reason: "반영되어 있음" };
+    else qualify[r.cpId] = { comment: _autoClearComment(r), reason: "반영되어 있음" };
   });
   var changed = false;
   var rm = Verdict.revertAutoVerdicts(verdictStore, Object.keys(qualify));
@@ -1301,8 +1325,8 @@ function applyAutoVerdicts() {
   Object.keys(qualify).forEach(function (cpId) {
     var cur = verdictStore[cpId];
     if (cur && cur.verdict) return; // 기판정 보존(사람 판정·기존 자동 기재 모두)
-    verdictStore = Verdict.setVerdict(verdictStore, cpId, "이상없음", qualify[cpId],
-      verdictToday(), "반영되어 있음", "auto");
+    verdictStore = Verdict.setVerdict(verdictStore, cpId, "이상없음", qualify[cpId].comment,
+      verdictToday(), qualify[cpId].reason, "auto");
     changed = true;
   });
   if (changed) saveVerdicts();
@@ -1425,7 +1449,10 @@ function verdictControlHtml(cpId, skipLoop) {
   // 자동 기재분 표시(투명성): 사람이 손대면 origin이 바뀌거나 보존 규칙이 지켜지므로 배지는 auto에만.
   var autoNote = cur.origin === "auto"
     ? '<span class="vd-auto-note">자동 기재 — 판정 버튼으로 해제·변경 가능</span>' : "";
-  return '<div class="verdict-ctl vc-rows">' + rows + autoNote + "</div>" + (skipLoop ? "" : loopInfoHtml(cpId));
+  var editDone = cur.verdict === "이상없음" && _verdictEditPins[cpId]
+    ? '<button class="ghost vd-edit-done" data-vcp="' + esc(cpId) + '">입력 완료 → ②로 이동</button>' : "";
+  return '<div class="verdict-ctl vc-rows">' + rows + autoNote + editDone + "</div>" +
+    (skipLoop ? "" : loopInfoHtml(cpId));
 }
 // 판정 직후 재렌더로 카드·행 높이가 바뀌면 화면이 밀려 "다음 조항으로 휙 넘어간" 것처럼
 // 보인다(2026-08-18 피드백). 재렌더 전에 판정한 컨트롤의 뷰포트 위치를 기억했다가,
@@ -1449,6 +1476,12 @@ function withVerdictAnchor(rootSel, cpId, rerenderFn) {
 // 조항별 보기·리포트 공용 — 판정 버튼 클릭·코멘트 저장 바인딩.
 // reRender(cpId): 저장 후 호출 — cpId는 스크롤 앵커 보정용(무시해도 무방).
 function bindVerdictControls(root, reRender) {
+  function focusVisible(selector) {
+    var nodes = document.querySelectorAll(selector);
+    for (var i = 0; i < nodes.length; i++) {
+      if (nodes[i].offsetParent !== null) { nodes[i].focus(); return; }
+    }
+  }
   root.querySelectorAll(".local-ai-use-draft").forEach(function (btn) {
     btn.addEventListener("click", function () {
       var cpId = btn.getAttribute("data-vcp");
@@ -1468,17 +1501,33 @@ function bindVerdictControls(root, reRender) {
       var cur = verdictStore[cp] || {};
       // 같은 판정 다시 누르면 취소(토글)
       var next = cur.verdict === v ? "" : v;
+      if (next === "이상없음") _verdictEditPins[cp] = true;
+      else delete _verdictEditPins[cp];
       // 다른 판정으로 전환하면 그 판정의 메모가 따로 있으므로 코멘트는 승계하지 않음.
       // 같은 판정 재선택(취소)이거나 동일 판정 유지면 기존 코멘트·사유 보존.
       var keep = (next === cur.verdict);
       applyVerdict(cp, next, keep ? (cur.comment || "") : "", keep ? cur.reason : "");
       if (reRender) reRender(cp);
+      // 이상없음 사유부터 바로 입력할 수 있게 새로 그린 동일 컨트롤로 포커스를 돌린다.
+      if (next === "이상없음") requestAnimationFrame(function () {
+        focusVisible('.vd-reason[data-vcp="' + cp + '"]');
+      });
     });
   });
   root.querySelectorAll(".vd-reason").forEach(function (sel) {
     sel.addEventListener("change", function () {
       applyReason(sel.getAttribute("data-vcp"), sel.value);
       if (reRender) reRender(sel.getAttribute("data-vcp"));
+      requestAnimationFrame(function () {
+        focusVisible('.vd-note[data-vcp="' + sel.getAttribute("data-vcp") + '"][data-vfor="이상없음"]');
+      });
+    });
+  });
+  root.querySelectorAll(".vd-edit-done").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var cp = btn.getAttribute("data-vcp");
+      delete _verdictEditPins[cp];
+      if (reRender) reRender(cp);
     });
   });
   root.querySelectorAll(".vd-note").forEach(function (inp) {
@@ -1915,6 +1964,10 @@ function currentSystemAssessments() {
   return Assessment.build(state.result.results, state.result.checkpoints, state.clauses || [], {
     generated: verdictToday(), contract_hash: verdictHash, type_id: state.typeId,
     engine_version: CR.app_version || "",
+    stance: state.stance,
+    party_roles: state.partyRoles || [],
+    party_context: state.partyContext || null,
+    active_modules: state.activeModules || [],
     subdoc_coverage: state.subDocCov || {},
     ref_coverage: state.refCov || {}
   });
@@ -1933,11 +1986,13 @@ function currentMatchingObservations() {
         return { clause_index: hit.clauseIndex, match_score: Math.round((hit.score || 0) * 100) / 100 };
       }),
       human_clause_index: reassigned ? state.reassign[r.cpId] : (confirmed ? r.best.clauseIndex : null),
-      human_evidence_source: reassigned ? "reassigned" : (confirmed ? "confirmed_match" : "none")
+      human_evidence_source: reassigned ? "reassigned" : (confirmed ? "confirmed_match" : "none"),
+      perspective: r.perspective || null
     };
   });
   return { format: "cr-matching-observations-v1", contract_hash: verdictHash,
-    type_id: state.typeId || null, items: items };
+    type_id: state.typeId || null, stance: state.stance,
+    party_context: state.partyContext || null, active_modules: state.activeModules || [], items: items };
 }
 function currentLlmAssistance() {
   var items = {};
@@ -1983,6 +2038,8 @@ function exportVerdicts() {
   var meta = { type_id: state.typeId, date: verdictToday(), contract_hash: verdictHash, reviewer: getReviewer(),
     subdoc_coverage: state.subDocCov || {},
     app_version: CR.app_version || "",
+    stance: state.stance, party_roles: state.partyRoles || [], party_context: state.partyContext || null,
+    active_modules: state.activeModules || [],
     opinion: _lastOpinionText }; // 종합 검토의견(표시 중 문안 — 수정본 우선)
   var blob = new Blob([JSON.stringify(currentVerdictExport(meta), null, 2)], { type: "application/json" });
   var url = URL.createObjectURL(blob);
@@ -2003,7 +2060,8 @@ function finishReview() {
   ingestCurrentToCorpus();
   saveArchiveRegistry(Compare.registryPush(loadArchiveRegistry(), {
     name: _contractName(), date: verdictToday(), reviewer: getReviewer(),
-    type_id: state.typeId || null, contract_hash: verdictHash, contract_text: state.text
+    type_id: state.typeId || null, contract_hash: verdictHash, contract_text: state.text,
+    stance: state.stance, party_context: state.partyContext || null, active_modules: state.activeModules || []
   }));
   renderReport(); renderClauses(); renderSuggestions(); // 코퍼스 카운트·추천 갱신
   var msg = document.getElementById("finish-msg");
@@ -2091,6 +2149,8 @@ function exportArchive() {
   var meta = { type_id: state.typeId, date: verdictToday(), contract_hash: verdictHash,
     reviewer: getReviewer(), opinion: _lastOpinionText,
     app_version: CR.app_version || "",
+    stance: state.stance, party_roles: state.partyRoles || [], party_context: state.partyContext || null,
+    active_modules: state.activeModules || [],
     archive: true, name: String(name || "").trim() || _contractName() };
   var obj = currentVerdictExport(meta);
   obj.contract_text = state.text;
@@ -2104,7 +2164,8 @@ function exportArchive() {
   // 파일 다운로드와 동시에 레지스트리 사본 등록 — 다음 해 분석 시 자동 안내의 원천.
   saveArchiveRegistry(Compare.registryPush(loadArchiveRegistry(), {
     name: meta.name, date: meta.date, reviewer: meta.reviewer,
-    type_id: state.typeId || null, contract_hash: verdictHash, contract_text: state.text
+    type_id: state.typeId || null, contract_hash: verdictHash, contract_text: state.text,
+    stance: state.stance, party_context: state.partyContext || null, active_modules: state.activeModules || []
   }));
 }
 
@@ -2446,6 +2507,7 @@ function renderCompareItem(r, showEvidence) {
     '<span class="sev sev-' + cp.severity + '" title="' + esc(cp.severity_basis || "") + '">' +
     esc(cp.severity) + "</span><span class=\"ci-id\">" + esc(cp.id) + "</span>" + reviewRouteHtml(r) + "</div>" +
     '<p class="ci-q">' + labelQ(cp) + "</p>" +
+    decisionGuidanceHtml(cp) +
     (reasons.length ? '<p class="ci-reason">' + esc(reasons.join("; ")) + "</p>" : "") +
     localLlmHtml(r) +
     (cp.severity_basis ? '<p class="ci-basis">' + esc(cp.severity_basis) + "</p>" : "") +
@@ -2492,6 +2554,7 @@ function renderConsiderItem(r) {
     '<div class="ci-head"><span class="sev sev-' + cp.severity + '" title="' + esc(cp.severity_basis || "") + '">' +
     esc(cp.severity) + "</span><span class=\"ci-id\">" + esc(cp.id) + "</span>" + reviewRouteHtml(r) + subBadge + refBadge + "</div>" +
     '<p class="ci-q">' + labelQ(cp) + "</p>" +
+    decisionGuidanceHtml(cp) +
     (cp.severity_basis ? '<p class="ci-basis">왜 봐야 하는지: ' + esc(cp.severity_basis) + "</p>" : "") +
     '<p class="ci-src">근거 ' + evidenceCell(cp) + "</p>" +
     stdRefsHtml(cp) + // 표시 전용 — 부재를 짚을 때 표준 문서의 대응 문안을 함께 보여줌(판정 무영향)
@@ -2618,11 +2681,11 @@ function clauseRowHtml(c) {
   // 예외 — 완료분 접힘은 사용자 본인의 제안·승인 사항.
   var done = all.filter(function (x) {
     var v = verdictStore[x.r.cpId];
-    return v && v.verdict === "이상없음";
+    return Verdict.reviewColumn(v, !!_verdictEditPins[x.r.cpId]) === "done";
   });
   var needs = all.filter(function (x) {
     var v = verdictStore[x.r.cpId];
-    return !(v && v.verdict === "이상없음");
+    return Verdict.reviewColumn(v, !!_verdictEditPins[x.r.cpId]) === "needs";
   });
   var autoN = done.filter(function (x) {
     var v = verdictStore[x.r.cpId];
@@ -2630,7 +2693,7 @@ function clauseRowHtml(c) {
   }).length;
   var doneCards = done.map(function (x) { return renderCompareItem(x.r, x.ev); }).join("");
   var doneHtml = done.length
-    ? '<details class="done-fold"><summary>✓ 확인 완료 ' + done.length + "건" +
+    ? '<details class="done-fold" open><summary>✓ 확인 완료 ' + done.length + "건" +
       (autoN ? " (자동 " + autoN + "건)" : "") + " — 펼치기</summary>" + doneCards + "</details>"
     : '<p class="cr-empty">—</p>';
   var needCards = needs.map(function (x) { return renderCompareItem(x.r, x.ev); }).join("");
@@ -2699,7 +2762,7 @@ function rerenderRow(ci) {
   tmp.innerHTML = clauseRowHtml(c);
   var next = tmp.firstChild;
   var nextFold = next.querySelector(".done-fold");
-  if (nextFold && foldOpen) nextFold.open = true;
+  if (nextFold) nextFold.open = foldEl ? foldOpen : true;
   old.parentNode.replaceChild(next, old);
   bindRowControls(next);
 }

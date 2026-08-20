@@ -175,6 +175,24 @@ def test_auto_verdict_must_be_boolean(knowledge_dir):
         load_knowledge(knowledge_dir)
 
 
+def test_decision_question_must_be_question(knowledge_dir):
+    bad = (knowledge_dir / "common.yaml").read_text().replace(
+        "    absence_check: true\n", "    decision_question: 수정 불필요\n    absence_check: true\n", 1
+    )
+    (knowledge_dir / "common.yaml").write_text(bad)
+    with pytest.raises(ValidationError, match="decision_question"):
+        load_knowledge(knowledge_dir)
+
+
+def test_unknown_perspective_rule_rejected(knowledge_dir):
+    bad = (knowledge_dir / "common.yaml").read_text().replace(
+        "    absence_check: true\n", "    perspective_rule: guess\n    absence_check: true\n", 1
+    )
+    (knowledge_dir / "common.yaml").write_text(bad)
+    with pytest.raises(ValidationError, match="perspective_rule"):
+        load_knowledge(knowledge_dir)
+
+
 def test_bad_evidence_required_groups_rejected(knowledge_dir):
     bad = (knowledge_dir / "common.yaml").read_text().replace(
         "    absence_check: true\n", "    evidence_required_groups: [[]]\n    absence_check: true\n", 1

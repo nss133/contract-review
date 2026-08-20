@@ -5,7 +5,7 @@ const {
   detectType, suggestModules, analyze,
   checkText, clauseQuery, buildModel, citationHit,
   scoreClauseCheck, decideTier, normMatches, titleBonus,
-  alarmGate, coverageOf, preconditionMet, pickType,
+  alarmGate, coverageOf, preconditionMet, pickType, detectPartyContext, evaluatePerspective,
 } = require("../src/matcher.js");
 const MC = require("../src/matcher_config.js");
 const ClauseRole = require("../src/clause_role.js");
@@ -39,6 +39,13 @@ const CHECK_PRIV = {
     quote: "개인정보의 처리 업무를 위탁하는 경우에는 문서로 한다",
   }],
 };
+
+test("checkText: 사람용 decision_question은 매칭 대표텍스트를 바꾸지 않는다", () => {
+  const base = { id: "Q", check: "손해배상 범위 조항", triggers: { keywords: ["배상"] }, sources: [] };
+  const withQuestion = Object.assign({}, base, { decision_question: "회사에 불리하지 않아 수정이 불필요한가?" });
+  assert.strictEqual(checkText(withQuestion), checkText(base));
+  assert.ok(!checkText(withQuestion).includes("수정이 불필요"));
+});
 const CHECK_DECOY = {
   id: "DECOY", module: "M-CORE", norm_type: "실무", absence_check: true, severity: "참고",
   check: "손해배상 상한이 설정되어 있는가(재위탁으로 인한 손해 포함)",
@@ -1191,4 +1198,33 @@ test("titleFitRatio/overlapFeatures: 이형어 표제도 인식(기밀유지→�
     triggers: { keywords: ["비밀정보", "비밀유지", "기밀", "영업비밀"] }, sources: [] };
   assert.ok(titleFitRatio(cl, cp) > 0.5, "기밀유지 표제가 비밀 체크와 일치로 인식");
   assert.ok(overlapFeatures(cl, cp).uniq > 0, "본문 겹침도 정규화 후 잡힘");
+});
+
+test("detectPartyContext: 미래에셋생명의 갑·을 호칭과 상대방을 읽는다", () => {
+  const a = detectPartyContext('주식회사 A(이하 "갑")와 미래에셋생명보험 주식회사(이하 "을")은 계약한다.');
+  assert.deepStrictEqual(a.ourAliases, ["을"]);
+  assert.ok(a.counterpartyAliases.includes("갑"));
+  assert.strictEqual(a.confidence, "explicit_alias");
+});
+
+test("evaluatePerspective: 상대방만 무기한 비밀유지 의무를 지면 당사에 유리", () => {
+  const cp = { perspective_rule: "confidentiality_duration" };
+  const cl = { heading: "제8조(비밀유지)", body: '"을"은 비밀정보를 누설하지 않으며 계약 종료 후에도 계속하여 그 의무가 존속한다.' };
+  const p = evaluatePerspective(cp, cl, { ourAliases: ["갑"], counterpartyAliases: ["을"] });
+  assert.strictEqual(p.bearer, "counterparty");
+  assert.strictEqual(p.duration, "indefinite");
+  assert.strictEqual(p.auto_pass, true);
+});
+
+test("evaluatePerspective: 당사 또는 쌍방의 무기한 의무는 자동 통과하지 않는다", () => {
+  const cp = { perspective_rule: "confidentiality_duration" };
+  const ctx = { ourAliases: ["을"], counterpartyAliases: ["갑"] };
+  const ours = evaluatePerspective(cp,
+    { heading: "비밀유지", body: '"을"은 계약 종료 후에도 계속하여 비밀유지의무를 부담한다.' }, ctx);
+  const mutual = evaluatePerspective(cp,
+    { heading: "비밀유지", body: '갑과 을은 계약 종료 후에도 계속하여 비밀유지의무를 부담한다.' }, ctx);
+  assert.strictEqual(ours.bearer, "company");
+  assert.strictEqual(ours.auto_pass, false);
+  assert.strictEqual(mutual.bearer, "mutual");
+  assert.strictEqual(mutual.auto_pass, false);
 });

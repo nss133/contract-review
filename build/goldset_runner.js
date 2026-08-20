@@ -7,6 +7,7 @@ const fs = require("fs");
 const { segmentContract, extractDocTitle } = require("../src/segmenter.js");
 const { detectType, pickType, suggestModules, analyze, buildModel, subDocCoverage, detectSubdocRefs,
   detectStance, moduleAllowedInStance, detectPartyRoles, hasAffiliateParty } = require("../src/matcher.js");
+const { detectPartyContext } = require("../src/matcher.js");
 const Verdict = require("../src/verdict.js");
 
 const payload = JSON.parse(fs.readFileSync(process.argv[2], "utf8"));
@@ -27,6 +28,7 @@ const results = cases.map(function (c) {
   const stance = c.stance || detectStance(text).stance;
   // 당사 지위·계열 상대방(11.1차) — app.js refreshInputSetup과 동일 산출.
   const partyRoles = c.party_roles !== undefined ? c.party_roles : detectPartyRoles(text);
+  const partyContext = c.party_context !== undefined ? c.party_context : detectPartyContext(text);
   const stanceCtx = { affiliate_party: hasAffiliateParty(text) };
   // 모듈 활성 — app.js renderScreening과 동일: common(횡단 X-* 풀)+유형 모듈 병합, always_on + 본문 제안.
   // 국면 게이트를 먼저 통과한 모듈만 후보(수범자가 당사가 아닌 규제는 제외).
@@ -46,7 +48,7 @@ const results = cases.map(function (c) {
   // base_text(선택): 변경합의서 케이스 — 원계약을 전제로 부재 판정(11차).
   const baseClauses = c.base_text ? segmentContract(String(c.base_text)) : [];
   const r = analyze(clauses, docs, { modules: active, stance: stance, baseClauses: baseClauses,
-    docTitle: docTitle, partyRoles: partyRoles });
+    docTitle: docTitle, partyRoles: partyRoles, partyContext: partyContext });
   const consider = r.results.filter(function (x) { return x.coverage === "consider"; }).map(function (x) { return x.cpId; });
   const verify = r.results.filter(function (x) { return x.coverage === "verify"; }).map(function (x) { return x.cpId; });
   const addressed = r.results.filter(function (x) { return x.coverage === "addressed"; }).map(function (x) { return x.cpId; });
@@ -61,6 +63,7 @@ const results = cases.map(function (c) {
       gate: x.best ? x.best.gate : null,
       auto_clear: !!(x.autoClear && x.autoClear.ok),
       auto_pass: Verdict.canAutoPass(checkById[x.cpId], x),
+      perspective: x.perspective || null,
     };
   });
   // shown = 화면에 어떤 형태로든 표면화된 항목(반영·살펴볼·확인안됨) — 강등되어 조용해진 것과 구별.
@@ -93,6 +96,7 @@ const results = cases.map(function (c) {
     stance: stance,
     docTitle: docTitle,
     partyRoles: partyRoles,
+    partyContext: partyContext,
     activeModules: active,
     available_check_ids: availableCheckIds,
     active_check_ids: r.checkpoints.map(function (cp) { return cp.id; }),

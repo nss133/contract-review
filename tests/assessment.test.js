@@ -80,3 +80,18 @@ test("build: 부속서류 커버와 본문 참조를 부재알람에서 분리�
   assert.strictEqual(out.items.C.coverage_source, "reviewer_declared");
   assert.strictEqual(out.items.C.review_route, "human_confirm");
 });
+
+test("build: 회사 관점 판정과 계약 당사자 컨텍스트를 감사 원장에 보존", () => {
+  const perspective = { rule: "confidentiality_duration", bearer: "counterparty",
+    duration: "indefinite", favorable: true, auto_pass: true, reason: "상대방만 부담" };
+  const partyContext = { ourAliases: ["갑"], counterpartyAliases: ["을"], roles: ["위탁자"],
+    confidence: "explicit_alias" };
+  const out = A.build([{ cpId: "C", coverage: "addressed", tier: "confirmed",
+    best: { reasons: [] }, ranked: [{ clauseIndex: 0, score: 50 }], perspective }],
+  CHECKS, CLAUSES, { stance: "party", party_roles: ["위탁자"], party_context: partyContext,
+    active_modules: ["M-CORE"] });
+  assert.strictEqual(out.items.C.perspective.obligation_bearer, "counterparty");
+  assert.strictEqual(out.items.C.perspective.auto_pass, true);
+  assert.deepStrictEqual(out.party_context, partyContext);
+  assert.deepStrictEqual(out.active_modules, ["M-CORE"]);
+});

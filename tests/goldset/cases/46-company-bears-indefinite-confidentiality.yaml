@@ -1,0 +1,11 @@
+id: company-bears-indefinite-confidentiality
+desc: 회사가 기간 제한 없이 비밀유지의무를 부담하면 자동 통과 금지
+force_type: procurement
+text: |
+  용역계약서
+  주식회사 공급자(이하 "갑"이라 한다)와 미래에셋생명보험 주식회사(이하 "을"이라 한다)는 다음과 같이 계약한다.
+
+  제8조(비밀유지)
+  "을"은 업무 중 알게 된 비밀정보를 제3자에게 누설하여서는 아니 되며, 계약 종료 후에도 계속하여 그 의무가 존속한다.
+matched_must_include: [CMN-16]
+auto_pass_must_exclude: [CMN-16]

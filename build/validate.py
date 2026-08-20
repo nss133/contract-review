@@ -102,6 +102,16 @@ def _validate(common, types):
             if note is not None and not isinstance(note, str):
                 raise ValidationError(f"{cid}: note는 문자열이어야 함")
 
+            for field in ("decision_question", "pass_guidance", "opinion_guidance"):
+                value = cp.get(field)
+                if value is not None and (not isinstance(value, str) or not value.strip()):
+                    raise ValidationError(f"{cid}: {field}는 비어 있지 않은 문자열이어야 함")
+            if cp.get("decision_question") and not cp["decision_question"].rstrip().endswith("?"):
+                raise ValidationError(f"{cid}: decision_question은 판정 가능한 질문형(?)이어야 함")
+            perspective_rule = cp.get("perspective_rule")
+            if perspective_rule is not None and perspective_rule not in {"confidentiality_duration"}:
+                raise ValidationError(f"{cid}: 알 수 없는 perspective_rule '{perspective_rule}'")
+
             llm_elements = cp.get("llm_elements")
             if llm_elements is not None and (
                 not isinstance(llm_elements, list) or not 1 <= len(llm_elements) <= 8

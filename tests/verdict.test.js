@@ -9,7 +9,8 @@ test("verdictKey: 계약서 해시별 저장키", () => {
 
 test("VERDICTS: 2택 상수 — 해당없음은 이상없음의 사유로 격하(11.3차)", () => {
   assert.deepStrictEqual(V.VERDICTS, ["이상없음", "검토의견"]);
-  assert.deepStrictEqual(V.OK_REASONS, ["반영되어 있음", "해당사항 없음"]);
+  assert.deepStrictEqual(V.OK_REASONS, ["반영되어 있음", "해당사항 없음",
+    "회사에 유리·불리하지 않음", "수용 가능한 위험"]);
 });
 
 test("setVerdict: 판정 추가(불변 — 원본 미변경)", () => {
@@ -55,7 +56,8 @@ test("verdictSummary: 판정 집계 + 사유별 집계", () => {
 
 test("verdictSummary: 빈 store", () => {
   assert.deepStrictEqual(V.verdictSummary({}),
-    { "이상없음": 0, "검토의견": 0, total: 0, reasons: { "반영되어 있음": 0, "해당사항 없음": 0 } });
+    { "이상없음": 0, "검토의견": 0, total: 0, reasons: { "반영되어 있음": 0,
+      "해당사항 없음": 0, "회사에 유리·불리하지 않음": 0, "수용 가능한 위험": 0 } });
 });
 
 test("exportVerdicts: meta + verdicts 구조", () => {
@@ -335,4 +337,19 @@ test("canAutoPass: 복합 체크의 auto_verdict false는 증거 확정 후에�
   assert.ok(!V.canAutoPass({ severity: "참고", auto_clear: {} },
     { coverage: "addressed", autoClear: { ok: false } }));
   assert.ok(!V.canAutoPass({ severity: "참고" }, { coverage: "verify", autoClear: { ok: true } }));
+});
+
+test("canAutoPass: 참고 항목의 보수적 회사관점 통과는 auto_clear와 별도로 인정", () => {
+  const favorable = { coverage: "addressed", autoClear: { ok: false },
+    perspective: { auto_pass: true } };
+  assert.ok(V.canAutoPass({ severity: "참고", auto_clear: {} }, favorable));
+  assert.ok(!V.canAutoPass({ severity: "참고", auto_clear: {}, auto_verdict: false }, favorable));
+  assert.ok(!V.canAutoPass({ severity: "권장", auto_clear: {} }, favorable));
+});
+
+test("reviewColumn: 이상없음 직후 편집 고정 중에는 ③, 완료 뒤에는 ②", () => {
+  assert.strictEqual(V.reviewColumn({ verdict: "이상없음" }, true), "needs");
+  assert.strictEqual(V.reviewColumn({ verdict: "이상없음" }, false), "done");
+  assert.strictEqual(V.reviewColumn({ verdict: "검토의견" }, false), "needs");
+  assert.strictEqual(V.reviewColumn(null, false), "needs");
 });

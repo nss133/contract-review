@@ -439,6 +439,9 @@ checks:
   - id: SP-DEL-08-2
     module: M-DELIVERY
     check: 지체상금·하자보수와 함께 이행(하자)보증보험 증권 징구 여부가 확인되어 있는가
+    decision_question: 이행·하자보증보험의 징구 여부와 조건이 명확하여 추가 확인이 불필요한가?
+    pass_guidance: 징구 여부와 금액·기간이 거래 위험에 맞게 정해졌으면 선택
+    opinion_guidance: 징구 필요성이 남거나 보험 조건이 불명확하면 선택
     label: "이행(하자)보증보험 확인"
     severity: 참고
     severity_basis: "실무 관행 항목(법령 강제 아님)"
