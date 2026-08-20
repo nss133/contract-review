@@ -18,7 +18,7 @@ ROOT = Path(__file__).parent.parent
 SRC = ROOT / "src"
 # pf.js는 추출기(cfb·extract-*)보다 먼저. cfb는 doc·hwp보다 먼저.
 JS_ORDER = [
-    "sim.js", "clause_role.js", "matcher_config.js", "segmenter.js", "matcher.js",
+    "sim.js", "clause_role.js", "matcher_config.js", "segmenter.js", "sentence.js", "matcher.js",
     "pf.js", "cfb.js", "extract-pdf.js", "extract-doc.js", "extract-hwp.js", "extract-zip.js", "extract.js",
     "verify.js", "assessment.js", "local_llm.js", "experiment.js", "verdict.js", "loop.js", "goldset.js", "tags.js", "formal.js", "evidence.js", "compare.js", "app.js",
 ]

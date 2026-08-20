@@ -770,6 +770,44 @@ test("detectType: docTitle 미전달 시 종전 동작(하위호환)", () => {
   assert.strictEqual(pickType(detectType("비밀유지계약서\n제1조", types)), "nda");
 });
 
+// ── 문장 요건 승격 auto_clear(12차, 2026-08-20 피드백) ─────────────
+const CHECK_TERM = {
+  id: "T-TERM",
+  check: "계약기간의 시기·종기가 명시되어 있는가",
+  severity: "참고",
+  norm_type: "실무",
+  module: "M-CORE",
+  triggers: { keywords: ["계약기간", "유효기간", "존속기간"] },
+  auto_clear: { any_groups: [["계약기간", "계약의 기간", "유효기간"]], require: ["period", "date"] },
+  absence_check: true,
+  sources: [],
+};
+const TERM_DOC = { meta: OUT_DOC.meta, checkpoints: OUT_DOC.checkpoints.concat([CHECK_TERM]) };
+
+test("auto_clear: weak-role(계약기간) 조항도 문장 요건 충족이면 확정(addressed)으로 승격", () => {
+  // 종전에는 term 역할이 weak라 구조적으로 review(verify)에 갇혔음 — 12차 핵심 사례.
+  const r = analyze(CLAUSES, [TERM_DOC], ["M-CORE"]);
+  const term = r.results.find((x) => x.cpId === "T-TERM");
+  assert.strictEqual(term.tier, "confirmed");
+  assert.strictEqual(term.coverage, "addressed");
+  assert.ok(term.autoClear && term.autoClear.ok, "결과에 autoClear가 부착되어야 함");
+  assert.ok(term.best.reasons.join("").indexOf("요건 문장 확인") !== -1, "사유에 요건 문장이 남아야 함");
+});
+
+test("auto_clear: 부정 종결('정하지 아니한다')은 승격하지 않는다", () => {
+  const clauses = CLAUSES.map((c) =>
+    c.index === 2 ? { ...c, body: "이 계약의 유효기간은 1년으로 정하지 아니한다." } : c);
+  const r = analyze(clauses, [TERM_DOC], ["M-CORE"]);
+  const term = r.results.find((x) => x.cpId === "T-TERM");
+  assert.notStrictEqual(term.coverage, "addressed", "부정 문장으로 확정되면 안 됨");
+  assert.ok(!(term.autoClear && term.autoClear.ok));
+});
+
+test("auto_clear 미선언 체크는 종전 동작(하위호환)", () => {
+  const r = analyze(CLAUSES, [OUT_DOC], ["M-CORE"]);
+  r.results.forEach((x) => assert.ok(!x.autoClear || !x.autoClear.ok));
+});
+
 // ── 파일명 신호(2026-08-19 피드백) ─────────────────────────────────
 test("detectType: 파일명 키워드만으로 유형 확정(제목·표제부 무신호)", () => {
   const types = [

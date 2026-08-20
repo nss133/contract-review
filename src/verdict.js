@@ -61,13 +61,31 @@ var Verdict = (function () {
     return next;
   }
   // 사유만 변경(판정은 유지). 이상없음이 아니면 무시.
+  // 자동 기재분(origin auto)의 사유를 사람이 바꾸면 사람 판정(manual)으로 승격 —
+  // 이후 재분석의 자동 회수 대상에서 제외(사람 손댄 판정 보존 원칙).
   function setReason(store, cpId, reason) {
     var cur = (store || {})[cpId];
     if (!cur || cur.verdict !== "이상없음") return store || {};
     var next = _clone(store);
     next[cpId] = { verdict: cur.verdict, reason: OK_REASONS.indexOf(reason) !== -1 ? reason : "",
-      comment: cur.comment || "", date: cur.date || "", origin: cur.origin || "legacy" };
+      comment: cur.comment || "", date: cur.date || "",
+      origin: cur.origin === "auto" ? "manual" : (cur.origin || "legacy") };
     return next;
+  }
+
+  // 자동 기재분 회수(12차): origin이 'auto'인 항목 중 keepIds에 없는 것을 제거.
+  // 사람이 판정·코멘트·사유를 손대면 origin이 manual로 바뀌므로 여기 걸리지 않음.
+  // 자동 기재 코멘트는 문장 인용을 담아 계약서마다 달라 comment 대조로는 회수 불가 — origin 기준.
+  function revertAutoVerdicts(store, keepIds) {
+    var keep = {};
+    (keepIds || []).forEach(function (id) { keep[id] = true; });
+    var next = _clone(store || {});
+    var removed = 0;
+    for (var k in next) {
+      if (!Object.prototype.hasOwnProperty.call(next, k)) continue;
+      if (next[k].origin === "auto" && !keep[k]) { delete next[k]; removed++; }
+    }
+    return { store: next, removed: removed };
   }
 
   function verdictSummary(store) {
@@ -215,6 +233,7 @@ var Verdict = (function () {
     ORIGINS: ORIGINS,
     migrateStore: migrateStore,
     setReason: setReason,
+    revertAutoVerdicts: revertAutoVerdicts,
     verdictKey: verdictKey,
     opinionKey: opinionKey,
     composeOpinion: composeOpinion,

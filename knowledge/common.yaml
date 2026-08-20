@@ -151,6 +151,11 @@ checks:
     basis: practice
     triggers:
       keywords: [대금, 수수료, 대가, 단가]
+    # 문장 요건(12차): 한 문장에 대금 어휘 + 구체 금액·요율이 있으면 '특정됨' 확인.
+    # 산정 방식만 있고 숫자가 없으면(별표 위임 등) 사람 검토로 남음 — 보수적.
+    auto_clear:
+      any_groups: [[대금, 수수료, 대가, 단가, 계약금액]]
+      require: [money, rate]
     absence_check: true
     sources: []
   - id: CMN-04
@@ -162,6 +167,11 @@ checks:
     basis: practice
     triggers:
       keywords: [지급, 정산, 지급방법, 지급시기]
+    # 문장 요건: 지급 어휘 + 구체 기한 숫자("익월 10일까지 지급한다"). "매월 말일" 등
+    # 숫자 없는 표현은 사람 검토로 남음.
+    auto_clear:
+      any_groups: [[지급, 정산]]
+      require: [period, date, number]
     absence_check: true
     sources: []
   - id: CMN-05
@@ -173,6 +183,9 @@ checks:
     basis: practice
     triggers:
       keywords: [부가가치세, 부가세, VAT]
+    # 문장 요건: 부가세 어휘 + 포함/별도 문구가 같은 문장에 있으면 '명시됨' 확인(숫자 불요).
+    auto_clear:
+      any_groups: [[부가가치세, 부가세, VAT], [포함, 별도, 제외]]
     absence_check: true
     sources: []
   - id: CMN-05-2
@@ -184,6 +197,10 @@ checks:
     basis: practice
     triggers:
       keywords: [지연이자, 지연손해금, 지체상금]
+    # 문장 요건: 지연이자 어휘 + 구체 요율. "공정위 고시 이율" 등 숫자 없는 위임은 사람 검토.
+    auto_clear:
+      any_groups: [[지연이자, 지연손해금, 지체상금]]
+      require: [rate]
     absence_check: true
     sources: []
   - id: CMN-06
@@ -198,6 +215,12 @@ checks:
     llm_elements:
       - 계약기간 시작 시점
       - 계약기간 종료 시점
+    # 문장 요건(12차 대표 사례): "계약기간은 체결일로부터 1년으로 한다" — 기간 어휘 +
+    # 구체 기간·날짜 + 긍정 종결이 한 문장에 있으면 확인. 계약기간 조항은 weak-role(term)이라
+    # 종전엔 구조적으로 verify에 갇혔음 — 문장 요건이 게이트를 관통해 확정·자동 기재로 이어짐.
+    auto_clear:
+      any_groups: [[계약기간, 계약 기간, 계약의 기간, 유효기간, 존속기간]]
+      require: [period, date]
     absence_check: true
     sources: []
   - id: CMN-07
@@ -237,6 +260,10 @@ checks:
     llm_elements:
       - 시정 최고 기간
       - 서면 해지 통지
+    # 문장 요건: 해지 + 최고·통지 어휘 + 구체 기간("30일의 기간을 정하여 시정을 최고하고 …").
+    auto_clear:
+      any_groups: [[해지], [최고, 시정, 통지]]
+      require: [period]
     absence_check: true
     sources: []
   - id: CMN-10
@@ -327,6 +354,10 @@ checks:
     llm_elements:
       - 계약 종료 후 비밀유지의무 존속
       - 비밀유지 존속기간
+    # 문장 요건: 비밀 어휘 + 종료 후 존속 문구 + 구체 기간("종료 후 3년간 존속한다").
+    auto_clear:
+      any_groups: [[비밀, 기밀], [종료 후, 종료된 후, 존속]]
+      require: [period]
     absence_check: true
     sources: []
   - id: CMN-17
@@ -2181,6 +2212,10 @@ checks:
     basis: statute
     triggers:
       keywords: [지급기일, 60일, 대금 지급, 하도급대금, 지급 기한]
+    # 문장 요건(필수는 자동 기재 없음 — 원클릭 '빠른 확인' 제안만): 지급기일 어휘 + 60일이
+    # 한 문장에서 긍정 종결로 확인되면 요건 문장으로 안내.
+    auto_clear:
+      any_groups: [[지급기일, 지급 기한, 하도급대금], [60일, 육십일]]
     absence_check: true
     tier: conditional
     sources:

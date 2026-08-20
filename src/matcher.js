@@ -11,6 +11,7 @@ if (typeof require !== "undefined") {
   var Sim = require("./sim.js");
   var ClauseRole = require("./clause_role.js");
   var MatcherConfig = require("./matcher_config.js");
+  var Sentence = require("./sentence.js");
 }
 
 // ── 유형 감지 v2 (제목 가중·길이 정규화·미확정) ──────────────────
@@ -601,10 +602,22 @@ function decisiveHit(clause, check) {
   return null;
 }
 
+// 문장 요건 판정(12차): check.auto_clear 스펙을 best 조항 본문에 적용.
+// 충족 문장은 (키워드 그룹 + 숫자 요건 + 긍정 종결)을 한 문장에서 확인한 것이라
+// 역할 휴리스틱(weak-role)보다 강한 증거 — 내용 자체를 본 것이므로 게이트를 관통한다.
+// 정의 문장("…을 말한다")은 Sentence 층에서 걸러져 정의 조항 오탐은 차단됨.
+function autoClearEval(clause, check) {
+  var spec = check && check.auto_clear;
+  if (!spec || !clause) return null;
+  return Sentence.evaluate(String(clause.heading || "") + "\n" + String(clause.body || ""), spec);
+}
+
 function decideTier(ranked, check) {
   if (!ranked.length) return "none";
   var best = ranked[0];
   if (best.s.score < MatcherConfig.REVIEW_FLOOR) return "none";
+  var ac = autoClearEval(best.clause, check);
+  if (ac && ac.ok) return "confirmed"; // 문장 요건 충족 — weak-role 게이트보다 우선
   var role = ClauseRole.clauseRole(best.clause.heading, best.clause.body);
   var citation = best.s.citation === true;
   if (role.weak === true && !citation) return "review"; // weak-role 게이트 유지
@@ -683,6 +696,11 @@ function _reasons(tier, ranked, check) {
   }
   var role = ClauseRole.clauseRole(best.clause.heading, best.clause.body);
   if (tier === "confirmed") {
+    var ach = autoClearEval(best.clause, check);
+    if (ach && ach.ok) {
+      var sent = String(ach.sentence || "");
+      return ["요건 문장 확인 (“" + (sent.length > 70 ? sent.slice(0, 70) + "…" : sent) + "”)"];
+    }
     var dh = decisiveHit(best.clause, check);
     if (dh) return ["결정 문구 일치 (“" + dh + "”)"];
     if (s.normMatch) return ["본문 문구·규범 일치"];
@@ -800,12 +818,17 @@ function analyze(clauses, docs, opts) {
     // 미달 시 tier는 보존하되 coverage를 quiet로 강등(약한 후보를 조용히 접음).
     // consider(부재 알람)·none은 조항 매칭이 아니라 게이트 대상 아님.
     var gate = null;
+    var acHit = null; // 문장 요건 판정(12차) — addressed/verify 매칭에서만 계산, 결과에 부착
     if ((coverage === "addressed" || coverage === "verify") && candidates.length) {
       var bestClause = candidates[0].clause;
       var f = overlapFeatures(bestClause, cp);
       var cited = candidates[0].s.citation === true;
+      // 문장 요건 충족은 조항 단위 어휘 겹침보다 강한 증거(내용 자체를 확인) —
+      // 노출·귀속·weak-role 게이트를 관통한다. 미충족(null 포함)이면 종전과 동일.
+      acHit = autoClearEval(bestClause, cp);
+      var acOk = !!(acHit && acHit.ok);
       // 게이트 통과 판정은 passesOverlapGate로 단일화(순수함수·테스트 대상과 동일 로직).
-      var passed = passesOverlapGate(bestClause, cp, cited);
+      var passed = passesOverlapGate(bestClause, cp, cited) || acOk;
       gate = { uniq: f.uniq, titleStrong: f.titleStrong, passed: passed };
       if (!passed) coverage = "quiet";
       // 조항 귀속 게이트(11.3차): 이 조항의 표제가 **다른 체크**를 정면으로 지시하는데,
@@ -820,7 +843,7 @@ function analyze(clauses, docs, opts) {
       //   표제가 남을 정면으로 가리키고(owner) + 내 표제 근거 0 + **본문 근거도 빈약**(겹침 최소치 미만).
       // 사용자 사례(제35조 매수청구권에 총회·공시 체크 부착)는 본문 겹침이 참조 언급 수준이라
       // 이 조건에 걸리고, PRIV-06처럼 본문에 실질 근거(겹침 5개)가 있으면 살아남는다.
-      if (coverage !== "quiet" && !cited && !f.titleStrong) {
+      if (coverage !== "quiet" && !cited && !f.titleStrong && !acOk) {
         var owner = owners[bestClause.index];
         if (owner && owner !== cp.id && titleFitRatio(bestClause, cp) === 0 &&
             f.uniq < MatcherConfig.OWNED_CLAUSE_MIN_OVERLAP) {
@@ -833,7 +856,7 @@ function analyze(clauses, docs, opts) {
       // 직접 겨냥한 체크(표제 강일치 — 예: '계약의 목적' 체크). 강등돼도 tier는 보존(매칭 존재 자체는 기록).
       if (coverage !== "quiet") {
         var bestRole = ClauseRole.clauseRole(bestClause.heading, bestClause.body);
-        if (bestRole.weak === true && !cited && !f.titleStrong) {
+        if (bestRole.weak === true && !cited && !f.titleStrong && !acOk) {
           coverage = "quiet";
           gate.weakRole = true;
         }
@@ -867,7 +890,8 @@ function analyze(clauses, docs, opts) {
       best: top ? { clauseIndex: top.clause.index, score: top.s.score, reasons: reasons, gate: gate } : null,
       ranked: rankedTop,
       inBase: inBase,      // 원계약에서 커버된 위치(변경합의서 국면) — 없으면 null
-      roleGated: roleGated // 당사 지위 불일치로 접힘(11.1차) — 진단·설명용
+      roleGated: roleGated, // 당사 지위 불일치로 접힘(11.1차) — 진단·설명용
+      autoClear: acHit     // 문장 요건 판정(12차) — {ok, sentence} 또는 null. 자동 기재·빠른 확인 근거
     });
 
     // 노출 매칭: 게이트 통과(coverage가 quiet로 강등되지 않은 조항 매칭)만.
@@ -924,6 +948,7 @@ if (typeof module !== "undefined")
     passesOverlapGate: passesOverlapGate,
     scoreClauseCheck: scoreClauseCheck,
     decisiveHit: decisiveHit,
+    autoClearEval: autoClearEval,
     decideTier: decideTier,
     alarmGate: alarmGate,
     preconditionMet: preconditionMet,

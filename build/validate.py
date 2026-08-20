@@ -109,6 +109,22 @@ def _validate(common, types):
             ):
                 raise ValidationError(f"{cid}: llm_elements는 비어 있지 않은 문자열 1~8개의 리스트여야 함")
 
+            auto_clear = cp.get("auto_clear")
+            if auto_clear is not None:
+                groups = auto_clear.get("any_groups") if isinstance(auto_clear, dict) else None
+                if (
+                    not isinstance(groups, list) or not groups
+                    or any(not isinstance(g, list) or not g
+                           or any(not isinstance(k, str) or not k.strip() for k in g) for g in groups)
+                ):
+                    raise ValidationError(f"{cid}: auto_clear.any_groups는 비어 있지 않은 문자열 그룹 리스트여야 함")
+                req = auto_clear.get("require")
+                allowed_req = {"number", "period", "date", "money", "rate"}
+                if req is not None and (
+                    not isinstance(req, list) or not req or any(r not in allowed_req for r in req)
+                ):
+                    raise ValidationError(f"{cid}: auto_clear.require는 {sorted(allowed_req)} 중에서만")
+
             sb = cp.get("severity_basis")
             if sb is not None and (not isinstance(sb, str) or not sb.strip()):
                 raise ValidationError(f"{cid}: severity_basis는 비어 있지 않은 문자열이어야 함")

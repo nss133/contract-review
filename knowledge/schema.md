@@ -46,6 +46,12 @@ checks:
     llm_elements:                  # 선택: 로컬 LLM 충족도 판정용, 사람이 확정한 필수 요소
       - 재위탁 제한 또는 금지
       - 위탁자의 사전 동의
+    auto_clear:                    # 선택(12차): 문장 단위 요건 — 한 문장에서 전 그룹 충족 + require
+      any_groups: [[계약기간, 유효기간], []]  #   OR-그룹 목록(그룹 간 AND). 충족 시 매칭 확정 승격,
+      require: [period, date]     #   참고/권장은 이상없음 자동 기재·필수는 빠른 확인 제안.
+                                   #   require: number|period|date|money|rate 중 1개 이상(OR). 생략 가능.
+                                   #   부정·단서·정의·공란 문장은 자동 제외(sentence.js) — 판단형
+                                   #   체크(공정성·적정성 평가)에는 부여 금지, 사실기재형 전용.
       patterns: []                # JS 정규식 문자열 (선택)
     absence_check: true       # true: 매칭 조항 없으면 "누락 의심" 보고
     absence_precondition: [질권, 근질권]   # 선택. 조건부 부재체크 — 본문에 이 어휘가 1개+ 있을 때만

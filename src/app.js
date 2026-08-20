@@ -949,7 +949,7 @@ function runAnalysis(opts) {
   loadReassign(); // 수동 재지정 맵(11.7차)
   _opinionEditing = false; // 재분석·해시 변경 시 종합 검토의견 편집 모드 해제
   applySubdocVerdicts();
-  applyAutoReferenceVerdicts(); // 참고 항목 확정 매칭 → 이상없음 자동 기재(2026-08-19 피드백)
+  applyAutoVerdicts(); // 참고=확정 매칭, 권장=문장 요건 충족 → 이상없음 자동 기재(12차)
   applyCompare(); // 아카이브 로드 상태면 현재 조항 기준 정렬·이관 후보 재산출
   renderArchiveBanner(); // 비교 미진입 시 레지스트리에서 전년 검토 후보 자동 안내
   renderClauses();
@@ -1246,29 +1246,44 @@ function applySubdocVerdicts() {
   });
   if (changed) saveVerdicts();
 }
-// 참고 항목 자동 완료(2026-08-19 피드백): 참고 severity는 매칭이 확정(addressed)이면
-// 이상없음을 자동 기재 — "필요한 검토 완료" 문구와 잔여 참고 목록이 어긋나던 문제 해소.
-// 사람이 찍었거나 손댄 판정은 불변(bulk 계열 보존 규칙). 재분석으로 자격을 잃은 항목
-// (유형·모듈 변경 등)은 판정·코멘트가 원형 그대로인 자동 기재분만 회수.
-// verify(매칭 불확실)는 자동 기재하지 않음 — 틀린 이상없음은 누락이라 확정 매칭만.
+// 자동 판정(12차, 2026-08-19~20 피드백): "자동판정이 더 공격적이어야 한다"는 지시에 따라
+// 심각도별로 차등 적용. verify(매칭 불확실)는 어느 심각도든 자동 기재하지 않음 —
+// 틀린 이상없음은 누락이라 실패 비용이 비대칭이므로 확정 매칭(addressed)만 대상.
+//   참고: 확정 매칭이면 자동 이상없음(사람 확인 실익 낮음 — 사용자 결정)
+//   권장: 확정 매칭 + 문장 요건 충족(auto_clear — 키워드·숫자·긍정 종결을 한 문장에서 확인)이면 자동 이상없음
+//   필수: 자동 기재 안 함 — 문장 요건 충족 시 "빠른 확인" 원클릭 제안만
+// 사람이 찍었거나 손댄 판정은 불변(origin이 manual로 바뀜). 재분석으로 자격을 잃은
+// 자동 기재분은 origin 기준으로 회수(코멘트가 문장 인용이라 계약서마다 달라 origin이 유일한 기준).
 var AUTO_REF_COMMENT = "참고 항목 — 관련 문구가 계약서에서 확인되어 자동 기재됨";
-function applyAutoReferenceVerdicts() {
-  var qualifySet = {};
+function _autoClearOk(r) { return !!(r && r.autoClear && r.autoClear.ok); }
+function _autoClearComment(r) {
+  var s = String((r.autoClear && r.autoClear.sentence) || "");
+  if (s.length > 100) s = s.slice(0, 100) + "…";
+  return "요건 문장 확인 — “" + s + "” (자동 기재)";
+}
+// 필수 항목의 원클릭 확인 대상 여부 — 자동 기재는 하지 않되 빠른 확인으로 제안.
+function _sentenceQuick(r) {
+  var cp = _cpById(r.cpId);
+  return !!(cp && cp.severity === "필수" && r.coverage === "addressed" && _autoClearOk(r));
+}
+function applyAutoVerdicts() {
+  var qualify = {}; // cpId → 자동 기재 코멘트
   ((state.result && state.result.results) || []).forEach(function (r) {
     var cp = _cpById(r.cpId);
-    if (cp && cp.severity === "참고" && r.coverage === "addressed") qualifySet[r.cpId] = true;
+    if (!cp || r.coverage !== "addressed") return;
+    if (cp.severity === "참고") qualify[r.cpId] = AUTO_REF_COMMENT;
+    else if (cp.severity === "권장" && _autoClearOk(r)) qualify[r.cpId] = _autoClearComment(r);
   });
-  var qualify = Object.keys(qualifySet);
-  // 회수 대상은 저장소 전체에서 탐색 — 유형 전환으로 결과에서 사라진 체크의 자동 기재분도 회수.
-  var others = Object.keys(verdictStore).filter(function (id) { return !qualifySet[id]; });
   var changed = false;
-  var rm = Verdict.revertBulkVerdict(verdictStore, others, "이상없음", AUTO_REF_COMMENT);
+  var rm = Verdict.revertAutoVerdicts(verdictStore, Object.keys(qualify));
   if (rm.removed) { verdictStore = rm.store; changed = true; }
-  if (qualify.length) {
-    var fill = Verdict.bulkVerdictComment(verdictStore, qualify, "이상없음", AUTO_REF_COMMENT,
+  Object.keys(qualify).forEach(function (cpId) {
+    var cur = verdictStore[cpId];
+    if (cur && cur.verdict) return; // 기판정 보존(사람 판정·기존 자동 기재 모두)
+    verdictStore = Verdict.setVerdict(verdictStore, cpId, "이상없음", qualify[cpId],
       verdictToday(), "반영되어 있음", "auto");
-    if (fill.applied) { verdictStore = fill.store; changed = true; }
-  }
+    changed = true;
+  });
   if (changed) saveVerdicts();
 }
 function verdictToday() {
@@ -1996,10 +2011,11 @@ function bindBulkVerdict() {
   if (b3) b3.addEventListener("click", function () { apply(["addressed", "verify"], "이상없음"); });
   var quick = document.getElementById("quick-review-ok");
   if (quick) quick.addEventListener("click", function () {
+    // 빠른 확인 = 코퍼스 반복 확인 항목 + 문장 요건 충족 필수 항목(12차 — 자동 기재 대신 원클릭)
     var quickIds = (state.result ? state.result.results : []).filter(function (r) {
-      return reviewRouteFor(r).route === "quick";
+      return reviewRouteFor(r).route === "quick" || _sentenceQuick(r);
     }).map(function (r) { return r.cpId; });
-    applyIds(quickIds, "이상없음", "반복 확인 항목");
+    applyIds(quickIds, "이상없음", "반영되어 있음");
   });
 }
 bindBulkVerdict();
@@ -2376,7 +2392,13 @@ function reviewRouteFor(r) {
 }
 function reviewRouteHtml(r) {
   var route = reviewRouteFor(r);
-  if (route.route === "standard") return "";
+  if (route.route === "standard") {
+    // 문장 요건 충족 필수 항목(12차) — 코퍼스 이력이 없어도 빠른 확인으로 안내.
+    if (_sentenceQuick(r)) {
+      return '<span class="review-route route-quick" title="요건 문장이 확인되어 원클릭 확인 대상">빠른 확인</span>';
+    }
+    return "";
+  }
   var labels = { detailed: "정밀 검토", applicability: "적용성 확인", quick: "빠른 확인" };
   return '<span class="review-route route-' + route.route + '" title="' + esc(route.reason) + '">' +
     labels[route.route] + "</span>";
@@ -2717,7 +2739,7 @@ function refreshClauseCounts() {
   if (quick) {
     var quickN = ((state.result && state.result.results) || []).filter(function (r) {
       var v = verdictStore[r.cpId];
-      return reviewRouteFor(r).route === "quick" && !(v && v.verdict);
+      return (reviewRouteFor(r).route === "quick" || _sentenceQuick(r)) && !(v && v.verdict);
     }).length;
     quick.hidden = !quickN;
     quick.textContent = "빠른 확인 " + quickN + "건 → 이상없음";
