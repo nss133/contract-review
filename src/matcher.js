@@ -179,6 +179,38 @@ function fundScopeAllows(check, kind) {
   return sc.indexOf(kind) !== -1;
 }
 
+// ── 용역 성질결정(도급형/위임형) — 12차, 2026-08-18 피드백 ─────────
+// "용역"은 전형계약 명칭이 아님: 일의 완성+결과 보수면 도급(민법 §664), 사무처리 위탁이면
+// 위임(§680) — 제작물공급계약에서 성질에 따라 담보책임 규정이 달라진다는 대법원 2010다56685
+// 법리. 도급형에는 하자담보책임(§667~§670)이 정면 적용되지만, 위임형에는 민법상 하자담보책임이
+// 없고 선관주의(§681) 위반 → §390 손해배상·해지(§689) 체계로 감. 따라서 위임형 계약에
+// 도급 하자담보 체크의 **부재알람**을 띄우면 법적으로 틀린 지적이 됨.
+// ⚠️ 게이트는 부재알람(consider)에만 적용 — 담보책임은 임의규정이라 위임형 계약에 하자보수
+// 조항을 둔 약정도 유효하므로, 조항이 실제로 있으면(매칭) 소거하지 않고 검토 대상으로 유지.
+// 분류 신호(사용자 제안): 산출물·검수·인도 조항 vs 기간별 수행·보고 조항.
+var COMPLETION_SIGNALS = ["산출물", "검수", "납품", "인도", "완성", "결과물", "준공",
+  "시운전", "구축", "제작", "성과물"];
+var MANDATE_SIGNALS = ["자문", "대행", "위임", "사무처리", "사무의 처리", "선량한 관리자",
+  "자문료", "고문", "운영 업무", "월별 보고", "정기 보고", "업무보고"];
+// 반환 {nature: "completion"|"mandate"|"", hits} — 복수 신호 + 우세일 때만 판별,
+// 확신 없으면 빈 문자열(게이트 비활성 = 양쪽 체크 전부 유지, 누락검출 우선).
+function detectServiceNature(text) {
+  var t = _stripStatuteCitations(String(text || ""));
+  var c = [], m = [];
+  COMPLETION_SIGNALS.forEach(function (s) { if (t.indexOf(s) !== -1) c.push(s); });
+  MANDATE_SIGNALS.forEach(function (s) { if (t.indexOf(s) !== -1) m.push(s); });
+  if (c.length >= 2 && c.length > m.length) return { nature: "completion", hits: c };
+  if (m.length >= 2 && m.length > c.length) return { nature: "mandate", hits: m };
+  return { nature: "", hits: [] };
+}
+// check.service_scope 미선언 = 성질 무관 적용. 판별 불가면 게이트 비활성.
+function serviceScopeAllows(check, nature) {
+  var sc = check && check.service_scope;
+  if (!sc || !sc.length) return true;
+  if (!nature) return true;
+  return sc.indexOf(nature) !== -1;
+}
+
 // 국면 자동 추정 — 계약서 문언에서 당사의 지위를 읽음. 입력 단계 프리필용이며
 // 최종 결정은 검토자가 함(추정은 근거와 함께 노출).
 // 수익자 신호: 투자신탁·집합투자 구조에서 당사가 수익자/투자자로만 등장하는 형태.
@@ -785,6 +817,11 @@ function analyze(clauses, docs, opts) {
     : detectFundKind((clauses || []).map(function (cl) {
         return String(cl.heading || "") + " " + String(cl.body || ""); }).join("\n"));
   var model = buildModel(docs, activeModules, stance, fundKind);
+  // 용역 성질결정(12차) — 계약서 문언으로 자동 판별. 부재알람 게이트에만 쓰임.
+  var svc = o.serviceNature !== undefined
+    ? { nature: o.serviceNature, hits: [] }
+    : detectServiceNature((clauses || []).map(function (cl) {
+        return String(cl.heading || "") + " " + String(cl.body || ""); }).join("\n"));
   var results = [];
   var matches = [];
   var missing = [];
@@ -878,6 +915,15 @@ function analyze(clauses, docs, opts) {
       }
     }
 
+    // 성질결정 게이트(12차): 도급형 전용 체크(하자담보 등)의 부재알람은 위임형 계약에서
+    // 접고, 위임형 전용 체크(선관주의 구제)의 부재알람은 도급형 계약에서 접는다.
+    // 매칭(addressed/verify)은 게이트 대상 아님 — 약정으로 둔 조항은 유효하므로 검토 유지.
+    var serviceGated = false;
+    if (coverage === "consider" && !serviceScopeAllows(cp, svc.nature)) {
+      coverage = "quiet";
+      serviceGated = true;
+    }
+
     var reasons = _reasons(tier, candidates.length ? candidates : scored, cp);
     var rankedTop = scored.slice(0, 3).map(function (r) {
       return { clauseIndex: r.clause.index, score: r.s.score };
@@ -891,7 +937,8 @@ function analyze(clauses, docs, opts) {
       ranked: rankedTop,
       inBase: inBase,      // 원계약에서 커버된 위치(변경합의서 국면) — 없으면 null
       roleGated: roleGated, // 당사 지위 불일치로 접힘(11.1차) — 진단·설명용
-      autoClear: acHit     // 문장 요건 판정(12차) — {ok, sentence} 또는 null. 자동 기재·빠른 확인 근거
+      autoClear: acHit,    // 문장 요건 판정(12차) — {ok, sentence} 또는 null. 자동 기재·빠른 확인 근거
+      serviceGated: serviceGated // 용역 성질 불일치로 부재알람 접힘(12차) — 진단·설명용
     });
 
     // 노출 매칭: 게이트 통과(coverage가 quiet로 강등되지 않은 조항 매칭)만.
@@ -911,6 +958,7 @@ function analyze(clauses, docs, opts) {
   return {
     checkpoints: model.checks.map(function (e) { return e.cp; }),
     results: results,
+    serviceNature: svc, // 용역 성질결정(12차) — {nature, hits}. UI 안내용
     matches: matches,   // 하위호환: tier!=="none" 인 best (app.js 소비)
     missing: missing    // 하위호환(재정의): coverage==="consider" — 알람 게이트 통과분만
   };
@@ -927,6 +975,8 @@ if (typeof module !== "undefined")
     STANCES: STANCES,
     subjectBonus: subjectBonus,
     detectFundKind: detectFundKind,
+    detectServiceNature: detectServiceNature,
+    serviceScopeAllows: serviceScopeAllows,
     fundScopeAllows: fundScopeAllows,
     titleHits: titleHits,
     titleFitRatio: titleFitRatio,

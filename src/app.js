@@ -566,6 +566,15 @@ function refreshInputSetup() {
     auto.textContent = picked
       ? "자동 감지 (근거어: " + (top.hits || []).slice(0, 4).join("·") + ")"
       : "자동 감지 실패 — 유형을 직접 고르면 해당 체크리스트가 붙습니다";
+    // 용역 성질결정(12차) — 도급형/위임형에 따라 하자담보 부재알람이 달라지므로 판별 결과를 노출.
+    if (picked === "procurement") {
+      var svcN = detectServiceNature(state.text);
+      if (svcN.nature) {
+        auto.textContent += " · 용역 성질: " +
+          (svcN.nature === "completion" ? "결과완성형(도급)" : "사무처리형(위임)") +
+          " (근거어: " + svcN.hits.slice(0, 3).join("·") + ")";
+      }
+    }
   }
   // ③ 모듈 칩
   renderInputScreening();
@@ -3065,6 +3074,21 @@ function renderReport() {
       "운용사·판매회사가 준수 주체인 항목은 반영 여부 확인 수준으로만 표시됩니다." +
       (state.partyRoles && state.partyRoles.length
         ? ' <span class="stance-roles">계약상 당사 지위: ' + esc(state.partyRoles.join("·")) + "</span>" : "") +
+      "</div>";
+  }
+
+  // 용역 성질결정 안내(12차): 부재알람이 성질 게이트로 접힌 경우 이유를 리포트에 명시 —
+  // 조용한 억제는 "왜 이 항목이 안 보이지"라는 혼란을 낳으므로 판별 근거와 함께 노출.
+  var svcNat = state.result && state.result.serviceNature;
+  var svcGatedN = ((state.result && state.result.results) || [])
+    .filter(function (r) { return r.serviceGated; }).length;
+  if (svcNat && svcNat.nature && svcGatedN) {
+    right += '<div class="report-stance-banner">' +
+      "<strong>용역 성질: " + (svcNat.nature === "completion" ? "결과완성형(도급)" : "사무처리형(위임)") +
+      "</strong> — 계약서 문언(근거어: " + esc(svcNat.hits.slice(0, 4).join("·")) + ")으로 판별. " +
+      (svcNat.nature === "mandate"
+        ? "위임형 용역에는 민법상 하자담보책임이 적용되지 않아(선관주의·채무불이행 체계) 도급 하자담보 부재알람 " + svcGatedN + "건을 표시하지 않습니다. 계약서에 하자보수 조항이 실제로 있으면 검토 대상으로 유지됩니다."
+        : "도급형 용역이라 위임형 전용 항목의 부재알람 " + svcGatedN + "건을 표시하지 않습니다.") +
       "</div>";
   }
 

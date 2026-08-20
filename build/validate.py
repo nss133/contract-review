@@ -109,6 +109,13 @@ def _validate(common, types):
             ):
                 raise ValidationError(f"{cid}: llm_elements는 비어 있지 않은 문자열 1~8개의 리스트여야 함")
 
+            service_scope = cp.get("service_scope")
+            if service_scope is not None and (
+                not isinstance(service_scope, list) or not service_scope
+                or any(s not in ("completion", "mandate") for s in service_scope)
+            ):
+                raise ValidationError(f"{cid}: service_scope는 completion|mandate 리스트여야 함")
+
             auto_clear = cp.get("auto_clear")
             if auto_clear is not None:
                 groups = auto_clear.get("any_groups") if isinstance(auto_clear, dict) else None

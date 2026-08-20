@@ -808,6 +808,57 @@ test("auto_clear 미선언 체크는 종전 동작(하위호환)", () => {
   r.results.forEach((x) => assert.ok(!x.autoClear || !x.autoClear.ok));
 });
 
+// ── 용역 성질결정 service_scope(12차, 2026-08-18 논의) ─────────────
+const { detectServiceNature, serviceScopeAllows } = require("../src/matcher.js");
+const CHECK_DEFECT = {
+  id: "T-DEFECT",
+  check: "완성물 하자보수 청구권 조항이 있는가",
+  severity: "권장",
+  norm_type: "임의",
+  module: "M-CORE",
+  triggers: { keywords: ["하자보수", "하자의 보수"] },
+  service_scope: ["completion"],
+  absence_check: true,
+  sources: [],
+};
+const DEFECT_DOC = { meta: OUT_DOC.meta, checkpoints: OUT_DOC.checkpoints.concat([CHECK_DEFECT]) };
+const MANDATE_CLAUSES = [
+  { heading: "제1조 (목적)", body: "갑은 을에게 경영 자문 사무의 처리를 위임하고 을은 이를 수행한다.", index: 0 },
+  { heading: "제2조 (업무 수행)", body: "을은 선량한 관리자의 주의로써 자문 업무를 수행하고 월별 보고를 한다.", index: 1 },
+  { heading: "제3조 (자문료)", body: "갑은 을에게 자문료를 지급한다.", index: 2 },
+];
+
+test("detectServiceNature: 산출물·검수 신호=도급형, 자문·위임 신호=위임형, 애매하면 보류", () => {
+  assert.strictEqual(detectServiceNature("산출물을 납품하고 검수를 받는다").nature, "completion");
+  assert.strictEqual(detectServiceNature("자문 사무처리를 위임하고 선량한 관리자의 주의로 수행한다").nature, "mandate");
+  assert.strictEqual(detectServiceNature("일반 조항만 있는 본문").nature, "");
+});
+
+test("serviceScopeAllows: 미선언=무관 적용, 판별 불가=게이트 비활성", () => {
+  assert.ok(serviceScopeAllows({}, "mandate"));
+  assert.ok(serviceScopeAllows(CHECK_DEFECT, ""));
+  assert.ok(serviceScopeAllows(CHECK_DEFECT, "completion"));
+  assert.ok(!serviceScopeAllows(CHECK_DEFECT, "mandate"));
+});
+
+test("성질 게이트: 위임형 계약에서 도급 하자담보 부재알람이 접힌다", () => {
+  const r = analyze(MANDATE_CLAUSES, [DEFECT_DOC], ["M-CORE"]);
+  assert.strictEqual(r.serviceNature.nature, "mandate");
+  const d = r.results.find((x) => x.cpId === "T-DEFECT");
+  assert.strictEqual(d.coverage, "quiet", "위임형에는 하자담보 부재알람 금지");
+  assert.ok(d.serviceGated);
+});
+
+test("성질 게이트: 위임형이라도 하자보수 조항이 실제로 있으면 매칭은 유지(약정 유효)", () => {
+  const withDefect = MANDATE_CLAUSES.concat([
+    { heading: "제4조 (하자보수)", body: "을의 업무 결과에 하자가 있는 경우 갑은 상당한 기간을 정하여 하자의 보수를 청구할 수 있다.", index: 3 },
+  ]);
+  const r = analyze(withDefect, [DEFECT_DOC], ["M-CORE"]);
+  const d = r.results.find((x) => x.cpId === "T-DEFECT");
+  assert.ok(d.coverage === "addressed" || d.coverage === "verify",
+    "조항이 있으면 소거가 아니라 검토 대상 — got " + d.coverage);
+});
+
 // ── 파일명 신호(2026-08-19 피드백) ─────────────────────────────────
 test("detectType: 파일명 키워드만으로 유형 확정(제목·표제부 무신호)", () => {
   const types = [
