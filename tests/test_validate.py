@@ -184,6 +184,17 @@ def test_bad_evidence_required_groups_rejected(knowledge_dir):
         load_knowledge(knowledge_dir)
 
 
+def test_bad_absence_precondition_groups_rejected(knowledge_dir):
+    bad = (knowledge_dir / "common.yaml").read_text().replace(
+        "    absence_check: true\n",
+        "    absence_precondition_groups: [[]]\n    absence_check: true\n",
+        1,
+    )
+    (knowledge_dir / "common.yaml").write_text(bad)
+    with pytest.raises(ValidationError, match="absence_precondition_groups"):
+        load_knowledge(knowledge_dir)
+
+
 def test_standard_subdocs_unknown_check_rejected(knowledge_dir):
     # meta.standard_subdocs에 존재하지 않는 check id를 covers로 넣으면 ValidationError.
     bad = (knowledge_dir / "common.yaml").read_text().replace(

@@ -67,6 +67,7 @@ def score(cases, results):
             if mid in active:
                 errs.append(f"모듈 오활성: {mid}가 activeModules에 있음")
         addressed = set(r.get("addressed") or [])
+        verify = set(r.get("verify") or [])
         for cid in c.get("addressed_must_exclude") or []:
             if cid in addressed:
                 errs.append(f"부착 오탐: {cid}가 addressed로 붙음(weak-role 게이트 위반)")
@@ -84,6 +85,15 @@ def score(cases, results):
         for cid in c.get("addressed_must_include") or []:
             if cid not in addressed:
                 errs.append(f"반영검출 실패: {cid}가 addressed에 없음")
+        # matched = 조항에 실제 부착된 addressed/verify. 부재알람(consider)은 법적 적용범위가
+        # 맞으면 유지해야 하므로, 의미 충돌 오부착 회귀는 shown이 아니라 이 축으로 고정한다.
+        matched = addressed | verify
+        for cid in c.get("matched_must_exclude") or []:
+            if cid in matched:
+                errs.append(f"조항 부착 오탐: {cid}가 addressed/verify로 붙음")
+        for cid in c.get("matched_must_include") or []:
+            if cid not in matched:
+                errs.append(f"조항 부착 실패: {cid}가 addressed/verify에 없음")
         subcov = set(r.get("subdoc_covered") or [])
         for cid in c.get("subdoc_must_cover") or []:
             if cid not in subcov:

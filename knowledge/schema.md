@@ -69,6 +69,9 @@ checks:
                                #   "문언에 제도 채택이 드러나는" 항목에만 사용(문언 밖 사실로 적용이
                                #   결정되면 tier: conditional이 맞음). 모듈 suggest_keywords와 동일
                                #   어휘면 중복(no-op)이므로 금지
+    absence_precondition_groups:          # 선택. 복합 전제 — 그룹 간 AND·내부 OR
+      - [개인정보, 개인신용정보]
+      - [제3자 제공, 제공받]
     sources:                  # basis=statute면 1개 이상 필수. 첫 항목에 quote 필수
       - law: 개인정보 보호법      # DB law_name과 일치해야 원문 첨부됨
         article: 제26조         # "제N조" / "제N조의M" 형태

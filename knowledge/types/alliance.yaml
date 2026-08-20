@@ -34,6 +34,8 @@ checks:
     basis: practice
     triggers:
       keywords: [구속력, MOU, 양해각서, 법적 효력]
+    # 일반 협약의 기간·효력 문언이 MOU 구속력 판단으로 붙는 것을 차단.
+    evidence_required_groups: [[법적 구속력, 구속력, 법적 효력]]
     absence_check: false
     sources: []
 

@@ -270,6 +270,7 @@ checks:
     basis: statute
     triggers:
       keywords: [위험부담, 멸실, 훼손, 위험의 이전]
+    evidence_required_groups: [[위험부담, 멸실, 훼손, 위험의 이전]]
     absence_check: false
     sources:
       - law: 민법
@@ -320,6 +321,9 @@ checks:
     basis: statute
     triggers:
       keywords: [하자보수, 하자의 보수, 하자 담보, 보수 청구]
+    evidence_required_groups:
+      - [하자, 하자보수, 하자의 보수, 하자 담보]
+      - [보수, 시정, 수정, 재수행]
     auto_clear:
       any_groups: [[하자, 하자보수, 하자의 보수], [보수, 시정, 수정, 재수행]]
     # 성질결정(12차, 2026-08-18 논의): 하자담보책임은 도급형(결과완성형) 법리 — 위임형
@@ -362,9 +366,17 @@ checks:
     norm_type: 임의
     basis: statute
     triggers:
-      keywords: [계약의 목적을 달성, 하자로 인하여, 해제]
+      keywords: [계약의 목적을 달성, 하자로 인하여, 불합격, 기준에 미달, 검수 통과, 재납품, 해제, 해지]
+    evidence_required_groups:
+      - [하자, 불합격, 기준에 미달, 검수를 통과하지 못, 검수 불합격]
+      - [해제, 해지, 계약 목적을 달성, 계약의 목적을 달성]
     auto_clear:
-      any_groups: [[하자], [목적을 달성], [해제]]
+      any_groups:
+        - [하자, 불합격, 기준에 미달, 검수를 통과하지 못, 검수 불합격]
+        - [목적을 달성, 기준에 미달, 검수를 통과하지 못, 검수 불합격]
+        - [해제, 해지]
+    # 하자 해당성·계약목적 달성불능은 법적 판단이 남으므로 증거 확정만 한다.
+    auto_verdict: false
     absence_check: false
     sources:
       - law: 민법
@@ -382,6 +394,9 @@ checks:
     basis: statute
     triggers:
       keywords: [담보책임 기간, 존속기간, 하자담보 기간, 1년내, 유지보수, 유지관리, 유상, 별도계약, 하자보수, 하자담보, 무상, 결함]
+    evidence_required_groups:
+      - [하자보수, 하자담보, 무상보증, 결함]
+      - [기간, 존속기간, 유지보수, 유지관리, 무상, 유상]
     # 기간·절차·유무상 구분의 복합 판단이므로 증거 확정만 하고 자동 이상없음은 금지.
     auto_clear:
       any_groups: [[하자보수, 하자담보], [기간, 존속기간], [유지보수, 유지관리, 무상, 유상]]
@@ -474,6 +489,7 @@ checks:
     basis: statute
     triggers:
       keywords: [종류, 완전물, 하자없는 물건, 대체물]
+    evidence_required_groups: [[완전물, 하자없는 물건, 대체물, 교환, 재납품]]
     absence_check: false
     sources:
       - law: 민법
@@ -517,6 +533,9 @@ checks:
     basis: practice
     triggers:
       keywords: [SLA, 서비스수준, 가동률, 장애, 서비스 지연]
+    evidence_required_groups:
+      - [SLA, 서비스수준, 서비스 수준, 가동률, 장애]
+      - [보상, 손해배상, 감액, 복구, 대응]
     # SLA 기준·장애 대응·보상까지 모두 필요한 복합 체크 — 문언을 짚되 자동판정하지 않음.
     auto_clear:
       any_groups: [[SLA, 서비스수준, 서비스 수준, 가동률], [장애, 대응, 복구], [보상, 손해배상, 감액]]

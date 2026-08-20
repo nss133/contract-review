@@ -5,9 +5,11 @@ meta:
   modules:
     - id: M-CORE
       name: 업무위탁 기본(금융권)
-      always_on: true
-      screening_question: null
-      suggest_keywords: []
+      # '행사 운영 위탁' 같은 일반 도급과 금융규제상 업무위탁을 분리한다. 규제 신호가
+      # 충분하면 자동 활성, 불명확하면 스크리닝 질문으로 검토자가 적용범위를 확정한다.
+      always_on: false
+      screening_question: 금융회사의 본질적·규제대상 업무를 외부에 위탁하는 계약인가?
+      suggest_keywords: [금융기관의 업무위탁, 업무위수탁기준, 금융감독원, 감독원장, 금융관련법령, 금융실명, 본질적 요소, 보험계약 관리, 보험 상담, 민원 접수, 신용정보 처리]
     - id: M-DISPATCH
       name: 도급·파견 경계
       always_on: false
@@ -81,6 +83,7 @@ checks:
     basis: statute
     triggers:
       keywords: [법령상 의무, 직접 수행, 의무를 부여]
+    evidence_required_groups: [[직접 수행, 직접수행, 금융기관이 수행, 의무를 부여]]
     absence_check: false
     sources:
       - law: 금융기관의 업무위탁 등에 관한 규정
@@ -98,6 +101,7 @@ checks:
     basis: statute
     triggers:
       keywords: [자격, 인허가, 등록, 법규 준수]
+    evidence_required_groups: [[손해사정, 사정업무, 손해사정사, 손해사정업자, 보험금 산정]]
     absence_check: true
     # 조건부 부재체크: 손해사정 위탁 어휘가 본문에 있을 때만 부재알람(콜센터·IT·일반사무 위탁에서 손해사정 평가기준 누락 오탐 방지).
     absence_precondition: [손해사정, 사정업무, 손해사정사, 손해사정업자, 보험금 산정]
@@ -124,6 +128,7 @@ checks:
     basis: statute
     triggers:
       keywords: [금융실명, 관련 법령, 법령 준수, 컴플라이언스]
+    evidence_required_groups: [[금융실명, 실명거래, 실명법]]
     absence_check: true
     sources:
       - law: 금융기관의 업무위탁 등에 관한 규정
@@ -204,6 +209,9 @@ checks:
     basis: statute
     triggers:
       keywords: [점검, 감사, 자료 요구, 관리감독]
+    evidence_required_groups:
+      - [점검, 감사, 자료 요구, 자료요구, 관리감독]
+      - [위탁자, 수탁자, 위탁업무, 위탁 업무]
     absence_check: true
     sources:
       - law: 금융기관의 업무위탁 등에 관한 규정
@@ -228,6 +236,9 @@ checks:
     basis: statute
     triggers:
       keywords: [보고, 금융감독원, 감독원장, 7영업일]
+    evidence_required_groups:
+      - [금융감독원, 감독원장, 사전보고]
+      - [7영업일, 업무 개시, 업무개시]
     absence_check: true
     sources:
       - law: 금융기관의 업무위탁 등에 관한 규정
@@ -246,6 +257,7 @@ checks:
     basis: statute
     triggers:
       keywords: [변경권고, 시정, 감독당국, 금융위원회]
+    evidence_required_groups: [[변경권고, 감독당국, 금융위원회, 금융감독원, 감독원장]]
     absence_check: true
     sources:
       - law: 금융기관의 업무위탁 등에 관한 규정

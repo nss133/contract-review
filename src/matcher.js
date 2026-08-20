@@ -686,13 +686,26 @@ function decideTier(ranked, check) {
 function alarmGate(check) {
   return MatcherConfig.ALARM_SEVERITIES.indexOf(check && check.severity) !== -1;
 }
-// 조건부 부재체크(전제신호 게이트): absence_precondition이 있으면 본문에 전제어휘가
-// 1개 이상 있을 때만 부재알람 발동. 없으면 관련성 미달로 조용(quiet).
-// precondition이 없는 check는 항상 발동(하위호환). 약한 게이트(1개 충족) — 누락검출 우선.
+// 조건부 부재체크(전제신호 게이트):
+// - absence_precondition_groups: 그룹 간 AND·그룹 내부 OR. 복합 적용범위에 사용.
+// - absence_precondition: 전제어휘 중 1개 이상(하위호환).
+// 둘 다 없으면 항상 발동한다.
 function preconditionMet(check, text) {
+  var groups = check && check.absence_precondition_groups;
+  var t = String(text || "");
+  if (groups && groups.length) {
+    for (var g = 0; g < groups.length; g++) {
+      var group = groups[g] || [];
+      var hit = false;
+      for (var j = 0; j < group.length; j++) {
+        if (group[j] && t.indexOf(group[j]) !== -1) { hit = true; break; }
+      }
+      if (!hit) return false;
+    }
+    return true;
+  }
   var pre = check && check.absence_precondition;
   if (!pre || !pre.length) return true; // 전제 없음 = 무조건 대상
-  var t = String(text || "");
   for (var i = 0; i < pre.length; i++) if (t.indexOf(pre[i]) !== -1) return true;
   return false;
 }

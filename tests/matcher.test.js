@@ -580,6 +580,18 @@ test("preconditionMet: precondition 없는 check는 항상 true(하위호환)", 
   assert.strictEqual(preconditionMet(CHECK_NOPRE, "아무 내용"), true);
 });
 
+test("preconditionMet: 복합 전제그룹은 그룹 간 AND·내부 OR로 판정", () => {
+  const check = {
+    absence_precondition_groups: [
+      ["개인정보", "개인신용정보"],
+      ["제3자 제공", "제공받"],
+    ],
+  };
+  assert.strictEqual(preconditionMet(check, "개인정보를 제3자 제공한다"), true);
+  assert.strictEqual(preconditionMet(check, "개인정보 처리업무를 위탁한다"), false);
+  assert.strictEqual(preconditionMet(check, "자료를 제공받는다"), false);
+});
+
 test("coverageOf: 전제 불충족 부재체크는 consider가 아니라 quiet", () => {
   // 질권 언급 없는 본문 → 질권 부재알람 억제.
   assert.strictEqual(coverageOf("none", CHECK_PLEDGE, "저당권 담보계약"), "quiet");

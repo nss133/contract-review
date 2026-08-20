@@ -148,6 +148,17 @@ def _validate(common, types):
             ):
                 raise ValidationError(f"{cid}: evidence_required_groups는 비어 있지 않은 문자열 그룹 리스트여야 함")
 
+            precondition_groups = cp.get("absence_precondition_groups")
+            if precondition_groups is not None and (
+                not isinstance(precondition_groups, list) or not precondition_groups
+                or any(not isinstance(g, list) or not g
+                       or any(not isinstance(k, str) or not k.strip() for k in g)
+                       for g in precondition_groups)
+            ):
+                raise ValidationError(
+                    f"{cid}: absence_precondition_groups는 비어 있지 않은 문자열 그룹 리스트여야 함"
+                )
+
             sb = cp.get("severity_basis")
             if sb is not None and (not isinstance(sb, str) or not sb.strip()):
                 raise ValidationError(f"{cid}: severity_basis는 비어 있지 않은 문자열이어야 함")

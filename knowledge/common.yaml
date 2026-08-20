@@ -437,6 +437,7 @@ checks:
     basis: practice
     triggers:
       keywords: [양도, 이전, 담보 제공, 승계]
+    evidence_required_groups: [[양도, 이전, 계약상 지위, 권리의무, 권리·의무]]
     # 코퍼스 8/8 이상없음. 양도 어휘만으로는 부족하며 동의 없는 이전의 명시적 금지를 요구.
     auto_clear:
       any_groups: [[양도, 이전, 담보 제공], [동의, 승인]]
@@ -468,6 +469,7 @@ checks:
     basis: statute
     triggers:
       keywords: [자산운용, 신용공여, 선량한 관리자]
+    evidence_required_groups: [[자산운용, 신용공여, 여신, 대출]]
     absence_check: false
     sources:
       - law: 보험업법
@@ -486,6 +488,7 @@ checks:
     basis: statute
     triggers:
       keywords: [투기, 자기주식, 임직원 대출, 정치자금]
+    evidence_required_groups: [[투기, 자기주식, 임직원 대출, 정치자금]]
     absence_check: false
     sources:
       - law: 보험업법
@@ -689,15 +692,9 @@ checks:
       - 국외
       - 리전
       - 고유식별정보
+    # 적용 여부는 계약 문언이 아니라 실제 처리정보의 종류로 결정됨.
+    tier: conditional
     absence_check: true
-    absence_precondition:
-    - 고유식별정보
-    - 개인신용정보
-    - 신용정보
-    - 주민등록번호
-    - 여권번호
-    - 운전면허
-    - 외국인등록번호
     sources:
     - law: 전자금융감독규정
       article: 제14조의2
@@ -1398,6 +1395,7 @@ checks:
     basis: statute
     triggers:
       keywords: [개인정보, 처리위탁, 개인정보 처리, 특약, 위탁 문서, 법정 기재]
+    evidence_required_groups: [[개인정보, 개인신용정보, 정보주체], [위탁, 수탁, 처리업무]]
     absence_check: true
     sources:
       - law: 개인정보 보호법
@@ -1555,6 +1553,9 @@ checks:
     basis: statute
     triggers:
       keywords: [홈페이지, 지속적으로 게재, 인터넷, 게시, 간행물, 신문, 사업장]
+    evidence_required_groups:
+      - [홈페이지, 인터넷 홈페이지, 게시, 게재, 간행물, 신문, 사업장]
+      - [위탁, 수탁]
     absence_check: false
     sources:
       - law: 개인정보 보호법 시행령
@@ -1784,9 +1785,14 @@ checks:
     basis: statute
     triggers:
       keywords: [개인정보, 제3자 제공, 정보제공, 동의]
+    evidence_required_groups:
+      - [개인정보, 개인신용정보, 고객정보, 정보주체]
+      - [제3자 제공, 제3자에게 제공, 개인정보를 제공, 정보제공, 제공받]
     absence_check: true
     # 조건부 부재체크: 제3자 제공(§17·§18) 규율 — 본문에 제공 어휘가 있을 때만 부재알람(처리위탁 전용 계약 오탐 방지).
-    absence_precondition: [제3자 제공, 제3자에게 제공, 개인정보를 제공, 정보제공, 제공받]
+    absence_precondition_groups:
+      - [개인정보, 개인신용정보, 고객정보, 정보주체]
+      - [제3자 제공, 제3자에게 제공, 개인정보를 제공, 정보제공, 제공받]
     sources:
       - law: 개인정보 보호법
         article: 제17조
@@ -1805,9 +1811,14 @@ checks:
     basis: statute
     triggers:
       keywords: [이용목적, 제공 항목, 보유기간, 고지]
+    evidence_required_groups:
+      - [개인정보, 개인신용정보, 고객정보, 정보주체]
+      - [제3자 제공, 제3자에게 제공, 개인정보를 제공, 정보제공, 제공받]
     absence_check: true
     # 조건부 부재체크: 제3자 제공(§17·§18) 규율 — 본문에 제공 어휘가 있을 때만 부재알람(처리위탁 전용 계약 오탐 방지).
-    absence_precondition: [제3자 제공, 제3자에게 제공, 개인정보를 제공, 정보제공, 제공받]
+    absence_precondition_groups:
+      - [개인정보, 개인신용정보, 고객정보, 정보주체]
+      - [제3자 제공, 제3자에게 제공, 개인정보를 제공, 정보제공, 제공받]
     sources:
       - law: 개인정보 보호법
         article: 제17조
@@ -1825,9 +1836,14 @@ checks:
     basis: statute
     triggers:
       keywords: [목적 외, 이용 제한, 제공 제한]
+    evidence_required_groups:
+      - [개인정보, 개인신용정보, 고객정보, 정보주체]
+      - [제3자 제공, 제3자에게 제공, 개인정보를 제공, 정보제공, 제공받]
     absence_check: true
     # 조건부 부재체크: 제3자 제공(§17·§18) 규율 — 본문에 제공 어휘가 있을 때만 부재알람(처리위탁 전용 계약 오탐 방지).
-    absence_precondition: [제3자 제공, 제3자에게 제공, 개인정보를 제공, 정보제공, 제공받]
+    absence_precondition_groups:
+      - [개인정보, 개인신용정보, 고객정보, 정보주체]
+      - [제3자 제공, 제3자에게 제공, 개인정보를 제공, 정보제공, 제공받]
     sources:
       - law: 개인정보 보호법
         article: 제18조

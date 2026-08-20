@@ -41,6 +41,8 @@ const results = cases.map(function (c) {
     .filter(function (m) { return m.always_on || suggested.on.indexOf(m.id) !== -1 || forcedModules.indexOf(m.id) !== -1; })
     .map(function (m) { return m.id; });
   const docs = [{ checkpoints: common.checks }, { checkpoints: doc ? doc.checks : [] }];
+  const availableCheckIds = (common.checks || []).concat(doc ? doc.checks || [] : [])
+    .map(function (cp) { return cp.id; });
   // base_text(선택): 변경합의서 케이스 — 원계약을 전제로 부재 판정(11차).
   const baseClauses = c.base_text ? segmentContract(String(c.base_text)) : [];
   const r = analyze(clauses, docs, { modules: active, stance: stance, baseClauses: baseClauses,
@@ -92,6 +94,8 @@ const results = cases.map(function (c) {
     docTitle: docTitle,
     partyRoles: partyRoles,
     activeModules: active,
+    available_check_ids: availableCheckIds,
+    active_check_ids: r.checkpoints.map(function (cp) { return cp.id; }),
     consider: consider,
     verify: verify,
     addressed: addressed,
