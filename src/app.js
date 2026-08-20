@@ -5,7 +5,7 @@ var CR = JSON.parse(document.getElementById("cr-data").textContent);
 // stance = 검토 국면(party 기본 | beneficiary 수익자·투자자), baseClauses = 원계약 조항(변경합의서 검토 시)
 // docTitle = 문서 제목(유형·모듈·체크 게이트의 최상위 신호), partyRoles = 당사가 계약에서 갖는 지위
 var state = { text: "", clauses: [], typeId: null, activeModules: [], result: null,
-  stance: "party", baseText: "", baseClauses: [], docTitle: "", partyRoles: [],
+  stance: "party", baseText: "", baseClauses: [], docTitle: "", partyRoles: [], fileName: "",
   // 수동 재지정(11.7차): cpId → clauseIndex. 자동 매칭이 엉뚱한 조항에 붙었을 때
   // 검토자가 올바른 조항으로 옮긴 기록. 재분석해도 유지되도록 계약서 해시별 저장.
   reassign: {} };
@@ -87,6 +87,19 @@ function evidenceCell(cp) {
   var lawText = src
     ? esc(src.law) + " " + esc(src.article) + (src.clause ? " " + esc(src.clause) : "")
     : "";
+  // 법령 조문 호버 플로팅(2026-08-19 피드백): 근거가 된 조문 내용을 그 자리에서 확인 —
+  // "강행규정이니까 매칭했다"는 안내만 보고 법을 다시 찾아보게 하지 않기 위함.
+  // 발췌(quote)를 우선, 없으면 DB 원문 앞부분. 데이터는 이미 빌드 시 내장돼 있어 표시만 추가.
+  if (lawText) {
+    var popBody = String(src.quote || "").trim();
+    if (!popBody && src.text) popBody = String(src.text).trim().slice(0, 600) +
+      (String(src.text).trim().length > 600 ? "…" : "");
+    if (popBody) {
+      lawText = '<span class="law-ref" tabindex="0">' + lawText +
+        '<span class="law-pop"><span class="law-pop-head">' + esc(src.law) + " " + esc(src.article) +
+        (src.clause ? " " + esc(src.clause) : "") + "</span>" + esc(popBody) + "</span></span>";
+    }
+  }
   return (lawText ? lawText + " " : "") +
     (badge ? '<span class="badge ' + badge.cls + '">' + badge.label + "</span>" : "") +
     (src ? sourceTypeBadgeHtml(src) : "");
@@ -97,11 +110,12 @@ function evidenceCell(cp) {
    모르겠다")에 따라 압축어("반영/제안/검토 제안") 대신 구체적으로 이해되는
    문구로 풀어씀 — 타일·섹션 제목·풋터 범례와 동일 어휘로 일관.
    내부 키·CSS 클래스명(verify/cov-verify)은 구조 변경 범위가 아니라 유지. */
+/* '원문'이라는 말이 "법령 원문"과 헷갈린다는 피드백(2026-08-18) — 계약서 쪽은 '문구'로 통일. */
 var COVERAGE_LABEL = {
-  addressed: "✓ 관련 원문 찾음",
-  verify: "△ 원문 확인 필요",
+  addressed: "✓ 계약서에 관련 문구 있음",
+  verify: "△ 관련 문구인지 확인 필요",
   consider: "! 적용·보완 판단 필요",
-  base_covered: "✓ 원계약에서 관련 원문 찾음",   // 변경합의서 국면 — 변경본엔 없으나 원계약이 다룸
+  base_covered: "✓ 원계약에 관련 문구 있음",   // 변경합의서 국면 — 변경본엔 없으나 원계약이 다룸
   quiet: "·"
 };
 var COVERAGE_CLS = {
@@ -416,13 +430,16 @@ function renderSuggestions() {
     return sa - sb;
   });
   var html = main.map(renderSuggestionItem).join("") ||
-    (ref.length ? "" : '<p class="compare-empty">현재 원문 확인이 필요한 항목 없음</p>');
+    (ref.length ? "" : '<p class="compare-empty">현재 계약서 문구 확인이 필요한 항목 없음</p>');
   if (ref.length) {
     html += '<details class="ref-fold"><summary>참고로 살펴볼 항목 ' + ref.length + '건 펼치기</summary>' +
       ref.map(renderSuggestionItem).join("") + "</details>";
   }
   box.innerHTML = html;
-  bindVerdictControls(box, function () { renderSuggestions(); renderReport(); });
+  bindVerdictControls(box, function (cpId) {
+    withVerdictAnchor("#suggestions-body", cpId, renderSuggestions);
+    renderReport();
+  });
 }
 
 // 유형 select는 입력 탭(input-type)과 리포트 조정부(checklist-type) 두 곳에 있음 —
@@ -475,6 +492,7 @@ function loadContractFile(f) {
   err.hidden = false;
   extractFileText(f).then(function (text) {
     document.getElementById("contract-text").value = text;
+    state.fileName = f.name || ""; // 파일명도 유형 신호(2026-08-19 피드백) — 수동 편집 시 해제
     err.hidden = true;
     refreshInputSetup(); // 파일 적재 즉시 국면·유형·모듈 추정 프리필(11차)
   }).catch(function (ex) {
@@ -516,6 +534,7 @@ function refreshInputSetup() {
     var bits = [];
     if (state.docTitle) bits.push("문서 제목: <strong>" + esc(state.docTitle) + "</strong>");
     else bits.push('<span class="setup-warn">문서 제목을 못 읽음</span> — 제목 줄이 있으면 유형·체크 분류가 정확해집니다');
+    if (state.fileName) bits.push("파일명: <strong>" + esc(state.fileName) + "</strong> (유형 신호로 사용)");
     if (state.partyRoles.length) bits.push("계약상 당사 지위: <strong>" + esc(state.partyRoles.join("·")) + "</strong>");
     dt.innerHTML = bits.join(" · ");
     dt.hidden = false;
@@ -533,8 +552,8 @@ function refreshInputSetup() {
       note.hidden = false;
     }
   }
-  // ② 유형 추정 — 프리필만, 확정은 검토자 몫. 제목이 최상위 신호로 가산됨.
-  var ranked = detectType(state.text, CR.types, state.docTitle);
+  // ② 유형 추정 — 프리필만, 확정은 검토자 몫. 제목·파일명이 강신호로 가산됨.
+  var ranked = detectType(state.text, CR.types, state.docTitle, state.fileName);
   state.detectRanked = ranked;
   var picked = pickType(ranked) || "";
   if (!_analyzedOnce) {
@@ -552,6 +571,9 @@ function refreshInputSetup() {
   renderInputScreening();
 }
 document.getElementById("contract-text").addEventListener("input", function () {
+  // 사람이 본문을 직접 손대면 파일명은 더 이상 이 내용을 대표하지 않을 수 있음(다른 계약 붙여넣기 등)
+  // — 오래된 파일명이 유형을 오도하는 것보다 신호를 버리는 쪽이 안전.
+  state.fileName = "";
   clearTimeout(refreshInputSetup._t);
   refreshInputSetup._t = setTimeout(refreshInputSetup, 300); // 타이핑 중 과호출 방지
 });
@@ -927,6 +949,7 @@ function runAnalysis(opts) {
   loadReassign(); // 수동 재지정 맵(11.7차)
   _opinionEditing = false; // 재분석·해시 변경 시 종합 검토의견 편집 모드 해제
   applySubdocVerdicts();
+  applyAutoReferenceVerdicts(); // 참고 항목 확정 매칭 → 이상없음 자동 기재(2026-08-19 피드백)
   applyCompare(); // 아카이브 로드 상태면 현재 조항 기준 정렬·이관 후보 재산출
   renderArchiveBanner(); // 비교 미진입 시 레지스트리에서 전년 검토 후보 자동 안내
   renderClauses();
@@ -1223,6 +1246,31 @@ function applySubdocVerdicts() {
   });
   if (changed) saveVerdicts();
 }
+// 참고 항목 자동 완료(2026-08-19 피드백): 참고 severity는 매칭이 확정(addressed)이면
+// 이상없음을 자동 기재 — "필요한 검토 완료" 문구와 잔여 참고 목록이 어긋나던 문제 해소.
+// 사람이 찍었거나 손댄 판정은 불변(bulk 계열 보존 규칙). 재분석으로 자격을 잃은 항목
+// (유형·모듈 변경 등)은 판정·코멘트가 원형 그대로인 자동 기재분만 회수.
+// verify(매칭 불확실)는 자동 기재하지 않음 — 틀린 이상없음은 누락이라 확정 매칭만.
+var AUTO_REF_COMMENT = "참고 항목 — 관련 문구가 계약서에서 확인되어 자동 기재됨";
+function applyAutoReferenceVerdicts() {
+  var qualifySet = {};
+  ((state.result && state.result.results) || []).forEach(function (r) {
+    var cp = _cpById(r.cpId);
+    if (cp && cp.severity === "참고" && r.coverage === "addressed") qualifySet[r.cpId] = true;
+  });
+  var qualify = Object.keys(qualifySet);
+  // 회수 대상은 저장소 전체에서 탐색 — 유형 전환으로 결과에서 사라진 체크의 자동 기재분도 회수.
+  var others = Object.keys(verdictStore).filter(function (id) { return !qualifySet[id]; });
+  var changed = false;
+  var rm = Verdict.revertBulkVerdict(verdictStore, others, "이상없음", AUTO_REF_COMMENT);
+  if (rm.removed) { verdictStore = rm.store; changed = true; }
+  if (qualify.length) {
+    var fill = Verdict.bulkVerdictComment(verdictStore, qualify, "이상없음", AUTO_REF_COMMENT,
+      verdictToday(), "반영되어 있음", "auto");
+    if (fill.applied) { verdictStore = fill.store; changed = true; }
+  }
+  if (changed) saveVerdicts();
+}
 function verdictToday() {
   var d = new Date();
   return d.getFullYear() + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + "-" + ("0" + d.getDate()).slice(-2);
@@ -1338,9 +1386,28 @@ function verdictControlHtml(cpId, skipLoop) {
     }
     return '<div class="vd-row">' + btn + '<span class="vd-side">' + side + "</span></div>";
   }).join("");
-  return '<div class="verdict-ctl vc-rows">' + rows + "</div>" + (skipLoop ? "" : loopInfoHtml(cpId));
+  // 자동 기재분 표시(투명성): 사람이 손대면 origin이 바뀌거나 보존 규칙이 지켜지므로 배지는 auto에만.
+  var autoNote = cur.origin === "auto"
+    ? '<span class="vd-auto-note">자동 기재 — 판정 버튼으로 해제·변경 가능</span>' : "";
+  return '<div class="verdict-ctl vc-rows">' + rows + autoNote + "</div>" + (skipLoop ? "" : loopInfoHtml(cpId));
 }
-// 조항별 보기·리포트 공용 — 판정 버튼 클릭·코멘트 저장 바인딩. reRender: 저장 후 호출.
+// 판정 직후 재렌더로 카드·행 높이가 바뀌면 화면이 밀려 "다음 조항으로 휙 넘어간" 것처럼
+// 보인다(2026-08-18 피드백). 재렌더 전에 판정한 컨트롤의 뷰포트 위치를 기억했다가,
+// 재렌더 후 같은 컨트롤이 같은 화면 위치에 오도록 스크롤을 보정한다.
+// rootSel: 보이는 탭의 컨테이너로 한정(같은 cpId 컨트롤이 숨은 탭에도 렌더되므로).
+function withVerdictAnchor(rootSel, cpId, rerenderFn) {
+  var sel = rootSel + ' .vd-btn[data-vcp="' + cpId + '"]';
+  var el = cpId ? document.querySelector(sel) : null;
+  var top = el ? el.getBoundingClientRect().top : null;
+  rerenderFn();
+  if (top === null) return;
+  requestAnimationFrame(function () {
+    var el2 = document.querySelector(sel);
+    if (el2) window.scrollBy(0, el2.getBoundingClientRect().top - top);
+  });
+}
+// 조항별 보기·리포트 공용 — 판정 버튼 클릭·코멘트 저장 바인딩.
+// reRender(cpId): 저장 후 호출 — cpId는 스크롤 앵커 보정용(무시해도 무방).
 function bindVerdictControls(root, reRender) {
   root.querySelectorAll(".local-ai-use-draft").forEach(function (btn) {
     btn.addEventListener("click", function () {
@@ -1352,7 +1419,7 @@ function bindVerdictControls(root, reRender) {
       result.localLlm.draft_accepted_at = verdictToday();
       _llmAcceptedDrafts[(verdictHash || "") + "::" + cpId] = JSON.parse(JSON.stringify(result.localLlm));
       applyVerdict(cpId, "검토의견", draft, "", "llm_draft");
-      if (reRender) reRender();
+      if (reRender) reRender(cpId);
     });
   });
   root.querySelectorAll(".vd-btn").forEach(function (btn) {
@@ -1365,13 +1432,13 @@ function bindVerdictControls(root, reRender) {
       // 같은 판정 재선택(취소)이거나 동일 판정 유지면 기존 코멘트·사유 보존.
       var keep = (next === cur.verdict);
       applyVerdict(cp, next, keep ? (cur.comment || "") : "", keep ? cur.reason : "");
-      if (reRender) reRender();
+      if (reRender) reRender(cp);
     });
   });
   root.querySelectorAll(".vd-reason").forEach(function (sel) {
     sel.addEventListener("change", function () {
       applyReason(sel.getAttribute("data-vcp"), sel.value);
-      if (reRender) reRender();
+      if (reRender) reRender(sel.getAttribute("data-vcp"));
     });
   });
   root.querySelectorAll(".vd-note").forEach(function (inp) {
@@ -1391,7 +1458,7 @@ function bindVerdictControls(root, reRender) {
     inp.addEventListener("change", function () {
       clearTimeout(inp._saveTimer);
       saveNote();
-      if (reRender) reRender();
+      if (reRender) reRender(inp.getAttribute("data-vcp"));
     });
   });
   // 추천 코멘트 클릭 → 코멘트 재사용(#4 루프 활용). 판정 없으면 검토의견으로.
@@ -1400,14 +1467,14 @@ function bindVerdictControls(root, reRender) {
       var cp = btn.getAttribute("data-vcp"), text = btn.getAttribute("data-ct");
       var cur = verdictStore[cp] || {};
       applyVerdict(cp, cur.verdict || "검토의견", text);
-      if (reRender) reRender();
+      if (reRender) reRender(cp);
     });
   });
   // 전년 검토 인용 수용(비교 모드) — 1클릭으로 전년 판정·코멘트 기재(date 오늘, 꼬리표 부착).
   root.querySelectorAll(".carry-accept").forEach(function (btn) {
     btn.addEventListener("click", function () {
       acceptCarry(btn.getAttribute("data-vcp"));
-      if (reRender) reRender();
+      if (reRender) reRender(btn.getAttribute("data-vcp"));
     });
   });
 }
@@ -2558,8 +2625,8 @@ function clauseRowHtml(c) {
 function bindRowControls(rowEl) {
   var ci = Number(rowEl.getAttribute("data-ci"));
   bindReassign(rowEl); // 오부착 재지정(11.7차)
-  bindVerdictControls(rowEl, function () {
-    rerenderRow(ci);
+  bindVerdictControls(rowEl, function (cpId) {
+    withVerdictAnchor("#clause-rows", cpId, function () { rerenderRow(ci); });
     refreshClauseCounts();
     renderSuggestions();
     renderReport();
@@ -2606,8 +2673,8 @@ function renderConsiderBlock() {
     '<p class="consider-hint">판정을 남겨도 항목 위치는 바뀌지 않습니다. 같은 자리에서 확인 메모나 검토의견을 이어 작성하세요.</p>' +
     items + coveredHtml + referencedHtml + "</div>";
   bindReassign(block); // 오부착 재지정(11.7차) — 부재 알람에서도 실제 조항 지정 가능
-  bindVerdictControls(block, function () {
-    renderConsiderBlock();
+  bindVerdictControls(block, function (cpId) {
+    withVerdictAnchor("#consider-block", cpId, renderConsiderBlock);
     refreshClauseCounts();
     renderSuggestions();
     renderReport();
@@ -2636,7 +2703,7 @@ function refreshClauseCounts() {
   if (va) {
     var vp = verifyPendingInfo();
     va.hidden = !vp.count;
-    va.textContent = "원문 확인 " + vp.count + "건";
+    va.textContent = "문구 확인 " + vp.count + "건";
   }
   var ff = document.getElementById("formal-flag");
   if (ff) {

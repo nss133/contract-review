@@ -26,30 +26,47 @@ function _countOcc(hay, needle) {
 }
 // docTitle(선택, 11.1차): 문서 제목 줄. 표제부(앞 300자)보다 더 강한 최상위 신호로 가산 —
 // "이 문서가 무슨 계약인가"는 제목이 가장 정확하게 말해주고, 본문의 부수 언급과 층위가 다름.
-function detectType(text, types, docTitle) {
+// fileName(선택, 2026-08-19 피드백): "업무위탁계약서_○○사.hwp"처럼 파일명이 계약 유형을
+// 직접 말해주는 경우가 많음 — 문서 제목 다음가는 강신호로 가산.
+function detectType(text, types, docTitle, fileName) {
   var t = String(text || "");
   var head = t.slice(0, MatcherConfig.DETECT_HEAD_LEN);
   var title = String(docTitle || "");
+  // macOS 파일명은 NFD(자모 분해형)로 올 수 있어 NFC 정규화 필수 — 분해형이면
+  // 한글 키워드 indexOf가 절대 맞지 않음. 확장자는 제거.
+  var fname = String(fileName || "");
+  if (fname.normalize) fname = fname.normalize("NFC");
+  fname = fname.replace(/\.[A-Za-z0-9]+$/, "");
   // 제목 점수는 유형당 **가장 특정한 키워드 1건**만 인정한다(11.4차).
   // 겹치는 키워드('위탁' ⊂ '위탁계약서')가 같은 글자를 중복 계상해 점수를 부풀리면,
   // 범용어를 여러 개 가진 유형이 특정어 하나를 가진 유형을 이겨버림
   // ("보험회사-보험대리점 표준위탁계약서" → channel이어야 하는데 outsourcing 승리).
-  function bestTitleKw(kws) {
+  function bestKwIn(hay, kws) {
     var best = null;
     (kws || []).forEach(function (kw) {
-      if (title.indexOf(kw) === -1) return;
+      if (!hay || hay.indexOf(kw) === -1) return;
       if (!best || String(kw).length > String(best).length) best = kw;
     });
     return best;
   }
+  function specOf(kw) {
+    return Math.min(String(kw).length / 2, MatcherConfig.DETECT_SPEC_CAP);
+  }
   var scored = types.map(function (ty) {
     var score = 0, hits = [], titleHit = false;
-    var titleKw = bestTitleKw(ty.meta.detect_keywords);
+    var titleKw = bestKwIn(title, ty.meta.detect_keywords);
     if (titleKw) {
-      var spec0 = Math.min(String(titleKw).length / 2, MatcherConfig.DETECT_SPEC_CAP);
-      score += MatcherConfig.DETECT_DOCTITLE_W * spec0;
+      score += MatcherConfig.DETECT_DOCTITLE_W * specOf(titleKw);
       titleHit = true;
       hits.push(titleKw);
+    }
+    // 파일명 가산 — 제목과 같은 키워드면 동일 증거의 중복 계상이라 건너뜀.
+    // 파일명 적중도 "이 문서가 무슨 계약인가"의 직접 증거이므로 성격 억제 예외(titleHit)에 포함.
+    var fileKw = bestKwIn(fname, ty.meta.detect_keywords);
+    if (fileKw && fileKw !== titleKw) {
+      score += MatcherConfig.DETECT_FILENAME_W * specOf(fileKw);
+      titleHit = true;
+      if (hits.indexOf(fileKw) === -1) hits.push(fileKw);
     }
     (ty.meta.detect_keywords || []).forEach(function (kw) {
       var titleN = _countOcc(title, kw);

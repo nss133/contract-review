@@ -770,6 +770,33 @@ test("detectType: docTitle 미전달 시 종전 동작(하위호환)", () => {
   assert.strictEqual(pickType(detectType("비밀유지계약서\n제1조", types)), "nda");
 });
 
+// ── 파일명 신호(2026-08-19 피드백) ─────────────────────────────────
+test("detectType: 파일명 키워드만으로 유형 확정(제목·표제부 무신호)", () => {
+  const types = [
+    { meta: { type_id: "outsourcing", detect_keywords: ["업무위탁"] }, checkpoints: [] },
+    { meta: { type_id: "nda", detect_keywords: ["비밀유지"] }, checkpoints: [] },
+  ];
+  const pad = "무관한 내용. ".repeat(50);
+  const ranked = detectType(pad, types, "", "업무위탁계약서_거래처.hwp");
+  assert.strictEqual(pickType(ranked), "outsourcing");
+  assert.ok(ranked[0].titleHit, "파일명 적중도 성격 억제 예외(titleHit)에 포함");
+});
+
+test("detectType: NFD(자모 분해) 파일명도 NFC 정규화로 매칭", () => {
+  const types = [{ meta: { type_id: "outsourcing", detect_keywords: ["업무위탁"] }, checkpoints: [] }];
+  const pad = "무관한 내용. ".repeat(50);
+  const nfd = "업무위탁계약서.hwp".normalize("NFD"); // macOS 파일시스템 형태
+  assert.strictEqual(pickType(detectType(pad, types, "", nfd)), "outsourcing");
+});
+
+test("detectType: 제목과 같은 키워드의 파일명은 중복 계상하지 않음", () => {
+  const types = [{ meta: { type_id: "outsourcing", detect_keywords: ["업무위탁"] }, checkpoints: [] }];
+  const pad = "무관한 내용. ".repeat(50);
+  const titleOnly = detectType(pad, types, "업무위탁계약서");
+  const both = detectType(pad, types, "업무위탁계약서", "업무위탁계약서.hwp");
+  assert.strictEqual(both[0].score, titleOnly[0].score, "동일 증거는 한 번만 계상");
+});
+
 test("titleHits: 제목에 성격어가 있는지", () => {
   assert.deepStrictEqual(titleHits("근질권설정계약서", ["질권", "저당"]), ["질권"]);
   assert.deepStrictEqual(titleHits("신탁계약 변경합의서", ["질권", "저당"]), []);

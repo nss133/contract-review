@@ -310,3 +310,16 @@ test("setReason: 이상없음일 때만 사유가 붙는다", () => {
   let s3 = V.setVerdict({}, "C", "이상없음", "", "d", "아무말");
   assert.strictEqual(s3.C.reason, "");
 });
+
+// ── 자동 기재 origin(2026-08-19, 참고 항목 자동 완료) ──────────────
+test("origin 'auto': 보존되고, 원형 그대로면 revertBulkVerdict로 회수된다", () => {
+  const CMT = "참고 항목 — 관련 문구가 계약서에서 확인되어 자동 기재됨";
+  const fill = V.bulkVerdictComment({}, ["R1", "R2"], "이상없음", CMT, "2026-08-20", "반영되어 있음", "auto");
+  assert.strictEqual(fill.store.R1.origin, "auto");
+  assert.strictEqual(fill.store.R1.reason, "반영되어 있음");
+  // 사람이 코멘트를 손댄 항목은 회수되지 않음
+  const touched = V.setVerdict(fill.store, "R2", "이상없음", "확인함", "2026-08-20", "반영되어 있음");
+  const rm = V.revertBulkVerdict(touched, ["R1", "R2"], "이상없음", CMT);
+  assert.strictEqual(rm.removed, 1);
+  assert.ok(!rm.store.R1 && rm.store.R2);
+});

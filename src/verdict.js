@@ -15,7 +15,8 @@ var Verdict = (function () {
   // 이상없음의 사유(선택). 빈 문자열 = 미선택.
   var OK_REASONS = ["반영되어 있음", "해당사항 없음"];
   var LEGACY_NA = "해당없음"; // 구 판정값 — 이상없음 + '해당사항 없음'으로 이관
-  var ORIGINS = ["manual", "bulk", "subdoc", "prior_review", "llm_draft", "legacy"];
+  // "auto" = 시스템 자동 기재(참고 항목 매칭 확인 등) — 사람 판정과 구분해 코퍼스 집계됨.
+  var ORIGINS = ["manual", "bulk", "subdoc", "prior_review", "llm_draft", "legacy", "auto"];
 
   function verdictKey(hash) { return "cr-verdict-" + hash; }
 

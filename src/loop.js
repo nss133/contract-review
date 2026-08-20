@@ -9,7 +9,7 @@ var Loop = (function () {
   // 신규 집계는 reason('해당사항 없음')을 같은 칸에 합산한다.
   var VERDICTS = ["이상없음", "검토의견", "해당없음"];
   var NA_REASON = "해당사항 없음";
-  var ORIGINS = ["manual", "bulk", "subdoc", "prior_review", "llm_draft", "legacy"];
+  var ORIGINS = ["manual", "bulk", "subdoc", "prior_review", "llm_draft", "legacy", "auto"];
 
   function emptyCorpus() {
     return { meta: { updated: "", contract_count: 0, hashes: [] }, byCheck: {} };
