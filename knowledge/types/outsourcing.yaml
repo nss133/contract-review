@@ -44,6 +44,8 @@ checks:
     basis: statute
     triggers:
       keywords: [본질적 요소, 위탁업무의 범위, 인가]
+    # 일반 해지조항의 '업무/금융/이행' 어휘 결합으로 붙던 실계약 오탐 억제.
+    evidence_required_groups: [[본질적 요소, 핵심업무, 본질적 업무], [인가, 금융업]]
     absence_check: false
     sources:
       - law: 금융기관의 업무위탁 등에 관한 규정

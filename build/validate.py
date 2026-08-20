@@ -131,6 +131,22 @@ def _validate(common, types):
                     not isinstance(req, list) or not req or any(r not in allowed_req for r in req)
                 ):
                     raise ValidationError(f"{cid}: auto_clear.require는 {sorted(allowed_req)} 중에서만")
+                expect = auto_clear.get("expect")
+                allowed_expect = {"statement", "prohibition", "definition"}
+                if expect is not None and expect not in allowed_expect:
+                    raise ValidationError(f"{cid}: auto_clear.expect는 {sorted(allowed_expect)} 중 하나여야 함")
+
+            auto_verdict = cp.get("auto_verdict")
+            if auto_verdict is not None and not isinstance(auto_verdict, bool):
+                raise ValidationError(f"{cid}: auto_verdict는 불리언이어야 함")
+
+            evidence_groups = cp.get("evidence_required_groups")
+            if evidence_groups is not None and (
+                not isinstance(evidence_groups, list) or not evidence_groups
+                or any(not isinstance(g, list) or not g
+                       or any(not isinstance(k, str) or not k.strip() for k in g) for g in evidence_groups)
+            ):
+                raise ValidationError(f"{cid}: evidence_required_groups는 비어 있지 않은 문자열 그룹 리스트여야 함")
 
             sb = cp.get("severity_basis")
             if sb is not None and (not isinstance(sb, str) or not sb.strip()):

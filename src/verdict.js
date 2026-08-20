@@ -88,6 +88,16 @@ var Verdict = (function () {
     return { store: next, removed: removed };
   }
 
+  // 자동 이상없음 자격 정책(12~13차): 증거 확정과 법적 무문제 판정을 분리한다.
+  // auto_verdict:false인 복합 체크는 문장 요건이 충족돼도 사람 판정을 남긴다.
+  function canAutoPass(check, result) {
+    if (!check || !result || result.coverage !== "addressed" || check.auto_verdict === false) return false;
+    // 참고 항목도 auto_clear를 명시했다면 그 보수적 문장 요건을 우회하지 않는다.
+    // 미선언 참고 체크만 기존 정책(확정 매칭이면 자동 완료)을 유지한다.
+    if (check.severity === "참고") return !check.auto_clear || !!(result.autoClear && result.autoClear.ok);
+    return check.severity === "권장" && !!(result.autoClear && result.autoClear.ok);
+  }
+
   function verdictSummary(store) {
     var sum = { "이상없음": 0, "검토의견": 0, total: 0, reasons: { "반영되어 있음": 0, "해당사항 없음": 0 } };
     store = store || {};
@@ -234,6 +244,7 @@ var Verdict = (function () {
     migrateStore: migrateStore,
     setReason: setReason,
     revertAutoVerdicts: revertAutoVerdicts,
+    canAutoPass: canAutoPass,
     verdictKey: verdictKey,
     opinionKey: opinionKey,
     composeOpinion: composeOpinion,

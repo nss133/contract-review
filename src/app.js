@@ -1270,7 +1270,7 @@ function applySubdocVerdicts() {
 // 자동 판정(12차, 2026-08-19~20 피드백): "자동판정이 더 공격적이어야 한다"는 지시에 따라
 // 심각도별로 차등 적용. verify(매칭 불확실)는 어느 심각도든 자동 기재하지 않음 —
 // 틀린 이상없음은 누락이라 실패 비용이 비대칭이므로 확정 매칭(addressed)만 대상.
-//   참고: 확정 매칭이면 자동 이상없음(사람 확인 실익 낮음 — 사용자 결정)
+//   참고: auto_clear 미선언 체크는 확정 매칭이면 자동 이상없음. 선언 체크는 문장 요건도 통과해야 함
 //   권장: 확정 매칭 + 문장 요건 충족(auto_clear — 키워드·숫자·긍정 종결을 한 문장에서 확인)이면 자동 이상없음
 //   필수: 자동 기재 안 함 — 문장 요건 충족 시 "빠른 확인" 원클릭 제안만
 // 사람이 찍었거나 손댄 판정은 불변(origin이 manual로 바뀜). 재분석으로 자격을 잃은
@@ -1291,9 +1291,9 @@ function applyAutoVerdicts() {
   var qualify = {}; // cpId → 자동 기재 코멘트
   ((state.result && state.result.results) || []).forEach(function (r) {
     var cp = _cpById(r.cpId);
-    if (!cp || r.coverage !== "addressed") return;
-    if (cp.severity === "참고") qualify[r.cpId] = AUTO_REF_COMMENT;
-    else if (cp.severity === "권장" && _autoClearOk(r)) qualify[r.cpId] = _autoClearComment(r);
+    if (!Verdict.canAutoPass(cp, r)) return;
+    if (cp.severity === "참고" && !cp.auto_clear) qualify[r.cpId] = AUTO_REF_COMMENT;
+    else qualify[r.cpId] = _autoClearComment(r);
   });
   var changed = false;
   var rm = Verdict.revertAutoVerdicts(verdictStore, Object.keys(qualify));
@@ -1914,7 +1914,9 @@ function currentSystemAssessments() {
   if (!state.result) return null;
   return Assessment.build(state.result.results, state.result.checkpoints, state.clauses || [], {
     generated: verdictToday(), contract_hash: verdictHash, type_id: state.typeId,
-    engine_version: CR.app_version || ""
+    engine_version: CR.app_version || "",
+    subdoc_coverage: state.subDocCov || {},
+    ref_coverage: state.refCov || {}
   });
 }
 function currentMatchingObservations() {

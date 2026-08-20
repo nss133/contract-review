@@ -808,6 +808,42 @@ test("auto_clear 미선언 체크는 종전 동작(하위호환)", () => {
   r.results.forEach((x) => assert.ok(!x.autoClear || !x.autoClear.ok));
 });
 
+test("auto_clear prohibition: 명시적 금지 종결은 승격하고 허용 문장은 승격하지 않는다", () => {
+  const cp = {
+    ...CHECK_TERM,
+    id: "T-PROHIBIT",
+    check: "동의 없는 양도를 금지하는가",
+    triggers: { keywords: ["양도", "동의"] },
+    auto_clear: { any_groups: [["양도"], ["동의"]], expect: "prohibition" },
+  };
+  const doc = { meta: OUT_DOC.meta, checkpoints: OUT_DOC.checkpoints.concat([cp]) };
+  const denied = [{ heading: "제8조(양도 금지)", body: "을은 갑의 동의 없이 권리의무를 양도할 수 없다.", index: 0 }];
+  const allowed = [{ heading: "제8조(양도)", body: "을은 갑의 동의를 받아 권리의무를 양도할 수 있다.", index: 0 }];
+  const yes = analyze(denied, [doc], ["M-CORE"]).results.find((x) => x.cpId === cp.id);
+  const no = analyze(allowed, [doc], ["M-CORE"]).results.find((x) => x.cpId === cp.id);
+  assert.strictEqual(yes.coverage, "addressed");
+  assert.ok(yes.autoClear && yes.autoClear.expect === "prohibition");
+  assert.ok(!(no.autoClear && no.autoClear.ok));
+});
+
+test("evidence_required_groups: 높은 점수 decoy를 버리고 핵심 문언이 있는 후보를 선택", () => {
+  const cp = {
+    ...CHECK_TERM,
+    id: "T-IP",
+    check: "제3자 지식재산권 침해 시 방어·면책 의무가 있는가",
+    triggers: { keywords: ["제3자", "지식재산권", "침해", "면책"] },
+    evidence_required_groups: [["지식재산권", "저작권"], ["침해"], ["면책", "배상"]],
+  };
+  const doc = { meta: OUT_DOC.meta, checkpoints: OUT_DOC.checkpoints.concat([cp]) };
+  const clauses = [
+    { heading: "제5조(지식재산권)", body: "산출물의 지식재산권은 갑에게 귀속되고 제3자에게 양도할 수 없다.", index: 0 },
+    { heading: "제6조(권리침해)", body: "을은 제3자의 지식재산권 침해 주장으로 인한 손해를 배상한다.", index: 1 },
+  ];
+  const hit = analyze(clauses, [doc], ["M-CORE"]).results.find((x) => x.cpId === cp.id);
+  assert.strictEqual(hit.best.clauseIndex, 1);
+  assert.ok(hit.coverage === "addressed" || hit.coverage === "verify");
+});
+
 // ── 용역 성질결정 service_scope(12차, 2026-08-18 논의) ─────────────
 const { detectServiceNature, serviceScopeAllows } = require("../src/matcher.js");
 const CHECK_DEFECT = {

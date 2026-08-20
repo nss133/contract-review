@@ -5,6 +5,7 @@ id: mortgage-only-loan
 desc: 근저당 대출계약(질권 언급 없음) — 질권·양도담보 부재알람 금지
 detect_expected: finance
 consider_must_exclude: [FIN-SEC-02, FIN-SEC-05]
+shown_must_include: [FIN-SEC-03]
 text: |
   금전소비대차 및 근저당권설정 계약서
 

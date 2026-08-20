@@ -11,6 +11,7 @@
    check.auto_clear 스키마:
      any_groups: [[...], [...]]  # OR-그룹 목록 — 각 그룹에서 1개 이상이 같은 문장에 있어야 함
      require: [period|date|money|rate|number]  # 하나 이상 충족(OR). 생략 시 숫자 요건 없음
+     expect: statement|prohibition|definition # 생략 시 statement
    브라우저 전역 Sentence + node require 겸용. */
 var Sentence = (function () {
 
@@ -45,10 +46,14 @@ var Sentence = (function () {
     if (/(?:^|[^0-9])년\s*월\s*일/.test(s)) return true;
     return false;
   }
-  // 부정 종결 — "정하지 아니한다/않는다/할 수 없다" 등은 요건의 존재가 아니라 배제.
-  // 보수적: 애매하면 부정으로 보고 사람 검토로 남김(자동 이상없음의 오판 = 누락).
+  // 부정 종결 — statement 모드에서는 요건의 존재가 아니라 배제로 본다.
   function isNegated(s) {
-    return /(아니\s?한다|아니\s?된다|않는다|않기로\s*한다|할\s*수\s*없다|없는\s*것으로\s*한다|무효로\s*한다)\s*\.?\s*$/.test(s);
+    return /(아니\s?한다|아니\s?된다|않는다|않기로\s*한다|할\s*수\s*없다|하지\s*못한다|하여서는\s*(?:아니\s*된다|안\s*된다)|해서는\s*안\s*된다|금지(?:한)?다|없는\s*것으로\s*한다|무효로\s*한다)\s*\.?\s*$/.test(s);
+  }
+  // 금지형 체크는 부정 종결 자체가 충족 신호다. 일반 부정(무효·부존재)은 제외하고,
+  // 의무 주체의 행위를 직접 금지하는 계약 문언만 좁게 인정한다.
+  function isProhibition(s) {
+    return /(할\s*수\s*없다|하지\s*못한다|하여서는\s*(?:아니\s*된다|안\s*된다)|해서는\s*안\s*된다|금지(?:한)?다|하지\s*아니한다)\s*\.?\s*$/.test(s);
   }
 
   var REQUIRE_RES = {
@@ -80,18 +85,24 @@ var Sentence = (function () {
   // 본문에서 spec을 충족하는 첫 문장을 찾는다. 반환 {ok, sentence?, require_hit?}.
   function evaluate(text, spec) {
     if (!spec || !Array.isArray(spec.any_groups) || !spec.any_groups.length) return null;
+    var expect = spec.expect || "statement";
     var sents = splitSentences(text);
     for (var i = 0; i < sents.length; i++) {
       var s = sents[i];
-      if (isProviso(s) || isDefinition(s) || isBlank(s)) continue;
+      if (isProviso(s) || isBlank(s)) continue;
+      if (expect === "definition") {
+        if (!isDefinition(s)) continue;
+      } else if (isDefinition(s)) continue;
       if (!groupsHit(s, spec.any_groups)) continue;
       var rq = null;
       if (Array.isArray(spec.require) && spec.require.length) {
         rq = requireHit(s, spec.require);
         if (!rq) continue;
       }
-      if (isNegated(s)) continue;
-      return { ok: true, sentence: s, require_hit: rq };
+      if (expect === "prohibition") {
+        if (!isProhibition(s)) continue;
+      } else if (expect === "statement" && isNegated(s)) continue;
+      return { ok: true, sentence: s, require_hit: rq, expect: expect };
     }
     return { ok: false };
   }
@@ -102,6 +113,7 @@ var Sentence = (function () {
     isDefinition: isDefinition,
     isBlank: isBlank,
     isNegated: isNegated,
+    isProhibition: isProhibition,
     evaluate: evaluate
   };
 })();

@@ -58,3 +58,25 @@ test("build: 로컬 LLM 결과는 규칙 판정을 덮지 않는 advisory로 기
   assert.deepStrictEqual(out.items.A.advisory.missing_elements, ["서면 방식"]);
   assert.strictEqual(out.items.A.advisory.draft_accepted, true);
 });
+
+test("build: 부속서류 커버와 본문 참조를 부재알람에서 분리한다", () => {
+  const results = [
+    { cpId: "A", coverage: "consider", tier: "none", best: null, ranked: [] },
+    { cpId: "B", coverage: "consider", tier: "none", best: null, ranked: [] },
+    { cpId: "C", coverage: "consider", tier: "none", best: null, ranked: [] },
+  ];
+  const out = A.build(results, CHECKS, CLAUSES, {
+    subdoc_coverage: { A: { docName: "보안관리약정서.pdf", score: 51.234 } },
+    ref_coverage: {
+      B: { title: "보안관리약정서", signal: "체결한다", quote: "별첨 약정서를 체결한다" },
+      C: { title: "보안관리약정서", signal: "수동 체크", quote: "검토자 확인" },
+    },
+  });
+  assert.strictEqual(out.items.A.system_assessment, "covered_by_subdoc");
+  assert.strictEqual(out.items.A.coverage_source, "uploaded_subdoc");
+  assert.strictEqual(out.items.A.evidence[0].match_score, 51.23);
+  assert.strictEqual(out.items.B.system_assessment, "referenced_subdoc");
+  assert.strictEqual(out.items.B.coverage_source, "contract_reference");
+  assert.strictEqual(out.items.C.coverage_source, "reviewer_declared");
+  assert.strictEqual(out.items.C.review_route, "human_confirm");
+});

@@ -8,6 +8,7 @@ detect_expected: finance
 # tier=review(=coverage verify)로 잡힘 — 조항이 실재하므로 "없다"(consider)보다
 # "이 조항을 보라"(verify)가 정확함. 항목이 검토자 눈에 들어오는지를 shown으로 고정.
 shown_must_include: [FIN-SEC-02]
+shown_must_exclude: [FIN-SEC-03]
 text: |
   대출 및 질권설정 계약서
 

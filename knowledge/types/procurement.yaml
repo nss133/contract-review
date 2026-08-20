@@ -236,6 +236,9 @@ checks:
     basis: practice
     triggers:
       keywords: [검사, 검수, 인수, 합격, 불합격]
+    # 코퍼스 5/5 이상없음. 검수와 처리 절차 어휘가 같은 문장에 있는 경우만 확정.
+    auto_clear:
+      any_groups: [[검사, 검수, 인수], [기준, 방법, 기한, 불합격, 보완, 재검수]]
     absence_check: true
     sources: []
     note: ITDL-03(검수·인수 기준) 통합(2026-07-29 지식 다이어트) — 같은 모듈(M-DELIVERY) 내 완전 동취지 쌍, 코퍼스 판정 이력은 SP-DEL-01로 이관
@@ -297,6 +300,8 @@ checks:
     basis: statute
     triggers:
       keywords: [수령지체, 채권자의 책임, 대금 청구, 귀책]
+    # 일반 해지·귀책조항이 아니라 채권자귀책 이행불능과 반대급부 청구 문언을 함께 요구.
+    evidence_required_groups: [[채권자, 발주자, 갑], [귀책, 책임, 수령지체], [대금청구, 보수청구, 대금을 청구, 지급을 청구]]
     absence_check: false
     sources:
       - law: 민법
@@ -315,6 +320,8 @@ checks:
     basis: statute
     triggers:
       keywords: [하자보수, 하자의 보수, 하자 담보, 보수 청구]
+    auto_clear:
+      any_groups: [[하자, 하자보수, 하자의 보수], [보수, 시정, 수정, 재수행]]
     # 성질결정(12차, 2026-08-18 논의): 하자담보책임은 도급형(결과완성형) 법리 — 위임형
     # (사무처리형) 계약에서는 부재알람을 접음(민법상 하자담보책임 부존재, §681 선관주의 체계).
     # 위임형 계약이 하자보수 조항을 둔 경우는 약정 유효 — 매칭되면 검토 대상으로 유지됨.
@@ -337,6 +344,8 @@ checks:
     basis: statute
     triggers:
       keywords: [하자 손해배상, 보수에 갈음, 손해배상 청구]
+    auto_clear:
+      any_groups: [[하자], [손해배상], [갈음, 함께, 병행]]
     absence_check: false
     sources:
       - law: 민법
@@ -354,6 +363,8 @@ checks:
     basis: statute
     triggers:
       keywords: [계약의 목적을 달성, 하자로 인하여, 해제]
+    auto_clear:
+      any_groups: [[하자], [목적을 달성], [해제]]
     absence_check: false
     sources:
       - law: 민법
@@ -371,6 +382,11 @@ checks:
     basis: statute
     triggers:
       keywords: [담보책임 기간, 존속기간, 하자담보 기간, 1년내, 유지보수, 유지관리, 유상, 별도계약, 하자보수, 하자담보, 무상, 결함]
+    # 기간·절차·유무상 구분의 복합 판단이므로 증거 확정만 하고 자동 이상없음은 금지.
+    auto_clear:
+      any_groups: [[하자보수, 하자담보], [기간, 존속기간], [유지보수, 유지관리, 무상, 유상]]
+      require: [period]
+    auto_verdict: false
     absence_check: false
     sources:
       - law: 민법
@@ -415,6 +431,8 @@ checks:
     basis: practice
     triggers:
       keywords: [이행보증보험, 하자보증보험, 보증보험증권, 이행보증]
+    # 지체상금 조항이 보증수단 체크에 붙던 실계약 오탐 4건 억제.
+    evidence_required_groups: [[보증보험, 이행보증, 하자보증, 보증보험증권]]
     absence_check: true
     # 조건부 부재체크: 보증보험 어휘가 본문에 있을 때만 부재알람(ITDL-06 SLA 체크와 동일 패턴).
     # 회사 표준계약서 자체가 이행보증보험 '有/無' 두 버전으로 병존(조달 규모·리스크에 따라
@@ -474,6 +492,9 @@ checks:
     basis: statute
     triggers:
       keywords: [안 날로부터, 권리행사기간, 6월내, 담보책임 기간]
+    auto_clear:
+      any_groups: [[하자, 담보책임], [안 날, 권리행사, 행사]]
+      require: [period]
     absence_check: false
     sources:
       - law: 민법
@@ -496,6 +517,10 @@ checks:
     basis: practice
     triggers:
       keywords: [SLA, 서비스수준, 가동률, 장애, 서비스 지연]
+    # SLA 기준·장애 대응·보상까지 모두 필요한 복합 체크 — 문언을 짚되 자동판정하지 않음.
+    auto_clear:
+      any_groups: [[SLA, 서비스수준, 서비스 수준, 가동률], [장애, 대응, 복구], [보상, 손해배상, 감액]]
+    auto_verdict: false
     absence_check: true
     # 조건부 부재체크: SLA·서비스수준 어휘가 본문에 있을 때만 부재알람(비IT 일반 용역에서 SLA 누락 오탐 방지 — 표준 하도급 케이스 11 회귀).
     absence_precondition: [SLA, 서비스수준, 서비스 수준, 장애]

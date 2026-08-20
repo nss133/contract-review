@@ -140,6 +140,10 @@ checks:
     basis: practice
     triggers:
       keywords: [목적, 계약의 목적]
+    # 코퍼스 16/16 이상없음. 목적 문장 존재는 확정하되 실제 법적 성격과의 부합은 사람이 판단.
+    auto_clear:
+      any_groups: [[목적], [위탁, 용역, 매매, 구매, 공급, 업무]]
+    auto_verdict: false
     absence_check: true
     sources: []
   - id: CMN-03
@@ -246,6 +250,10 @@ checks:
     llm_elements:
       - 해지 또는 해제 사유
       - 당사자 간 해지권의 균형
+    # 코퍼스 6/7 이상없음. 해지사유 조항 존재만 확정하고 균형성은 자동판정하지 않음.
+    auto_clear:
+      any_groups: [[해지, 해제], [위반, 도산, 파산, 회생, 사유]]
+    auto_verdict: false
     absence_check: true
     sources: []
   - id: CMN-09
@@ -291,6 +299,10 @@ checks:
       - 손해배상 귀책사유
       - 손해배상 범위
       - 당사자 간 책임의 균형
+    # 코퍼스 10/10 이상없음. 손배 문언 존재는 확정하되 범위·균형성 판단은 사람에게 남김.
+    auto_clear:
+      any_groups: [[손해, 손해배상], [배상, 책임]]
+    auto_verdict: false
     absence_check: true
     sources: []
   - id: CMN-12
@@ -306,6 +318,10 @@ checks:
       - 통상손해 범위
       - 특별손해 또는 간접손해 포함 여부
       - 특별손해의 예견가능성 요건
+    # 코퍼스 9/9 이상없음. 특약 문언을 짚되 확장·제한의 법적 효과는 자동판정하지 않음.
+    auto_clear:
+      any_groups: [[통상손해, 특별손해, 간접손해, 일실이익], [한도, 포함, 제외, 예견]]
+    auto_verdict: false
     absence_check: false
     sources:
       - law: 민법
@@ -329,6 +345,10 @@ checks:
     basis: practice
     triggers:
       keywords: [책임 상한, 배상액의 한도, 면책, 고의 또는 중과실]
+    # 코퍼스 3/4 이상없음. 상한·면책 문언만 확정하고 예외·대칭성은 사람 판단.
+    auto_clear:
+      any_groups: [[책임 상한, 배상액의 한도, 면책], [고의, 중과실, 한도, 제외]]
+    auto_verdict: false
     absence_check: true
     sources: []
   - id: CMN-15
@@ -340,6 +360,10 @@ checks:
     basis: practice
     triggers:
       keywords: [비밀정보, 비밀유지, 기밀, 영업비밀]
+    # 코퍼스 4/4 이상없음. 이 체크는 정의 문장이 정상 증거이므로 definition 모드 사용.
+    auto_clear:
+      any_groups: [[비밀정보, 비밀 정보, 기밀정보, 기밀 정보]]
+      expect: definition
     absence_check: true
     sources: []
   - id: CMN-16
@@ -380,6 +404,10 @@ checks:
     basis: practice
     triggers:
       keywords: [권리 침해, 제3자의 권리, 지식재산권 침해]
+    # 양도·하도급·IP 귀속 조항이 '제3자/권리/책임'만 공유해 붙던 실계약 오탐 4건 억제.
+    evidence_required_groups: [[지식재산권, 지적재산권, 저작권, 특허, 상표], [침해], [방어, 면책, 배상, 책임]]
+    auto_clear:
+      any_groups: [[제3자], [권리, 지식재산권, 저작권], [침해], [방어, 면책, 배상]]
     absence_check: true
     sources: []
   - id: CMN-19
@@ -409,6 +437,10 @@ checks:
     basis: practice
     triggers:
       keywords: [양도, 이전, 담보 제공, 승계]
+    # 코퍼스 8/8 이상없음. 양도 어휘만으로는 부족하며 동의 없는 이전의 명시적 금지를 요구.
+    auto_clear:
+      any_groups: [[양도, 이전, 담보 제공], [동의, 승인]]
+      expect: prohibition
     absence_check: true
     sources: []
   - id: CMN-21
@@ -420,6 +452,8 @@ checks:
     basis: practice
     triggers:
       keywords: [완전한 합의, 완전합의, 서면에 의한 변경]
+    auto_clear:
+      any_groups: [[완전한 합의, 완전합의], [종전, 이전, 구두, 대체, 우선]]
     absence_check: false
     sources: []
 
@@ -1416,6 +1450,9 @@ checks:
     basis: statute
     triggers:
       keywords: [위탁업무의 목적, 위탁업무의 범위, 처리 목적]
+    # 코퍼스 4/4 이상없음. 목적과 범위 어휘가 같은 문장에 함께 있어야 확정.
+    auto_clear:
+      any_groups: [[위탁 목적, 위탁업무의 목적, 처리 목적], [위탁 범위, 위탁업무의 범위, 업무 범위]]
     absence_check: true
     sources:
       - law: 개인정보 보호법 시행령
@@ -1564,6 +1601,9 @@ checks:
     basis: statute
     triggers:
       keywords: [교육, 감독, 점검, 실태점검]
+    # 코퍼스 3/4 이상없음. 교육과 감독·점검을 모두 규정한 문장만 인정.
+    auto_clear:
+      any_groups: [[교육], [감독, 점검, 실태점검], [수탁자, 개인정보]]
     absence_check: true
     sources:
       - law: 개인정보 보호법
@@ -1586,6 +1626,10 @@ checks:
     basis: statute
     triggers:
       keywords: [범위를 초과, 제3자 제공, 제3자에게 제공, 목적 외]
+    # 코퍼스 5/5 이상없음. 범위초과 이용·제공의 명시적 금지 종결을 요구.
+    auto_clear:
+      any_groups: [[범위를 초과, 목적 외, 목적외], [이용, 처리, 제공]]
+      expect: prohibition
     absence_check: true
     sources:
       - law: 개인정보 보호법
@@ -2050,7 +2094,8 @@ checks:
     module: X-SEC
     # 문서 성격 게이트(11.1차): 담보권 설정계약서일 때만 적용. 신탁계약·일반계약에
     # "질권" 어휘가 스쳐 나온 것만으로는 이 체크가 붙지 않음.
-    requires_doc_title: [질권, 근질권, 저당, 근저당, 양도담보, 담보설정, 담보 설정, 담보권, 담보제공, 담보 제공]
+    # 저당권 전용 체크. 질권·근질권 문서는 민법 제357조 채권최고액 대상이 아님.
+    requires_doc_title: [저당, 근저당]
     # 당사 지위 게이트: 대항요건·점유이전 확보는 담보권자(질권자)의 몫 —
     # 당사가 담보제공자·설정자면 우리 검토항목이 아님.
     party_roles: [질권자, 담보권자, 저당권자, 양도담보권자, 채권자]
@@ -2061,6 +2106,10 @@ checks:
     basis: statute
     triggers:
       keywords: [저당권, 근저당, 채권최고액, 피담보채권]
+    # 문서 제목으로 근저당 성격을 확정한 뒤 채권최고액 문언이 있는 조항만 후보로 삼음.
+    evidence_required_groups: [[채권최고액, 채무최고액]]
+    auto_clear:
+      any_groups: [[채권최고액, 채무최고액]]
     absence_check: true
     # 조건부 부재체크: 저당권을 실제로 "설정"하는 문언이 있을 때만 부재알람.
     # 2026-07-28 사내표준층 트리아지: 전제어휘를 "설정"/"채권최고액" 결합형으로 좁힘 — 종전

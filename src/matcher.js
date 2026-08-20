@@ -644,6 +644,23 @@ function autoClearEval(clause, check) {
   return Sentence.evaluate(String(clause.heading || "") + "\n" + String(clause.body || ""), spec);
 }
 
+// 체크별 필수 근거어 그룹(P3): 유사도는 높지만 법적 쟁점의 핵심 문언이 없는 조항을
+// 후보 단계에서 제외한다. 그룹 간 AND, 그룹 내부 OR. 미선언이면 전부 허용.
+function evidenceRequirementsMet(clause, check) {
+  var groups = check && check.evidence_required_groups;
+  if (!groups || !groups.length) return true;
+  var text = String(clause && clause.heading || "") + " " + String(clause && clause.body || "");
+  for (var i = 0; i < groups.length; i++) {
+    var group = groups[i] || [];
+    var hit = false;
+    for (var j = 0; j < group.length; j++) {
+      if (group[j] && text.indexOf(group[j]) !== -1) { hit = true; break; }
+    }
+    if (!hit) return false;
+  }
+  return true;
+}
+
 function decideTier(ranked, check) {
   if (!ranked.length) return "none";
   var best = ranked[0];
@@ -762,7 +779,10 @@ function subDocCoverage(considerCps, subDocs, model) {
       var scored = clauses.map(function (cl) {
         return { clause: cl, s: scoreClauseCheck(cl, entry, model) };
       }).sort(function (a, b) { return b.s.score - a.s.score; });
-      var candidates = scored.filter(function (r) { return r.s.score >= MatcherConfig.REVIEW_FLOOR; });
+      var candidates = scored.filter(function (r) {
+        return (r.s.citation === true || evidenceRequirementsMet(r.clause, cp)) &&
+          r.s.score >= MatcherConfig.REVIEW_FLOOR;
+      });
       var tier = decideTier(candidates, cp);
       // 부속서류에서 addressed/verify로 닿고 노출 게이트 통과하면 커버로 인정.
       if ((tier === "confirmed" || tier === "review") && candidates.length) {
@@ -839,10 +859,15 @@ function analyze(clauses, docs, opts) {
       return { clause: cl, s: scoreClauseCheck(cl, entry, model) };
     }).sort(function (a, b) { return b.s.score - a.s.score; });
 
-    var candidates = scored.filter(function (r) { return r.s.score >= MatcherConfig.REVIEW_FLOOR; });
+    // 핵심 근거어가 선언된 체크는 그 요건을 갖춘 조항만 후보가 된다. 명시 법령 인용은 예외.
+    // 필터를 tier 판정 전에 적용해야 높은 점수의 decoy 뒤에 있는 진짜 조항을 선택할 수 있다.
+    var eligibleScored = scored.filter(function (r) {
+      return r.s.citation === true || evidenceRequirementsMet(r.clause, cp);
+    });
+    var candidates = eligibleScored.filter(function (r) { return r.s.score >= MatcherConfig.REVIEW_FLOOR; });
     var tier = decideTier(candidates, cp);
     var coverage = coverageOf(tier, cp, fullText, docTitle);
-    var top = scored[0] || null;
+    var top = eligibleScored[0] || null;
     // 당사 지위 게이트(11.1차): 그 지위가 아니면 이 체크는 우리 검토항목이 아님.
     // 담보설정계약에서 당사가 질권자가 아니면 대항요건 확보는 우리 몫이 아니다.
     var roleGated = false;
@@ -908,10 +933,13 @@ function analyze(clauses, docs, opts) {
       var baseScored = baseClauses.map(function (cl) {
         return { clause: cl, s: scoreClauseCheck(cl, entry, model) };
       }).sort(function (a, b) { return b.s.score - a.s.score; });
-      var baseCand = baseScored.filter(function (r) { return r.s.score >= MatcherConfig.REVIEW_FLOOR; });
+      var baseCand = baseScored.filter(function (r) {
+        return (r.s.citation === true || evidenceRequirementsMet(r.clause, cp)) &&
+          r.s.score >= MatcherConfig.REVIEW_FLOOR;
+      });
       if (decideTier(baseCand, cp) !== "none") {
         coverage = "base_covered";
-        inBase = { clauseIndex: baseScored[0].clause.index, score: baseScored[0].s.score };
+        inBase = { clauseIndex: baseCand[0].clause.index, score: baseCand[0].s.score };
       }
     }
 
@@ -924,8 +952,8 @@ function analyze(clauses, docs, opts) {
       serviceGated = true;
     }
 
-    var reasons = _reasons(tier, candidates.length ? candidates : scored, cp);
-    var rankedTop = scored.slice(0, 3).map(function (r) {
+    var reasons = _reasons(tier, candidates.length ? candidates : eligibleScored, cp);
+    var rankedTop = eligibleScored.slice(0, 3).map(function (r) {
       return { clauseIndex: r.clause.index, score: r.s.score };
     });
 
@@ -999,6 +1027,7 @@ if (typeof module !== "undefined")
     scoreClauseCheck: scoreClauseCheck,
     decisiveHit: decisiveHit,
     autoClearEval: autoClearEval,
+    evidenceRequirementsMet: evidenceRequirementsMet,
     decideTier: decideTier,
     alarmGate: alarmGate,
     preconditionMet: preconditionMet,

@@ -5,6 +5,7 @@ dist/*.zip
 .omc/
 .claude/
 data/verification_log.json
+data/private/
 verifications/*.json
 dist/contract-review-v*/
 dist/contract-review 2.html

@@ -7,6 +7,7 @@ const fs = require("fs");
 const { segmentContract, extractDocTitle } = require("../src/segmenter.js");
 const { detectType, pickType, suggestModules, analyze, buildModel, subDocCoverage, detectSubdocRefs,
   detectStance, moduleAllowedInStance, detectPartyRoles, hasAffiliateParty } = require("../src/matcher.js");
+const Verdict = require("../src/verdict.js");
 
 const payload = JSON.parse(fs.readFileSync(process.argv[2], "utf8"));
 const { common, types, cases } = payload;
@@ -45,7 +46,21 @@ const results = cases.map(function (c) {
   const r = analyze(clauses, docs, { modules: active, stance: stance, baseClauses: baseClauses,
     docTitle: docTitle, partyRoles: partyRoles });
   const consider = r.results.filter(function (x) { return x.coverage === "consider"; }).map(function (x) { return x.cpId; });
+  const verify = r.results.filter(function (x) { return x.coverage === "verify"; }).map(function (x) { return x.cpId; });
   const addressed = r.results.filter(function (x) { return x.coverage === "addressed"; }).map(function (x) { return x.cpId; });
+  const resultItems = {};
+  const checkById = {};
+  r.checkpoints.forEach(function (cp) { checkById[cp.id] = cp; });
+  r.results.forEach(function (x) {
+    resultItems[x.cpId] = {
+      coverage: x.coverage,
+      tier: x.tier,
+      top1_clause_index: x.best ? x.best.clauseIndex : null,
+      gate: x.best ? x.best.gate : null,
+      auto_clear: !!(x.autoClear && x.autoClear.ok),
+      auto_pass: Verdict.canAutoPass(checkById[x.cpId], x),
+    };
+  });
   // shown = 화면에 어떤 형태로든 표면화된 항목(반영·살펴볼·확인안됨) — 강등되어 조용해진 것과 구별.
   const shown = r.results
     .filter(function (x) { return ["addressed", "verify", "consider"].indexOf(x.coverage) !== -1; })
@@ -78,7 +93,9 @@ const results = cases.map(function (c) {
     partyRoles: partyRoles,
     activeModules: active,
     consider: consider,
+    verify: verify,
     addressed: addressed,
+    items: resultItems,
     shown: shown,
     base_covered: r.results.filter(function (x) { return x.coverage === "base_covered"; }).map(function (x) { return x.cpId; }),
     subdoc_covered: subdocCovered,

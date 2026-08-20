@@ -159,6 +159,13 @@ test("reviewRoute: 직접근거와 이상없음이 5건 이상 일치해야 빠�
   assert.strictEqual(L.reviewRoute(c, "X", "possible_evidence").route, "standard");
 });
 
+test("reviewRoute: 부속서류 커버 반복 확인도 빠른 확인으로 분류", () => {
+  const c = { meta: {}, byCheck: { X: { counts: { "이상없음": 5, "검토의견": 0, "해당없음": 0 },
+    system_verdict_pairs: { "covered_by_subdoc::이상없음": 5 } } } };
+  assert.strictEqual(L.reviewRoute(c, "X", "covered_by_subdoc").route, "quick");
+  assert.strictEqual(L.reviewRoute(c, "X", "evidence_not_found").route, "standard");
+});
+
 test("checkStats: 분포 비율 + 표본수", () => {
   let c = L.emptyCorpus();
   ["h1", "h2", "h3", "h4"].forEach((h, i) => {

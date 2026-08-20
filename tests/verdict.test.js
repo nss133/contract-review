@@ -323,3 +323,16 @@ test("origin 'auto': 보존되고, 원형 그대로면 revertBulkVerdict로 회�
   assert.strictEqual(rm.removed, 1);
   assert.ok(!rm.store.R1 && rm.store.R2);
 });
+
+test("canAutoPass: 복합 체크의 auto_verdict false는 증거 확정 후에도 자동판정 차단", () => {
+  const addressed = { coverage: "addressed", autoClear: { ok: true } };
+  assert.ok(V.canAutoPass({ severity: "참고" }, addressed));
+  assert.ok(V.canAutoPass({ severity: "참고", auto_clear: {} }, addressed));
+  assert.ok(V.canAutoPass({ severity: "권장" }, addressed));
+  assert.ok(!V.canAutoPass({ severity: "필수" }, addressed));
+  assert.ok(!V.canAutoPass({ severity: "참고", auto_verdict: false }, addressed));
+  assert.ok(!V.canAutoPass({ severity: "권장" }, { coverage: "addressed", autoClear: { ok: false } }));
+  assert.ok(!V.canAutoPass({ severity: "참고", auto_clear: {} },
+    { coverage: "addressed", autoClear: { ok: false } }));
+  assert.ok(!V.canAutoPass({ severity: "참고" }, { coverage: "verify", autoClear: { ok: true } }));
+});

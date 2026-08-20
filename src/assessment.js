@@ -20,7 +20,19 @@ var Assessment = (function () {
     return typeof n === "number" ? Math.round(n * 100) / 100 : null;
   }
 
-  function _classification(result) {
+  function _coverageContext(result, ctx) {
+    var cpId = result && result.cpId;
+    var sub = cpId && ctx && ctx.subdoc_coverage && ctx.subdoc_coverage[cpId];
+    if (sub) return { kind: "uploaded_subdoc", detail: sub };
+    var ref = cpId && ctx && ctx.ref_coverage && ctx.ref_coverage[cpId];
+    if (ref) return {
+      kind: ref.signal === "수동 체크" ? "reviewer_declared" : "contract_reference",
+      detail: ref
+    };
+    return null;
+  }
+
+  function _classification(result, coverageCtx) {
     if (result.roleGated) {
       return { applicability: "not_applicable", assessment: "not_applicable", route: "no_review" };
     }
@@ -31,6 +43,12 @@ var Assessment = (function () {
       return { applicability: "applicable", assessment: "possible_evidence", route: "human_required" };
     }
     if (result.coverage === "consider") {
+      if (coverageCtx && coverageCtx.kind === "uploaded_subdoc") {
+        return { applicability: "applicable", assessment: "covered_by_subdoc", route: "human_confirm" };
+      }
+      if (coverageCtx) {
+        return { applicability: "applicable", assessment: "referenced_subdoc", route: "human_confirm" };
+      }
       return { applicability: "applicable", assessment: "evidence_not_found", route: "human_required" };
     }
     if (result.coverage === "base_covered") {
@@ -46,7 +64,8 @@ var Assessment = (function () {
     var items = {};
 
     (results || []).forEach(function (r) {
-      var cls = _classification(r);
+      var coverageCtx = _coverageContext(r, ctx);
+      var cls = _classification(r, coverageCtx);
       var cp = checks[r.cpId] || {};
       var ranked = (r.ranked || []).map(function (hit) {
         var cl = clauseByIndex[hit.clauseIndex] || {};
@@ -62,6 +81,12 @@ var Assessment = (function () {
       } else if (cls.assessment === "evidence_in_base" && r.inBase) {
         evidence = [{ source: "base_contract", clause_index: r.inBase.clauseIndex,
           heading: "", match_score: _roundScore(r.inBase.score) }];
+      } else if (cls.assessment === "covered_by_subdoc") {
+        evidence = [{ source: "subdoc", document: String(coverageCtx.detail.docName || ""),
+          match_score: _roundScore(coverageCtx.detail.score) }];
+      } else if (cls.assessment === "referenced_subdoc") {
+        evidence = [{ source: coverageCtx.kind, document: String(coverageCtx.detail.title || ""),
+          signal: String(coverageCtx.detail.signal || ""), quote: String(coverageCtx.detail.quote || "") }];
       }
       var advisory = null;
       if (r.localLlm) {
@@ -85,6 +110,7 @@ var Assessment = (function () {
         applicability: cls.applicability,
         system_assessment: cls.assessment,
         review_route: cls.route,
+        coverage_source: coverageCtx ? coverageCtx.kind : null,
         coverage: r.coverage || "",
         tier: r.tier || "",
         evidence: evidence,

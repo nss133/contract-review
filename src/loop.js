@@ -160,9 +160,10 @@ var Loop = (function () {
         reason: "과거 해당없음 " + na + "/" + st.n + "건", issue: issue, ok: ok, na: na };
     }
     var slot = corpus && corpus.byCheck && corpus.byCheck[cpId];
+    var quickAssessments = ["evidence_found", "covered_by_subdoc", "referenced_subdoc"];
     var confirmedOk = slot && slot.system_verdict_pairs &&
-      (slot.system_verdict_pairs["evidence_found::이상없음"] || 0);
-    if (systemAssessment === "evidence_found" && st.n >= minQuick && issue === 0 && na === 0 &&
+      (slot.system_verdict_pairs[systemAssessment + "::이상없음"] || 0);
+    if (quickAssessments.indexOf(systemAssessment) !== -1 && st.n >= minQuick && issue === 0 && na === 0 &&
         ok === st.n && confirmedOk >= minQuick) {
       return { route: "quick", n: st.n,
         reason: "직접근거·이상없음 " + confirmedOk + "건 반복", issue: issue, ok: ok, na: na };

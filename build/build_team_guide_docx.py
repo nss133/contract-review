@@ -341,13 +341,14 @@ def build_guide(version, out_path):
         ("계약서에 관련 문구 있음", "체크 항목과 관련된 문구를 계약서에서 찾았다는 뜻입니다. 문제없음이 확정된 것은 아닙니다."),
         ("관련 문구인지 확인 필요", "관련 가능성이 있는 문구를 찾았지만 사람이 내용을 확인해야 합니다."),
         ("적용·보완 판단 필요", "이 계약에 적용되는지, 계약 내용을 보완해야 하는지 사람이 판단해야 합니다."),
+        ("확인 완료(자동·수동)", "자동 요건을 통과했거나 검토자가 이상없음으로 확인한 항목입니다. 펼치면 근거 조항과 판정을 다시 볼 수 있습니다."),
     ]
     for left, right in rows:
         cells = table.add_row().cells
         _add_text(cells[0], left, True)
         _add_text(cells[1], right)
     _table_geometry(table, [2700, 6660])
-    _callout(doc, "기억할 점", "시스템은 원문 위치를 안내할 뿐입니다. 중요한 항목은 반드시 계약서 원문을 직접 확인하세요.", GOLD)
+    _callout(doc, "기억할 점", "문장 요건이 없는 참고 항목의 확정 매칭과 일부 사실기재형 참고·권장 항목은 보수적 문장 요건을 통과하면 자동으로 이상없음 처리됩니다. 균형성·법적 효과 판단이 필요한 항목은 자동 처리되지 않습니다. 중요한 항목은 반드시 계약서 원문을 직접 확인하세요.", GOLD)
 
     _heading(doc, "항목의 중요도", 2)
     importance_bullets = _new_numbering(doc, "bullet", "•")
@@ -361,6 +362,7 @@ def build_guide(version, out_path):
     ok_bullets = _new_numbering(doc, "bullet", "•")
     _bullet(doc, "반영되어 있음: 계약서 내용으로 충분히 확인한 경우", ok_bullets)
     _bullet(doc, "해당사항 없음: 이 계약에는 해당 항목이 적용되지 않는 경우", ok_bullets)
+    _body(doc, "자동으로 기재된 이상없음도 검토자가 원문을 확인한 뒤 수정하거나 검토의견으로 바꿀 수 있습니다.")
 
     _heading(doc, "검토의견", 2)
     _body(doc, "수정, 보완, 협의 또는 추가 확인이 필요한 경우 선택합니다. 이유와 필요한 조치를 코멘트에 적습니다.")

@@ -157,6 +157,33 @@ def test_bad_trigger_pattern_rejected(knowledge_dir):
         load_knowledge(knowledge_dir)
 
 
+def test_bad_auto_clear_expect_rejected(knowledge_dir):
+    bad = (knowledge_dir / "common.yaml").read_text().replace(
+        "    absence_check: true\n", "    auto_clear:\n      any_groups: [[계약]]\n      expect: negative\n    absence_check: true\n", 1
+    )
+    (knowledge_dir / "common.yaml").write_text(bad)
+    with pytest.raises(ValidationError, match="auto_clear.expect"):
+        load_knowledge(knowledge_dir)
+
+
+def test_auto_verdict_must_be_boolean(knowledge_dir):
+    bad = (knowledge_dir / "common.yaml").read_text().replace(
+        "    absence_check: true\n", "    auto_verdict: no-thanks\n    absence_check: true\n", 1
+    )
+    (knowledge_dir / "common.yaml").write_text(bad)
+    with pytest.raises(ValidationError, match="auto_verdict"):
+        load_knowledge(knowledge_dir)
+
+
+def test_bad_evidence_required_groups_rejected(knowledge_dir):
+    bad = (knowledge_dir / "common.yaml").read_text().replace(
+        "    absence_check: true\n", "    evidence_required_groups: [[]]\n    absence_check: true\n", 1
+    )
+    (knowledge_dir / "common.yaml").write_text(bad)
+    with pytest.raises(ValidationError, match="evidence_required_groups"):
+        load_knowledge(knowledge_dir)
+
+
 def test_standard_subdocs_unknown_check_rejected(knowledge_dir):
     # meta.standard_subdocs에 존재하지 않는 check id를 covers로 넣으면 ValidationError.
     bad = (knowledge_dir / "common.yaml").read_text().replace(
