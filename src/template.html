@@ -42,6 +42,18 @@
           <label class="filebtn">파일 열기<input id="docx-file" type="file" accept=".docx,.pdf,.doc,.hwp,.hwpx" hidden></label>
           <button id="btn-analyze" class="primary">분석 시작</button>
         </div>
+        <div id="analysis-progress" class="analysis-progress" role="status" aria-live="polite" aria-atomic="true" hidden>
+          <div class="analysis-progress-head">
+            <span class="analysis-spinner" aria-hidden="true"></span>
+            <span id="analysis-progress-text">문서 구조를 파악하고 있습니다</span>
+          </div>
+          <ol class="analysis-steps" aria-hidden="true">
+            <li data-analysis-step="0">문서 구조</li>
+            <li data-analysis-step="1">유형·지위</li>
+            <li data-analysis-step="2">체크항목 선별</li>
+            <li data-analysis-step="3">관련 조항 연결</li>
+          </ol>
+        </div>
         <p id="input-error" class="error" hidden></p>
 
         <!-- 검토 설정(11차) — 분석 전에 검토자가 국면·유형·모듈을 직접 지정.
@@ -74,6 +86,10 @@
           <div class="setup-row setup-row-modules">
             <span class="setup-label">적용 모듈</span>
             <div id="input-screening" class="module-bar"></div>
+          </div>
+          <div class="setup-row setup-row-subdocs">
+            <span class="setup-label">보안관리약정서</span>
+            <div id="input-subdoc-use" class="subdoc-use-list"></div>
           </div>
 
           <div class="setup-row setup-row-ai">

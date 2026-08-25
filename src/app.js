@@ -200,13 +200,39 @@ function renderCheckCard(cp, hits) {
 }
 
 /* ---------- 탭 ---------- */
+var _paneTransitionSeq = 0;
+function reducedMotion() {
+  return !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+}
+function activatePane(name, opts) {
+  opts = opts || {};
+  var btn = document.querySelector('.tab[data-tab="' + name + '"]');
+  var pane = document.getElementById("pane-" + name);
+  if (!btn || !pane || btn.disabled) return;
+  var current = document.querySelector(".pane.active");
+  var same = current === pane;
+  document.querySelectorAll(".tab").forEach(function (b) {
+    var on = b === btn;
+    b.classList.toggle("active", on);
+    b.setAttribute("aria-selected", on ? "true" : "false");
+  });
+  document.querySelectorAll(".pane").forEach(function (p) {
+    p.classList.toggle("active", p === pane);
+    if (p !== pane) p.classList.remove("pane-enter");
+  });
+  if (same || opts.animate === false || reducedMotion()) return;
+  var seq = ++_paneTransitionSeq;
+  pane.classList.add("pane-enter");
+  requestAnimationFrame(function () {
+    requestAnimationFrame(function () {
+      if (seq === _paneTransitionSeq) pane.classList.remove("pane-enter");
+    });
+  });
+}
 document.querySelectorAll(".tab").forEach(function (btn) {
   btn.addEventListener("click", function () {
     if (btn.disabled) return;
-    document.querySelectorAll(".tab").forEach(function (b) { b.classList.remove("active"); });
-    document.querySelectorAll(".pane").forEach(function (p) { p.classList.remove("active"); });
-    btn.classList.add("active");
-    document.getElementById("pane-" + btn.dataset.tab).classList.add("active");
+    activatePane(btn.dataset.tab);
   });
 });
 
@@ -654,6 +680,9 @@ function renderSubDocList() {
       if (_analyzedOnce) runAnalysis();
     });
   });
+  // 파일명·본문 자동 감지 결과를 입력 단계와 분석 후 조정 화면에 즉시 반영.
+  renderInputSubdocUse();
+  if (_analyzedOnce) renderScreening();
 }
 document.getElementById("subdoc-file").addEventListener("change", function (e) {
   var files = Array.prototype.slice.call(e.target.files || []);
@@ -700,9 +729,58 @@ document.getElementById("subdoc-file").addEventListener("change", function (e) {
 // 이후 유형·모듈을 조정하면 즉시 재검토됨(btn-run 없음).
 // 11차: 입력 단계에서 검토자가 지정한 국면·유형·모듈이 있으면 그것을 그대로 사용 —
 // 자동 감지로 덮어쓰지 않음(사람의 지정이 기계 추정보다 우선).
+var _analysisPresentationSeq = 0;
+var ANALYSIS_PHASES = [
+  "문서 구조를 파악하고 있습니다",
+  "계약 유형과 당사자 지위를 확인하고 있습니다",
+  "적용할 체크항목을 선별하고 있습니다",
+  "체크항목과 관련 계약조항을 연결하고 있습니다"
+];
+function setAnalysisPhase(index) {
+  var box = document.getElementById("analysis-progress");
+  var text = document.getElementById("analysis-progress-text");
+  if (!box || !text) return;
+  box.hidden = false;
+  text.textContent = ANALYSIS_PHASES[index] || "분석 결과를 정리했습니다";
+  box.querySelectorAll("[data-analysis-step]").forEach(function (step) {
+    var n = Number(step.getAttribute("data-analysis-step"));
+    step.classList.toggle("done", n < index);
+    step.classList.toggle("active", n === index);
+  });
+}
+function finishAnalysisPresentation(seq) {
+  var btn = document.getElementById("btn-analyze");
+  var box = document.getElementById("analysis-progress");
+  if (seq !== _analysisPresentationSeq) return;
+  btn.disabled = false;
+  btn.textContent = "다시 분석";
+  if (box) box.hidden = true;
+}
+function prepareResultReveal(tabName) {
+  var pane = document.getElementById("pane-" + tabName);
+  if (!pane || reducedMotion()) return;
+  pane.querySelectorAll(".reveal-row").forEach(function (row) { row.classList.remove("reveal-row"); });
+  if (tabName === "clauses") {
+    Array.prototype.slice.call(pane.querySelectorAll("#clause-rows .clause-row"), 0, 6)
+      .forEach(function (row) { row.classList.add("reveal-row"); });
+  }
+  pane.classList.add("is-result-entering");
+  requestAnimationFrame(function () {
+    requestAnimationFrame(function () {
+      pane.classList.remove("is-result-entering");
+      window.setTimeout(function () {
+        pane.querySelectorAll(".reveal-row").forEach(function (row) { row.classList.remove("reveal-row"); });
+      }, 1150);
+    });
+  });
+}
 document.getElementById("btn-analyze").addEventListener("click", function () {
   state.text = document.getElementById("contract-text").value;
   if (!state.text.trim()) return;
+  var btn = document.getElementById("btn-analyze");
+  var seq = ++_analysisPresentationSeq;
+  btn.disabled = true;
+  btn.textContent = "분석 중…";
   state.clauses = segmentContract(state.text);
   if (!state.detectRanked) refreshInputSetup(); // 입력 설정을 한 번도 안 돌린 경우(붙여넣기 직후 즉시 클릭)
   state.typeId = document.getElementById("input-type").value;
@@ -710,7 +788,23 @@ document.getElementById("btn-analyze").addEventListener("click", function () {
   renderScreening();
   renderTags();
   document.getElementById("analyze-setup").hidden = false;
-  runAnalysis({ landing: true });
+  setAnalysisPhase(0);
+  if (reducedMotion()) {
+    runAnalysis({ landing: true, reveal: false });
+    finishAnalysisPresentation(seq);
+    return;
+  }
+  var phase = 1;
+  var timer = setInterval(function () {
+    if (seq !== _analysisPresentationSeq) { clearInterval(timer); return; }
+    if (phase < ANALYSIS_PHASES.length) {
+      setAnalysisPhase(phase++);
+      return;
+    }
+    clearInterval(timer);
+    runAnalysis({ landing: true, reveal: true });
+    window.setTimeout(function () { finishAnalysisPresentation(seq); }, 720);
+  }, 250);
 });
 
 /* ---------- 자동 마킹 태그 (계약 세부 성격) ---------- */
@@ -771,6 +865,30 @@ function subdocInUse(def) {
 function subdocAutoComment(def) {
   return def.auto_comment || ("표준 " + def.title + " 체결로 반영 — 별첨 체결·간인 확인");
 }
+function subdocUseRowsHtml(scope) {
+  return ((CR.common.meta || {}).standard_subdocs || []).map(function (d) {
+    return '<label class="subdoc-use"><input type="checkbox" class="subdoc-use-cb" data-sdid="' + esc(d.id) +
+      '" name="' + esc(scope) + '-subdoc-use-' + esc(d.id) + '"' + (subdocInUse(d) ? " checked" : "") +
+      '> 『' + esc(d.title) + '』(표준서식) 체결 사용' +
+      ' <span class="subdoc-use-hint">체결하는 경우 체크 — 약정서가 다루는 항목을 별첨 참조로 분류하고 미검토 항목에 이상없음을 자동 기재</span></label>';
+  }).join("") || '<span class="setup-auto">선택 가능한 표준 부속서류 없음</span>';
+}
+function bindSubdocUseControls(root, syncOther) {
+  if (!root) return;
+  root.querySelectorAll(".subdoc-use-cb").forEach(function (cb) {
+    cb.addEventListener("change", function () {
+      state.subdocUse[cb.dataset.sdid] = cb.checked;
+      if (syncOther) syncOther();
+      if (_analyzedOnce) runAnalysis();
+    });
+  });
+}
+function renderInputSubdocUse() {
+  var box = document.getElementById("input-subdoc-use");
+  if (!box) return;
+  box.innerHTML = subdocUseRowsHtml("input");
+  bindSubdocUseControls(box, function () { renderScreening(); });
+}
 
 /* ---------- 분석 모드: 모듈 스크리닝 ---------- */
 // 현재 유형·국면에서 스크리닝 대상이 되는 모듈 목록.
@@ -796,6 +914,7 @@ function currentModuleList() {
 function renderInputScreening() {
   var box = document.getElementById("input-screening");
   if (!box) return;
+  renderInputSubdocUse();
   var modList = currentModuleList();
   if (!state.text.trim() || !modList.length) {
     box.innerHTML = '<span class="setup-auto">계약서 본문을 넣으면 적용 모듈이 자동 추정됩니다.</span>';
@@ -879,13 +998,10 @@ function renderScreening() {
           ' <span class="ask-q-hint">(본문 언급이 적어 자동 판단 불가 — 해당되면 위 칩을 켜세요)</span></div>';
       }).join("");
   }
-  // 표준 부속서류 사용 체크(#B): 본문 참조·파일 업로드 감지 시 기본 ON, 항상 수동 전환 가능.
-  var subRows = ((CR.common.meta || {}).standard_subdocs || []).map(function (d) {
-    return '<label class="subdoc-use"><input type="checkbox" class="subdoc-use-cb" data-sdid="' + esc(d.id) + '" name="subdoc-use-' + esc(d.id) + '"' +
-      (subdocInUse(d) ? " checked" : "") + "> 『" + esc(d.title) + "』(표준서식) 체결 사용" +
-      ' <span class="subdoc-use-hint">체크 시 약정서가 다루는 항목을 별첨 참조로 분류하고 미검토 항목에 이상없음을 자동 기재</span></label>';
-  }).join("");
-  document.getElementById("screening").innerHTML = chips + askQs + subRows;
+  // 표준 부속서류 사용 체크(#B): 입력 단계와 같은 상태를 공유하며, 분석 후에도 조정 가능.
+  var subRows = subdocUseRowsHtml("report");
+  var screening = document.getElementById("screening");
+  screening.innerHTML = chips + askQs + subRows;
   document.querySelectorAll("#screening .module-chip[data-mid]").forEach(function (chip) {
     chip.addEventListener("click", function () {
       toggleModule(chip.dataset.mid);
@@ -893,12 +1009,7 @@ function renderScreening() {
       renderInputScreening(); // 입력 탭 칩 상태 동기화
     });
   });
-  document.querySelectorAll("#screening .subdoc-use-cb").forEach(function (cb) {
-    cb.addEventListener("change", function () {
-      state.subdocUse[cb.dataset.sdid] = cb.checked;
-      if (_analyzedOnce) runAnalysis(); // 모듈 토글과 동일 — 즉시 재검토(자동 기재·해제 반영)
-    });
-  });
+  bindSubdocUseControls(screening, renderInputSubdocUse);
 }
 
 /* ---------- 분석 실행 ---------- */
@@ -992,10 +1103,10 @@ function runAnalysis(opts) {
   // 사용자가 보고 있던 탭과 스크롤을 보존한다.
   if (!wasAnalyzed || opts.landing) {
     var landTab = pendingReviewCount() > 0 ? "clauses" : "report";
-    document.querySelector('.tab[data-tab="' + landTab + '"]').click();
+    if (opts.reveal !== false) prepareResultReveal(landTab);
+    activatePane(landTab);
   } else if (activeTabName) {
-    var keep = document.querySelector('.tab[data-tab="' + activeTabName + '"]');
-    if (keep) keep.click();
+    activatePane(activeTabName, { animate: false });
     window.scrollTo(0, scrollY);
     requestAnimationFrame(function () { window.scrollTo(0, scrollY); });
   }
@@ -3478,6 +3589,7 @@ window.addEventListener("afterprint", function () {
 });
 
 initChecklistType();
+renderInputScreening();
 renderChecklist();
 
 /* ---------- 검수 탭 ---------- */

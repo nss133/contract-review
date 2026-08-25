@@ -48,6 +48,12 @@
   /* 근거 배지(원문확인/문언불일치/실무/자율규제) 전용 — coverage보다 흐리게(위계 하위) */
   --ev-bg: #eef0f3;
   --ev-fg: #667;
+
+  /* 화면 전환 — 순서를 눈으로 따라갈 수 있되 업무 흐름을 지연시키지 않는 수준. */
+  --motion-fast: 160ms;
+  --motion-base: 320ms;
+  --motion-reveal: 420ms;
+  --motion-ease: cubic-bezier(.22, .61, .36, 1);
 }
 * { box-sizing: border-box; }
 body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
@@ -57,7 +63,9 @@ body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Apple SD Goth
 .topbar h1 { font-size: var(--fs-heading); margin: 0; }
 .topbar nav { display: flex; align-items: center; flex: 1; }
 .tab { background: none; border: none; color: #aab; padding: var(--sp-1) 14px;
-       font-size: var(--fs-body-sub); cursor: pointer; border-bottom: 2px solid transparent; }
+       font-size: var(--fs-body-sub); cursor: pointer; border-bottom: 2px solid transparent;
+       transition: color var(--motion-fast) ease, border-color var(--motion-fast) ease,
+                   background-color var(--motion-fast) ease; }
 .tab.active { color: #fff; border-bottom-color: #4ea1ff; }
 .tab:disabled { opacity: .35; cursor: default; }
 /* 관리 그룹(P1) — 일상 3탭과 위계 분리: 우측 끝 + 회색 톤 */
@@ -68,14 +76,17 @@ body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Apple SD Goth
 .tab-goldset, #report-goldset-snapshot { display: none; }
 body.admin-mode .tab-goldset, body.admin-mode #report-goldset-snapshot { display: inline-block; }
 main { max-width: 1400px; margin: 0 auto; padding: var(--sp-4); }
-.pane { display: none; }
+.pane { display: none; opacity: 1; transform: translateY(0);
+  transition: opacity var(--motion-base) var(--motion-ease), transform var(--motion-base) var(--motion-ease); }
 .pane.active { display: block; }
+.pane.pane-enter { opacity: 0; transform: translateY(14px); }
 .controls { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2); margin-bottom: var(--sp-2); }
 select, input[type=search], textarea { font: inherit; padding: 6px 10px;
   border: 1px solid #ccd; border-radius: 6px; }
 textarea#contract-text { width: 100%; height: 200px; }
 .primary { background: var(--accent); color: #fff; border: none; border-radius: 6px;
            padding: 9px 18px; font-size: var(--fs-body-sub); cursor: pointer; }
+.primary:disabled { cursor: wait; opacity: .72; }
 .filebtn { display: inline-block; padding: var(--sp-1) 14px; border: 1px dashed #99a;
            border-radius: 6px; cursor: pointer; font-size: var(--fs-body-sub); }
 .error { color: var(--c-red-fg); }
@@ -96,12 +107,86 @@ textarea#contract-text { width: 100%; height: 200px; }
 .subdoc-use { flex-basis: 100%; font-size: 12.5px; color: #23477a; background: #eef4fb;
   border: 1px solid #cfdcee; border-radius: 6px; padding: 5px 10px; margin-top: 2px; cursor: pointer; }
 .subdoc-use .subdoc-use-hint { color: #7a8ba3; font-size: 11.5px; }
+.subdoc-use-list { flex: 1; min-width: 280px; }
+.subdoc-use-list .subdoc-use { display: block; margin: 0; padding: var(--sp-1) var(--sp-2); }
+.subdoc-use-list input { margin-right: 5px; }
 
 #input-panel { background: #fff; border: 1px solid #e0e2ee; border-radius: 8px;
                padding: 12px 16px 16px; margin-bottom: 16px; }
 #input-panel .input-title { margin: 0 0 10px; font-size: 16px; font-weight: 600; }
 .input-actions { display: flex; gap: 10px; align-items: center; margin-top: 8px; }
 #analyze-setup { margin-top: 12px; }
+
+/* 최초 분석의 실제 처리 순서를 짧게 설명한다. 결과 계산과 표시를 분리해 갑작스러운 화면 점프를 줄임. */
+.analysis-progress { max-width: 640px; margin-top: var(--sp-2); padding: var(--sp-2) var(--sp-3);
+  border: 1px solid #c9d7f6; border-radius: 8px; background: #f6f9ff; color: var(--ink-soft);
+  box-shadow: 0 6px 18px rgba(36, 86, 230, .08); }
+.analysis-progress:not([hidden]) { animation: analysis-progress-in 300ms var(--motion-ease) both; }
+@keyframes analysis-progress-in { from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); } }
+.analysis-progress-head { display: flex; align-items: center; gap: var(--sp-1); min-height: 22px;
+  font-size: var(--fs-body-sub); font-weight: 600; }
+.analysis-spinner { width: 14px; height: 14px; flex: 0 0 auto; border: 2px solid #c9d5f2;
+  border-top-color: var(--accent); border-radius: 50%; animation: analysis-spin .75s linear infinite; }
+@keyframes analysis-spin { to { transform: rotate(360deg); } }
+.analysis-steps { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--sp-1);
+  list-style: none; padding: 0; margin: var(--sp-2) 0 0; counter-reset: analysis-step; }
+.analysis-steps li { position: relative; padding-top: 12px; color: var(--ink-ghost); font-size: var(--fs-meta);
+  transition: color var(--motion-base) ease; }
+.analysis-steps li::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 3px;
+  border-radius: 3px; background: #e5e9f2; transform-origin: left; transition: background var(--motion-base) ease; }
+.analysis-steps li.active { color: var(--accent); font-weight: 600; }
+.analysis-steps li.active::before { background: var(--accent); animation: analysis-step-fill .7s var(--motion-ease) both; }
+.analysis-steps li.done { color: var(--ink-mute); }
+.analysis-steps li.done::before { background: #91a9e8; }
+@keyframes analysis-step-fill { from { transform: scaleX(.12); } to { transform: scaleX(1); } }
+
+/* 최초 결과만 요약 → 핵심 결과 → 세부 목록 순서로 연결한다. */
+#pane-clauses #clause-header,
+#pane-clauses #compare-header,
+#pane-clauses #clause-cols-head,
+#pane-clauses #consider-block,
+#pane-clauses .reveal-row,
+#pane-report #report-summary-bar,
+#pane-report #report-body > h2,
+#pane-report #report-body > .report-intro,
+#pane-report #report-body > .report-pending-banner,
+#pane-report #report-body > .report-opinion,
+#pane-report #report-body > .report-tiles,
+#pane-report #report-body > .report-sec-block,
+#pane-report #report-body > .report-actions {
+  opacity: 1; transform: translateY(0);
+  transition: opacity var(--motion-reveal) var(--motion-ease), transform var(--motion-reveal) var(--motion-ease);
+}
+#pane-clauses.is-result-entering #clause-header,
+#pane-clauses.is-result-entering #compare-header,
+#pane-clauses.is-result-entering #clause-cols-head,
+#pane-clauses.is-result-entering #consider-block,
+#pane-clauses.is-result-entering .reveal-row,
+#pane-report.is-result-entering #report-summary-bar,
+#pane-report.is-result-entering #report-body > h2,
+#pane-report.is-result-entering #report-body > .report-intro,
+#pane-report.is-result-entering #report-body > .report-pending-banner,
+#pane-report.is-result-entering #report-body > .report-opinion,
+#pane-report.is-result-entering #report-body > .report-tiles,
+#pane-report.is-result-entering #report-body > .report-sec-block,
+#pane-report.is-result-entering #report-body > .report-actions { opacity: 0; transform: translateY(18px); }
+#pane-clauses #compare-header { transition-delay: 100ms; }
+#pane-clauses #clause-cols-head { transition-delay: 160ms; }
+#pane-clauses .reveal-row:nth-child(1) { transition-delay: 220ms; }
+#pane-clauses .reveal-row:nth-child(2) { transition-delay: 300ms; }
+#pane-clauses .reveal-row:nth-child(3) { transition-delay: 380ms; }
+#pane-clauses .reveal-row:nth-child(4) { transition-delay: 460ms; }
+#pane-clauses .reveal-row:nth-child(5) { transition-delay: 540ms; }
+#pane-clauses .reveal-row:nth-child(6) { transition-delay: 620ms; }
+#pane-clauses #consider-block { transition-delay: 700ms; }
+#pane-report #report-body > h2 { transition-delay: 100ms; }
+#pane-report #report-body > .report-intro,
+#pane-report #report-body > .report-pending-banner { transition-delay: 180ms; }
+#pane-report #report-body > .report-opinion { transition-delay: 260ms; }
+#pane-report #report-body > .report-tiles { transition-delay: 360ms; }
+#pane-report #report-body > .report-sec-block { transition-delay: 460ms; }
+#pane-report #report-body > .report-actions { transition-delay: 560ms; }
 
 .cp-card { background: var(--bg-card); border: 1px solid var(--border-card); border-radius: 8px;
            padding: var(--sp-2) var(--sp-3); margin-bottom: var(--sp-1); }
@@ -409,6 +494,21 @@ td.empty { text-align: center; color: var(--ink-faint); padding: var(--sp-4); }
   .report-tiles { break-inside: avoid; }
   .report-item, .tile, .report-opinion, .report-sec-block, .goldset-case, .verify-card { break-inside: avoid; }
   .report-sec, .report-more { border: none; padding: 0; }
+}
+
+/* 운영체제의 '동작 줄이기' 설정에서는 전환과 표시 지연을 모두 제거한다. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important; transition-duration: .01ms !important;
+    transition-delay: 0ms !important; }
+  .pane.pane-enter,
+  #pane-clauses.is-result-entering #clause-header,
+  #pane-clauses.is-result-entering #compare-header,
+  #pane-clauses.is-result-entering #clause-cols-head,
+  #pane-clauses.is-result-entering #consider-block,
+  #pane-clauses.is-result-entering .reveal-row,
+  #pane-report.is-result-entering #report-summary-bar,
+  #pane-report.is-result-entering #report-body > * { opacity: 1; transform: none; }
 }
 
 .verify-bar { display: flex; gap: var(--sp-2); align-items: center; flex-wrap: wrap; margin-bottom: var(--sp-2); }

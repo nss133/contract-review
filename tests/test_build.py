@@ -15,6 +15,10 @@ def test_build_produces_single_html(knowledge_dir, law_db, tmp_path):
     assert "/*__" not in html
     assert "segmentContract" in html          # JS 인라인 확인
     assert "JSZip" in html                    # vendor 인라인 확인
+    assert 'id="analysis-progress"' in html   # 최초 분석 단계 안내
+    assert 'id="input-subdoc-use"' in html    # 보안관리약정서 사용 여부를 분석 전에 지정
+    assert "function activatePane" in html    # 탭 전환을 클릭·자동 이동에서 공통 사용
+    assert "prefers-reduced-motion: reduce" in html
     m = re.search(r'<script id="cr-data"[^>]*>(.*?)</script>', html, re.S)
     data = json.loads(m.group(1))
     assert data["common"]["checks"][0]["id"] == "CMN-01"
