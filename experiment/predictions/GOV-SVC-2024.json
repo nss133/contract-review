@@ -4,8 +4,8 @@
     "document_id": "GOV-SVC-2024",
     "contract_hash": "3282e6b41925b86ad6188d8cb8376090e99d522ffbdb961bc738eebc3d4484c4",
     "type_id": "procurement",
-    "generated": "2026-08-06",
-    "app_version": "1.21.0",
+    "generated": "2026-08-29",
+    "app_version": "1.47.0",
     "model": "qwen3:4b",
     "llm_batch_failures": []
   },
@@ -490,24 +490,8 @@
       "check_id": "CMN-18",
       "check": "제3자 지식재산권 침해 주장 시 수탁자의 방어·면책 의무 조항이 있는가",
       "coverage": "quiet",
-      "rule_clause_index": 0,
-      "candidates": [
-        {
-          "clause_index": 0,
-          "heading": "(전문)",
-          "rule_score": 3.27
-        },
-        {
-          "clause_index": 4,
-          "heading": "5. 산출내역서 1부                               .        .         .",
-          "rule_score": 2.31
-        },
-        {
-          "clause_index": 1,
-          "heading": "2. 계약 일반조건 1부",
-          "rule_score": 0
-        }
-      ],
+      "rule_clause_index": null,
+      "candidates": [],
       "llm_reviewed": false,
       "llm_selected_clause_index": null,
       "llm_relation": "",
@@ -546,24 +530,8 @@
       "check_id": "CMN-20",
       "check": "계약상 지위·권리의무의 사전 서면 동의 없는 양도·이전·담보 제공을 금지하는 조항이 있는가",
       "coverage": "quiet",
-      "rule_clause_index": 0,
-      "candidates": [
-        {
-          "clause_index": 0,
-          "heading": "(전문)",
-          "rule_score": 9.28
-        },
-        {
-          "clause_index": 4,
-          "heading": "5. 산출내역서 1부                               .        .         .",
-          "rule_score": 7.23
-        },
-        {
-          "clause_index": 1,
-          "heading": "2. 계약 일반조건 1부",
-          "rule_score": 1.91
-        }
-      ],
+      "rule_clause_index": null,
+      "candidates": [],
       "llm_reviewed": false,
       "llm_selected_clause_index": null,
       "llm_relation": "",

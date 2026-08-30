@@ -1,0 +1,100 @@
+profile_version: 1.1.0
+checks:
+  CMN-06:
+    status: curated
+    topics: [contract_term]
+    required_facets: [topics]
+  CMN-08:
+    status: curated
+    topics: [termination]
+    actions: [terminate]
+    required_facets: [topics, actions]
+  CMN-11:
+    status: curated
+    topics: [damages]
+    actions: [compensate]
+    required_facets: [topics, actions]
+  CMN-15:
+    status: curated
+    topics: [confidentiality]
+    objects: [confidential_information]
+    required_facets: [topics, objects]
+  CMN-16:
+    status: curated
+    topics: [confidentiality, contract_term]
+    objects: [confidential_information]
+    conditions: [within_period]
+    required_facets: [topics, conditions]
+  CMN-17:
+    status: curated
+    topics: [intellectual_property]
+    objects: [intellectual_property, deliverable]
+    required_facets: [topics, objects]
+  CMN-18:
+    status: curated
+    topics: [intellectual_property]
+    objects: [intellectual_property]
+    required_facets: [topics, objects]
+  CMN-20:
+    status: curated
+    topics: [assignment]
+    actions: [assign]
+    objects: [contractual_position]
+    modalities: [prior_written_consent, prohibition]
+    required_facets: [topics, actions]
+  PRIV-05:
+    status: curated
+    topics: [subcontracting, personal_information]
+    actions: [subcontract]
+    required_facets: [topics, actions]
+  PRIV-08:
+    status: curated
+    topics: [personal_information, damages]
+    actors: [trustee]
+    actions: [compensate]
+    objects: [personal_information]
+    required_facets: [topics, actions]
+  PRIV-15:
+    status: curated
+    topics: [subcontracting, personal_information]
+    actors: [trustee]
+    actions: [subcontract, obtain_consent]
+    objects: [personal_information]
+    modalities: [prior_consent]
+    required_facets: [topics, actions, objects, modalities]
+  PRIV-21:
+    status: curated
+    topics: [subcontracting, personal_information]
+    actors: [trustee]
+    actions: [subcontract]
+    objects: [personal_information]
+    modalities: [prohibition]
+    required_facets: [topics, actions, modalities]
+  ITSEC-11:
+    status: curated
+    topics: [subcontracting]
+    actors: [trustee]
+    actions: [subcontract]
+    modalities: [prior_consent, prohibition]
+    required_facets: [topics, actions, modalities]
+  NDA-04:
+    status: curated
+    topics: [confidentiality]
+    actors: [receiving_party]
+    actions: [use, disclose]
+    objects: [confidential_information]
+    modalities: [prohibition]
+    required_facets: [topics, objects, modalities]
+  NDA-06:
+    status: curated
+    topics: [confidentiality]
+    actions: [provide, obtain_consent]
+    objects: [confidential_information]
+    modalities: [prior_written_consent]
+    required_facets: [topics, actions, objects, modalities]
+  NDA-15:
+    status: curated
+    topics: [confidentiality, damages]
+    actions: [compensate]
+    objects: [confidential_information]
+    required_facets: [topics, actions]

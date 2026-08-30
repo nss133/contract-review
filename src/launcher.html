@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>계약서 리뷰 가이드 실행기</title>
+<style>
+*{box-sizing:border-box}html,body{height:100%;margin:0;font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;color:#1a1a2e;background:#f5f6fa}
+body{display:flex;flex-direction:column}.bar{height:44px;flex:0 0 44px;display:flex;align-items:center;gap:12px;padding:0 14px;background:#111427;color:#fff;border-bottom:1px solid #33384d}
+.bar strong{font-size:14px}.bar .version{font-size:12px;color:#b9c2d5}.bar .note{margin-left:auto;font-size:11px;color:#98a4ba}.filebtn,.ghost{font:inherit;font-size:12px;border-radius:6px;padding:6px 11px;cursor:pointer}.filebtn{display:inline-block;background:#2456e6;color:#fff;border:1px solid #2456e6}.ghost{background:#24283d;color:#dbe1ee;border:1px solid #50566d}
+#frame{width:100%;height:calc(100vh - 44px);border:0;background:#fff}.empty{flex:1;display:flex;align-items:center;justify-content:center;padding:24px}.card{width:min(680px,100%);background:#fff;border:1px solid #e0e2ee;border-radius:12px;padding:28px;box-shadow:0 8px 32px #2d345018}.card h1{margin:0 0 10px;font-size:22px}.card p,.card li{font-size:14px;line-height:1.6;color:#556}.card ol{padding-left:22px}.status{margin-top:16px;padding:10px 12px;border-radius:7px;background:#eef1f6;font-size:13px;color:#4a5b73}.status.error{background:#fdecea;color:#c0392b}
+</style>
+</head>
+<body>
+<div class="bar">
+  <strong>계약서 리뷰 가이드 실행기</strong>
+  <span id="version" class="version">앱 미설치</span>
+  <label class="filebtn">버전 설치·업데이트<input id="update-file" type="file" accept=".crupdate" hidden></label>
+  <button id="reload" class="ghost" hidden>앱 다시 열기</button>
+  <span class="note">이 실행기 파일은 최초 설치 위치에서 계속 사용하세요.</span>
+</div>
+<div id="empty" class="empty">
+  <div class="card">
+    <h1>최초 설치</h1>
+    <p>이 실행기는 앱 버전과 법률검토 태깅자료의 저장 위치를 고정합니다. 실행기 자체는 교체하지 않고, 새 버전이 오면 상단의 버전 설치·업데이트에서 crupdate 파일만 선택합니다.</p>
+    <ol>
+      <li>같은 ZIP에 있는 contract-review-v버전.crupdate 파일을 선택합니다.</li>
+      <li>앱이 열리면 지식 데이터 탭에서 태깅 XLSX를 최초 1회 가져옵니다.</li>
+      <li>다음 버전부터는 이 실행기를 다시 열어 새 crupdate 파일만 선택합니다. 태깅자료는 다시 넣지 않습니다.</li>
+    </ol>
+    <div id="status" class="status">설치된 앱을 확인하고 있습니다.</div>
+  </div>
+</div>
+<iframe id="frame" title="계약서 리뷰 가이드" hidden></iframe>
+<script>
+(function(){
+"use strict";
+var DB="contract-review-launcher",VER=1,STORE="app",KEY="current",FORMAT="contract-review-update-v1";
+var frame=document.getElementById("frame"),empty=document.getElementById("empty"),status=document.getElementById("status"),version=document.getElementById("version"),reload=document.getElementById("reload");
+function setStatus(text,error){status.textContent=text;status.className="status"+(error?" error":"")}
+function openDb(){return new Promise(function(resolve,reject){var r=indexedDB.open(DB,VER);r.onupgradeneeded=function(){if(!r.result.objectStoreNames.contains(STORE))r.result.createObjectStore(STORE)};r.onsuccess=function(){resolve(r.result)};r.onerror=function(){reject(r.error)}})}
+function load(){return openDb().then(function(db){return new Promise(function(resolve,reject){var r=db.transaction(STORE,"readonly").objectStore(STORE).get(KEY);r.onsuccess=function(){db.close();resolve(r.result||null)};r.onerror=function(){db.close();reject(r.error)}})})}
+function save(pkg){return openDb().then(function(db){return new Promise(function(resolve,reject){var tx=db.transaction(STORE,"readwrite");tx.objectStore(STORE).put(pkg,KEY);tx.oncomplete=function(){db.close();resolve(pkg)};tx.onerror=function(){db.close();reject(tx.error)}})})}
+function show(pkg){if(!pkg||!pkg.html)return;version.textContent="v"+pkg.version;empty.hidden=true;frame.hidden=false;reload.hidden=false;frame.srcdoc=pkg.html}
+async function sha256(value){if(!crypto||!crypto.subtle)return "";var b=new TextEncoder().encode(value),d=await crypto.subtle.digest("SHA-256",b);return Array.from(new Uint8Array(d)).map(function(x){return x.toString(16).padStart(2,"0")}).join("")}
+document.getElementById("update-file").addEventListener("change",function(e){var f=e.target.files[0];if(!f)return;setStatus("업데이트 파일을 확인하고 있습니다.");f.text().then(JSON.parse).then(async function(pkg){if(!pkg||pkg.format!==FORMAT||!pkg.version||!pkg.html)throw new Error("계약서검토 업데이트 파일이 아닙니다");var actual=await sha256(pkg.html);if(pkg.sha256&&actual&&pkg.sha256!==actual)throw new Error("업데이트 파일 무결성 값이 일치하지 않습니다");return save(pkg)}).then(function(pkg){setStatus("v"+pkg.version+" 설치 완료. 기존 태깅자료와 검토자료는 유지됩니다.");show(pkg)}).catch(function(err){setStatus("설치 실패: "+(err&&err.message||"파일 형식 오류"),true)});e.target.value=""});
+reload.addEventListener("click",function(){load().then(show)});
+load().then(function(pkg){if(pkg){setStatus("설치된 앱을 여는 중입니다.");show(pkg)}else setStatus("설치된 앱이 없습니다. crupdate 파일을 선택하세요.")}).catch(function(err){setStatus("실행기 저장소를 열 수 없습니다: "+(err&&err.message||""),true)});
+})();
+</script>
+</body>
+</html>

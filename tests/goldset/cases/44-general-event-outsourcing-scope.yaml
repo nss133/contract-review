@@ -1,8 +1,9 @@
 # 금융회사 명칭과 '위탁운영'만으로 금융규제상 업무위탁 기본 모듈을 자동 활성하지 않는다.
 id: general-event-outsourcing-scope
-desc: 단건 행사운영 위탁 — 금융규제 M-CORE 자동 오활성 금지
-force_type: outsourcing
-active_must_exclude: [M-CORE]
+desc: 단건 행사운영 대행 — 조달 유형 및 금융업무위탁 규정 비적용
+detect_expected: procurement
+active_must_exclude: [X-FINOUT]
+scope_expected: {financial_outsourcing: non_applicable}
 text: |
   임직원 초청 행사 위탁운영 계약서
 

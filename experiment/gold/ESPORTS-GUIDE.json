@@ -1046,6 +1046,16 @@
       "note": ""
     },
     {
+      "check_id": "SP-DEL-12",
+      "check": "사무처리형(위임형) 용역에서 수임인의 선관주의 의무와 불완전이행 시 구제(시정·재수행 요구, 손해배상, 해지)가 규정되어 있는가",
+      "applicable": null,
+      "direct_clause_indices": [],
+      "reference_clause_indices": [],
+      "completeness": "",
+      "confidence": "",
+      "note": ""
+    },
+    {
       "check_id": "SP-DEL-08-2",
       "check": "지체상금·하자보수와 함께 이행(하자)보증보험 증권 징구 여부가 확인되어 있는가",
       "applicable": null,

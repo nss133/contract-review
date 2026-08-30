@@ -15,12 +15,25 @@ def test_build_produces_single_html(knowledge_dir, law_db, tmp_path):
     assert "/*__" not in html
     assert "segmentContract" in html          # JS 인라인 확인
     assert "JSZip" in html                    # vendor 인라인 확인
+    assert "ContractTagEngine" in html        # 구조화 태그 엔진도 단일 HTML에 인라인
     assert 'id="analysis-progress"' in html   # 최초 분석 단계 안내
     assert 'id="input-subdoc-use"' in html    # 보안관리약정서 사용 여부를 분석 전에 지정
     assert "function activatePane" in html    # 탭 전환을 클릭·자동 이동에서 공통 사용
     assert "prefers-reduced-motion: reduce" in html
+    assert "계약서 반영 안내와 실제 처리 비교" in html
+    assert '<details class="vd-feedback"' in html
+    assert "정확도 개선용 피드백" in html
+    assert "선택하지 않아도 검토 완료와 리포트에는 영향이 없습니다." in html
+    assert "계약조치 미분류" not in html
+    assert "선택적 협상" not in html
     m = re.search(r'<script id="cr-data"[^>]*>(.*?)</script>', html, re.S)
     data = json.loads(m.group(1))
+    assert data["tag_match_mode"] == "assist"
+    assert data["regulatory_scopes"] == {"schema_version": "", "scopes": {}}
+    assert data["legal_constraints"] == {"schema_version": "", "rules": []}
+    assert data["tag_engine"]["profileVersion"] == "1.1.0"
+    assert data["tag_engine"]["producerPackageVersion"] == "0.6.3"
+    assert len(data["tag_engine"]["taxonomySha256"]) == 64
     assert data["common"]["checks"][0]["id"] == "CMN-01"
     src = data["types"][0]["checks"][0]["sources"][0]
     assert src["status"] == "quote_ok" and "사전 동의" in src["text"]

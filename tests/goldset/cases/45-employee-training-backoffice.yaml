@@ -1,0 +1,11 @@
+id: employee-training-backoffice
+desc: 직원 연수 운영용역 — 단순 후선업무 비적용
+detect_expected: procurement
+active_must_exclude: [X-FINOUT]
+scope_expected: {financial_outsourcing: non_applicable}
+text: |
+  직원 연수 운영 용역계약서
+
+  갑은 을에게 임직원 대상 직원연수의 강의장 대관, 교재 인쇄, 식사 및 현장 진행을 맡긴다.
+  본 용역은 보험상품 설명, 고객 상담 및 개인정보 처리를 포함하지 않는다.
+  계약기간은 교육 종료 및 비용 정산 완료일까지로 한다.

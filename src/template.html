@@ -18,6 +18,7 @@
     <button data-tab="checklist" class="tab">체크리스트</button>
     <!-- 관리 그룹(P1) — 매 검토 사용 탭과 위계 분리(우측·회색 톤). 큐레이터·회귀 채점용 -->
     <span class="nav-admin">
+      <button data-tab="knowledge" class="tab tab-admin">지식 데이터</button>
       <button data-tab="verify" class="tab tab-admin">지식 검수</button>
       <!-- 골드셋은 관리모드(#admin) 전용 노출 — 팀원 기본 화면에서 숨김(기능·코드는 보존) -->
       <button data-tab="goldset" class="tab tab-admin tab-goldset">골드셋 채점</button>
@@ -105,6 +106,16 @@
             <span id="local-llm-status" class="local-ai-status"></span>
           </div>
 
+          <div class="setup-row setup-row-motion">
+            <span class="setup-label">화면 효과</span>
+            <select id="motion-preference" aria-label="화면 효과 설정">
+              <option value="auto">시스템 설정</option>
+              <option value="full">효과 사용</option>
+              <option value="reduce">효과 줄임</option>
+            </select>
+            <span id="motion-status" class="motion-status" role="status"></span>
+          </div>
+
           <!-- ③ 변경합의서 — 원계약을 넣으면 그 내용을 전제로, 없으면 변경내용에 포커스 -->
           <div class="setup-row setup-row-base">
             <span class="setup-label">원계약</span>
@@ -163,6 +174,7 @@
            형식 경고 · 일괄 검토(드롭다운) · 내보내기/불러오기 · 완료 CTA(미검토 0일 때) -->
       <div id="clause-header" class="clause-header">
         <span id="clause-progress" class="clause-progress"></span>
+        <button id="action-anchor" class="ghost action-anchor" hidden>별도 자료 확인 0건</button>
         <button id="consider-anchor" class="ghost consider-anchor" hidden>적용·보완 판단 0건</button>
         <button id="verify-anchor" class="ghost verify-anchor" hidden title="클릭하면 확인할 문구가 있는 조항으로 차례로 이동">문구 확인 0건</button>
         <button id="formal-flag" class="ghost formal-flag" hidden title="당사 고유명사(상호·대표자·주소) 근사 오기 — 클릭하면 리포트 형식 점검으로 이동">형식 경고 0건</button>
@@ -187,6 +199,12 @@
       </div>
       <!-- 비교 모드 헤더 — 전년 검토 대비 동일·변경·신설·삭제 카운트 + 일괄 수용 + 해제 -->
       <div id="compare-header" class="compare-header" hidden></div>
+      <!-- 계약 본문 수정이 아니라 부속서류·증빙·내부 운영자료에서 확인할 항목 -->
+      <div id="action-queue-block"></div>
+      <!-- 특정 조항이 아니라 계약 전체에 귀속한 체크·검토의견 -->
+      <div id="contract-opinion-block"></div>
+      <!-- 체크리스트와 독립된 자유 의견 + 계약서 자체 완결성 점검 -->
+      <div id="document-review-block"></div>
       <!-- 컬럼 안내 행 + 조항 행 연속 스크롤 -->
       <div id="clause-cols-head" class="clause-cols-head">
         <span>① 계약서 원문</span><span>② 검토된 내용</span><span>③ 남긴 검토의견</span>
@@ -243,6 +261,40 @@
       <p class="suggestions-hint">관련 가능성이 있는 계약서 문구를 사람이 확인할 항목입니다.</p>
       <div id="suggestions-body"></div>
     </section>
+    </div>
+  </section>
+
+  <!-- 법률검토의견 전건 태깅자료 — 앱 버전과 분리된 영구 지식 저장소 -->
+  <section id="pane-knowledge" class="pane">
+    <div class="knowledge-page">
+      <div class="knowledge-head">
+        <div>
+          <h2>법률검토 태깅자료</h2>
+          <p>legal-opinion-tagger에서 만든 XLSX를 최초 1회 적재합니다. 자료는 앱 코드와 분리된 브라우저 지식 저장소에 남고, 새 버전은 같은 저장소를 이어서 사용합니다.</p>
+        </div>
+        <span id="knowledge-store-state" class="knowledge-store-state">저장소 확인 중</span>
+      </div>
+      <div id="knowledge-status" class="knowledge-status"></div>
+      <div class="knowledge-actions">
+        <label class="filebtn primary-like">태깅 XLSX 가져오기<input id="knowledge-xlsx" type="file" accept=".xlsx" hidden></label>
+        <button id="knowledge-backup" class="ghost" disabled>지식팩 백업</button>
+        <label class="filebtn ghost">지식팩 복구<input id="knowledge-restore" type="file" accept=".json,.crknowledge" hidden></label>
+        <span id="knowledge-action-msg" class="report-actions-note"></span>
+      </div>
+      <div id="knowledge-progress" class="knowledge-progress" hidden>
+        <div class="knowledge-progress-bar"><span></span></div>
+        <p></p>
+      </div>
+      <div class="knowledge-policy">
+        <h3>반영 원칙</h3>
+        <ul>
+          <li>같은 문서 ID와 같은 내용은 다시 넣어도 중복 집계하지 않습니다.</li>
+          <li>같은 문서 ID의 태그 결과가 달라지면 과거본을 지우지 않고 새 리비전으로 보존합니다.</li>
+          <li>태깅자료는 유형·적용범위·체크 연결 후보를 만드는 근거이며, 그 자체로 계약서 이상없음이나 수정 필요를 확정하지 않습니다.</li>
+          <li>버전 업데이트 전 지식팩 백업을 권장합니다. 백업에는 법률검토의견의 근거 문장이 포함될 수 있으므로 폐쇄망 내부에만 보관합니다.</li>
+        </ul>
+      </div>
+      <div id="knowledge-insights" class="knowledge-insights"></div>
     </div>
   </section>
 

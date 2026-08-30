@@ -9,9 +9,11 @@ const { detectType, pickType, suggestModules, analyze, buildModel, subDocCoverag
   detectStance, moduleAllowedInStance, detectPartyRoles, hasAffiliateParty } = require("../src/matcher.js");
 const { detectPartyContext } = require("../src/matcher.js");
 const Verdict = require("../src/verdict.js");
+const ScopeAssessment = require("../src/scope_assessment.js");
+const LegalConstraints = require("../src/legal_constraints.js");
 
 const payload = JSON.parse(fs.readFileSync(process.argv[2], "utf8"));
-const { common, types, cases } = payload;
+const { common, types, cases, regulatory_scopes, legal_constraints } = payload;
 
 const results = cases.map(function (c) {
   const text = String(c.text || "");
@@ -19,7 +21,8 @@ const results = cases.map(function (c) {
   // 문서 제목(11.1차) — 유형감지·모듈·체크 게이트의 최상위 신호. app.js와 동일 산출.
   const docTitle = c.doc_title !== undefined ? c.doc_title : extractDocTitle(text);
   // 유형 감지 — app.js btn-analyze와 동일 로직(pickType 공유): 임계 미달이면 미확정(null).
-  const ranked = detectType(text, types, docTitle);
+  const fileName = c.file_name || "";
+  const ranked = detectType(text, types, docTitle, fileName);
   // force_type(선택): 감지 대신 유형을 강제 — recall·부속커버 케이스처럼 유형감지 자체가
   // 쟁점이 아닌 경우 사용.
   const detected = c.force_type || pickType(ranked);
@@ -30,11 +33,17 @@ const results = cases.map(function (c) {
   const partyRoles = c.party_roles !== undefined ? c.party_roles : detectPartyRoles(text);
   const partyContext = c.party_context !== undefined ? c.party_context : detectPartyContext(text);
   const stanceCtx = { affiliate_party: hasAffiliateParty(text) };
+  const legalAlerts = LegalConstraints.assess(text, legal_constraints || { rules: [] },
+    { docTitle: docTitle, fileName: fileName });
+  const scopeAssessments = ScopeAssessment.assessAll(text, regulatory_scopes || { scopes: {} },
+    c.scope_answers || {}, { docTitle: docTitle, fileName: fileName,
+      scopeEffects: LegalConstraints.scopeEffects(legalAlerts) });
   // 모듈 활성 — app.js renderScreening과 동일: common(횡단 X-* 풀)+유형 모듈 병합, always_on + 본문 제안.
   // 국면 게이트를 먼저 통과한 모듈만 후보(수범자가 당사가 아닌 규제는 제외).
   const modList = (common.meta.modules || []).concat(doc ? doc.meta.modules || [] : [])
     .filter(function (m) { return moduleAllowedInStance(m, stance, stanceCtx); });
-  const suggested = suggestModules(text, modList, { stance: stance, docTitle: docTitle, stanceCtx: stanceCtx });
+  const suggested = suggestModules(text, modList, { stance: stance, docTitle: docTitle, stanceCtx: stanceCtx,
+    scopeAssessments: scopeAssessments });
   // force_active_modules(선택): 본문 제안과 무관하게 모듈을 강제 활성 — 부속서류 커버리지
   // 케이스처럼 "본계약 자체에는 활성 트리거가 없으나 부속서류 첨부로 해당 체크군이 쟁점이 되는"
   // 상황을 재현할 때 사용(사용자 화면에서는 스크리닝 질문에 수동 체크로 대응하는 경로에 해당).
@@ -42,9 +51,18 @@ const results = cases.map(function (c) {
   const active = modList
     .filter(function (m) { return m.always_on || suggested.on.indexOf(m.id) !== -1 || forcedModules.indexOf(m.id) !== -1; })
     .map(function (m) { return m.id; });
-  const docs = [{ checkpoints: common.checks }, { checkpoints: doc ? doc.checks : [] }];
-  const availableCheckIds = (common.checks || []).concat(doc ? doc.checks || [] : [])
-    .map(function (cp) { return cp.id; });
+  const sourceDocs = [];
+  Object.keys(scopeAssessments).forEach(function (sid) {
+    const a = scopeAssessments[sid];
+    if (!a || active.indexOf(a.module_id) === -1 || !a.check_source_type || a.check_source_type === detected) return;
+    const source = types.find(function (t) { return t.meta.type_id === a.check_source_type; });
+    if (source && sourceDocs.indexOf(source) === -1) sourceDocs.push(source);
+  });
+  const docs = [{ checkpoints: common.checks }, { checkpoints: doc ? doc.checks : [] }]
+    .concat(sourceDocs.map(function (source) { return { checkpoints: source.checks || [] }; }));
+  let availableChecks = (common.checks || []).concat(doc ? doc.checks || [] : []);
+  sourceDocs.forEach(function (source) { availableChecks = availableChecks.concat(source.checks || []); });
+  const availableCheckIds = availableChecks.map(function (cp) { return cp.id; });
   // base_text(선택): 변경합의서 케이스 — 원계약을 전제로 부재 판정(11차).
   const baseClauses = c.base_text ? segmentContract(String(c.base_text)) : [];
   const r = analyze(clauses, docs, { modules: active, stance: stance, baseClauses: baseClauses,
@@ -64,6 +82,7 @@ const results = cases.map(function (c) {
       auto_clear: !!(x.autoClear && x.autoClear.ok),
       auto_pass: Verdict.canAutoPass(checkById[x.cpId], x),
       perspective: x.perspective || null,
+      relationship_gated: !!x.relationshipGated,
     };
   });
   // shown = 화면에 어떤 형태로든 표면화된 항목(반영·살펴볼·확인안됨) — 강등되어 조용해진 것과 구별.
@@ -98,6 +117,9 @@ const results = cases.map(function (c) {
     partyRoles: partyRoles,
     partyContext: partyContext,
     activeModules: active,
+    legalAlerts: legalAlerts,
+    scopeAssessments: scopeAssessments,
+    dataRelationship: r.dataRelationship,
     available_check_ids: availableCheckIds,
     active_check_ids: r.checkpoints.map(function (cp) { return cp.id; }),
     consider: consider,

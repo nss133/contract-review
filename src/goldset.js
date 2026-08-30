@@ -45,12 +45,23 @@ var Goldset = (function () {
     var doc = null;
     for (var i = 0; i < CR.types.length; i++)
       if (CR.types[i].meta.type_id === detected) { doc = CR.types[i]; break; }
+    var scopes = env.assessScopes ? env.assessScopes(text, CR.regulatory_scopes || { scopes: {} }, {}) : {};
     var modList = (CR.common.meta.modules || []).concat(doc ? doc.meta.modules || [] : []);
-    var suggested = env.suggestModules(text, modList);
+    var suggested = env.suggestModules(text, modList, { scopeAssessments: scopes });
     var active = modList.filter(function (m) {
       return m.always_on || suggested.on.indexOf(m.id) !== -1;
     }).map(function (m) { return m.id; });
-    var r = env.analyze(clauses, [{ checkpoints: CR.common.checks }, { checkpoints: doc ? doc.checks : [] }], active);
+    var docs = [{ checkpoints: CR.common.checks }, { checkpoints: doc ? doc.checks : [] }];
+    Object.keys(scopes).forEach(function (sid) {
+      var a = scopes[sid];
+      if (!a || active.indexOf(a.module_id) === -1 || !a.check_source_type || a.check_source_type === detected) return;
+      for (var j = 0; j < CR.types.length; j++) {
+        if (CR.types[j].meta.type_id === a.check_source_type) {
+          docs.push({ checkpoints: CR.types[j].checks || [] }); break;
+        }
+      }
+    });
+    var r = env.analyze(clauses, docs, active);
     function ids(cov) {
       return r.results.filter(function (x) { return x.coverage === cov; })
         .map(function (x) { return x.cpId; }).sort();

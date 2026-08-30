@@ -57,7 +57,8 @@ test("verdictSummary: 판정 집계 + 사유별 집계", () => {
 test("verdictSummary: 빈 store", () => {
   assert.deepStrictEqual(V.verdictSummary({}),
     { "이상없음": 0, "검토의견": 0, total: 0, reasons: { "반영되어 있음": 0,
-      "해당사항 없음": 0, "회사에 유리·불리하지 않음": 0, "수용 가능한 위험": 0 } });
+      "해당사항 없음": 0,
+      "회사에 유리·불리하지 않음": 0, "수용 가능한 위험": 0 } });
 });
 
 test("exportVerdicts: meta + verdicts 구조", () => {
@@ -208,6 +209,19 @@ test("composeOpinion: 조항 위치 축약 — 표제 뒤 본문이 붙어도 �
   assert.ok(t.indexOf("지체일수당") === -1);
 });
 
+test("composeOpinion: 계약 전반 의견은 조항 의견과 구별하고 먼저 제시", () => {
+  const t = V.composeOpinion({
+    name: "계약서", clauseCount: 4, typeName: "업무위탁", mustCoreLabels: [],
+    opinions: [
+      { label: "손해배상", severity: "필수", scope: "clause", loc: "제8조(손해배상)", comment: "상한 필요" },
+      { label: "거래구조", severity: "권장", scope: "contract", loc: "", comment: "책임 구조 전반 재정리 필요" },
+    ], formalWarnTitles: []
+  });
+  const globalText = "다만, 계약 전반에 관한 검토의견으로서 「거래구조」에 대하여 ‘책임 구조 전반 재정리 필요’ 의견이 있어 계약 전체 기준의 검토·보완이 필요함.";
+  assert.ok(t.includes(globalText));
+  assert.ok(t.indexOf("거래구조") < t.indexOf("제8조(손해배상)"));
+});
+
 test("composeOpinion: 추가 판단 필수 항목 — 적용·보완 판단 문장 + 1문장 상태 반영", () => {
   const one = V.composeOpinion({
     name: "계약서", clauseCount: 5, typeName: "업무위탁",
@@ -274,6 +288,22 @@ test("composeOpinion: compare 미지정이면 기존 출력 불변(무영향)", 
     mustCoreLabels: [], opinions: [], formalWarnTitles: []
   });
   assert.strictEqual(t.indexOf("전년"), -1);
+});
+
+test("composeOpinion: 계약서 수정·반영 여부·별도 자료·회사 유불리를 구분한다", () => {
+  const t = V.composeOpinion({
+    name: "테스트계약", clauseCount: 3, typeName: "용역",
+    contractActionLabels: ["재위탁 제한"],
+    holdLabels: ["책임 범위"],
+    externalCheckLabels: ["개인정보 교육"],
+    negotiationLabels: ["지체상금"],
+    opinions: [], formalWarnTitles: []
+  });
+  assert.match(t, /계약서 수정 검토 1건/);
+  assert.match(t, /반영 여부 확인 1건/);
+  assert.match(t, /별도 자료 확인 1건/);
+  assert.match(t, /회사 유불리 검토\(필수 아님\) 1건/);
+  assert.match(t, /부속서류·증빙·내부 운영자료 확인/);
 });
 
 // ── 구 판정값 이관(11.3차) ───────────────────────────────────────
@@ -352,4 +382,21 @@ test("reviewColumn: 이상없음 직후 편집 고정 중에는 ③, 완료 뒤�
   assert.strictEqual(V.reviewColumn({ verdict: "이상없음" }, false), "done");
   assert.strictEqual(V.reviewColumn({ verdict: "검토의견" }, false), "needs");
   assert.strictEqual(V.reviewColumn(null, false), "needs");
+});
+
+test("최종 계약조치 판정은 이상없음·검토의견과 별도 축으로 보존한다", () => {
+  let s = V.setVerdict({}, "A", "이상없음", "", "d", "반영되어 있음", "manual");
+  s = V.setActionDisposition(s, "A", "유지");
+  assert.equal(s.A.action_disposition, "유지");
+  s = V.setVerdict(s, "A", "검토의견", "수정 필요", "d", "", "manual");
+  assert.equal(s.A.action_disposition, "유지", "판정을 바꿔도 독립 조치값은 보존");
+  assert.equal(V.setActionDisposition(s, "A", "잘못된값"), s);
+});
+
+test("실제 처리 결과는 기존 저장값을 유지하면서 화면용 문구를 풀어 쓴다", () => {
+  assert.equal(V.ACTION_DISPOSITION_LABELS["수정요청"], "계약서 수정 요청");
+  assert.equal(V.ACTION_DISPOSITION_LABELS["계약외조치"], "별도 자료·절차로 확인");
+  assert.equal(V.ACTION_DISPOSITION_LABELS["보류"], "추가 확인 후 결정");
+  assert.deepStrictEqual(V.ACTION_DISPOSITIONS,
+    ["수정요청", "삭제요청", "유지", "계약외조치", "비적용", "보류"]);
 });

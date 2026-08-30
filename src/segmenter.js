@@ -5,6 +5,9 @@ var CR_HEADING_RES = [
   /^제\s*\d+\s*조(?:의\s*\d+)?(?:\s|\(|\[|$)/, // 제1조, 제2조의2 (제목 괄호 허용)
   /^\d+\.\s+/,                                  // "1. 목적" 형태
 ];
+// 줄 첫머리의 내부 인용은 조문 표제가 아니다. 기존 정규식은
+// "제2조 제3항에 따른다"도 제2조 표제로 잘라 중복 조문을 만들 수 있었다.
+var ARTICLE_PARAGRAPH_REF_RE = /^제\s*\d+\s*조(?:의\s*\d+)?\s+제\s*\d+\s*항(?:\s*제\s*\d+\s*호)?(?:\s|에|을|를|의|$)/;
 
 /* 문서 제목(계약서 표제) 추출 — 11.1차.
    계약서의 성격은 제목에 가장 뚜렷하게 드러난다("○○담보설정계약서", "신탁계약 변경합의서").
@@ -67,6 +70,7 @@ function segmentContract(text) {
   for (var i = 0; i < lines.length; i++) {
     var t = lines[i].trim();
     var isHeading = t && CR_HEADING_RES.some(function (re) { return re.test(t); });
+    if (isHeading && ARTICLE_PARAGRAPH_REF_RE.test(t)) isHeading = false;
     // 제N조 조항이 열려 있으면, 숫자 헤딩(1. 2. ...)은 각 호 나열이므로 본문으로 취급
     if (
       isHeading &&

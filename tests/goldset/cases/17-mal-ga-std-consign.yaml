@@ -5,10 +5,10 @@ desc: 사내표준 개인보험대리점 위탁 — 표준서식 회귀(사내�
 detect_expected: channel
 # 2026-07-28 사용자 게이트: channel detect_keywords 보강("보험대리점")으로 outsourcing 오분류
 # 해소. X-EFIN 신호 정비(금융거래/전자금융 부분문자열 제거)로 ITSEC-01~13 대량 오탐 해소.
-# CORE-*(M-CORE 전속)·ITSEC-*(X-EFIN)는 재발 방지 고정. PRIV-05·PRIV-06(재위탁 제한·접근
+# CORE-*(X-FINOUT 전속)·ITSEC-*(X-EFIN)는 재발 방지 고정. PRIV-05·PRIV-06(재위탁 제한·접근
 # 제한, X-PII)·CH-02·CH-03은 channel 정상 감지 후에도 잔존하는 별건 — 라벨하지 않고 알람
 # 유지(진성 공백 가능성, 별도 트리아지 필요).
-active_must_exclude: [M-CORE, X-EFIN]
+active_must_exclude: [X-FINOUT, X-EFIN]
 text: "[보험회사-보험대리점 표준위탁계약서] \n\n미래에셋생명보험주식회사(이하 “회사”)와 [               ]보험대리점(이하 “대리점”)은\
   \ 다음과 같이 표준위탁계약(이하 “본 계약”이라 한다)을 체결한다. \n\n제 1 장   총   칙\n제1조 (목적) \n본 계약은 회사가 대리점에\
   \ 본 계약에서 정하는 바에 따라 보험 모집, 관리 등의 업무를 위탁하고, 대리점이 해당 위탁업무를 수행함에 있어 대리점의 준수사항, 회사의 수수료\

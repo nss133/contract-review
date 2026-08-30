@@ -4,7 +4,7 @@
    이상없음/검토의견" 이라는 검토자 의견을 건별로 축적한다.
    브라우저 전역 Verdict + node require 겸용.
 
-   판정 체계(11.3차 재구성, 사용자 피드백):
+   판정 체계(14.1차 재구성, 사용자 피드백):
      이상없음 ─ 사유(reason, 선택): 반영되어 있음 | 해당사항 없음 |
        회사에 유리·불리하지 않음 | 수용 가능한 위험 | (미선택)
      검토의견 ─ 코멘트 필수 성격
@@ -13,8 +13,22 @@
    해당사항 없음은 **이상없음의 사유**로 격하. 기존 저장분은 로드 시 자동 이관. */
 var Verdict = (function () {
   var VERDICTS = ["이상없음", "검토의견"];
+  // 저장·교환 포맷은 기존 값을 유지하고 화면에서만 행동을 풀어 쓴다.
+  var ACTION_DISPOSITIONS = ["수정요청", "삭제요청", "유지", "계약외조치", "비적용", "보류"];
+  var ACTION_DISPOSITION_LABELS = {
+    "수정요청": "계약서 수정 요청",
+    "삭제요청": "문제 문구 삭제 요청",
+    "유지": "현 문구 유지",
+    "계약외조치": "별도 자료·절차로 확인",
+    "비적용": "이 계약에는 해당 없음",
+    "보류": "추가 확인 후 결정"
+  };
   // 이상없음의 사유(선택). 빈 문자열 = 미선택.
-  var OK_REASONS = ["반영되어 있음", "해당사항 없음", "회사에 유리·불리하지 않음", "수용 가능한 위험"];
+  var OK_REASONS = ["반영되어 있음", "해당사항 없음",
+    "회사에 유리·불리하지 않음", "수용 가능한 위험"];
+  // 구 UI에서 선택한 값은 기록 손실 없이 읽되 새 판정 선택지에는 노출하지 않는다.
+  // 계약 반영 필요성은 matcher의 contract_requirement에서 선행 라우팅한다.
+  var LEGACY_OK_REASONS = ["계약 반영 불필요"];
   var LEGACY_NA = "해당없음"; // 구 판정값 — 이상없음 + '해당사항 없음'으로 이관
   // "auto" = 시스템 자동 기재(참고 항목 매칭 확인 등) — 사람 판정과 구분해 코퍼스 집계됨.
   var ORIGINS = ["manual", "bulk", "subdoc", "prior_review", "llm_draft", "legacy", "auto"];
@@ -35,9 +49,12 @@ var Verdict = (function () {
     if (v === LEGACY_NA) { v = "이상없음"; reason = reason || "해당사항 없음"; }
     if (VERDICTS.indexOf(v) === -1) return null;
     if (v !== "이상없음") reason = ""; // 사유는 이상없음 전용
-    if (reason && OK_REASONS.indexOf(reason) === -1) reason = "";
+    if (reason && OK_REASONS.indexOf(reason) === -1 && LEGACY_OK_REASONS.indexOf(reason) === -1) reason = "";
     var origin = ORIGINS.indexOf(item.origin) !== -1 ? item.origin : "legacy";
-    return { verdict: v, reason: reason, comment: item.comment || "", date: item.date || "", origin: origin };
+    var actionDisposition = ACTION_DISPOSITIONS.indexOf(item.action_disposition) !== -1
+      ? item.action_disposition : "";
+    return { verdict: v, reason: reason, comment: item.comment || "", date: item.date || "", origin: origin,
+      action_disposition: actionDisposition };
   }
   // 저장소 전체 정규화(로드 직후 1회).
   function migrateStore(store) {
@@ -55,10 +72,20 @@ var Verdict = (function () {
   function setVerdict(store, cpId, verdict, comment, date, reason, origin) {
     var next = _clone(store || {});
     if (!verdict) { delete next[cpId]; return next; }
+    var previousAction = next[cpId] && next[cpId].action_disposition || "";
     var m = migrateItem({ verdict: verdict, reason: reason, comment: comment, date: date,
-      origin: origin || "manual" });
+      origin: origin || "manual", action_disposition: previousAction });
     if (!m) return store || {};
     next[cpId] = m;
+    return next;
+  }
+  function setActionDisposition(store, cpId, actionDisposition) {
+    var cur = (store || {})[cpId];
+    if (!cur || !cur.verdict) return store || {};
+    if (actionDisposition && ACTION_DISPOSITIONS.indexOf(actionDisposition) === -1) return store || {};
+    var next = _clone(store);
+    next[cpId] = Object.assign({}, cur, { action_disposition: actionDisposition || "",
+      origin: cur.origin === "auto" ? "manual" : (cur.origin || "manual") });
     return next;
   }
   // 사유만 변경(판정은 유지). 이상없음이 아니면 무시.
@@ -70,7 +97,8 @@ var Verdict = (function () {
     var next = _clone(store);
     next[cpId] = { verdict: cur.verdict, reason: OK_REASONS.indexOf(reason) !== -1 ? reason : "",
       comment: cur.comment || "", date: cur.date || "",
-      origin: cur.origin === "auto" ? "manual" : (cur.origin || "legacy") };
+      origin: cur.origin === "auto" ? "manual" : (cur.origin || "legacy"),
+      action_disposition: cur.action_disposition || "" };
     return next;
   }
 
@@ -192,12 +220,26 @@ var Verdict = (function () {
     var SEV = { "필수": 0, "권장": 1, "참고": 2 };
     var sents = [];
     // 1문장: 전반 상태 — 시스템의 원문 검색 결과가 아니라 사람의 추가 판단 필요 여부를 기술.
-    var mustLabels = d.mustCoreLabels || [];
-    sents.push((d.name || "계약서") + "(" + (d.clauseCount || 0) + "개 조항, " +
-      (d.typeName ? d.typeName + " 유형" : "유형 미확정") + ") 검토 결과 " +
-      (mustLabels.length
+    var mustLabels = d.contractActionLabels || d.mustCoreLabels || [];
+    var holdLabels = d.holdLabels || [];
+    var externalLabels = d.externalCheckLabels || [];
+    var negotiationLabels = d.negotiationLabels || [];
+    var actionAware = d.contractActionLabels !== undefined || d.holdLabels !== undefined ||
+      d.externalCheckLabels !== undefined || d.negotiationLabels !== undefined;
+    var first = (d.name || "계약서") + "(" + (d.clauseCount || 0) + "개 조항, " +
+      (d.typeName ? d.typeName + " 유형" : "유형 미확정") + ") 검토 결과 ";
+    if (actionAware) {
+      var actionParts = [];
+      if (mustLabels.length) actionParts.push("계약서 수정 검토 " + mustLabels.length + "건");
+      if (holdLabels.length) actionParts.push("반영 여부 확인 " + holdLabels.length + "건");
+      if (externalLabels.length) actionParts.push("별도 자료 확인 " + externalLabels.length + "건");
+      if (negotiationLabels.length) actionParts.push("회사 유불리 검토(필수 아님) " + negotiationLabels.length + "건");
+      sents.push(first + (actionParts.length ? actionParts.join("·") + "이 있음." : "추가 조치가 필요한 항목 없음."));
+    } else {
+      sents.push(first + (mustLabels.length
         ? "추가 판단이 필요한 필수 항목이 " + mustLabels.length + "건 있음."
         : "추가 판단이 필요한 필수 항목 없음."));
+    }
     // 비교 모드(재검토): 전년 대비 요지 1문장 — 정렬은 보조 도구이므로 "확인됨" 단정 대신 기술식 유지.
     if (d.compare) {
       var c = d.compare;
@@ -210,6 +252,10 @@ var Verdict = (function () {
     }
     // 2문장~: 검토의견 코멘트 인용 — 코멘트는 사용자 판단 기록이므로 글자 수를 자르지 않음.
     var ops = (d.opinions || []).slice().sort(function (a, b) {
+      // 특정 조항을 넘어 계약 전체에 관한 의견을 먼저 제시한다.
+      var sa = a.scope === "contract" ? 0 : 1;
+      var sb = b.scope === "contract" ? 0 : 1;
+      if (sa !== sb) return sa - sb;
       var ra = SEV[a.severity]; if (ra === undefined) ra = 3;
       var rb = SEV[b.severity]; if (rb === undefined) rb = 3;
       return ra - rb;
@@ -227,16 +273,26 @@ var Verdict = (function () {
     ops.slice(0, 3).forEach(function (o, i) {
       var c = String(o.comment || "").trim();
       var loc = _shortLoc(o.loc);
-      sents.push((i === 0 ? "다만, " : "또한 ") +
-        (loc ? loc + " 관련 " : "계약서 전체를 기준으로 볼 때 ") +
-        "「" + (o.label || "") + "」에 대하여 " + (c ? "‘" + c + "’ " : "") +
-        "의견이 있어 보완 필요함.");
+      if (o.scope === "contract") {
+        sents.push((i === 0 ? "다만, " : "또한 ") + "계약 전반에 관한 검토의견으로서 「" +
+          (o.label || "") + "」에 대하여 " + (c ? "‘" + c + "’ " : "") +
+          "의견이 있어 계약 전체 기준의 검토·보완이 필요함.");
+      } else {
+        sents.push((i === 0 ? "다만, " : "또한 ") +
+          (loc ? loc + " 관련 " : "계약서 전체를 기준으로 볼 때 ") +
+          "「" + (o.label || "") + "」에 대하여 " + (c ? "‘" + c + "’ " : "") +
+          "의견이 있어 보완 필요함.");
+      }
     });
     if (ops.length > 3) sents.push("외 검토의견 " + (ops.length - 3) + "건이 있음.");
     // 필수 미확인: 조항 신설 검토
     if (mustLabels.length) {
       sents.push("「" + mustLabels[0] + "」" + (mustLabels.length > 1 ? " 등 " + mustLabels.length + "건은" : " 항목은") +
-        " 해당 여부 또는 계약 내용 보완 필요성 판단 요함.");
+        (actionAware ? " 계약 문구의 추가·수정 또는 조치 필요성 판단 요함." : " 해당 여부 또는 계약 내용 보완 필요성 판단 요함."));
+    }
+    if (externalLabels.length) {
+      sents.push("「" + externalLabels[0] + "」" + (externalLabels.length > 1 ? " 등 " + externalLabels.length + "건은" : " 항목은") +
+        " 계약 본문이 아닌 부속서류·증빙·내부 운영자료 확인 요함.");
     }
     // 형식 경고 1줄
     var fw = d.formalWarnTitles || [];
@@ -245,16 +301,20 @@ var Verdict = (function () {
         " 경고가 있어 확인 요함.");
     }
     // 특이사항 전무
-    if (!ops.length && !mustLabels.length && !fw.length) sents.push("전반적으로 특이사항 없음.");
+    if (!ops.length && !mustLabels.length && !holdLabels.length && !externalLabels.length && !negotiationLabels.length && !fw.length)
+      sents.push("전반적으로 특이사항 없음.");
     return sents.join(" ");
   }
 
   return {
     VERDICTS: VERDICTS,
+    ACTION_DISPOSITIONS: ACTION_DISPOSITIONS,
+    ACTION_DISPOSITION_LABELS: ACTION_DISPOSITION_LABELS,
     OK_REASONS: OK_REASONS,
     ORIGINS: ORIGINS,
     migrateStore: migrateStore,
     setReason: setReason,
+    setActionDisposition: setActionDisposition,
     revertAutoVerdicts: revertAutoVerdicts,
     canAutoPass: canAutoPass,
     reviewColumn: reviewColumn,

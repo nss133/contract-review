@@ -115,9 +115,11 @@ checks:
     severity_basis: 강행규정(의무) — 자본시장법 제96조(투자일임업자 선관·충실의무)
     norm_type: 강행
     basis: statute
+    implementation_channel: statutory_duty
+    contract_requirement: none
     triggers:
       keywords: [투자일임, 선관, 충실의무, 운용]
-    absence_check: true
+    absence_check: false
     sources:
       - law: 자본시장과 금융투자업에 관한 법률
         article: 제96조

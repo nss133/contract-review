@@ -1,6 +1,8 @@
 "use strict";
 /* 매칭 결과를 감사 가능한 시스템 평가 원장으로 변환한다.
    법적 최종 판정(verdict)과 분리하며, score는 보정된 확률이 아니라 매칭 점수다. */
+var _AssessmentActionRouter = typeof ActionRouter !== "undefined"
+  ? ActionRouter : (typeof require !== "undefined" ? require("./action_router") : null);
 var Assessment = (function () {
   var FORMAT = "cr-system-assessment-v1";
 
@@ -33,7 +35,7 @@ var Assessment = (function () {
   }
 
   function _classification(result, coverageCtx) {
-    if (result.roleGated) {
+    if (result.roleGated || result.relationshipGated) {
       return { applicability: "not_applicable", assessment: "not_applicable", route: "no_review" };
     }
     if (result.coverage === "addressed") {
@@ -67,6 +69,11 @@ var Assessment = (function () {
       var coverageCtx = _coverageContext(r, ctx);
       var cls = _classification(r, coverageCtx);
       var cp = checks[r.cpId] || {};
+      var actionRoute = _AssessmentActionRouter
+        ? _AssessmentActionRouter.route(cp, r, ctx)
+        : { action: "hold", label: "계약서 반영 여부 확인", requirement: "unclassified",
+          text_effect: "conditional", implementation_channel: "unclassified",
+          evidence_state: "not_evaluated", reason_code: "router_unavailable", confidence: "low" };
       var ranked = (r.ranked || []).map(function (hit) {
         var cl = clauseByIndex[hit.clauseIndex] || {};
         return {
@@ -110,12 +117,35 @@ var Assessment = (function () {
         applicability: cls.applicability,
         system_assessment: cls.assessment,
         review_route: cls.route,
+        contract_action: actionRoute.action,
+        contract_action_label: actionRoute.label,
+        contract_requirement: actionRoute.requirement,
+        text_effect: actionRoute.text_effect,
+        implementation_channel: actionRoute.implementation_channel,
+        action_evidence_state: actionRoute.evidence_state,
+        action_reason_code: actionRoute.reason_code,
+        action_confidence: actionRoute.confidence,
         coverage_source: coverageCtx ? coverageCtx.kind : null,
         coverage: r.coverage || "",
         tier: r.tier || "",
+        relationship_gated: !!r.relationshipGated,
         evidence: evidence,
         candidate_clauses: ranked,
         reasons: r.best && r.best.reasons ? r.best.reasons.slice() : [],
+        tag_analysis: r.best && r.best.tagTrace ? {
+          profile_version: String(r.best.tagTrace.profileVersion || ""),
+          raw_score: _roundScore(r.best.tagTrace.score),
+          applied_adjustment: _roundScore(r.best.tagAdjustment || 0),
+          eligible: !!r.best.tagTrace.eligible,
+          comparison_basis: String(r.best.tagTrace.comparisonBasis || "clause_aggregate"),
+          aggregate_eligible: !!r.best.tagTrace.aggregateEligible,
+          best_frame: r.best.tagTrace.bestFrame || null,
+          matches: r.best.tagTrace.matches || {},
+          missing_facets: (r.best.tagTrace.missing || []).slice(),
+          conflicts: (r.best.tagTrace.conflicts || []).slice(),
+          observed: r.best.tagTrace.observed || {},
+          evidence: (r.best.tagTrace.evidence || []).slice()
+        } : null,
         perspective: r.perspective ? {
           rule: r.perspective.rule || "",
           obligation_bearer: r.perspective.bearer || "unknown",
@@ -141,6 +171,17 @@ var Assessment = (function () {
       party_roles: (ctx.party_roles || []).slice(),
       party_context: ctx.party_context || null,
       active_modules: (ctx.active_modules || []).slice(),
+      scope_assessments: ctx.scope_assessments || {},
+      scope_answers: ctx.scope_answers || {},
+      legal_alerts: ctx.legal_alerts || [],
+      data_relationship: ctx.data_relationship || null,
+      tag_engine: ctx.tag_engine ? {
+        profile_version: String(ctx.tag_engine.profileVersion || ""),
+        producer_package: String(ctx.tag_engine.producerPackage || ""),
+        producer_version: String(ctx.tag_engine.producerPackageVersion || ""),
+        artifact_sha256: String(ctx.tag_engine.artifactSha256 || ""),
+        taxonomy_sha256: String(ctx.tag_engine.taxonomySha256 || "")
+      } : null,
       items: items
     };
   }

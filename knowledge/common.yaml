@@ -3,6 +3,11 @@ meta:
   type_name: 공통
   detect_keywords: []
   modules:
+    - id: X-FINOUT
+      name: 금융기관 업무위탁 규정
+      always_on: false
+      scope_rule: financial_outsourcing
+      screening_question: 금융업 영위 목적의 업무를 제3자의 용역·시설로 계속 수행하는 구조인가?
     - id: X-ASSET
       name: 보험업 자산운용 규제
       always_on: false
@@ -892,6 +897,8 @@ checks:
     severity_basis: 근거 조문이 강행규정(의무)임 — 전자금융감독규정 제60조
     norm_type: 강행
     basis: statute
+    implementation_channel: internal_control
+    contract_requirement: none
     triggers:
       keywords:
       - 분리
@@ -899,7 +906,7 @@ checks:
       - 전산설비
       - 개발 장소
       - 개발망
-    absence_check: true
+    absence_check: false
     sources:
     - law: 전자금융감독규정
       article: 제60조
@@ -915,13 +922,15 @@ checks:
     severity_basis: 근거 조문이 강행규정(의무)임 — 전자금융감독규정 제60조
     norm_type: 강행
     basis: statute
+    implementation_channel: internal_control
+    contract_requirement: none
     triggers:
       keywords:
       - 암호화정보
       - 해독
       - 원장
       - 데이터 변경 금지
-    absence_check: true
+    absence_check: false
     sources:
     - law: 전자금융감독규정
       article: 제60조
@@ -937,6 +946,8 @@ checks:
     severity_basis: 근거 조문이 강행규정(의무)임 — 전자금융감독규정 제60조
     norm_type: 강행
     basis: statute
+    implementation_channel: internal_control
+    contract_requirement: none
     triggers:
       keywords:
       - 계좌번호
@@ -944,7 +955,7 @@ checks:
       - 금융정보
       - 무단보관
       - 유출 금지
-    absence_check: true
+    absence_check: false
     sources:
     - law: 전자금융감독규정
       article: 제60조
@@ -960,6 +971,8 @@ checks:
     severity_basis: 근거 조문이 강행규정(의무)임 — 전자금융감독규정 제60조
     norm_type: 강행
     basis: statute
+    implementation_channel: internal_control
+    contract_requirement: none
     triggers:
       keywords:
       - 보안대책
@@ -967,7 +980,7 @@ checks:
       - 접근매체
       - 위변조
       - 정보유출
-    absence_check: true
+    absence_check: false
     sources:
     - law: 전자금융감독규정
       article: 제60조
@@ -983,6 +996,8 @@ checks:
     severity_basis: 근거 조문이 강행규정(의무)임 — 전자금융감독규정 제60조
     norm_type: 강행
     basis: statute
+    implementation_channel: internal_control
+    contract_requirement: none
     triggers:
       keywords:
       - 전용회선
@@ -990,7 +1005,7 @@ checks:
       - 망 분리
       - 접속
       - VPN
-    absence_check: true
+    absence_check: false
     sources:
     - law: 전자금융감독규정
       article: 제60조
@@ -1006,13 +1021,15 @@ checks:
     severity_basis: 근거 조문이 강행규정(의무)임 — 전자금융감독규정 제60조
     norm_type: 강행
     basis: statute
+    implementation_channel: internal_control
+    contract_requirement: none
     triggers:
       keywords:
       - 비상대책
       - 장애
       - 서비스 중단
       - 복구
-    absence_check: true
+    absence_check: false
     sources:
     - law: 전자금융감독규정
       article: 제60조
@@ -1028,6 +1045,8 @@ checks:
     severity_basis: 근거 조문이 강행규정(의무)임 — 전자금융감독규정 제60조
     norm_type: 강행
     basis: statute
+    implementation_channel: internal_control
+    contract_requirement: none
     triggers:
       keywords:
       - 단계별
@@ -1035,7 +1054,7 @@ checks:
       - 입찰
       - 계약
       - 수행
-    absence_check: true
+    absence_check: false
     sources:
     - law: 전자금융감독규정
       article: 제60조
@@ -1051,13 +1070,15 @@ checks:
     severity_basis: 근거 조문이 강행규정(의무)임 — 전자금융감독규정 제60조
     norm_type: 강행
     basis: statute
+    implementation_channel: internal_control
+    contract_requirement: none
     triggers:
       keywords:
       - 백업
       - 백업설비
       - 전산자료
       - 업무지속성
-    absence_check: true
+    absence_check: false
     sources:
     - law: 전자금융감독규정
       article: 제60조
@@ -1073,13 +1094,15 @@ checks:
     severity_basis: 근거 조문이 강행규정(의무)임 — 전자금융감독규정 제60조
     norm_type: 강행
     basis: statute
+    implementation_channel: monitoring_evidence
+    contract_requirement: none
     triggers:
       keywords:
       - 재무건전성
       - 평가
       - 모니터링
       - 도산
-    absence_check: true
+    absence_check: false
     sources:
     - law: 전자금융감독규정
       article: 제60조
@@ -1095,13 +1118,15 @@ checks:
     severity_basis: 근거 조문이 강행규정(의무)임 — 전자금융감독규정 제60조
     norm_type: 강행
     basis: statute
+    implementation_channel: monitoring_evidence
+    contract_requirement: none
     triggers:
       keywords:
       - 품질수준
       - 서비스 수준
       - 평가
       - SLA
-    absence_check: true
+    absence_check: false
     sources:
     - law: 전자금융감독규정
       article: 제60조
@@ -1117,6 +1142,8 @@ checks:
     severity_basis: 근거 조문이 강행규정(의무)임 — 전자금융감독규정 제60조
     norm_type: 강행
     basis: statute
+    implementation_channel: cooperation_control
+    contract_requirement: express
     triggers:
       keywords:
       - 재위탁
@@ -1140,6 +1167,8 @@ checks:
     severity_basis: 근거 조문이 강행규정(의무)임 — 전자금융감독규정 제60조
     norm_type: 강행
     basis: statute
+    implementation_channel: cooperation_control
+    contract_requirement: derived
     triggers:
       keywords:
       - 신원조회
@@ -1163,13 +1192,15 @@ checks:
     severity_basis: 근거 조문이 강행규정(의무)임 — 전자금융감독규정 제60조
     norm_type: 강행
     basis: statute
+    implementation_channel: monitoring_evidence
+    contract_requirement: none
     triggers:
       keywords:
       - 보안성검토
       - 보안점검
       - 취약점
       - 점검
-    absence_check: true
+    absence_check: false
     sources:
     - law: 전자금융감독규정
       article: 제60조
@@ -1808,12 +1839,14 @@ checks:
   # ══ 제3자 제공: 개인정보 보호법 제17조·제18조 (처리위탁 §26과 법적으로 구별 — 독립 보존) ══
   - id: ALL-PII-01
     module: X-PII
-    check: 고객 개인정보를 제휴사(제3자)에 제공하는 경우 정보주체 동의 근거가 확보되는가
-    label: "개인정보 제3자 제공 동의"
+    check: 고객 개인정보를 독립적으로 이용하는 제3자에게 제공하는 경우 법적근거 또는 정보주체 동의 증빙이 확보되는가
+    label: "제3자 제공 근거·동의"
     severity: 필수
     severity_basis: 강행규정 — 개인정보 보호법 제17조 제1항(제3자 제공은 동의 등 법적근거 필요)
     norm_type: 강행
     basis: statute
+    relationship_scope: [third_party_provision, mixed]
+    implementation_channel: external_evidence
     triggers:
       keywords: [개인정보, 제3자 제공, 정보제공, 동의]
     evidence_required_groups:
@@ -1831,7 +1864,7 @@ checks:
         quote: 정보주체의 개인정보를 제3자에게 제공(공유를 포함한다. 이하 같다)할 수 있다
         verified: true
         source_type: law
-    note: 처리'위탁'(§26)과 구별되는 제3자 '제공'(§17) 규율 — 제공은 정보주체 동의 등 별도 법적근거를 요함
+    note: 처리위탁(§26)과 구별되는 제3자 제공(§17) 규율. 계약조항 자체보다 동의서·법적근거 등 외부 증빙을 확인함
   - id: ALL-PII-02
     module: X-PII
     check: 개인정보 제공 동의 시 정보주체에게 법정 고지사항(제공받는 자·이용목적·항목·보유기간 등)을 알리도록 하는가
@@ -1840,6 +1873,8 @@ checks:
     severity_basis: 강행규정 — 개인정보 보호법 제17조 제2항(동의 시 각 호 사항 고지 의무)
     norm_type: 강행
     basis: statute
+    relationship_scope: [third_party_provision, mixed]
+    implementation_channel: external_evidence
     triggers:
       keywords: [이용목적, 제공 항목, 보유기간, 고지]
     evidence_required_groups:
@@ -1865,12 +1900,16 @@ checks:
     severity_basis: 강행규정(금지) — 개인정보 보호법 제18조 제1항(목적 외 이용·제공 제한)
     norm_type: 강행
     basis: statute
+    relationship_scope: [third_party_provision, mixed]
+    implementation_channel: contract_or_internal_control
     triggers:
       keywords: [목적 외, 이용 제한, 제공 제한]
     evidence_required_groups:
       - [개인정보, 개인신용정보, 고객정보, 정보주체]
       - [제3자 제공, 제3자에게 제공, 개인정보를 제공, 정보제공, 제공받]
-    absence_check: true
+    # 법률상 직접 금지의무이므로 계약 문구가 없다는 이유만으로 누락 경보를 만들지 않는다.
+    # 실제 제공 관계라면 계약상 제한 문구 또는 내부통제로 준수 여부를 확인한다.
+    absence_check: false
     # 조건부 부재체크: 제3자 제공(§17·§18) 규율 — 본문에 제공 어휘가 있을 때만 부재알람(처리위탁 전용 계약 오탐 방지).
     absence_precondition_groups:
       - [개인정보, 개인신용정보, 고객정보, 정보주체]
@@ -1882,7 +1921,7 @@ checks:
         quote: 제17조제1항 및 제28조의8제1항에 따른 범위를 초과하여 제3자에게 제공하여서는 아니 된다
         verified: true
         source_type: law
-    note: 제공(§17)받은 목적 범위 초과 이용·제공 금지(§18). 처리위탁 수탁자의 범위초과 금지(PRIV-14, §26⑤)와 근거 조문이 달라 별도 보존
+    note: 제공(§17)받은 목적 범위 초과 이용·제공 금지(§18). 법정 준수의무라 계약상 부재알람은 만들지 않고 내부통제 확인 채널로 보존
   # ── X-REINS: 재보험 (횡단 — Phase C2 통합) ──
   - id: ALL-REINS-01
     check: 재보험 출재 시 원보험계약의 효력과 분리(원계약 무영향)가 전제되어 있는가

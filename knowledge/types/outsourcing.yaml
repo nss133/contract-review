@@ -3,22 +3,15 @@ meta:
   type_name: 업무위탁
   detect_keywords: [위탁, 수탁, 위수탁, 업무위탁, 대행, 위탁운영, 사무처리, 콜센터, 접수심사, 위임계약, 위탁계약서, 파견]
   modules:
-    - id: M-CORE
-      name: 업무위탁 기본(금융권)
-      # '행사 운영 위탁' 같은 일반 도급과 금융규제상 업무위탁을 분리한다. 규제 신호가
-      # 충분하면 자동 활성, 불명확하면 스크리닝 질문으로 검토자가 적용범위를 확정한다.
-      always_on: false
-      screening_question: 금융회사의 본질적·규제대상 업무를 외부에 위탁하는 계약인가?
-      suggest_keywords: [금융기관의 업무위탁, 업무위수탁기준, 금융감독원, 감독원장, 금융관련법령, 금융실명, 본질적 요소, 보험계약 관리, 보험 상담, 민원 접수, 신용정보 처리]
     - id: M-DISPATCH
       name: 도급·파견 경계
       always_on: false
       screening_question: 수탁자 인력이 위탁자 사업장에 상주하며 지휘를 받는가?
       suggest_keywords: [상주, 파견, 근무 장소, 지휘, 감독]
 checks:
-  # ── M-CORE: 금융기관의 업무위탁 등에 관한 규정 ──
+  # ── X-FINOUT: 금융기관의 업무위탁 등에 관한 규정(횡단 적용범위 게이트) ──
   - id: CORE-01
-    module: M-CORE
+    module: X-FINOUT
     check: 위수탁 당사자 간 합의한 업무범위 등 계약조건이 위탁계약서에 반드시 반영·교부되도록 되어 있는가
     label: "합의 업무범위 계약서 반영"
     severity: 참고
@@ -37,7 +30,7 @@ checks:
         source_type: self_regulation
     note: 자율규제(손해사정 업무위탁 모범규준)는 손해사정 위탁에 한해 업무범위 계약서 반영 의무를 부과 — 일반 위탁의 참고 근거
   - id: CORE-02
-    module: M-CORE
+    module: X-FINOUT
     check: 위탁 업무가 인가받은 금융업 또는 다른 금융업의 본질적 요소를 포함하지 않는가
     label: "본질적 요소 불포함"
     severity: 필수
@@ -57,7 +50,7 @@ checks:
         verified: true
     note: 본질적 요소의 범위는 제3조 제2항 별표 2 — 별표는 DB 미수록(원문 미확인)
   - id: CORE-03
-    module: M-CORE
+    module: X-FINOUT
     check: 본질적 요소를 포함하는 업무라면 제3조 제1항 제1호 가목·나목의 예외에 해당하는 근거가 확인되는가
     label: "본질적 요소 예외 근거"
     severity: 권장
@@ -74,7 +67,7 @@ checks:
         quote: '다만, 다음 각 목의 어느 하나에 해당하는 업무의 경우에는 위탁할 수 있다'
         verified: true
   - id: CORE-04
-    module: M-CORE
+    module: X-FINOUT
     check: 위탁 업무가 관련 법령에서 금융기관이 직접 수행하도록 의무를 부여한 업무에 해당하지 않는가
     label: "직접수행 의무 업무 배제"
     severity: 필수
@@ -92,7 +85,7 @@ checks:
         quote: '관련 법령에서 금융기관이 수행하도록 의무를 부여하고 있는 경우'
         verified: true
   - id: CORE-05
-    module: M-CORE
+    module: X-FINOUT
     check: 보험회사가 손해사정 업무 위탁을 위한 평가기준을 마련·준수하여 수탁자(손해사정사·손해사정업자)를 선정하는 절차가 있는가
     label: "손해사정 평가기준 선정"
     severity: 필수
@@ -119,7 +112,7 @@ checks:
         verified: true
         source_type: self_regulation
   - id: CORE-06
-    module: M-CORE
+    module: X-FINOUT
     check: 위탁업무 처리가 금융실명법 등 관련 법령에 저촉되지 않도록 하는 법령 준수 조항이 있는가
     label: "금융실명법 등 법령준수"
     severity: 필수
@@ -137,7 +130,7 @@ checks:
         quote: '「금융실명거래 및 비밀보장에 관한 법률」 등 관련 법령에의 저촉 여부'
         verified: true
   - id: CORE-07
-    module: M-CORE
+    module: X-FINOUT
     check: 수탁자가 위탁자의 사전 동의 없이 재위탁하지 못하도록 하는 조항이 있는가
     label: "재위탁 사전동의"
     severity: 필수
@@ -145,6 +138,8 @@ checks:
     severity_basis: "임의 서술이나 위탁자 동의는 강행적 전제임 — 금융기관의 업무위탁 등에 관한 규정 제3조 (PRIV-15·IT-09와 정합)"
     norm_type: 임의
     basis: statute
+    implementation_channel: cooperation_control
+    contract_requirement: derived
     triggers:
       keywords: [재위탁, 재수탁, 사전 동의, 제3자에게 위탁]
     llm_elements:
@@ -159,7 +154,7 @@ checks:
         verified: true
     note: 임의 서술이나 위탁자 동의는 강행적 전제이며 제2조·제3조·제4항 내지 제6항 준용 — 무단 재위탁은 감독규정 위반. PRIV-15·IT-09와 정합 위해 필수
   - id: CORE-08
-    module: M-CORE
+    module: X-FINOUT
     check: 재위탁 시 감독원장(감독당국)에 대한 보고의 주체가 원위탁 금융회사로 정해져 있는가
     label: "재위탁 보고주체 지정"
     severity: 필수
@@ -176,7 +171,7 @@ checks:
         quote: '재위탁시 보고의 주체는 원위탁 금융회사로 한다'
         verified: true
   - id: CORE-09
-    module: M-CORE
+    module: X-FINOUT
     check: 수탁자의 금융관련법령·업무위수탁기준 위반으로 발생한 손해에 대한 배상·구상 조항이 있는가
     label: "법규위반 손해 배상·구상"
     severity: 필수
@@ -200,13 +195,15 @@ checks:
         verified: true
         source_type: self_regulation
   - id: CORE-10
-    module: M-CORE
+    module: X-FINOUT
     check: 위탁자의 업무 처리 현황 점검·자료 요구·감사권 등 수탁자 관리·감독 조항이 있는가
     label: "수탁자 관리·감독권"
     severity: 필수
     severity_basis: "근거 조문이 강행규정(의무)임 — 금융기관의 업무위탁 등에 관한 규정 제3조의2"
     norm_type: 강행
     basis: statute
+    implementation_channel: contract_or_internal_control
+    contract_requirement: derived
     triggers:
       keywords: [점검, 감사, 자료 요구, 관리감독]
     evidence_required_groups:
@@ -227,7 +224,7 @@ checks:
         source_type: self_regulation
     note: 별표 3 업무위수탁기준 세부 문언은 DB 미수록 — 원문 미확인. 자율규제(의료자문 표준내부통제기준 제4조)는 수탁자 준수 점검·관리·보고·조치를 업무위수탁운영기준에 포함하도록 요구
   - id: CORE-11
-    module: M-CORE
+    module: X-FINOUT
     check: 감독원장 사전보고(수탁자의 업무 개시 7영업일 이전) 일정·자료 협조가 계약 발효와 연동되어 있는가
     label: "업무개시 사전보고 연동"
     severity: 필수
@@ -248,7 +245,7 @@ checks:
         verified: true
   # CORE-12 삭제(2026-07-29 지식 다이어트) — 계약 문언이 아닌 절차 해당성 판단(프로세스성)으로 별도 행 실익 없음. CORE-11(사전보고 연동, 존치) 판정 시 사람이 함께 결정(triage §2 참조)
   - id: CORE-13
-    module: M-CORE
+    module: X-FINOUT
     check: 감독당국의 변경권고 등 조치가 있는 경우 계약 변경·시정에 협조하는 조항이 있는가
     label: "변경권고 시정 협조"
     severity: 권장
@@ -265,7 +262,7 @@ checks:
         quote: '감독원장은 업무위탁 또는 수탁이 제3조의 규정에 적합하지 아니하다고 판단하는 경우에는 당해 금융기관에 대하여 그 내용의 변경권고 등 필요한 조치를 할 수 있다'
         verified: true
   - id: CORE-14
-    module: M-CORE
+    module: X-FINOUT
     check: 수탁자가 위탁업무와 관련한 금융감독원장의 검사·자료제출 요구에 응하도록 하는 조항이 있는가
     label: "감독원 검사·자료제출 응함"
     severity: 권장

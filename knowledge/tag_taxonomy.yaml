@@ -1,0 +1,58 @@
+profile_version: 1.1.0
+facets:
+  topics:
+    personal_information: {label: 개인정보, aliases: [개인정보, 개인신용정보, 신용정보]}
+    subcontracting: {label: 재위탁, aliases: [재위탁, 재수탁, 하도급]}
+    confidentiality: {label: 비밀유지, aliases: [비밀유지, 비밀정보, 기밀정보]}
+    damages: {label: 손해배상, aliases: [손해배상, 배상책임]}
+    termination: {label: 해지·해제, aliases: [해지, 해제]}
+    intellectual_property: {label: 지식재산권, aliases: [지식재산권, 지적재산권, 저작권, 특허권]}
+    contract_term: {label: 계약기간, aliases: [계약기간, 유효기간, 존속기간]}
+    assignment: {label: 양도, aliases: [양도, 계약상 지위, 권리의무]}
+    notice: {label: 통지·보고, aliases: [통지, 보고]}
+  actors:
+    trustee: {label: 수탁자, aliases: [수탁자, 수탁회사, 수임인]}
+    trustor: {label: 위탁자, aliases: [위탁자, 위탁회사, 위임인]}
+    company: {label: 회사, aliases: [회사, 당사, 미래에셋생명보험]}
+    counterparty: {label: 상대방, aliases: [상대방]}
+    disclosing_party: {label: 정보제공자, aliases: [정보제공자, 공개당사자]}
+    receiving_party: {label: 정보수령자, aliases: [정보수령자, 수령당사자]}
+    party_a: {label: 갑, aliases: [갑]}
+    party_b: {label: 을, aliases: [을]}
+  actions:
+    subcontract: {label: 재위탁, aliases: [재위탁, 재수탁, 하도급]}
+    process: {label: 처리, aliases: [처리]}
+    provide: {label: 제공, aliases: [제공, 제3자 제공]}
+    destroy: {label: 파기, aliases: [파기, 삭제, 폐기]}
+    disclose: {label: 공개·누설, aliases: [공개, 누설, 유출]}
+    notify: {label: 통지, aliases: [통지]}
+    report: {label: 보고, aliases: [보고]}
+    obtain_consent: {label: 동의취득, aliases: [동의를 받다, 동의를 얻다]}
+    obtain_approval: {label: 승인취득, aliases: [승인을 받다, 승인을 얻다]}
+    terminate: {label: 해지·해제, aliases: [해지, 해제]}
+    compensate: {label: 배상, aliases: [배상, 보상]}
+    assign: {label: 양도, aliases: [양도]}
+    use: {label: 사용, aliases: [사용, 이용]}
+  objects:
+    personal_information: {label: 개인정보, aliases: [개인정보, 개인신용정보, 신용정보]}
+    confidential_information: {label: 비밀정보, aliases: [비밀정보, 기밀정보]}
+    intellectual_property: {label: 지식재산권, aliases: [지식재산권, 지적재산권, 저작권, 특허권]}
+    contractual_position: {label: 계약상 지위, aliases: [계약상 지위, 권리의무]}
+    deliverable: {label: 산출물, aliases: [산출물, 성과물, 결과물]}
+  modalities:
+    prior_written_consent: {label: 사전 서면동의, aliases: [사전 서면동의]}
+    prior_consent: {label: 사전동의, aliases: [사전 동의]}
+    prior_approval: {label: 사전승인, aliases: [사전 승인]}
+    written: {label: 서면, aliases: [서면, 문서로]}
+    prohibition: {label: 금지, aliases: [금지, 할 수 없다, 하여서는 아니 된다]}
+    obligation: {label: 의무, aliases: [하여야 한다, 의무를 부담한다]}
+    permission: {label: 허용, aliases: [할 수 있다, 허용한다]}
+    unconditional_permission: {label: 무조건 허용, aliases: [별도 동의 없이 할 수 있다]}
+    notice_required: {label: 통지 필요, aliases: [통지하여야 한다]}
+    post_notice: {label: 사후 통지, aliases: [사후 통지]}
+  conditions:
+    prior: {label: 사전, aliases: [사전, 미리]}
+    written: {label: 서면, aliases: [서면, 문서로]}
+    within_period: {label: 기한, aliases: [이내, 즉시, 지체 없이]}
+    exception: {label: 예외·단서, aliases: [다만, 예외, 제외]}
+  provisions: {}

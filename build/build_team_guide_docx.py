@@ -372,9 +372,9 @@ def build_guide(version, out_path):
     _heading(doc, "5. 종합리포트 확인하기", 1)
     _body(doc, "종합리포트는 시스템의 원문 검색 결과가 아니라 사람의 검토 진행과 판정을 중심으로 보여줍니다.")
     report_bullets = _new_numbering(doc, "bullet", "•")
-    _bullet(doc, "검토 완료 상태: 사람이 판정해야 할 항목이 남아 있는지", report_bullets)
-    _bullet(doc, "검토자 판정: 이상없음과 검토의견을 몇 건 남겼는지", report_bullets)
-    _bullet(doc, "형식 확인 필요: 상호, 대표자, 주소 표기에서 확인할 부분이 있는지", report_bullets)
+    _bullet(doc, "검토 상태: 사람이 확인해야 할 항목이 남아 있는지", report_bullets)
+    _bullet(doc, "검토 결과: 이상없음과 검토의견을 몇 건 남겼는지", report_bullets)
+    _bullet(doc, "형식 점검: 상호, 대표자, 주소 표기에서 확인할 부분이 있는지", report_bullets)
     _body(doc, "추가 검토 필요 항목이 남아 있으면 [조항별 검토로 이동]을 눌러 판정합니다. 필요한 검토가 모두 끝나면 [검토 마치기]가 활성화됩니다.")
     _body(doc, "상단의 종합 검토의견은 자동 초안입니다. [수정]을 눌러 직접 고칠 수 있으며 긴 코멘트도 잘리지 않습니다.")
 

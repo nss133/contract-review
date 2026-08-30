@@ -3,7 +3,8 @@
 id: callcenter-outsourcing
 desc: 일반 콜센터 업무위탁 — §60(IT-*) 오탐 금지
 detect_expected: outsourcing
-active_must_include: [M-CORE]
+active_must_include: [X-FINOUT]
+scope_expected: {financial_outsourcing: applicable}
 consider_must_exclude_prefix: [IT-, ALL-PII-]
 # 신용정보 특칙(신정법)·제3자 제공(§17·§18)은 처리위탁 전용 계약에서 부재알람 금지 (Phase C2 X-PII 통합 회귀)
 consider_must_exclude: [PRIV-17, PRIV-19, PRIV-20, PRIV-21]

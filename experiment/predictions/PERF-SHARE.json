@@ -4,8 +4,8 @@
     "document_id": "PERF-SHARE",
     "contract_hash": "9468da4c9795b32c37bd0c6a9ae29476d4cc505bb2f66c82b7856c483a0aed80",
     "type_id": "outsourcing",
-    "generated": "2026-08-06",
-    "app_version": "1.21.0",
+    "generated": "2026-08-29",
+    "app_version": "1.47.0",
     "model": "qwen3:4b",
     "llm_batch_failures": []
   },
@@ -19,7 +19,7 @@
         {
           "clause_index": 0,
           "heading": "(전체)",
-          "rule_score": 17.03
+          "rule_score": 20.61
         }
       ],
       "llm_reviewed": false,
@@ -37,7 +37,7 @@
         {
           "clause_index": 0,
           "heading": "(전체)",
-          "rule_score": 12.51
+          "rule_score": 15.99
         }
       ],
       "llm_reviewed": false,
@@ -55,7 +55,7 @@
         {
           "clause_index": 0,
           "heading": "(전체)",
-          "rule_score": 4.28
+          "rule_score": 6.26
         }
       ],
       "llm_reviewed": false,
@@ -73,7 +73,7 @@
         {
           "clause_index": 0,
           "heading": "(전체)",
-          "rule_score": 1.6
+          "rule_score": 2.06
         }
       ],
       "llm_reviewed": false,
@@ -91,7 +91,7 @@
         {
           "clause_index": 0,
           "heading": "(전체)",
-          "rule_score": 0.94
+          "rule_score": 1.15
         }
       ],
       "llm_reviewed": false,
@@ -109,7 +109,7 @@
         {
           "clause_index": 0,
           "heading": "(전체)",
-          "rule_score": 1.79
+          "rule_score": 2.14
         }
       ],
       "llm_reviewed": false,
@@ -127,7 +127,7 @@
         {
           "clause_index": 0,
           "heading": "(전체)",
-          "rule_score": 8.18
+          "rule_score": 9.67
         }
       ],
       "llm_reviewed": false,
@@ -145,7 +145,7 @@
         {
           "clause_index": 0,
           "heading": "(전체)",
-          "rule_score": 3.39
+          "rule_score": 3.83
         }
       ],
       "llm_reviewed": false,
@@ -163,7 +163,7 @@
         {
           "clause_index": 0,
           "heading": "(전체)",
-          "rule_score": 7.9
+          "rule_score": 10.03
         }
       ],
       "llm_reviewed": false,
@@ -181,7 +181,7 @@
         {
           "clause_index": 0,
           "heading": "(전체)",
-          "rule_score": 3.11
+          "rule_score": 3.89
         }
       ],
       "llm_reviewed": false,
@@ -199,7 +199,7 @@
         {
           "clause_index": 0,
           "heading": "(전체)",
-          "rule_score": 3.84
+          "rule_score": 4.99
         }
       ],
       "llm_reviewed": false,
@@ -217,7 +217,7 @@
         {
           "clause_index": 0,
           "heading": "(전체)",
-          "rule_score": 2.37
+          "rule_score": 2.8
         }
       ],
       "llm_reviewed": false,
@@ -235,7 +235,7 @@
         {
           "clause_index": 0,
           "heading": "(전체)",
-          "rule_score": 6.74
+          "rule_score": 9.38
         }
       ],
       "llm_reviewed": false,
@@ -253,7 +253,7 @@
         {
           "clause_index": 0,
           "heading": "(전체)",
-          "rule_score": 9.5
+          "rule_score": 12.42
         }
       ],
       "llm_reviewed": false,
@@ -271,7 +271,7 @@
         {
           "clause_index": 0,
           "heading": "(전체)",
-          "rule_score": 2.02
+          "rule_score": 2.71
         }
       ],
       "llm_reviewed": false,
@@ -289,7 +289,7 @@
         {
           "clause_index": 0,
           "heading": "(전체)",
-          "rule_score": 5.58
+          "rule_score": 6.99
         }
       ],
       "llm_reviewed": false,
@@ -307,7 +307,7 @@
         {
           "clause_index": 0,
           "heading": "(전체)",
-          "rule_score": 3.69
+          "rule_score": 4.83
         }
       ],
       "llm_reviewed": false,
@@ -320,14 +320,8 @@
       "check_id": "CMN-18",
       "check": "제3자 지식재산권 침해 주장 시 수탁자의 방어·면책 의무 조항이 있는가",
       "coverage": "quiet",
-      "rule_clause_index": 0,
-      "candidates": [
-        {
-          "clause_index": 0,
-          "heading": "(전체)",
-          "rule_score": 4.3
-        }
-      ],
+      "rule_clause_index": null,
+      "candidates": [],
       "llm_reviewed": false,
       "llm_selected_clause_index": null,
       "llm_relation": "",
@@ -343,7 +337,7 @@
         {
           "clause_index": 0,
           "heading": "(전체)",
-          "rule_score": 2.32
+          "rule_score": 3.07
         }
       ],
       "llm_reviewed": false,
@@ -356,14 +350,8 @@
       "check_id": "CMN-20",
       "check": "계약상 지위·권리의무의 사전 서면 동의 없는 양도·이전·담보 제공을 금지하는 조항이 있는가",
       "coverage": "quiet",
-      "rule_clause_index": 0,
-      "candidates": [
-        {
-          "clause_index": 0,
-          "heading": "(전체)",
-          "rule_score": 2.54
-        }
-      ],
+      "rule_clause_index": null,
+      "candidates": [],
       "llm_reviewed": false,
       "llm_selected_clause_index": null,
       "llm_relation": "",
@@ -379,7 +367,7 @@
         {
           "clause_index": 0,
           "heading": "(전체)",
-          "rule_score": 3.96
+          "rule_score": 5.26
         }
       ],
       "llm_reviewed": false,
@@ -397,7 +385,7 @@
         {
           "clause_index": 0,
           "heading": "(전체)",
-          "rule_score": 5.51
+          "rule_score": 7.82
         }
       ],
       "llm_reviewed": false,
@@ -415,241 +403,7 @@
         {
           "clause_index": 0,
           "heading": "(전체)",
-          "rule_score": 5.89
-        }
-      ],
-      "llm_reviewed": false,
-      "llm_selected_clause_index": null,
-      "llm_relation": "",
-      "llm_completeness": "",
-      "hybrid_clause_index": null
-    },
-    {
-      "check_id": "CORE-01",
-      "check": "위수탁 당사자 간 합의한 업무범위 등 계약조건이 위탁계약서에 반드시 반영·교부되도록 되어 있는가",
-      "coverage": "quiet",
-      "rule_clause_index": 0,
-      "candidates": [
-        {
-          "clause_index": 0,
-          "heading": "(전체)",
-          "rule_score": 12.89
-        }
-      ],
-      "llm_reviewed": false,
-      "llm_selected_clause_index": null,
-      "llm_relation": "",
-      "llm_completeness": "",
-      "hybrid_clause_index": null
-    },
-    {
-      "check_id": "CORE-02",
-      "check": "위탁 업무가 인가받은 금융업 또는 다른 금융업의 본질적 요소를 포함하지 않는가",
-      "coverage": "quiet",
-      "rule_clause_index": 0,
-      "candidates": [
-        {
-          "clause_index": 0,
-          "heading": "(전체)",
-          "rule_score": 12.86
-        }
-      ],
-      "llm_reviewed": false,
-      "llm_selected_clause_index": null,
-      "llm_relation": "",
-      "llm_completeness": "",
-      "hybrid_clause_index": null
-    },
-    {
-      "check_id": "CORE-03",
-      "check": "본질적 요소를 포함하는 업무라면 제3조 제1항 제1호 가목·나목의 예외에 해당하는 근거가 확인되는가",
-      "coverage": "quiet",
-      "rule_clause_index": 0,
-      "candidates": [
-        {
-          "clause_index": 0,
-          "heading": "(전체)",
-          "rule_score": 5.8
-        }
-      ],
-      "llm_reviewed": false,
-      "llm_selected_clause_index": null,
-      "llm_relation": "",
-      "llm_completeness": "",
-      "hybrid_clause_index": null
-    },
-    {
-      "check_id": "CORE-04",
-      "check": "위탁 업무가 관련 법령에서 금융기관이 직접 수행하도록 의무를 부여한 업무에 해당하지 않는가",
-      "coverage": "quiet",
-      "rule_clause_index": 0,
-      "candidates": [
-        {
-          "clause_index": 0,
-          "heading": "(전체)",
-          "rule_score": 11.32
-        }
-      ],
-      "llm_reviewed": false,
-      "llm_selected_clause_index": null,
-      "llm_relation": "",
-      "llm_completeness": "",
-      "hybrid_clause_index": null
-    },
-    {
-      "check_id": "CORE-05",
-      "check": "보험회사가 손해사정 업무 위탁을 위한 평가기준을 마련·준수하여 수탁자(손해사정사·손해사정업자)를 선정하는 절차가 있는가",
-      "coverage": "quiet",
-      "rule_clause_index": 0,
-      "candidates": [
-        {
-          "clause_index": 0,
-          "heading": "(전체)",
-          "rule_score": 11.38
-        }
-      ],
-      "llm_reviewed": false,
-      "llm_selected_clause_index": null,
-      "llm_relation": "",
-      "llm_completeness": "",
-      "hybrid_clause_index": null
-    },
-    {
-      "check_id": "CORE-06",
-      "check": "위탁업무 처리가 금융실명법 등 관련 법령에 저촉되지 않도록 하는 법령 준수 조항이 있는가",
-      "coverage": "consider",
-      "rule_clause_index": 0,
-      "candidates": [
-        {
-          "clause_index": 0,
-          "heading": "(전체)",
-          "rule_score": 6.76
-        }
-      ],
-      "llm_reviewed": false,
-      "llm_selected_clause_index": null,
-      "llm_relation": "",
-      "llm_completeness": "",
-      "hybrid_clause_index": null
-    },
-    {
-      "check_id": "CORE-07",
-      "check": "수탁자가 위탁자의 사전 동의 없이 재위탁하지 못하도록 하는 조항이 있는가",
-      "coverage": "consider",
-      "rule_clause_index": 0,
-      "candidates": [
-        {
-          "clause_index": 0,
-          "heading": "(전체)",
-          "rule_score": 6.45
-        }
-      ],
-      "llm_reviewed": false,
-      "llm_selected_clause_index": null,
-      "llm_relation": "",
-      "llm_completeness": "",
-      "hybrid_clause_index": null
-    },
-    {
-      "check_id": "CORE-08",
-      "check": "재위탁 시 감독원장(감독당국)에 대한 보고의 주체가 원위탁 금융회사로 정해져 있는가",
-      "coverage": "quiet",
-      "rule_clause_index": 0,
-      "candidates": [
-        {
-          "clause_index": 0,
-          "heading": "(전체)",
-          "rule_score": 6.39
-        }
-      ],
-      "llm_reviewed": false,
-      "llm_selected_clause_index": null,
-      "llm_relation": "",
-      "llm_completeness": "",
-      "hybrid_clause_index": null
-    },
-    {
-      "check_id": "CORE-09",
-      "check": "수탁자의 금융관련법령·업무위수탁기준 위반으로 발생한 손해에 대한 배상·구상 조항이 있는가",
-      "coverage": "consider",
-      "rule_clause_index": 0,
-      "candidates": [
-        {
-          "clause_index": 0,
-          "heading": "(전체)",
-          "rule_score": 13.57
-        }
-      ],
-      "llm_reviewed": false,
-      "llm_selected_clause_index": null,
-      "llm_relation": "",
-      "llm_completeness": "",
-      "hybrid_clause_index": null
-    },
-    {
-      "check_id": "CORE-10",
-      "check": "위탁자의 업무 처리 현황 점검·자료 요구·감사권 등 수탁자 관리·감독 조항이 있는가",
-      "coverage": "consider",
-      "rule_clause_index": 0,
-      "candidates": [
-        {
-          "clause_index": 0,
-          "heading": "(전체)",
-          "rule_score": 12.55
-        }
-      ],
-      "llm_reviewed": false,
-      "llm_selected_clause_index": null,
-      "llm_relation": "",
-      "llm_completeness": "",
-      "hybrid_clause_index": null
-    },
-    {
-      "check_id": "CORE-11",
-      "check": "감독원장 사전보고(수탁자의 업무 개시 7영업일 이전) 일정·자료 협조가 계약 발효와 연동되어 있는가",
-      "coverage": "consider",
-      "rule_clause_index": 0,
-      "candidates": [
-        {
-          "clause_index": 0,
-          "heading": "(전체)",
-          "rule_score": 12.4
-        }
-      ],
-      "llm_reviewed": false,
-      "llm_selected_clause_index": null,
-      "llm_relation": "",
-      "llm_completeness": "",
-      "hybrid_clause_index": null
-    },
-    {
-      "check_id": "CORE-13",
-      "check": "감독당국의 변경권고 등 조치가 있는 경우 계약 변경·시정에 협조하는 조항이 있는가",
-      "coverage": "consider",
-      "rule_clause_index": 0,
-      "candidates": [
-        {
-          "clause_index": 0,
-          "heading": "(전체)",
-          "rule_score": 7
-        }
-      ],
-      "llm_reviewed": false,
-      "llm_selected_clause_index": null,
-      "llm_relation": "",
-      "llm_completeness": "",
-      "hybrid_clause_index": null
-    },
-    {
-      "check_id": "CORE-14",
-      "check": "수탁자가 위탁업무와 관련한 금융감독원장의 검사·자료제출 요구에 응하도록 하는 조항이 있는가",
-      "coverage": "consider",
-      "rule_clause_index": 0,
-      "candidates": [
-        {
-          "clause_index": 0,
-          "heading": "(전체)",
-          "rule_score": 3
+          "rule_score": 9.12
         }
       ],
       "llm_reviewed": false,

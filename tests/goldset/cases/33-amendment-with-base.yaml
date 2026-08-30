@@ -7,7 +7,7 @@
 id: amendment-with-base
 desc: 업무위탁 변경합의서 + 원계약 첨부 — 원계약 커버분 알람 이탈
 detect_expected: outsourcing
-force_active_modules: [M-CORE]
+force_active_modules: [X-FINOUT]
 base_must_cover: [CORE-07, CORE-09]
 consider_must_exclude: [CORE-07, CORE-09]
 # 원계약에도 없는 항목은 계속 확인 대상으로 남아야 함.

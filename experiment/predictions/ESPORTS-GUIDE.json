@@ -4,10 +4,98 @@
     "document_id": "ESPORTS-GUIDE",
     "contract_hash": "eb5fe007d6ab4b0deae876b30c3a3cff75fcd610f77a2ab2ab2b45243f06a424",
     "type_id": "procurement",
-    "generated": "2026-08-06",
-    "app_version": "1.21.0",
+    "generated": "2026-08-29",
+    "app_version": "1.47.0",
     "model": "qwen3:4b",
-    "llm_batch_failures": []
+    "llm_batch_failures": [
+      {
+        "batch": 1,
+        "check_ids": [
+          "SP-UNF-01",
+          "SP-UNF-09"
+        ],
+        "error": "HTTP 503: {\"error\": \"<urlopen error [Errno 61] Connection refused>\"}"
+      },
+      {
+        "batch": 2,
+        "check_ids": [
+          "SP-UNF-10",
+          "SP-UNF-11"
+        ],
+        "error": "HTTP 503: {\"error\": \"<urlopen error [Errno 61] Connection refused>\"}"
+      },
+      {
+        "batch": 3,
+        "check_ids": [
+          "SP-UNF-12",
+          "SP-UNF-13"
+        ],
+        "error": "HTTP 503: {\"error\": \"<urlopen error [Errno 61] Connection refused>\"}"
+      },
+      {
+        "batch": 4,
+        "check_ids": [
+          "RISK-02",
+          "SP-UNF-02"
+        ],
+        "error": "HTTP 503: {\"error\": \"<urlopen error [Errno 61] Connection refused>\"}"
+      },
+      {
+        "batch": 5,
+        "check_ids": [
+          "SP-DEL-06",
+          "SP-DEL-12"
+        ],
+        "error": "HTTP 503: {\"error\": \"<urlopen error [Errno 61] Connection refused>\"}"
+      },
+      {
+        "batch": 6,
+        "check_ids": [
+          "CMN-02",
+          "CMN-08"
+        ],
+        "error": "HTTP 503: {\"error\": \"<urlopen error [Errno 61] Connection refused>\"}"
+      },
+      {
+        "batch": 7,
+        "check_ids": [
+          "CMN-15",
+          "CMN-20"
+        ],
+        "error": "HTTP 503: {\"error\": \"<urlopen error [Errno 61] Connection refused>\"}"
+      },
+      {
+        "batch": 8,
+        "check_ids": [
+          "CMN-21",
+          "CRS-05"
+        ],
+        "error": "HTTP 503: {\"error\": \"<urlopen error [Errno 61] Connection refused>\"}"
+      },
+      {
+        "batch": 9,
+        "check_ids": [
+          "ITDL-01",
+          "SP-UNF-06"
+        ],
+        "error": "HTTP 503: {\"error\": \"<urlopen error [Errno 61] Connection refused>\"}"
+      },
+      {
+        "batch": 10,
+        "check_ids": [
+          "CMN-16",
+          "CMN-17"
+        ],
+        "error": "HTTP 503: {\"error\": \"<urlopen error [Errno 61] Connection refused>\"}"
+      },
+      {
+        "batch": 11,
+        "check_ids": [
+          "CMN-19"
+        ],
+        "error": "HTTP 503: {\"error\": \"<urlopen error [Errno 61] Connection refused>\"}"
+      }
+    ]
   },
   "items": [
     {
@@ -19,17 +107,17 @@
         {
           "clause_index": 53,
           "heading": "제13조 (계약의 실효)",
-          "rule_score": 9.06
-        },
-        {
-          "clause_index": 40,
-          "heading": "제18조 (부속 합의)",
-          "rule_score": 8.04
+          "rule_score": 8.72
         },
         {
           "clause_index": 6,
           "heading": "제4조 (선수활동의 범위)",
-          "rule_score": 7.98
+          "rule_score": 7.73
+        },
+        {
+          "clause_index": 40,
+          "heading": "제18조 (부속 합의)",
+          "rule_score": 7.69
         }
       ],
       "llm_reviewed": false,
@@ -47,24 +135,24 @@
         {
           "clause_index": 54,
           "heading": "제1조(목적)      이 계약은 선수가 이스포츠 선수로서 선수활동을 하고 게임단은 이에",
-          "rule_score": 32.6
+          "rule_score": 31.48
         },
         {
           "clause_index": 92,
           "heading": "제1조(목적)      이 부속합의서의 목적은 게임단과 청소년 선수 (또는 육성군) 사이에",
-          "rule_score": 28.59
+          "rule_score": 28.58
         },
         {
-          "clause_index": 74,
-          "heading": "제1조(목적)      이 계약은 선수가 이스포츠 선수로써의 잠재력과 기량을 증명하고, 게",
-          "rule_score": 28.14
+          "clause_index": 3,
+          "heading": "제1조 (목적)",
+          "rule_score": 27.64
         }
       ],
-      "llm_reviewed": true,
-      "llm_selected_clause_index": 54,
-      "llm_relation": "direct",
-      "llm_completeness": "complete",
-      "hybrid_clause_index": 54
+      "llm_reviewed": false,
+      "llm_selected_clause_index": null,
+      "llm_relation": "",
+      "llm_completeness": "",
+      "hybrid_clause_index": null
     },
     {
       "check_id": "CMN-03",
@@ -75,17 +163,17 @@
         {
           "clause_index": 31,
           "heading": "제9조 (비용의 부담 등)",
-          "rule_score": 6.25
+          "rule_score": 6.16
         },
         {
           "clause_index": 13,
           "heading": "제11조 (비용의 부담 등)",
-          "rule_score": 6.16
+          "rule_score": 6.08
         },
         {
           "clause_index": 17,
           "heading": "제15조 (계약의 해제 또는 해지 등)",
-          "rule_score": 5.21
+          "rule_score": 5.17
         }
       ],
       "llm_reviewed": false,
@@ -103,17 +191,17 @@
         {
           "clause_index": 9,
           "heading": "제7조 (후원금)",
-          "rule_score": 14.25
+          "rule_score": 14.22
         },
         {
           "clause_index": 60,
           "heading": "제7조(후원금)     ① 게임단은 본 계약기간 동안 선수가 본 계약에 따른 의무를 이행하          부록",
-          "rule_score": 8.99
+          "rule_score": 8.94
         },
         {
           "clause_index": 73,
           "heading": "제20조(부속 합의)   ① 게임단과 선수는 이 계약의 내용을 보충하거나, 이 계약에서 정하",
-          "rule_score": 8.55
+          "rule_score": 8.34
         }
       ],
       "llm_reviewed": false,
@@ -131,17 +219,17 @@
         {
           "clause_index": 49,
           "heading": "제9조 (청소년의 선수활동 제공시간)",
-          "rule_score": 3.05
+          "rule_score": 3.02
         },
         {
           "clause_index": 26,
           "heading": "제4조 (선수활동의 범위)",
-          "rule_score": 2.59
+          "rule_score": 2.56
         },
         {
           "clause_index": 34,
           "heading": "제12조 (계약의 해제 또는 해지 등)",
-          "rule_score": 2.43
+          "rule_score": 2.4
         }
       ],
       "llm_reviewed": false,
@@ -159,17 +247,17 @@
         {
           "clause_index": 9,
           "heading": "제7조 (후원금)",
-          "rule_score": 7.48
+          "rule_score": 7.45
         },
         {
           "clause_index": 82,
           "heading": "제9조(비용의 부    ① 게임단은 자신의 권한 범위 내에서 선수의 선수활동에 필요한 능력",
-          "rule_score": 4.96
+          "rule_score": 4.84
         },
         {
           "clause_index": 61,
           "heading": "제8조(대회참가활    ① 선수가 속한 선수단이 대회에 참여하여 상금을 수령하는 경우, 종",
-          "rule_score": 4.53
+          "rule_score": 4.44
         }
       ],
       "llm_reviewed": false,
@@ -187,17 +275,17 @@
         {
           "clause_index": 37,
           "heading": "제15조 (비밀유지)",
-          "rule_score": 15.62
+          "rule_score": 15.51
         },
         {
           "clause_index": 19,
           "heading": "제17조 (비밀유지)",
-          "rule_score": 15.6
+          "rule_score": 15.48
         },
         {
           "clause_index": 65,
           "heading": "제12조(지식재산    ① 게임단은 계약기간 중 선수와 관련하여 게임단이 선수의 본명, 게",
-          "rule_score": 14.32
+          "rule_score": 14.19
         }
       ],
       "llm_reviewed": false,
@@ -215,17 +303,17 @@
         {
           "clause_index": 40,
           "heading": "제18조 (부속 합의)",
-          "rule_score": 10.28
+          "rule_score": 10.13
         },
         {
           "clause_index": 22,
           "heading": "제20조 (부속 합의)",
-          "rule_score": 9.7
+          "rule_score": 9.52
         },
         {
           "clause_index": 49,
           "heading": "제9조 (청소년의 선수활동 제공시간)",
-          "rule_score": 9.62
+          "rule_score": 9.5
         }
       ],
       "llm_reviewed": false,
@@ -243,23 +331,23 @@
         {
           "clause_index": 17,
           "heading": "제15조 (계약의 해제 또는 해지 등)",
-          "rule_score": 25.61
+          "rule_score": 25.05
         },
         {
           "clause_index": 34,
           "heading": "제12조 (계약의 해제 또는 해지 등)",
-          "rule_score": 25.18
+          "rule_score": 24.57
         },
         {
           "clause_index": 53,
           "heading": "제13조 (계약의 실효)",
-          "rule_score": 13.01
+          "rule_score": 12.77
         }
       ],
-      "llm_reviewed": true,
-      "llm_selected_clause_index": 17,
-      "llm_relation": "reference_only",
-      "llm_completeness": "partial",
+      "llm_reviewed": false,
+      "llm_selected_clause_index": null,
+      "llm_relation": "",
+      "llm_completeness": "",
       "hybrid_clause_index": null
     },
     {
@@ -271,17 +359,17 @@
         {
           "clause_index": 17,
           "heading": "제15조 (계약의 해제 또는 해지 등)",
-          "rule_score": 11.73
+          "rule_score": 10.86
         },
         {
           "clause_index": 34,
           "heading": "제12조 (계약의 해제 또는 해지 등)",
-          "rule_score": 11.53
+          "rule_score": 10.65
         },
         {
-          "clause_index": 85,
-          "heading": "제12조(계약의 해   ① 게임단 또는 선수가 이 계약상의 내용을 위반하는 경우, 그 상대방",
-          "rule_score": 9.26
+          "clause_index": 68,
+          "heading": "제15조(계약의 해   ① 게임단 또는 선수가 이 계약상의 내용을 위반하는 경우, 그 상대방",
+          "rule_score": 8.26
         }
       ],
       "llm_reviewed": false,
@@ -299,17 +387,17 @@
         {
           "clause_index": 12,
           "heading": "제10조 (선수의 인성교육 및 건강 지원)",
-          "rule_score": 8
+          "rule_score": 7.91
         },
         {
           "clause_index": 30,
           "heading": "제8조 (선수의 인성교육 및 건강 지원)",
-          "rule_score": 7.96
+          "rule_score": 7.88
         },
         {
           "clause_index": 5,
           "heading": "제3조 (계약 기간 및 적용범위)",
-          "rule_score": 7.89
+          "rule_score": 7.79
         }
       ],
       "llm_reviewed": false,
@@ -327,17 +415,17 @@
         {
           "clause_index": 17,
           "heading": "제15조 (계약의 해제 또는 해지 등)",
-          "rule_score": 12.33
+          "rule_score": 12.05
         },
         {
           "clause_index": 34,
           "heading": "제12조 (계약의 해제 또는 해지 등)",
-          "rule_score": 12.08
+          "rule_score": 11.76
         },
         {
           "clause_index": 35,
           "heading": "제13조 (불가항력에 따른 계약종료 등)",
-          "rule_score": 11.87
+          "rule_score": 11.46
         }
       ],
       "llm_reviewed": false,
@@ -349,51 +437,51 @@
     {
       "check_id": "CMN-12",
       "check": "손해배상 범위 특약이 통상손해 한도 원칙을 확장·제한하는지, 특별손해(간접손해·일실이익)의 포함 여부와 예견가능성 요건 문언이 있는지 확인되는가",
-      "coverage": "verify",
-      "rule_clause_index": 68,
+      "coverage": "quiet",
+      "rule_clause_index": 17,
       "candidates": [
-        {
-          "clause_index": 68,
-          "heading": "제15조(계약의 해   ① 게임단 또는 선수가 이 계약상의 내용을 위반하는 경우, 그 상대방",
-          "rule_score": 15.32
-        },
         {
           "clause_index": 17,
           "heading": "제15조 (계약의 해제 또는 해지 등)",
-          "rule_score": 15.3
+          "rule_score": 14.98
+        },
+        {
+          "clause_index": 68,
+          "heading": "제15조(계약의 해   ① 게임단 또는 선수가 이 계약상의 내용을 위반하는 경우, 그 상대방",
+          "rule_score": 14.93
         },
         {
           "clause_index": 26,
           "heading": "제4조 (선수활동의 범위)",
-          "rule_score": 13.11
+          "rule_score": 12.77
         }
       ],
-      "llm_reviewed": true,
-      "llm_selected_clause_index": 68,
-      "llm_relation": "direct",
-      "llm_completeness": "complete",
-      "hybrid_clause_index": 68
+      "llm_reviewed": false,
+      "llm_selected_clause_index": null,
+      "llm_relation": "",
+      "llm_completeness": "",
+      "hybrid_clause_index": null
     },
     {
       "check_id": "CMN-14",
       "check": "책임 상한(cap)·면책 조항이 고의·중과실을 상한 예외로 명시하고 있고, 상한·면책의 이익이 당사자 간 대칭적으로(회사에만 불리하지 않게) 배분되어 있는가",
       "coverage": "quiet",
-      "rule_clause_index": 23,
+      "rule_clause_index": 34,
       "candidates": [
-        {
-          "clause_index": 23,
-          "heading": "제1조 (목적)",
-          "rule_score": 8.97
-        },
         {
           "clause_index": 34,
           "heading": "제12조 (계약의 해제 또는 해지 등)",
-          "rule_score": 8.95
+          "rule_score": 8.82
         },
         {
-          "clause_index": 3,
+          "clause_index": 23,
           "heading": "제1조 (목적)",
-          "rule_score": 8.83
+          "rule_score": 8.68
+        },
+        {
+          "clause_index": 17,
+          "heading": "제15조 (계약의 해제 또는 해지 등)",
+          "rule_score": 8.61
         }
       ],
       "llm_reviewed": false,
@@ -406,29 +494,29 @@
       "check_id": "CMN-15",
       "check": "비밀정보의 정의·범위 조항이 있는가",
       "coverage": "verify",
-      "rule_clause_index": 19,
+      "rule_clause_index": 70,
       "candidates": [
-        {
-          "clause_index": 19,
-          "heading": "제17조 (비밀유지)",
-          "rule_score": 31.51
-        },
         {
           "clause_index": 70,
           "heading": "제17조(비밀유지)    게임단과 선수는 이 계약의 내용 및 이 계약과 관련하여 알게 된 상대",
-          "rule_score": 31.5
+          "rule_score": 31.47
         },
         {
           "clause_index": 88,
           "heading": "제15조(비밀유지)   게임단과 선수는 이 계약의 내용 및 이 계약과 관련하여 알게 된 상대",
-          "rule_score": 31.44
+          "rule_score": 31.41
+        },
+        {
+          "clause_index": 19,
+          "heading": "제17조 (비밀유지)",
+          "rule_score": 31.38
         }
       ],
-      "llm_reviewed": true,
-      "llm_selected_clause_index": 19,
-      "llm_relation": "direct",
-      "llm_completeness": "complete",
-      "hybrid_clause_index": 19
+      "llm_reviewed": false,
+      "llm_selected_clause_index": null,
+      "llm_relation": "",
+      "llm_completeness": "",
+      "hybrid_clause_index": null
     },
     {
       "check_id": "CMN-16",
@@ -439,24 +527,24 @@
         {
           "clause_index": 70,
           "heading": "제17조(비밀유지)    게임단과 선수는 이 계약의 내용 및 이 계약과 관련하여 알게 된 상대",
-          "rule_score": 43.43
+          "rule_score": 43.35
         },
         {
           "clause_index": 88,
           "heading": "제15조(비밀유지)   게임단과 선수는 이 계약의 내용 및 이 계약과 관련하여 알게 된 상대",
-          "rule_score": 43.33
+          "rule_score": 43.25
         },
         {
           "clause_index": 37,
           "heading": "제15조 (비밀유지)",
-          "rule_score": 31.95
+          "rule_score": 31.81
         }
       ],
-      "llm_reviewed": true,
-      "llm_selected_clause_index": 70,
-      "llm_relation": "direct",
-      "llm_completeness": "complete",
-      "hybrid_clause_index": 70
+      "llm_reviewed": false,
+      "llm_selected_clause_index": null,
+      "llm_relation": "",
+      "llm_completeness": "",
+      "hybrid_clause_index": null
     },
     {
       "check_id": "CMN-17",
@@ -467,52 +555,36 @@
         {
           "clause_index": 14,
           "heading": "제12조 (지식재산권 등)",
-          "rule_score": 36.39
+          "rule_score": 36
         },
         {
           "clause_index": 65,
           "heading": "제12조(지식재산    ① 게임단은 계약기간 중 선수와 관련하여 게임단이 선수의 본명, 게",
-          "rule_score": 18.54
+          "rule_score": 18.13
         },
         {
           "clause_index": 16,
           "heading": "제14조 (권리 등의 양도)",
-          "rule_score": 12.72
+          "rule_score": 12.34
         }
       ],
-      "llm_reviewed": true,
-      "llm_selected_clause_index": 14,
-      "llm_relation": "direct",
-      "llm_completeness": "complete",
-      "hybrid_clause_index": 14
+      "llm_reviewed": false,
+      "llm_selected_clause_index": null,
+      "llm_relation": "",
+      "llm_completeness": "",
+      "hybrid_clause_index": null
     },
     {
       "check_id": "CMN-18",
       "check": "제3자 지식재산권 침해 주장 시 수탁자의 방어·면책 의무 조항이 있는가",
-      "coverage": "addressed",
-      "rule_clause_index": 14,
-      "candidates": [
-        {
-          "clause_index": 14,
-          "heading": "제12조 (지식재산권 등)",
-          "rule_score": 34.05
-        },
-        {
-          "clause_index": 65,
-          "heading": "제12조(지식재산    ① 게임단은 계약기간 중 선수와 관련하여 게임단이 선수의 본명, 게",
-          "rule_score": 19.06
-        },
-        {
-          "clause_index": 43,
-          "heading": "제3조 (청소년의 자유선택권 보장)",
-          "rule_score": 14.26
-        }
-      ],
-      "llm_reviewed": true,
-      "llm_selected_clause_index": 14,
-      "llm_relation": "direct",
-      "llm_completeness": "complete",
-      "hybrid_clause_index": 14
+      "coverage": "quiet",
+      "rule_clause_index": null,
+      "candidates": [],
+      "llm_reviewed": false,
+      "llm_selected_clause_index": null,
+      "llm_relation": "",
+      "llm_completeness": "",
+      "hybrid_clause_index": null
     },
     {
       "check_id": "CMN-19",
@@ -523,24 +595,24 @@
         {
           "clause_index": 71,
           "heading": "제18조(분쟁해결)    ① 이 계약에서 발생하는 모든 분쟁은 선수와 게임단이 자율적으로",
-          "rule_score": 40.02
+          "rule_score": 40
         },
         {
           "clause_index": 89,
           "heading": "제16조(분쟁해결)   ① 이 계약에서 발생하는 모든 분쟁은 선수와 게임단이 자율적으로 해",
-          "rule_score": 38.02
+          "rule_score": 38
         },
         {
           "clause_index": 38,
           "heading": "제16조 (분쟁해결)",
-          "rule_score": 30.92
+          "rule_score": 30.8
         }
       ],
-      "llm_reviewed": true,
-      "llm_selected_clause_index": 71,
-      "llm_relation": "direct",
-      "llm_completeness": "complete",
-      "hybrid_clause_index": 71
+      "llm_reviewed": false,
+      "llm_selected_clause_index": null,
+      "llm_relation": "",
+      "llm_completeness": "",
+      "hybrid_clause_index": null
     },
     {
       "check_id": "CMN-20",
@@ -551,24 +623,24 @@
         {
           "clause_index": 16,
           "heading": "제14조 (권리 등의 양도)",
-          "rule_score": 25.25
+          "rule_score": 25.15
         },
         {
           "clause_index": 33,
           "heading": "제11조 (권리 등의 양도)",
-          "rule_score": 24.92
+          "rule_score": 24.77
         },
         {
           "clause_index": 67,
           "heading": "제14조(권리 등의   게임단은 권리 등의 양도가 발생하기 이전에 선수에게 해당 사실을 고",
-          "rule_score": 22.24
+          "rule_score": 21.93
         }
       ],
-      "llm_reviewed": true,
-      "llm_selected_clause_index": 16,
-      "llm_relation": "direct",
-      "llm_completeness": "complete",
-      "hybrid_clause_index": 16
+      "llm_reviewed": false,
+      "llm_selected_clause_index": null,
+      "llm_relation": "",
+      "llm_completeness": "",
+      "hybrid_clause_index": null
     },
     {
       "check_id": "CMN-21",
@@ -579,24 +651,24 @@
         {
           "clause_index": 32,
           "heading": "제10조 (계약내용의 변경)",
-          "rule_score": 25.76
+          "rule_score": 25.64
         },
         {
           "clause_index": 15,
           "heading": "제13조 (계약내용의 변경)",
-          "rule_score": 23.85
+          "rule_score": 23.74
         },
         {
           "clause_index": 22,
           "heading": "제20조 (부속 합의)",
-          "rule_score": 18.05
+          "rule_score": 17.83
         }
       ],
-      "llm_reviewed": true,
-      "llm_selected_clause_index": 32,
-      "llm_relation": "direct",
-      "llm_completeness": "complete",
-      "hybrid_clause_index": 32
+      "llm_reviewed": false,
+      "llm_selected_clause_index": null,
+      "llm_relation": "",
+      "llm_completeness": "",
+      "hybrid_clause_index": null
     },
     {
       "check_id": "CRS-03",
@@ -607,17 +679,17 @@
         {
           "clause_index": 5,
           "heading": "제3조 (계약 기간 및 적용범위)",
-          "rule_score": 11.12
+          "rule_score": 10.99
         },
         {
           "clause_index": 25,
           "heading": "제3조 (계약 기간 및 적용범위)",
-          "rule_score": 11.1
+          "rule_score": 10.98
         },
         {
           "clause_index": 76,
           "heading": "제 3조(계약 기간   ① 계약의 기간은 ______년 ___월 ___일부터 ______년 ___월 ___일",
-          "rule_score": 11.09
+          "rule_score": 10.96
         }
       ],
       "llm_reviewed": false,
@@ -635,17 +707,17 @@
         {
           "clause_index": 31,
           "heading": "제9조 (비용의 부담 등)",
-          "rule_score": 12.77
+          "rule_score": 12.66
         },
         {
           "clause_index": 13,
           "heading": "제11조 (비용의 부담 등)",
-          "rule_score": 12.35
+          "rule_score": 12.25
         },
         {
           "clause_index": 7,
           "heading": "제5조 (게임단의 일반적 권리 및 의무 등)",
-          "rule_score": 8.23
+          "rule_score": 8.1
         }
       ],
       "llm_reviewed": false,
@@ -663,23 +735,23 @@
         {
           "clause_index": 93,
           "heading": "제2조(적용)      이 부속 합의서는 별도의 계약을 구성하고 있으며, 주계약 보다 우선",
-          "rule_score": 20.09
+          "rule_score": 20.06
         },
         {
           "clause_index": 42,
           "heading": "제2조 (적용)",
-          "rule_score": 19.4
+          "rule_score": 19.22
         },
         {
           "clause_index": 13,
           "heading": "제11조 (비용의 부담 등)",
-          "rule_score": 14.76
+          "rule_score": 14.65
         }
       ],
-      "llm_reviewed": true,
-      "llm_selected_clause_index": 93,
-      "llm_relation": "reference_only",
-      "llm_completeness": "partial",
+      "llm_reviewed": false,
+      "llm_selected_clause_index": null,
+      "llm_relation": "",
+      "llm_completeness": "",
       "hybrid_clause_index": null
     },
     {
@@ -691,17 +763,17 @@
         {
           "clause_index": 17,
           "heading": "제15조 (계약의 해제 또는 해지 등)",
-          "rule_score": 14.34
+          "rule_score": 14.19
         },
         {
           "clause_index": 34,
           "heading": "제12조 (계약의 해제 또는 해지 등)",
-          "rule_score": 13.97
+          "rule_score": 13.78
         },
         {
           "clause_index": 53,
           "heading": "제13조 (계약의 실효)",
-          "rule_score": 8.85
+          "rule_score": 8.66
         }
       ],
       "llm_reviewed": false,
@@ -719,24 +791,24 @@
         {
           "clause_index": 16,
           "heading": "제14조 (권리 등의 양도)",
-          "rule_score": 29.46
+          "rule_score": 29.35
         },
         {
           "clause_index": 33,
           "heading": "제11조 (권리 등의 양도)",
-          "rule_score": 27.73
+          "rule_score": 27.58
         },
         {
           "clause_index": 14,
           "heading": "제12조 (지식재산권 등)",
-          "rule_score": 19.74
+          "rule_score": 19.56
         }
       ],
-      "llm_reviewed": true,
-      "llm_selected_clause_index": 16,
-      "llm_relation": "direct",
-      "llm_completeness": "complete",
-      "hybrid_clause_index": 16
+      "llm_reviewed": false,
+      "llm_selected_clause_index": null,
+      "llm_relation": "",
+      "llm_completeness": "",
+      "hybrid_clause_index": null
     },
     {
       "check_id": "ITDL-02",
@@ -752,12 +824,12 @@
         {
           "clause_index": 26,
           "heading": "제4조 (선수활동의 범위)",
-          "rule_score": 5.72
+          "rule_score": 5.69
         },
         {
           "clause_index": 45,
           "heading": "제5조 (청소년의 인격권 보장)",
-          "rule_score": 5.52
+          "rule_score": 5.47
         }
       ],
       "llm_reviewed": false,
@@ -775,17 +847,17 @@
         {
           "clause_index": 65,
           "heading": "제12조(지식재산    ① 게임단은 계약기간 중 선수와 관련하여 게임단이 선수의 본명, 게",
-          "rule_score": 9.51
+          "rule_score": 9.4
         },
         {
           "clause_index": 14,
           "heading": "제12조 (지식재산권 등)",
-          "rule_score": 7.67
+          "rule_score": 7.58
         },
         {
           "clause_index": 51,
           "heading": "제11조 (승부조작 등의 강요금지)",
-          "rule_score": 5.25
+          "rule_score": 5.19
         }
       ],
       "llm_reviewed": false,
@@ -803,17 +875,17 @@
         {
           "clause_index": 97,
           "heading": "제6조(청소년의     ① 게임단은 선수가「학교보건법」제7조의 건강검사에 참여할 수 있도",
-          "rule_score": 9.84
+          "rule_score": 9.65
         },
         {
           "clause_index": 28,
           "heading": "제6조 (선수의 일반적 권리 및 의무 등)",
-          "rule_score": 6.9
+          "rule_score": 6.87
         },
         {
           "clause_index": 11,
           "heading": "제9조 (영리활동)",
-          "rule_score": 6.56
+          "rule_score": 6.49
         }
       ],
       "llm_reviewed": false,
@@ -831,23 +903,23 @@
         {
           "clause_index": 13,
           "heading": "제11조 (비용의 부담 등)",
-          "rule_score": 19.11
+          "rule_score": 18.97
         },
         {
           "clause_index": 31,
           "heading": "제9조 (비용의 부담 등)",
-          "rule_score": 19.04
+          "rule_score": 18.9
         },
         {
           "clause_index": 37,
           "heading": "제15조 (비밀유지)",
-          "rule_score": 11.5
+          "rule_score": 11.37
         }
       ],
-      "llm_reviewed": true,
-      "llm_selected_clause_index": 37,
-      "llm_relation": "unrelated",
-      "llm_completeness": "unclear",
+      "llm_reviewed": false,
+      "llm_selected_clause_index": null,
+      "llm_relation": "",
+      "llm_completeness": "",
       "hybrid_clause_index": null
     },
     {
@@ -859,17 +931,17 @@
         {
           "clause_index": 17,
           "heading": "제15조 (계약의 해제 또는 해지 등)",
-          "rule_score": 11.31
+          "rule_score": 11.08
         },
         {
           "clause_index": 34,
           "heading": "제12조 (계약의 해제 또는 해지 등)",
-          "rule_score": 10.61
+          "rule_score": 10.35
         },
         {
           "clause_index": 68,
           "heading": "제15조(계약의 해   ① 게임단 또는 선수가 이 계약상의 내용을 위반하는 경우, 그 상대방",
-          "rule_score": 9.51
+          "rule_score": 9.22
         }
       ],
       "llm_reviewed": false,
@@ -887,24 +959,24 @@
         {
           "clause_index": 13,
           "heading": "제11조 (비용의 부담 등)",
-          "rule_score": 24.05
+          "rule_score": 23.92
         },
         {
           "clause_index": 31,
           "heading": "제9조 (비용의 부담 등)",
-          "rule_score": 23.9
+          "rule_score": 23.79
         },
         {
           "clause_index": 28,
           "heading": "제6조 (선수의 일반적 권리 및 의무 등)",
-          "rule_score": 13.81
+          "rule_score": 13.79
         }
       ],
-      "llm_reviewed": true,
-      "llm_selected_clause_index": 13,
-      "llm_relation": "direct",
-      "llm_completeness": "complete",
-      "hybrid_clause_index": 13
+      "llm_reviewed": false,
+      "llm_selected_clause_index": null,
+      "llm_relation": "",
+      "llm_completeness": "",
+      "hybrid_clause_index": null
     },
     {
       "check_id": "SP-UNF-02",
@@ -915,23 +987,23 @@
         {
           "clause_index": 13,
           "heading": "제11조 (비용의 부담 등)",
-          "rule_score": 31.12
+          "rule_score": 30.8
         },
         {
           "clause_index": 31,
           "heading": "제9조 (비용의 부담 등)",
-          "rule_score": 30.89
+          "rule_score": 30.59
         },
         {
           "clause_index": 82,
           "heading": "제9조(비용의 부    ① 게임단은 자신의 권한 범위 내에서 선수의 선수활동에 필요한 능력",
-          "rule_score": 14.64
+          "rule_score": 14.23
         }
       ],
-      "llm_reviewed": true,
-      "llm_selected_clause_index": 82,
-      "llm_relation": "reference_only",
-      "llm_completeness": "partial",
+      "llm_reviewed": false,
+      "llm_selected_clause_index": null,
+      "llm_relation": "",
+      "llm_completeness": "",
       "hybrid_clause_index": null
     },
     {
@@ -943,17 +1015,17 @@
         {
           "clause_index": 53,
           "heading": "제13조 (계약의 실효)",
-          "rule_score": 16.22
+          "rule_score": 15.81
         },
         {
           "clause_index": 34,
           "heading": "제12조 (계약의 해제 또는 해지 등)",
-          "rule_score": 15.88
+          "rule_score": 15.67
         },
         {
           "clause_index": 17,
           "heading": "제15조 (계약의 해제 또는 해지 등)",
-          "rule_score": 13.71
+          "rule_score": 13.56
         }
       ],
       "llm_reviewed": false,
@@ -971,24 +1043,24 @@
         {
           "clause_index": 7,
           "heading": "제5조 (게임단의 일반적 권리 및 의무 등)",
-          "rule_score": 17.41
+          "rule_score": 17.33
         },
         {
           "clause_index": 16,
           "heading": "제14조 (권리 등의 양도)",
-          "rule_score": 17
+          "rule_score": 16.87
         },
         {
           "clause_index": 28,
           "heading": "제6조 (선수의 일반적 권리 및 의무 등)",
-          "rule_score": 16.68
+          "rule_score": 16.59
         }
       ],
-      "llm_reviewed": true,
-      "llm_selected_clause_index": 28,
-      "llm_relation": "direct",
-      "llm_completeness": "complete",
-      "hybrid_clause_index": 28
+      "llm_reviewed": false,
+      "llm_selected_clause_index": null,
+      "llm_relation": "",
+      "llm_completeness": "",
+      "hybrid_clause_index": null
     },
     {
       "check_id": "SP-UNF-07",
@@ -999,17 +1071,17 @@
         {
           "clause_index": 34,
           "heading": "제12조 (계약의 해제 또는 해지 등)",
-          "rule_score": 12.5
+          "rule_score": 12.39
         },
         {
           "clause_index": 8,
           "heading": "제6조 (선수의 일반적 권리 및 의무 등)",
-          "rule_score": 12.26
+          "rule_score": 12.24
         },
         {
           "clause_index": 52,
           "heading": "제12조 (청소년 법정대리인의 권한 등)",
-          "rule_score": 11.91
+          "rule_score": 11.81
         }
       ],
       "llm_reviewed": false,
@@ -1027,17 +1099,17 @@
         {
           "clause_index": 13,
           "heading": "제11조 (비용의 부담 등)",
-          "rule_score": 16.33
+          "rule_score": 16.25
         },
         {
           "clause_index": 31,
           "heading": "제9조 (비용의 부담 등)",
-          "rule_score": 16.22
+          "rule_score": 16.14
         },
         {
-          "clause_index": 35,
-          "heading": "제13조 (불가항력에 따른 계약종료 등)",
-          "rule_score": 13.36
+          "clause_index": 7,
+          "heading": "제5조 (게임단의 일반적 권리 및 의무 등)",
+          "rule_score": 13.08
         }
       ],
       "llm_reviewed": false,
@@ -1055,24 +1127,24 @@
         {
           "clause_index": 34,
           "heading": "제12조 (계약의 해제 또는 해지 등)",
-          "rule_score": 30.27
+          "rule_score": 29.75
         },
         {
           "clause_index": 17,
           "heading": "제15조 (계약의 해제 또는 해지 등)",
-          "rule_score": 27.48
+          "rule_score": 27.04
         },
         {
           "clause_index": 40,
           "heading": "제18조 (부속 합의)",
-          "rule_score": 17.54
+          "rule_score": 17.37
         }
       ],
-      "llm_reviewed": true,
-      "llm_selected_clause_index": 34,
-      "llm_relation": "direct",
-      "llm_completeness": "complete",
-      "hybrid_clause_index": 34
+      "llm_reviewed": false,
+      "llm_selected_clause_index": null,
+      "llm_relation": "",
+      "llm_completeness": "",
+      "hybrid_clause_index": null
     },
     {
       "check_id": "SP-UNF-10",
@@ -1083,24 +1155,24 @@
         {
           "clause_index": 15,
           "heading": "제13조 (계약내용의 변경)",
-          "rule_score": 22.68
+          "rule_score": 22.56
         },
         {
           "clause_index": 32,
           "heading": "제10조 (계약내용의 변경)",
-          "rule_score": 22.58
+          "rule_score": 22.46
         },
         {
           "clause_index": 22,
           "heading": "제20조 (부속 합의)",
-          "rule_score": 18.97
+          "rule_score": 18.65
         }
       ],
-      "llm_reviewed": true,
-      "llm_selected_clause_index": 15,
-      "llm_relation": "direct",
-      "llm_completeness": "complete",
-      "hybrid_clause_index": 15
+      "llm_reviewed": false,
+      "llm_selected_clause_index": null,
+      "llm_relation": "",
+      "llm_completeness": "",
+      "hybrid_clause_index": null
     },
     {
       "check_id": "SP-UNF-11",
@@ -1111,52 +1183,52 @@
         {
           "clause_index": 33,
           "heading": "제11조 (권리 등의 양도)",
-          "rule_score": 21.64
+          "rule_score": 21.54
         },
         {
           "clause_index": 16,
           "heading": "제14조 (권리 등의 양도)",
-          "rule_score": 21.3
+          "rule_score": 21.23
         },
         {
-          "clause_index": 43,
-          "heading": "제3조 (청소년의 자유선택권 보장)",
-          "rule_score": 15.24
+          "clause_index": 14,
+          "heading": "제12조 (지식재산권 등)",
+          "rule_score": 15.11
         }
       ],
-      "llm_reviewed": true,
-      "llm_selected_clause_index": 33,
-      "llm_relation": "direct",
-      "llm_completeness": "complete",
-      "hybrid_clause_index": 33
+      "llm_reviewed": false,
+      "llm_selected_clause_index": null,
+      "llm_relation": "",
+      "llm_completeness": "",
+      "hybrid_clause_index": null
     },
     {
       "check_id": "SP-UNF-12",
       "check": "고객의 작위·부작위를 의사표시로 의제하거나 의사표시 형식에 부당한 제한을 두는 무효 조항이 없는가",
       "coverage": "verify",
-      "rule_clause_index": 43,
+      "rule_clause_index": 22,
       "candidates": [
-        {
-          "clause_index": 43,
-          "heading": "제3조 (청소년의 자유선택권 보장)",
-          "rule_score": 15.92
-        },
         {
           "clause_index": 22,
           "heading": "제20조 (부속 합의)",
-          "rule_score": 15.9
+          "rule_score": 15.61
+        },
+        {
+          "clause_index": 43,
+          "heading": "제3조 (청소년의 자유선택권 보장)",
+          "rule_score": 15.51
         },
         {
           "clause_index": 7,
           "heading": "제5조 (게임단의 일반적 권리 및 의무 등)",
-          "rule_score": 14.96
+          "rule_score": 14.85
         }
       ],
-      "llm_reviewed": true,
-      "llm_selected_clause_index": 43,
-      "llm_relation": "direct",
-      "llm_completeness": "complete",
-      "hybrid_clause_index": 43
+      "llm_reviewed": false,
+      "llm_selected_clause_index": null,
+      "llm_relation": "",
+      "llm_completeness": "",
+      "hybrid_clause_index": null
     },
     {
       "check_id": "SP-UNF-13",
@@ -1167,23 +1239,23 @@
         {
           "clause_index": 40,
           "heading": "제18조 (부속 합의)",
-          "rule_score": 18.67
+          "rule_score": 18.57
         },
         {
           "clause_index": 22,
           "heading": "제20조 (부속 합의)",
-          "rule_score": 18.18
+          "rule_score": 18.03
         },
         {
           "clause_index": 91,
           "heading": "제18조(부속 합의)   ① 게임단과 선수는 이 계약의 내용을 보충하거나, 이 계약에서 정하",
-          "rule_score": 16.17
+          "rule_score": 16
         }
       ],
-      "llm_reviewed": true,
-      "llm_selected_clause_index": 91,
-      "llm_relation": "unrelated",
-      "llm_completeness": "unclear",
+      "llm_reviewed": false,
+      "llm_selected_clause_index": null,
+      "llm_relation": "",
+      "llm_completeness": "",
       "hybrid_clause_index": null
     },
     {
@@ -1195,17 +1267,17 @@
         {
           "clause_index": 97,
           "heading": "제6조(청소년의     ① 게임단은 선수가「학교보건법」제7조의 건강검사에 참여할 수 있도",
-          "rule_score": 6.46
+          "rule_score": 6.27
         },
         {
           "clause_index": 46,
           "heading": "제6조 (청소년의 신체적·정신적 건강 보장)",
-          "rule_score": 5.29
+          "rule_score": 5.2
         },
         {
           "clause_index": 65,
           "heading": "제12조(지식재산    ① 게임단은 계약기간 중 선수와 관련하여 게임단이 선수의 본명, 게",
-          "rule_score": 3.36
+          "rule_score": 3.38
         }
       ],
       "llm_reviewed": false,
@@ -1217,23 +1289,23 @@
     {
       "check_id": "SP-DEL-02",
       "check": "납품·용역 이행지체에 대한 지체상금(손해배상액의 예정) 약정이 있는가",
-      "coverage": "consider",
+      "coverage": "quiet",
       "rule_clause_index": 17,
       "candidates": [
         {
           "clause_index": 17,
           "heading": "제15조 (계약의 해제 또는 해지 등)",
-          "rule_score": 12.31
+          "rule_score": 11.94
         },
         {
           "clause_index": 77,
           "heading": "제4조(선수활동의    ① 선수의 선수활동은 다음 각 호의 활동을 말한다.",
-          "rule_score": 12.03
+          "rule_score": 11.49
         },
         {
           "clause_index": 68,
           "heading": "제15조(계약의 해   ① 게임단 또는 선수가 이 계약상의 내용을 위반하는 경우, 그 상대방",
-          "rule_score": 11.39
+          "rule_score": 10.95
         }
       ],
       "llm_reviewed": false,
@@ -1246,22 +1318,22 @@
       "check_id": "SP-DEL-03",
       "check": "목적물 인도 전 당사자 쌍방 무책 멸실·훼손 시 위험부담(대금청구 가부) 처리 조항이 있는가",
       "coverage": "quiet",
-      "rule_clause_index": 92,
+      "rule_clause_index": 27,
       "candidates": [
         {
-          "clause_index": 92,
-          "heading": "제1조(목적)      이 부속합의서의 목적은 게임단과 청소년 선수 (또는 육성군) 사이에",
-          "rule_score": 15.63
+          "clause_index": 27,
+          "heading": "제5조 (게임단의 일반적 권리 및 의무 등",
+          "rule_score": 9.78
         },
         {
-          "clause_index": 23,
-          "heading": "제1조 (목적)",
-          "rule_score": 15.61
+          "clause_index": 78,
+          "heading": "제5조(게임단의     ① 게임단은 선수에 대하여 이스포츠 선수활동에 필요한 능력의 습득",
+          "rule_score": 8.98
         },
         {
-          "clause_index": 3,
-          "heading": "제1조 (목적)",
-          "rule_score": 15.47
+          "clause_index": 51,
+          "heading": "제11조 (승부조작 등의 강요금지)",
+          "rule_score": 8.62
         }
       ],
       "llm_reviewed": false,
@@ -1279,17 +1351,17 @@
         {
           "clause_index": 18,
           "heading": "제16조 (불가항력에 따른 계약종료)",
-          "rule_score": 12.83
+          "rule_score": 12.6
         },
         {
           "clause_index": 35,
           "heading": "제13조 (불가항력에 따른 계약종료 등)",
-          "rule_score": 12.4
+          "rule_score": 12.17
         },
         {
           "clause_index": 86,
           "heading": "제13조(불가항력    선수가 선수활동으로 인하여 질병에 걸리거나 상해를 당하거나 자신",
-          "rule_score": 11.35
+          "rule_score": 10.93
         }
       ],
       "llm_reviewed": false,
@@ -1301,58 +1373,26 @@
     {
       "check_id": "SP-DEL-04",
       "check": "발주자(채권자) 귀책 또는 수령지체 중 이행불능 시 수급인의 대금청구권 유지 조항이 있는가",
-      "coverage": "verify",
-      "rule_clause_index": 17,
-      "candidates": [
-        {
-          "clause_index": 17,
-          "heading": "제15조 (계약의 해제 또는 해지 등)",
-          "rule_score": 20.64
-        },
-        {
-          "clause_index": 34,
-          "heading": "제12조 (계약의 해제 또는 해지 등)",
-          "rule_score": 17.19
-        },
-        {
-          "clause_index": 68,
-          "heading": "제15조(계약의 해   ① 게임단 또는 선수가 이 계약상의 내용을 위반하는 경우, 그 상대방",
-          "rule_score": 14.24
-        }
-      ],
-      "llm_reviewed": true,
-      "llm_selected_clause_index": 17,
-      "llm_relation": "direct",
-      "llm_completeness": "complete",
-      "hybrid_clause_index": 17
+      "coverage": "quiet",
+      "rule_clause_index": null,
+      "candidates": [],
+      "llm_reviewed": false,
+      "llm_selected_clause_index": null,
+      "llm_relation": "",
+      "llm_completeness": "",
+      "hybrid_clause_index": null
     },
     {
       "check_id": "SP-DEL-05",
       "check": "용역(도급) 완성물에 하자가 있는 경우 상당한 기간을 정한 하자보수 청구권 조항이 있는가",
-      "coverage": "verify",
-      "rule_clause_index": 17,
-      "candidates": [
-        {
-          "clause_index": 17,
-          "heading": "제15조 (계약의 해제 또는 해지 등)",
-          "rule_score": 22.43
-        },
-        {
-          "clause_index": 74,
-          "heading": "제1조(목적)      이 계약은 선수가 이스포츠 선수로써의 잠재력과 기량을 증명하고, 게",
-          "rule_score": 20.62
-        },
-        {
-          "clause_index": 92,
-          "heading": "제1조(목적)      이 부속합의서의 목적은 게임단과 청소년 선수 (또는 육성군) 사이에",
-          "rule_score": 20.55
-        }
-      ],
-      "llm_reviewed": true,
-      "llm_selected_clause_index": 17,
-      "llm_relation": "direct",
-      "llm_completeness": "complete",
-      "hybrid_clause_index": 17
+      "coverage": "quiet",
+      "rule_clause_index": null,
+      "candidates": [],
+      "llm_reviewed": false,
+      "llm_selected_clause_index": null,
+      "llm_relation": "",
+      "llm_completeness": "",
+      "hybrid_clause_index": null
     },
     {
       "check_id": "SP-DEL-06",
@@ -1363,45 +1403,17 @@
         {
           "clause_index": 68,
           "heading": "제15조(계약의 해   ① 게임단 또는 선수가 이 계약상의 내용을 위반하는 경우, 그 상대방",
-          "rule_score": 24.57
+          "rule_score": 24.06
         },
         {
           "clause_index": 17,
           "heading": "제15조 (계약의 해제 또는 해지 등)",
-          "rule_score": 23.86
+          "rule_score": 23.47
         },
         {
           "clause_index": 85,
           "heading": "제12조(계약의 해   ① 게임단 또는 선수가 이 계약상의 내용을 위반하는 경우, 그 상대방",
-          "rule_score": 19.78
-        }
-      ],
-      "llm_reviewed": true,
-      "llm_selected_clause_index": 68,
-      "llm_relation": "direct",
-      "llm_completeness": "complete",
-      "hybrid_clause_index": 68
-    },
-    {
-      "check_id": "SP-DEL-07",
-      "check": "완성물의 하자로 계약 목적을 달성할 수 없는 경우의 해제권 조항이 있는가",
-      "coverage": "quiet",
-      "rule_clause_index": 23,
-      "candidates": [
-        {
-          "clause_index": 23,
-          "heading": "제1조 (목적)",
-          "rule_score": 30.61
-        },
-        {
-          "clause_index": 17,
-          "heading": "제15조 (계약의 해제 또는 해지 등)",
-          "rule_score": 30.11
-        },
-        {
-          "clause_index": 3,
-          "heading": "제1조 (목적)",
-          "rule_score": 29.09
+          "rule_score": 19.2
         }
       ],
       "llm_reviewed": false,
@@ -1411,55 +1423,63 @@
       "hybrid_clause_index": null
     },
     {
+      "check_id": "SP-DEL-07",
+      "check": "완성물의 하자로 계약 목적을 달성할 수 없는 경우의 해제권 조항이 있는가",
+      "coverage": "quiet",
+      "rule_clause_index": null,
+      "candidates": [],
+      "llm_reviewed": false,
+      "llm_selected_clause_index": null,
+      "llm_relation": "",
+      "llm_completeness": "",
+      "hybrid_clause_index": null
+    },
+    {
       "check_id": "SP-DEL-08",
       "check": "도급(용역) 하자담보책임의 존속기간(인도·검수완료 기산, 1년 등)과 하자 대응 절차가 규정되어 있고, 유지보수(유상)의 범위·대가가 무상 하자보수와 구분되어 있는가",
+      "coverage": "quiet",
+      "rule_clause_index": null,
+      "candidates": [],
+      "llm_reviewed": false,
+      "llm_selected_clause_index": null,
+      "llm_relation": "",
+      "llm_completeness": "",
+      "hybrid_clause_index": null
+    },
+    {
+      "check_id": "SP-DEL-12",
+      "check": "사무처리형(위임형) 용역에서 수임인의 선관주의 의무와 불완전이행 시 구제(시정·재수행 요구, 손해배상, 해지)가 규정되어 있는가",
       "coverage": "verify",
       "rule_clause_index": 17,
       "candidates": [
         {
           "clause_index": 17,
           "heading": "제15조 (계약의 해제 또는 해지 등)",
-          "rule_score": 22.24
+          "rule_score": 22.31
         },
         {
           "clause_index": 34,
           "heading": "제12조 (계약의 해제 또는 해지 등)",
-          "rule_score": 19.29
+          "rule_score": 20.21
         },
         {
-          "clause_index": 23,
-          "heading": "제1조 (목적)",
-          "rule_score": 19.15
+          "clause_index": 103,
+          "heading": "제12조(청소년 법   ① 선수의 법정대리인은 게임단이 선수를 대리하여 체결한 선수활동",
+          "rule_score": 16.67
         }
       ],
-      "llm_reviewed": true,
-      "llm_selected_clause_index": 23,
-      "llm_relation": "unrelated",
-      "llm_completeness": "unclear",
+      "llm_reviewed": false,
+      "llm_selected_clause_index": null,
+      "llm_relation": "",
+      "llm_completeness": "",
       "hybrid_clause_index": null
     },
     {
       "check_id": "SP-DEL-08-2",
       "check": "지체상금·하자보수와 함께 이행(하자)보증보험 증권 징구 여부가 확인되어 있는가",
       "coverage": "quiet",
-      "rule_clause_index": 74,
-      "candidates": [
-        {
-          "clause_index": 74,
-          "heading": "제1조(목적)      이 계약은 선수가 이스포츠 선수로써의 잠재력과 기량을 증명하고, 게",
-          "rule_score": 3.22
-        },
-        {
-          "clause_index": 73,
-          "heading": "제20조(부속 합의)   ① 게임단과 선수는 이 계약의 내용을 보충하거나, 이 계약에서 정하",
-          "rule_score": 3
-        },
-        {
-          "clause_index": 91,
-          "heading": "제18조(부속 합의)   ① 게임단과 선수는 이 계약의 내용을 보충하거나, 이 계약에서 정하",
-          "rule_score": 3
-        }
-      ],
+      "rule_clause_index": null,
+      "candidates": [],
       "llm_reviewed": false,
       "llm_selected_clause_index": null,
       "llm_relation": "",
@@ -1475,17 +1495,17 @@
         {
           "clause_index": 54,
           "heading": "제1조(목적)      이 계약은 선수가 이스포츠 선수로서 선수활동을 하고 게임단은 이에",
-          "rule_score": 19.28
+          "rule_score": 18.73
         },
         {
           "clause_index": 74,
           "heading": "제1조(목적)      이 계약은 선수가 이스포츠 선수로써의 잠재력과 기량을 증명하고, 게",
-          "rule_score": 18.13
+          "rule_score": 17.62
         },
         {
-          "clause_index": 23,
+          "clause_index": 3,
           "heading": "제1조 (목적)",
-          "rule_score": 16.84
+          "rule_score": 16.62
         }
       ],
       "llm_reviewed": false,
@@ -1497,30 +1517,14 @@
     {
       "check_id": "SP-DEL-10",
       "check": "종류물(불특정물) 구매의 경우 하자 있는 물건 대신 완전물 급부를 청구할 수 있는 조항이 있는가",
-      "coverage": "verify",
-      "rule_clause_index": 17,
-      "candidates": [
-        {
-          "clause_index": 17,
-          "heading": "제15조 (계약의 해제 또는 해지 등)",
-          "rule_score": 32.45
-        },
-        {
-          "clause_index": 34,
-          "heading": "제12조 (계약의 해제 또는 해지 등)",
-          "rule_score": 28.58
-        },
-        {
-          "clause_index": 68,
-          "heading": "제15조(계약의 해   ① 게임단 또는 선수가 이 계약상의 내용을 위반하는 경우, 그 상대방",
-          "rule_score": 21.2
-        }
-      ],
-      "llm_reviewed": true,
-      "llm_selected_clause_index": 17,
-      "llm_relation": "direct",
-      "llm_completeness": "partial",
-      "hybrid_clause_index": 17
+      "coverage": "quiet",
+      "rule_clause_index": null,
+      "candidates": [],
+      "llm_reviewed": false,
+      "llm_selected_clause_index": null,
+      "llm_relation": "",
+      "llm_completeness": "",
+      "hybrid_clause_index": null
     },
     {
       "check_id": "SP-DEL-11",
@@ -1531,17 +1535,17 @@
         {
           "clause_index": 95,
           "heading": "제4조(청소년의     ① 게임단은 선수가 「교육기본법」 제8조에 따른 의무교육을 받을 권",
-          "rule_score": 14.19
+          "rule_score": 13.5
         },
         {
           "clause_index": 44,
           "heading": "제4조 (청소년의 학습권 보장)",
-          "rule_score": 12.01
+          "rule_score": 11.57
         },
         {
           "clause_index": 65,
           "heading": "제12조(지식재산    ① 게임단은 계약기간 중 선수와 관련하여 게임단이 선수의 본명, 게",
-          "rule_score": 11.66
+          "rule_score": 11.37
         }
       ],
       "llm_reviewed": false,
@@ -1554,24 +1558,8 @@
       "check_id": "ITDL-06",
       "check": "서비스수준(SLA)·가동률 기준과 장애 발생 시 대응·보상·손해배상 조항이 있는가",
       "coverage": "quiet",
-      "rule_clause_index": 57,
-      "candidates": [
-        {
-          "clause_index": 57,
-          "heading": "제4조(선수활동의   ① 선수의 선수활동은 다음 각 호의 활동을 말한다.",
-          "rule_score": 5.06
-        },
-        {
-          "clause_index": 40,
-          "heading": "제18조 (부속 합의)",
-          "rule_score": 4.8
-        },
-        {
-          "clause_index": 35,
-          "heading": "제13조 (불가항력에 따른 계약종료 등)",
-          "rule_score": 4.66
-        }
-      ],
+      "rule_clause_index": null,
+      "candidates": [],
       "llm_reviewed": false,
       "llm_selected_clause_index": null,
       "llm_relation": "",

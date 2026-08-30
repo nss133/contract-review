@@ -1,8 +1,21 @@
 # 지식 YAML 스키마 (v2)
 
+## 구조화 태그층
+
+- `tag_taxonomy.yaml`: 태그 축별 정식 ID·표시명·별칭의 정본
+- `tag_signatures.yaml`: check ID별 요구사항 태그. `candidate|curated|disabled` 상태를 구분함
+- `curated`만 매칭 보조점수 대상이며, 배포본 `assist`에서도 제한 가감점만 적용하고 trace를 별도 기록함
+- 태그 축은 `topics`, `actors`, `actions`, `objects`, `modalities`, `conditions`, `provisions`임
+- `required_facets`는 해당 축에 관찰 태그가 있어야 구조적으로 완성된 후보라는 뜻이나,
+  태그 자체는 명시 인용·복수 핵심어·표제·문장요건을 대체하는 노출 증거가 아님
+- `avoid`는 사람 재지정에서 반복 확인된 혼동 태그의 축별 목록이며 `assist`에서 제한 감점만 적용함
+- `build/generate_tag_signatures.py`는 240개 체크의 후보를 만들 뿐 정본을 자동 덮어쓰지 않음
+
 ## 파일 구성
 - `common.yaml` — 모든 계약 공통 체크리스트
 - `types/<type_id>.yaml` — 유형별 체크리스트
+- `regulatory_scopes.yaml` — 법규 적용범위의 요소·신호·상태·횡단모듈 연결
+- `legal_constraints.yaml` — 금지·위법 가능 조합을 유형과 분리하는 준법경보 규칙
 
 ## 최상위 구조 (두 키 모두 필수)
 
@@ -12,6 +25,7 @@ meta:
   detect_keywords: [위탁, 수탁]  # 유형 자동 감지용 (common은 빈 리스트)
   nature_signals: [화해, 부제소]  # 선택. 성격 배타 게이트 — 이 강신호가 본문에 NATURE_MIN(2)개+ 검출되면
   suppresses: [shareholders]     #   suppresses의 유형 점수를 0으로(오탐 억제). settlement가 사용 중
+  suppress_title_hits: true      # 선택. 강신호가 제목 적중 유형도 억제(행사 실행용역처럼 제목에 '위탁'이 있는 경우)
   modules:                    # 규제 레짐 모듈. 없으면 빈 리스트. common.yaml의 모듈(X-*)은 횡단 풀 —
                               #   유형과 무관하게 전 계약에서 스크리닝됨(유형 미확정 포함)
     - id: M-PRIV              # 파일 내 유일. 횡단 모듈은 X- 접두어 관례
@@ -24,6 +38,7 @@ meta:
       stance_exempt_if: [affiliate_party]  # 선택. 이 사유가 성립하면 국면 게이트를 뚫고 활성(11.1차)
       title_signals: [질권, 담보설정]  # 선택. 문서 제목에 이 어휘가 있으면 본문과 무관하게 활성
       title_required: true      # 선택. 제목 미적중 시 본문 어휘가 있어도 비활성(질문으로 전환)
+      scope_rule: financial_outsourcing # 선택. regulatory_scopes의 3상태가 활성 여부를 통제
 checks:
   - id: OUT-09-1               # 전역 유일. 유형약어-번호(-원자순번), 조문 항·호 = 1 항목
     check: 위탁 문서에 "위탁업무 수행 목적 외 개인정보의 처리 금지" 사항이 포함되어 있는가   # 질문 1문장. 서술형 코멘트 금지
@@ -54,6 +69,20 @@ checks:
                                    #   부재알람(consider)에만 적용: 위임형 계약에 도급 하자담보 부재알람 금지
                                    #   (민법상 하자담보책임 부존재 — §681 선관주의 체계). 매칭된 조항은 약정
                                    #   유효라 게이트 대상 아님. 판별 불가 시 게이트 비활성(전 체크 유지).
+    relationship_scope: [third_party_provision, mixed] # 선택(14차): 개인정보 법률관계 게이트.
+                                   # processing_outsourcing|third_party_provision|mixed|unknown.
+                                   # 문장별 topic·action·modality 태그를 결합해 "제3자 제공 금지"를
+                                   # 실제 제3자 제공으로 오인하지 않으며, 불일치 체크는 채점 전 quiet.
+    implementation_channel: external_evidence # 선택: contract|standard_subdoc|external_evidence|
+                                   # contract_or_internal_control|internal_control|monitoring_evidence|
+                                   # cooperation_control|statutory_duty. 실제 확인 위치를 UI에 표시한다.
+    contract_requirement: express  # 선택: express(계약 명시 필요)|derived(계약상 협조·통제 필요)|
+                                   # recommended(리스크상 권장)|none(계약 반영이 판정요건 아님).
+                                   # severity(법적 중요도)와 별도 축이며 none은 부재 알람을 만들지 않는다.
+    text_effect: required_present   # 선택: required_present(있어야 함)|required_absent(있으면 안 됨)|
+                                   # conditional(사실관계·이행구조에 따라 필요)|advisory(선택적 협상)|
+                                   # none(문구 존재·부재가 판단요건 아님).
+    action_rationale: "법정 기재사항" # 선택. 계약조치 분류의 사람이 확인한 한 줄 근거.
     auto_clear:                    # 선택(12차): 문장 단위 요건 — 한 문장에서 전 그룹 충족 + require
       any_groups: [[계약기간, 유효기간], []]  #   OR-그룹 목록(그룹 간 AND). 충족 시 매칭 확정 승격,
       require: [period, date]     #   참고/권장은 이상없음 자동 기재·필수는 빠른 확인 제안.
@@ -115,7 +144,7 @@ check 항목에 `guidance` 키가 남아 있으면 `ValidationError("guidance는
 - `severity_basis`가 있으면 비어 있지 않은 문자열이어야 함
 - `severity_override`가 있으면 불리언이어야 함
 - `severity`가 아래 도출 규칙과 불일치하고 `severity_override`가 없거나 false면 **경고 출력**(stderr, ValidationError 아님 — 지식 작성 가드). 의도적 예외는 `severity_override: true` + `note`에 사유 기재
-- `module`이 있으면 해당 파일 `meta.modules`에 선언된 id여야 함
+- `module`이 있으면 해당 파일 또는 `common.yaml`의 `meta.modules`에 선언된 id여야 함
 - `sources` 각 항목 필수 키: `law`, `article`, `verified` / 선택 키: `clause`, `quote`, `source_type`
 - `source_type` ∈ {`law`, `self_regulation`} (선택 필드 — validate가 필수화하지 않음). 생략 시 `law`로 간주. `self_regulation`은 협회 자율규제·모범규준(klia_regulations.sqlite 수록)에만 명시. UI가 법령 근거와 자율규제 근거의 배지를 구분하는 데 사용
 - `basis: statute` → `sources`가 1개 이상 필요, `sources[0].quote`가 비어있지 않은 문자열이어야 함 (없으면 빌드 실패)
@@ -149,13 +178,38 @@ check 항목에 `guidance` 키가 남아 있으면 `ValidationError("guidance는
 | `strong` | 서로 다른 키워드 **2개+** 검출, 아니면 꺼짐 | 특수 규제(전자금융 §60 등) — 오탐 억제 우선 |
 | `confirm` | 강신호(서로 다른 2개+ **또는** 총 출현 3회+)=자동 ON / 약신호(1~2회)=OFF+**질문 노출** / 무신호=OFF | 문언만으론 실제 취급 여부 판단 불가한 모듈(개인정보 등). 상투 준수조항 1회 ≈ 약신호 → 추측하지 않고 사람에게 물음 |
 
-## 오탐 억제 게이트 6층 (판정 기준 — P2에서 확립, 국면층 11차·문서/지위층 11.1차·귀속층 11.3차 추가)
+`scope_rule`이 선언된 모듈은 위 키워드 등급보다 적용범위 판정이 우선한다. `applicable`만 자동
+활성화하고, `needs_confirmation`은 질문, `non_applicable`은 비활성화한다.
+유형 파일의 체크가 공통 횡단모듈을 참조할 수 있으며, 모듈이 켜지면 `check_source_type`의
+전문 체크셋을 현재 계약 유형과 함께 로드한다.
+
+## 법규 적용범위 (regulatory_scopes.yaml)
+
+각 scope는 `label`, `module_id`, `check_source_type`, `questions`, `signals`를 필수로 가진다.
+현재 금융업무위탁 scope의 질문 축은 `financial_business_purpose`, `continuous_use`,
+`simple_backoffice_exclusion`이다. 신호는 적용 제외 계약유형, 금융업무, 계속성,
+단발성, 단순 후선업무로 나눈다. 문언상 명시적 부정(“보험상담을 수행하지 않는다”)은 양성
+신호에서 제외한다. 자동 상태와 근거, 사람의 요소별 보정은 평가 원장에 모두 남겨야 한다.
+
+## 법령상 개연성 제약 (legal_constraints.yaml)
+
+각 rule은 `id`, `label`, `requires`, `signals`, `sources`를 필수로 가진다. `requires`의 모든 신호군이
+명시적으로 검출될 때만 경보를 만든다. 금지행위나 현실적으로 드문 조합은 계약유형의 양성 근거가
+아니므로 `affects_type: true`를 허용하지 않는다. 필요하면 `scope_effects`로 특정 일반 규정의 적용범위와
+분리하고, `route`로 별도 준법검토 큐를 지정한다. 더 구체적인 경보는 `supersedes`로 일반 경보를 접는다.
+
+예: `행사 + 보험상품 설명·가입권유`는 금융업무위탁이나 모집계약으로 재분류하지 않고 보험업법
+제83조·제99조 확인 경보로 보낸다. 여기에 `경품·금품·보험료 할인`이 더해지면 보험업법 제98조와
+시행령 제46조의 특별이익 경보가 이를 대체한다. 명시적 부정문은 양성 신호에서 제외한다.
+
+## 오탐 억제 게이트 7층 (판정 기준 — P2에서 확립, 관계층 14차 추가)
 
 | 층 | 장치 | 언제 쓰나 |
 |---|---|---|
 | **문서 성격** | `title_signals`+`title_required` (모듈) / `requires_doc_title` (check) | **그 문서가 애초에 그런 계약이 아닐 때**. 본문에 어휘가 스쳐 지나갔을 뿐일 때 |
 | **당사 지위** | `party_roles` (check) | **당사가 그 지위가 아닐 때**. 담보설정계약이라도 당사가 질권자가 아니면 대항요건은 우리 몫이 아님 |
 | **국면** | `requires_stance`(+`stance_exempt_if`) (모듈) / `stance_scope` (check) | **당사가 그 규범의 수범자가 아닐 때**. 문언은 맞지만 의무주체가 남일 때 |
+| **개인정보 관계** | `relationship_scope` (check) | **처리위탁과 독립적 제3자 제공을 구별할 때**. 제공 금지문은 제3자 제공의 양성 신호에서 제외 |
 | 유형 | `nature_signals` + `suppresses` | 계약의 법적 성격이 다른 유형과 배타적일 때(화해 vs 상법 조직행위) |
 | 모듈 | `activation: strong/confirm` | 규제 모듈이 일반 계약에 오활성될 때 |
 | **조항 귀속** | (자동 — 지식 선언 불요) | **조항 표제가 다른 체크를 정면으로 지시할 때**. 그 조항이 타 제도를 참조 언급한 것만으로 이 체크가 붙는 것을 차단 |

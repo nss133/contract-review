@@ -1,0 +1,10 @@
+id: recurring-pure-event
+desc: 연간 반복 행사라도 금융업무와 무관한 단순 행사운영은 비적용
+detect_expected: procurement
+active_must_exclude: [X-FINOUT]
+scope_expected: {financial_outsourcing: non_applicable}
+text: |
+  연간 행사 운영 용역계약서
+
+  을은 1년 동안 매월 임직원 문화행사의 대관, 무대, 음향, 케이터링과 현장 운영을 수행한다.
+  대상은 임직원이며 보험계약, 보험금, 고객 상담 또는 개인정보 처리 업무는 수행하지 않는다.

@@ -1,0 +1,11 @@
+id: claims-administration-outsourcing
+desc: 상시 보험금 청구·심사 운영은 금융업무위탁 규정 적용
+detect_expected: outsourcing
+active_must_include: [X-FINOUT]
+scope_expected: {financial_outsourcing: applicable}
+text: |
+  보험금 심사 업무위탁계약서
+
+  갑은 을에게 보험금 청구 접수와 보험금 심사 지원 업무를 위탁한다.
+  을은 전담 인력을 두고 1년 동안 상시 업무를 수행하며 월별 처리 실적을 보고한다.
+  계약은 특별한 의사표시가 없으면 매년 갱신한다.

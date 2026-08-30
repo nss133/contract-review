@@ -34,12 +34,206 @@ def derive_severity(norm_type, basis):
 
 
 def load_knowledge(knowledge_dir):
-    """common.yaml + types/*.yaml 로드·검증 → {"common": dict, "types": [dict]}"""
+    """계약 지식과 선택적 구조화 태그 정본을 로드·검증한다."""
     kdir = Path(knowledge_dir)
     common = _load_file(kdir / "common.yaml")
     types = [_load_file(p) for p in sorted((kdir / "types").glob("*.yaml"))]
+    contract_actions = _load_contract_actions(kdir, common, types)
     _validate(common, types)
-    return {"common": common, "types": types}
+    regulatory_scopes = _load_regulatory_scopes(kdir, common, types)
+    legal_constraints = _load_legal_constraints(kdir)
+    taxonomy, signatures = _load_tag_knowledge(kdir, common, types)
+    return {"common": common, "types": types, "tag_taxonomy": taxonomy,
+            "tag_signatures": signatures, "regulatory_scopes": regulatory_scopes,
+            "legal_constraints": legal_constraints, "contract_actions": contract_actions}
+
+
+def _load_contract_actions(kdir, common, types):
+    """계약조치 메타데이터 정본을 check에 병합한다.
+
+    파일이 없는 임시 테스트 지식은 하위호환한다. 본 저장소에서는 영향이 큰 부재알람
+    후보부터 사람이 분류하고, 미분류 항목은 런타임에서 자동 필수로 단정하지 않는다.
+    """
+    path = kdir / "contract_actions.yaml"
+    if not path.exists():
+        return {"schema_version": "", "actions": {}}
+    data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    actions = data.get("actions")
+    if not isinstance(actions, dict):
+        raise ValidationError("contract_actions.yaml: actions는 매핑이어야 함")
+    check_map = {cp["id"]: cp for doc in [common, *types] for cp in doc["checks"]}
+    allowed = {"contract_requirement", "text_effect", "implementation_channel", "action_rationale"}
+    for cid, action in actions.items():
+        if cid not in check_map:
+            raise ValidationError(f"contract action: 알 수 없는 check id '{cid}'")
+        if not isinstance(action, dict):
+            raise ValidationError(f"{cid}: contract action은 매핑이어야 함")
+        unknown = set(action) - allowed
+        if unknown:
+            raise ValidationError(f"{cid}: contract action 알 수 없는 필드 {sorted(unknown)}")
+        required = {"contract_requirement", "text_effect", "implementation_channel"}
+        missing = required - set(action)
+        if missing:
+            raise ValidationError(f"{cid}: contract action 필수 필드 누락 {sorted(missing)}")
+        cp = check_map[cid]
+        for key, value in action.items():
+            if key in cp and cp[key] != value:
+                raise ValidationError(f"{cid}: {key}가 체크 원본과 contract_actions 정본에서 충돌함")
+            cp[key] = value
+        cp["contract_action_curated"] = True
+    absence_ids = {cid for cid, cp in check_map.items() if cp.get("absence_check")}
+    action_ids = set(actions)
+    missing = sorted(absence_ids - action_ids)
+    extra = sorted(action_ids - absence_ids)
+    if missing or extra:
+        detail = []
+        if missing:
+            detail.append(f"부재점검 미분류 {missing}")
+        if extra:
+            detail.append(f"부재점검 아닌 action {extra}")
+        raise ValidationError("contract_actions.yaml 전수분류 불일치: " + "; ".join(detail))
+    return data
+
+
+def _load_regulatory_scopes(kdir, common, types):
+    """법규 적용범위 게이트를 로드한다. 임시 테스트 지식에는 없어도 하위호환한다."""
+    path = kdir / "regulatory_scopes.yaml"
+    if not path.exists():
+        return {"schema_version": "", "scopes": {}}
+    data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    scopes = data.get("scopes")
+    if not isinstance(scopes, dict):
+        raise ValidationError("regulatory_scopes.yaml: scopes는 매핑이어야 함")
+    common_modules = {m["id"] for m in common["meta"]["modules"]}
+    type_ids = {doc["meta"]["type_id"] for doc in types}
+    required_factors = {
+        "financial_business_purpose", "continuous_use", "simple_backoffice_exclusion",
+    }
+    required_signals = {
+        "non_applicable_contract", "financial_business", "continuous_use", "one_off",
+        "simple_backoffice",
+    }
+    for sid, scope in scopes.items():
+        if not isinstance(scope, dict):
+            raise ValidationError(f"regulatory scope {sid}: 매핑이어야 함")
+        missing = {"label", "module_id", "check_source_type", "questions", "signals"} - scope.keys()
+        if missing:
+            raise ValidationError(f"regulatory scope {sid}: 필수 필드 누락 {sorted(missing)}")
+        if scope["module_id"] not in common_modules:
+            raise ValidationError(f"regulatory scope {sid}: common에 없는 module_id '{scope['module_id']}'")
+        if scope["check_source_type"] not in type_ids:
+            raise ValidationError(
+                f"regulatory scope {sid}: 알 수 없는 check_source_type '{scope['check_source_type']}'"
+            )
+        questions = scope["questions"]
+        if not isinstance(questions, dict) or not required_factors.issubset(questions):
+            raise ValidationError(f"regulatory scope {sid}: questions에 {sorted(required_factors)} 필요")
+        signals = scope["signals"]
+        if not isinstance(signals, dict) or not required_signals.issubset(signals):
+            raise ValidationError(f"regulatory scope {sid}: signals에 {sorted(required_signals)} 필요")
+        for key in required_signals:
+            values = signals[key]
+            if not isinstance(values, list) or any(not isinstance(v, str) or not v.strip() for v in values):
+                raise ValidationError(f"regulatory scope {sid}: signals.{key}는 문자열 리스트여야 함")
+    return data
+
+
+def _load_legal_constraints(kdir):
+    """법령상 드문·위법 가능 조합을 별도 경보로 보내는 개연성 제약을 로드한다."""
+    path = kdir / "legal_constraints.yaml"
+    if not path.exists():
+        return {"schema_version": "", "rules": []}
+    data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    rules = data.get("rules")
+    if not isinstance(rules, list):
+        raise ValidationError("legal_constraints.yaml: rules는 리스트여야 함")
+    seen = set()
+    for rule in rules:
+        if not isinstance(rule, dict):
+            raise ValidationError("legal constraint: 각 rule은 매핑이어야 함")
+        missing = {"id", "label", "requires", "signals", "sources"} - rule.keys()
+        if missing:
+            raise ValidationError(f"legal constraint: 필수 필드 누락 {sorted(missing)}")
+        if rule["id"] in seen:
+            raise ValidationError(f"legal constraint 중복 id: {rule['id']}")
+        seen.add(rule["id"])
+        requires, signals = rule["requires"], rule["signals"]
+        if not isinstance(requires, list) or not requires or not isinstance(signals, dict):
+            raise ValidationError(f"{rule['id']}: requires와 signals 형식 오류")
+        for group in requires:
+            values = signals.get(group)
+            if not isinstance(values, list) or not values or any(
+                not isinstance(value, str) or not value.strip() for value in values
+            ):
+                raise ValidationError(f"{rule['id']}: signals.{group}는 비어 있지 않은 문자열 리스트여야 함")
+        if not isinstance(rule["sources"], list) or not rule["sources"]:
+            raise ValidationError(f"{rule['id']}: sources가 필요함")
+        if rule.get("affects_type") is True:
+            raise ValidationError(f"{rule['id']}: 금지행위 경보는 계약유형을 직접 변경할 수 없음")
+    return data
+
+
+def _load_tag_knowledge(kdir, common, types):
+    """tag_taxonomy/tag_signatures가 있으면 검증 후 check에 signature를 join한다.
+
+    임시 테스트 지식폴더 등 두 파일이 모두 없는 경우에는 빈 태그층으로 진행하여
+    기존 빌드 API와 하위호환한다. 한 파일만 있으면 계보가 불완전하므로 실패한다.
+    """
+    taxonomy_path = kdir / "tag_taxonomy.yaml"
+    signatures_path = kdir / "tag_signatures.yaml"
+    if not taxonomy_path.exists() and not signatures_path.exists():
+        return {"profile_version": "", "facets": {}}, {"profile_version": "", "checks": {}}
+    if not taxonomy_path.is_file() or not signatures_path.is_file():
+        raise ValidationError("tag_taxonomy.yaml과 tag_signatures.yaml은 함께 있어야 함")
+    taxonomy = yaml.safe_load(taxonomy_path.read_text(encoding="utf-8")) or {}
+    signatures = yaml.safe_load(signatures_path.read_text(encoding="utf-8")) or {}
+    if taxonomy.get("profile_version") != signatures.get("profile_version"):
+        raise ValidationError("태그 taxonomy/signatures profile_version 불일치")
+    facets = taxonomy.get("facets")
+    signature_map = signatures.get("checks")
+    if not isinstance(facets, dict) or not isinstance(signature_map, dict):
+        raise ValidationError("태그 정본은 facets/checks 매핑이 필요함")
+    check_map = {cp["id"]: cp for doc in [common, *types] for cp in doc["checks"]}
+    allowed_status = {"candidate", "curated", "disabled"}
+    for cid, signature in signature_map.items():
+        if cid not in check_map:
+            raise ValidationError(f"태그 signature가 알 수 없는 check를 참조함: {cid}")
+        if not isinstance(signature, dict):
+            raise ValidationError(f"{cid}: tag signature는 매핑이어야 함")
+        status = signature.get("status", "candidate")
+        if status not in allowed_status:
+            raise ValidationError(f"{cid}: tag status 값 오류 '{status}'")
+        required = signature.get("required_facets", [])
+        if not isinstance(required, list) or any(f not in facets for f in required):
+            raise ValidationError(f"{cid}: required_facets가 taxonomy 축과 불일치")
+        declared = []
+        for facet, registry in facets.items():
+            values = signature.get(facet, [])
+            if not isinstance(values, list):
+                raise ValidationError(f"{cid}: {facet}는 리스트여야 함")
+            if not isinstance(registry, dict):
+                raise ValidationError(f"taxonomy {facet}: 매핑이어야 함")
+            unknown = [value for value in values if value not in registry]
+            if unknown:
+                raise ValidationError(f"{cid}: 알 수 없는 {facet} 태그 {unknown}")
+            if values:
+                declared.append(facet)
+        avoid = signature.get("avoid", {})
+        if not isinstance(avoid, dict):
+            raise ValidationError(f"{cid}: avoid는 축별 태그 매핑이어야 함")
+        for facet, values in avoid.items():
+            if facet not in facets or not isinstance(values, list):
+                raise ValidationError(f"{cid}: avoid.{facet} 형식 오류")
+            unknown = [value for value in values if value not in facets[facet]]
+            if unknown:
+                raise ValidationError(f"{cid}: 알 수 없는 avoid.{facet} 태그 {unknown}")
+        if status == "curated" and not declared:
+            raise ValidationError(f"{cid}: curated signature에는 태그가 필요함")
+        missing_required = [facet for facet in required if not signature.get(facet)]
+        if missing_required:
+            raise ValidationError(f"{cid}: required facet에 값 없음 {missing_required}")
+        check_map[cid]["tag_signature"] = signature
+    return taxonomy, signatures
 
 
 def _load_file(path):
@@ -61,9 +255,12 @@ def _load_file(path):
 
 def _validate(common, types):
     seen_ids = set()
+    common_module_ids = {m["id"] for m in common["meta"]["modules"]}
     for doc in [common, *types]:
         fname = doc["meta"].get("type_id", "?")
-        module_ids = {m["id"] for m in doc["meta"]["modules"]}
+        # 유형 체크가 공통 횡단모듈(X-*)을 참조할 수 있다. 적용범위는 common에서
+        # 결정하되, 전문 체크셋은 해당 유형 파일에 유지하기 위한 구조다.
+        module_ids = {m["id"] for m in doc["meta"]["modules"]} | common_module_ids
         for cp in doc["checks"]:
             cid = cp.get("id", "?")
             if "guidance" in cp:
@@ -125,6 +322,39 @@ def _validate(common, types):
                 or any(s not in ("completion", "mandate") for s in service_scope)
             ):
                 raise ValidationError(f"{cid}: service_scope는 completion|mandate 리스트여야 함")
+
+            relationship_scope = cp.get("relationship_scope")
+            allowed_relationships = {"processing_outsourcing", "third_party_provision", "mixed", "unknown"}
+            if relationship_scope is not None and (
+                not isinstance(relationship_scope, list) or not relationship_scope
+                or any(s not in allowed_relationships for s in relationship_scope)
+            ):
+                raise ValidationError(f"{cid}: relationship_scope 값이 올바르지 않음")
+
+            implementation_channel = cp.get("implementation_channel")
+            if implementation_channel is not None and implementation_channel not in {
+                "contract", "standard_subdoc", "external_evidence", "contract_or_internal_control",
+                "internal_control", "monitoring_evidence", "cooperation_control", "statutory_duty"
+            }:
+                raise ValidationError(f"{cid}: 알 수 없는 implementation_channel '{implementation_channel}'")
+
+            contract_requirement = cp.get("contract_requirement")
+            if contract_requirement is not None and contract_requirement not in {
+                "express", "derived", "recommended", "none"
+            }:
+                raise ValidationError(f"{cid}: 알 수 없는 contract_requirement '{contract_requirement}'")
+
+            text_effect = cp.get("text_effect")
+            if text_effect is not None and text_effect not in {
+                "required_present", "required_absent", "conditional", "advisory", "none"
+            }:
+                raise ValidationError(f"{cid}: 알 수 없는 text_effect '{text_effect}'")
+
+            action_rationale = cp.get("action_rationale")
+            if action_rationale is not None and (
+                not isinstance(action_rationale, str) or not action_rationale.strip()
+            ):
+                raise ValidationError(f"{cid}: action_rationale은 비어 있지 않은 문자열이어야 함")
 
             auto_clear = cp.get("auto_clear")
             if auto_clear is not None:

@@ -12,7 +12,70 @@ var Loop = (function () {
   var ORIGINS = ["manual", "bulk", "subdoc", "prior_review", "llm_draft", "legacy", "auto"];
 
   function emptyCorpus() {
-    return { meta: { updated: "", contract_count: 0, hashes: [] }, byCheck: {} };
+    return { meta: { format: "cr-loop-corpus-v2", schema_version: 2, updated: "",
+        contract_count: 0, hashes: [] },
+      contracts: {}, byCheck: {}, tag_proposal_decisions: {} };
+  }
+
+  // v1 코퍼스도 그대로 읽되, 이후 병합 결과는 v2 구조로 정규화한다.
+  function _normalizeCorpus(corpus) {
+    var next = JSON.parse(JSON.stringify(corpus || emptyCorpus()));
+    if (!next.meta) next.meta = {};
+    var sourceVersion = Number(next.meta.schema_version || 0);
+    if (!Array.isArray(next.meta.hashes)) next.meta.hashes = [];
+    if (typeof next.meta.contract_count !== "number") next.meta.contract_count = next.meta.hashes.length;
+    // v1은 재지정 후의 best를 원래 Top1로 저장한 결함이 있어 매칭 정확도·태그 음성표본을
+    // 신뢰할 수 없다. 법적 판정·코멘트는 보존하되 학습축만 한 번 제외한다.
+    if (sourceVersion < 2 && next.byCheck) Object.keys(next.byCheck).forEach(function (cpId) {
+      delete next.byCheck[cpId].matching_counts;
+      delete next.byCheck[cpId].tag_learning;
+    });
+    next.meta.format = "cr-loop-corpus-v2";
+    next.meta.schema_version = 2;
+    if (typeof next.meta.legacy_matching_excluded !== "number")
+      next.meta.legacy_matching_excluded = sourceVersion < 2 ? next.meta.contract_count : 0;
+    if (!next.contracts || typeof next.contracts !== "object" || Array.isArray(next.contracts)) next.contracts = {};
+    if (!next.byCheck || typeof next.byCheck !== "object" || Array.isArray(next.byCheck)) next.byCheck = {};
+    if (!next.tag_proposal_decisions) next.tag_proposal_decisions = {};
+    return next;
+  }
+
+  function _tagCounts() { return {}; }
+  function _tagLearningSlot() {
+    return { profile_version: "", observed: 0, confirmed: 0, reassigned: 0,
+      positive_counts: _tagCounts(), negative_counts: _tagCounts() };
+  }
+  function _bumpTags(target, observed) {
+    Object.keys(observed || {}).forEach(function (facet) {
+      var values = observed[facet];
+      if (!Array.isArray(values)) return;
+      if (!target[facet]) target[facet] = {};
+      values.forEach(function (tag) {
+        if (!tag) return;
+        target[facet][tag] = (target[facet][tag] || 0) + 1;
+      });
+    });
+  }
+  function _mergeTagCountMaps(target, source) {
+    Object.keys(source || {}).forEach(function (facet) {
+      if (!target[facet]) target[facet] = {};
+      Object.keys(source[facet] || {}).forEach(function (tag) {
+        target[facet][tag] = (target[facet][tag] || 0) + (source[facet][tag] || 0);
+      });
+    });
+  }
+  function _mergeTagObservation(slot, observation, source) {
+    if (!observation || !observation.human_observed) return;
+    if (!slot.tag_learning) slot.tag_learning = _tagLearningSlot();
+    var tl = slot.tag_learning;
+    tl.profile_version = observation.profile_version || tl.profile_version || "";
+    tl.observed++;
+    if (source === "reassigned") tl.reassigned++;
+    else tl.confirmed++;
+    _bumpTags(tl.positive_counts, observation.human_observed);
+    // 사람이 다른 조항으로 재지정한 경우에만 기존 Top1 태그를 혼동 음성으로 누적한다.
+    if (source === "reassigned" && observation.rule_observed)
+      _bumpTags(tl.negative_counts, observation.rule_observed);
   }
 
   function _ensureCheck(corpus, cpId) {
@@ -20,11 +83,16 @@ var Loop = (function () {
       corpus.byCheck[cpId] = { counts: { "이상없음": 0, "검토의견": 0, "해당없음": 0 }, comments: [], lastSeen: "" };
     }
     var slot = corpus.byCheck[cpId];
+    if (!corpus.tag_proposal_decisions) corpus.tag_proposal_decisions = {};
     if (!slot.origin_counts) slot.origin_counts = {};
+    if (!slot.reason_counts) slot.reason_counts = {};
+    if (!slot.action_counts) slot.action_counts = {};
+    if (!slot.system_action_pairs) slot.system_action_pairs = {};
     if (!slot.system_verdict_pairs) slot.system_verdict_pairs = {};
     if (!slot.llm_verdict_pairs) slot.llm_verdict_pairs = {};
     if (!slot.matching_counts) slot.matching_counts = { observed: 0, confirmed: 0, reassigned: 0,
-      top1_correct: 0, top1_wrong: 0, gold_in_top3: 0 };
+      top1_correct: 0, top1_wrong: 0, gold_in_top3: 0, invalid: 0 };
+    if (typeof slot.matching_counts.invalid !== "number") slot.matching_counts.invalid = 0;
     if (!slot.llm_assistance_counts) slot.llm_assistance_counts = {
       analyzed: 0, draft_offered: 0, draft_accepted: 0, accepted_unchanged: 0, accepted_edited: 0
     };
@@ -34,7 +102,7 @@ var Loop = (function () {
   // 검토의견 내보내기 객체({meta,verdicts})를 코퍼스에 병합(불변 반환).
   // 같은 contract_hash 재적재는 중복 카운트하지 않음(멱등).
   function mergeIntoCorpus(corpus, exportObj) {
-    var next = JSON.parse(JSON.stringify(corpus || emptyCorpus()));
+    var next = _normalizeCorpus(corpus);
     if (!exportObj || typeof exportObj !== "object") return next;
     var meta = exportObj.meta || {};
     var hash = meta.contract_hash || "";
@@ -55,8 +123,19 @@ var Loop = (function () {
       if (VERDICTS.indexOf(vv) === -1) return;
       var slot = _ensureCheck(next, cpId);
       slot.counts[vv]++;
+      var reason = v.reason || (v.verdict === "해당없음" ? NA_REASON : "");
+      if (reason) slot.reason_counts[reason] = (slot.reason_counts[reason] || 0) + 1;
       var origin = ORIGINS.indexOf(v.origin) !== -1 ? v.origin : "legacy";
       slot.origin_counts[origin] = (slot.origin_counts[origin] || 0) + 1;
+      var disposition = v.action_disposition || "";
+      if (disposition) {
+        slot.action_counts[disposition] = (slot.action_counts[disposition] || 0) + 1;
+        var systemAction = systemItems[cpId] && systemItems[cpId].contract_action;
+        if (systemAction) {
+          var actionPair = systemAction + "::" + disposition;
+          slot.system_action_pairs[actionPair] = (slot.system_action_pairs[actionPair] || 0) + 1;
+        }
+      }
       var assessment = systemItems[cpId] && systemItems[cpId].system_assessment;
       if (assessment) {
         var pair = assessment + "::" + vv;
@@ -66,18 +145,6 @@ var Loop = (function () {
       if (advisory && advisory.kind === "local_llm") {
         var llmPair = advisory.relation + "/" + advisory.completeness + "::" + vv;
         slot.llm_verdict_pairs[llmPair] = (slot.llm_verdict_pairs[llmPair] || 0) + 1;
-      }
-      var observation = matchingItems[cpId];
-      if (observation && observation.human_evidence_source && observation.human_evidence_source !== "none" &&
-          typeof observation.human_clause_index === "number") {
-        var mc = slot.matching_counts;
-        mc.observed++;
-        if (observation.human_evidence_source === "reassigned") mc.reassigned++;
-        else mc.confirmed++;
-        if (observation.rule_clause_index === observation.human_clause_index) mc.top1_correct++;
-        else mc.top1_wrong++;
-        var candidates = observation.candidate_clauses || [];
-        if (candidates.some(function (c) { return c.clause_index === observation.human_clause_index; })) mc.gold_in_top3++;
       }
       slot.lastSeen = date || slot.lastSeen;
       var text = (v.comment || "").trim();
@@ -95,6 +162,33 @@ var Loop = (function () {
         }
       }
     });
+    // 조항 확인은 법적 판정과 독립된 축이다. 판정을 아직 남기지 않았더라도 검토자가 명시적으로
+    // Top1을 확인·재지정했다면 매칭 원자료로 누적한다.
+    Object.keys(matchingItems).forEach(function (cpId) {
+      var observation = matchingItems[cpId];
+      if (!observation || ["confirmed_match", "reassigned"].indexOf(observation.human_evidence_source) === -1 ||
+          typeof observation.human_clause_index !== "number") return;
+      var slot = _ensureCheck(next, cpId);
+      var mc = slot.matching_counts;
+      var source = observation.human_evidence_source;
+      // 구버전 결함 방어: 재지정인데 기계 Top1과 사람 정답이 같으면 원래 Top1이 사람 값으로
+      // 덮인 손상 표본일 수 있다. 정확도·태그 학습에서 제외하고 진단 카운트만 남긴다.
+      var validRule = typeof observation.rule_clause_index === "number";
+      var corruptedReassign = source === "reassigned" && validRule &&
+        observation.rule_clause_index === observation.human_clause_index;
+      if (!validRule || corruptedReassign) mc.invalid++;
+      else {
+        mc.observed++;
+        if (source === "reassigned") mc.reassigned++;
+        else mc.confirmed++;
+        if (observation.rule_clause_index === observation.human_clause_index) mc.top1_correct++;
+        else mc.top1_wrong++;
+        var candidates = observation.candidate_clauses || [];
+        if (candidates.some(function (c) { return c.clause_index === observation.human_clause_index; })) mc.gold_in_top3++;
+        _mergeTagObservation(slot, observation.tag_observation, source);
+      }
+      slot.lastSeen = date || slot.lastSeen;
+    });
     // LLM 보조 노출 자체와 초안 채택은 판정 유무와 별도 집계한다. 관련 원문을 찾은 항목은
     // 최종 판정을 요구하지 않을 수 있으므로 verdicts만 순회하면 사용량이 과소계상된다.
     Object.keys(assistanceItems).forEach(function (cpId) {
@@ -110,6 +204,59 @@ var Loop = (function () {
         else ac.accepted_edited++;
       }
     });
+    // 계약 원문·조항 발췌 없이 실행환경과 판정 분포만 보존한다. 체크별 집계만 있던 v1과 달리
+    // 앱 버전·유형·적용범위 상태를 계약 단위로 역추적할 수 있어 회귀 원인을 찾을 수 있다.
+    if (hash) {
+      var contractVerdicts = { "이상없음": 0, "검토의견": 0, "해당없음": 0 };
+      var contractReasons = {};
+      Object.keys(verdicts).forEach(function (cpId) {
+        var v = verdicts[cpId] || {};
+        var vv = (v.verdict === "이상없음" && v.reason === NA_REASON) ? "해당없음" : v.verdict;
+        if (VERDICTS.indexOf(vv) !== -1) contractVerdicts[vv]++;
+        var rs = v.reason || (v.verdict === "해당없음" ? NA_REASON : "");
+        if (rs) contractReasons[rs] = (contractReasons[rs] || 0) + 1;
+      });
+      var scopeStatuses = {};
+      var scopes = (exportObj.system_assessments && exportObj.system_assessments.scope_assessments) || {};
+      Object.keys(scopes).forEach(function (scopeId) {
+        var s = scopes[scopeId] || {};
+        scopeStatuses[scopeId] = { status: String(s.status || ""), confidence: String(s.confidence || "") };
+      });
+      var manualFindingCounts = { total: 0, by_category: {}, by_scope: {}, by_severity: {} };
+      Object.keys(exportObj.manual_findings || {}).forEach(function (id) {
+        var f = exportObj.manual_findings[id] || {};
+        manualFindingCounts.total++;
+        var cat = String(f.category || "general"), scope = String(f.scope || "contract"), sev = String(f.severity || "일반");
+        manualFindingCounts.by_category[cat] = (manualFindingCounts.by_category[cat] || 0) + 1;
+        manualFindingCounts.by_scope[scope] = (manualFindingCounts.by_scope[scope] || 0) + 1;
+        manualFindingCounts.by_severity[sev] = (manualFindingCounts.by_severity[sev] || 0) + 1;
+      });
+      var integrityDecisionCounts = {};
+      Object.keys(exportObj.finding_decisions || {}).forEach(function (id) {
+        var d = exportObj.finding_decisions[id] || {};
+        var rule = String(id).split("-").slice(1, 3).join("-") || "unknown";
+        if (!integrityDecisionCounts[rule]) integrityDecisionCounts[rule] = {};
+        var decision = String(d.decision || "pending");
+        integrityDecisionCounts[rule][decision] = (integrityDecisionCounts[rule][decision] || 0) + 1;
+      });
+      var requirementCounts = {};
+      var requirementItems = (exportObj.contract_requirement_outcomes && exportObj.contract_requirement_outcomes.items) || {};
+      Object.keys(requirementItems).forEach(function (cpId) {
+        var req = String((requirementItems[cpId] || {}).requirement || "unknown");
+        requirementCounts[req] = (requirementCounts[req] || 0) + 1;
+      });
+      next.contracts[hash] = {
+        date: String(date || ""), reviewer: String(reviewer || ""),
+        app_version: String(meta.app_version || ""), type_id: meta.type_id || null,
+        stance: meta.stance || "party", active_modules: (meta.active_modules || []).slice(),
+        party_roles: (meta.party_roles || []).slice(), scope_statuses: scopeStatuses,
+        verdict_counts: contractVerdicts, reason_counts: contractReasons,
+        manual_finding_counts: manualFindingCounts,
+        integrity_decision_counts: integrityDecisionCounts,
+        contract_requirement_counts: requirementCounts,
+        matching_format: String(exportObj.matching_observations && exportObj.matching_observations.format || "")
+      };
+    }
     next.meta.updated = date || next.meta.updated;
     return next;
   }
@@ -126,7 +273,8 @@ var Loop = (function () {
       pct[v] = Math.round((dist[v] / n) * 100);
       if (dist[v] > dmax) { dmax = dist[v]; dominant = v; }
     });
-    return { n: n, dist: dist, pct: pct, dominant: dominant, lowSample: n < 5 };
+    return { n: n, dist: dist, pct: pct, dominant: dominant, lowSample: n < 5,
+      reasons: JSON.parse(JSON.stringify(slot.reason_counts || {})) };
   }
 
   // 자동화 승격 검토용 원자료. 시스템 평가는 법적 판정이 아니므로 일치율로 단순 환산하지 않고
@@ -137,7 +285,8 @@ var Loop = (function () {
     return {
       pairs: JSON.parse(JSON.stringify(slot.system_verdict_pairs || {})),
       llmPairs: JSON.parse(JSON.stringify(slot.llm_verdict_pairs || {})),
-      origins: JSON.parse(JSON.stringify(slot.origin_counts || {}))
+      origins: JSON.parse(JSON.stringify(slot.origin_counts || {})),
+      reasons: JSON.parse(JSON.stringify(slot.reason_counts || {}))
     };
   }
 
@@ -172,7 +321,8 @@ var Loop = (function () {
   }
 
   function matchingStats(corpus) {
-    var total = { observed: 0, confirmed: 0, reassigned: 0, top1_correct: 0, top1_wrong: 0, gold_in_top3: 0 };
+    var total = { observed: 0, confirmed: 0, reassigned: 0, top1_correct: 0, top1_wrong: 0,
+      gold_in_top3: 0, invalid: 0 };
     var byCheck = (corpus && corpus.byCheck) || {};
     Object.keys(byCheck).forEach(function (cpId) {
       var mc = byCheck[cpId].matching_counts || {};
@@ -181,6 +331,55 @@ var Loop = (function () {
     total.top1_accuracy = total.observed ? total.top1_correct / total.observed : null;
     total.top3_recall = total.observed ? total.gold_in_top3 / total.observed : null;
     total.reassignment_rate = total.observed ? total.reassigned / total.observed : null;
+    return total;
+  }
+
+  // 시스템의 계약조치와 검토자의 최종조치를 비교한다. 법적 판단이 본질적으로 남는
+  // negotiate/hold는 정확도 분모에서 제외하고, 실행결과가 일대일로 비교 가능한 경로만
+  // '측정가능 표본'으로 집계한다. 따라서 이 값은 법률판단 전체 정확도가 아니라
+  // 계약조치 라우팅의 사후 일치도다.
+  function actionDispositionStats(corpus) {
+    var expected = {
+      add_or_modify: ["수정요청"],
+      remove: ["삭제요청"],
+      verify_elsewhere: ["계약외조치"],
+      no_action: ["유지", "비적용"]
+    };
+    var total = { observed: 0, evaluable: 0, agreed: 0, agreement_rate: null,
+      unnecessary_modify_candidates: 0, missed_modify_candidates: 0,
+      hold_total: 0, hold_resolved: 0, negotiation_total: 0,
+      by_system: {}, by_disposition: {} };
+    var byCheck = (corpus && corpus.byCheck) || {};
+    Object.keys(byCheck).forEach(function (cpId) {
+      var pairs = byCheck[cpId].system_action_pairs || {};
+      Object.keys(pairs).forEach(function (pair) {
+        var splitAt = pair.indexOf("::");
+        if (splitAt < 0) return;
+        var systemAction = pair.slice(0, splitAt);
+        var disposition = pair.slice(splitAt + 2);
+        var count = pairs[pair] || 0;
+        if (!count) return;
+        total.observed += count;
+        total.by_system[systemAction] = (total.by_system[systemAction] || 0) + count;
+        total.by_disposition[disposition] = (total.by_disposition[disposition] || 0) + count;
+        if (expected[systemAction]) {
+          total.evaluable += count;
+          if (expected[systemAction].indexOf(disposition) !== -1) total.agreed += count;
+        }
+        if (["add_or_modify", "remove"].indexOf(systemAction) !== -1 &&
+            ["유지", "비적용", "계약외조치"].indexOf(disposition) !== -1)
+          total.unnecessary_modify_candidates += count;
+        if (["no_action", "verify_elsewhere"].indexOf(systemAction) !== -1 &&
+            ["수정요청", "삭제요청"].indexOf(disposition) !== -1)
+          total.missed_modify_candidates += count;
+        if (systemAction === "hold") {
+          total.hold_total += count;
+          if (disposition !== "보류") total.hold_resolved += count;
+        }
+        if (systemAction === "negotiate") total.negotiation_total += count;
+      });
+    });
+    total.agreement_rate = total.evaluable ? total.agreed / total.evaluable : null;
     return total;
   }
 
@@ -201,7 +400,8 @@ var Loop = (function () {
     var out = { contracts: (corpus && corpus.meta && corpus.meta.contract_count) || 0,
       verdicts: 0, issues: 0, no_issue: 0, not_applicable: 0,
       route_checks: { detailed: 0, applicability: 0, quick: 0, standard: 0 },
-      matching: matchingStats(corpus), llm_assistance: llmAssistanceStats(corpus) };
+      matching: matchingStats(corpus), action_disposition: actionDispositionStats(corpus),
+      llm_assistance: llmAssistanceStats(corpus) };
     var byCheck = (corpus && corpus.byCheck) || {};
     Object.keys(byCheck).forEach(function (cpId) {
       var counts = byCheck[cpId].counts || {};
@@ -239,16 +439,77 @@ var Loop = (function () {
     return { gold: gold, conditional: conditional };
   }
 
+  function _proposalKey(cpId, additions, avoid) {
+    function flat(items) {
+      return (items || []).map(function (x) { return x.facet + ":" + x.tag; }).sort().join(",");
+    }
+    return cpId + "|add=" + flat(additions) + "|avoid=" + flat(avoid);
+  }
+
+  // 사람이 확인·재지정한 정답 조항의 태그 분포에서 개선 후보를 만든다.
+  // 자동 반영은 하지 않는다. 표본·지지율 기준을 넘은 항목만 사람 승인 대상으로 제시한다.
+  function tagLearningProposals(corpus, signatures, opts) {
+    opts = opts || {};
+    var minN = opts.minN || 5;
+    var support = opts.support || 0.8;
+    var minNegative = opts.minNegative || 3;
+    var out = [];
+    var byCheck = (corpus && corpus.byCheck) || {};
+    var decisions = (corpus && corpus.tag_proposal_decisions) || {};
+    Object.keys(byCheck).forEach(function (cpId) {
+      var tl = byCheck[cpId].tag_learning;
+      if (!tl || tl.observed < minN) return;
+      var sig = (signatures && signatures[cpId]) || {};
+      var additions = [], avoid = [];
+      Object.keys(tl.positive_counts || {}).forEach(function (facet) {
+        var declared = Array.isArray(sig[facet]) ? sig[facet] : [];
+        Object.keys(tl.positive_counts[facet] || {}).forEach(function (tag) {
+          var count = tl.positive_counts[facet][tag] || 0;
+          if (count / tl.observed >= support && declared.indexOf(tag) === -1)
+            additions.push({ facet: facet, tag: tag, count: count, ratio: count / tl.observed });
+        });
+      });
+      if (tl.reassigned >= minNegative) {
+        Object.keys(tl.negative_counts || {}).forEach(function (facet) {
+          Object.keys(tl.negative_counts[facet] || {}).forEach(function (tag) {
+            var neg = tl.negative_counts[facet][tag] || 0;
+            var pos = ((tl.positive_counts[facet] || {})[tag]) || 0;
+            if (neg / tl.reassigned >= support && pos / tl.observed <= (1 - support))
+              avoid.push({ facet: facet, tag: tag, count: neg, ratio: neg / tl.reassigned });
+          });
+        });
+      }
+      if (!additions.length && !avoid.length) return;
+      var key = _proposalKey(cpId, additions, avoid);
+      out.push({ key: key, cpId: cpId, n: tl.observed, confirmed: tl.confirmed,
+        reassigned: tl.reassigned, profile_version: tl.profile_version || "",
+        additions: additions, avoid: avoid, current_signature: sig,
+        decision: decisions[key] || null });
+    });
+    return out.sort(function (a, b) { return b.n - a.n || a.cpId.localeCompare(b.cpId); });
+  }
+
+  function decideTagProposal(corpus, key, decision, meta) {
+    var next = JSON.parse(JSON.stringify(corpus || emptyCorpus()));
+    if (["approved", "held"].indexOf(decision) === -1 || !key) return next;
+    if (!next.tag_proposal_decisions) next.tag_proposal_decisions = {};
+    next.tag_proposal_decisions[key] = { decision: decision,
+      reviewer: String(meta && meta.reviewer || ""), date: String(meta && meta.date || "") };
+    return next;
+  }
+
   // 코퍼스 백업({meta:{hashes…}, byCheck}) 병합 — export JSON이 아닌 이미 집계된 코퍼스.
   // 집계라 계약 단위 분해가 불가하므로 멱등 규칙: 백업 해시가 하나라도 기적재면 전체 스킵.
   function mergeCorpusBackup(corpus, backup) {
-    var next = JSON.parse(JSON.stringify(corpus || emptyCorpus()));
+    var next = _normalizeCorpus(corpus);
     if (!backup || !backup.byCheck || !backup.meta) return next;
     var hashes = backup.meta.hashes || [];
     for (var i = 0; i < hashes.length; i++)
       if (next.meta.hashes.indexOf(hashes[i]) !== -1) return next;
     next.meta.hashes = next.meta.hashes.concat(hashes);
     next.meta.contract_count += backup.meta.contract_count || hashes.length;
+    var trustedMatching = Number(backup.meta.schema_version || 0) >= 2;
+    if (!trustedMatching) next.meta.legacy_matching_excluded += backup.meta.contract_count || hashes.length;
     Object.keys(backup.byCheck).forEach(function (cpId) {
       var src = backup.byCheck[cpId];
       var slot = _ensureCheck(next, cpId);
@@ -256,18 +517,36 @@ var Loop = (function () {
       Object.keys(src.origin_counts || {}).forEach(function (k) {
         slot.origin_counts[k] = (slot.origin_counts[k] || 0) + src.origin_counts[k];
       });
+      Object.keys(src.reason_counts || {}).forEach(function (k) {
+        slot.reason_counts[k] = (slot.reason_counts[k] || 0) + src.reason_counts[k];
+      });
+      Object.keys(src.action_counts || {}).forEach(function (k) {
+        slot.action_counts[k] = (slot.action_counts[k] || 0) + src.action_counts[k];
+      });
+      Object.keys(src.system_action_pairs || {}).forEach(function (k) {
+        slot.system_action_pairs[k] = (slot.system_action_pairs[k] || 0) + src.system_action_pairs[k];
+      });
       Object.keys(src.system_verdict_pairs || {}).forEach(function (k) {
         slot.system_verdict_pairs[k] = (slot.system_verdict_pairs[k] || 0) + src.system_verdict_pairs[k];
       });
       Object.keys(src.llm_verdict_pairs || {}).forEach(function (k) {
         slot.llm_verdict_pairs[k] = (slot.llm_verdict_pairs[k] || 0) + src.llm_verdict_pairs[k];
       });
-      Object.keys(src.matching_counts || {}).forEach(function (k) {
+      if (trustedMatching) Object.keys(src.matching_counts || {}).forEach(function (k) {
         slot.matching_counts[k] = (slot.matching_counts[k] || 0) + src.matching_counts[k];
       });
       Object.keys(src.llm_assistance_counts || {}).forEach(function (k) {
         slot.llm_assistance_counts[k] = (slot.llm_assistance_counts[k] || 0) + src.llm_assistance_counts[k];
       });
+      if (trustedMatching && src.tag_learning) {
+        if (!slot.tag_learning) slot.tag_learning = _tagLearningSlot();
+        slot.tag_learning.profile_version = src.tag_learning.profile_version || slot.tag_learning.profile_version;
+        slot.tag_learning.observed += src.tag_learning.observed || 0;
+        slot.tag_learning.confirmed += src.tag_learning.confirmed || 0;
+        slot.tag_learning.reassigned += src.tag_learning.reassigned || 0;
+        _mergeTagCountMaps(slot.tag_learning.positive_counts, src.tag_learning.positive_counts);
+        _mergeTagCountMaps(slot.tag_learning.negative_counts, src.tag_learning.negative_counts);
+      }
       (src.comments || []).forEach(function (cm) {
         var found = null;
         for (var j = 0; j < slot.comments.length; j++)
@@ -283,21 +562,35 @@ var Loop = (function () {
     });
     if (backup.meta.updated && backup.meta.updated > (next.meta.updated || ""))
       next.meta.updated = backup.meta.updated;
+    Object.keys(backup.contracts || {}).forEach(function (hash) {
+      if (!next.contracts[hash]) next.contracts[hash] = JSON.parse(JSON.stringify(backup.contracts[hash]));
+    });
+    if (!next.tag_proposal_decisions) next.tag_proposal_decisions = {};
+    Object.keys(backup.tag_proposal_decisions || {}).forEach(function (key) {
+      var incoming = backup.tag_proposal_decisions[key] || {};
+      var current = next.tag_proposal_decisions[key] || {};
+      if (!current.date || String(incoming.date || "") >= String(current.date || ""))
+        next.tag_proposal_decisions[key] = JSON.parse(JSON.stringify(incoming));
+    });
     return next;
   }
 
   return {
     VERDICTS: VERDICTS,
     emptyCorpus: emptyCorpus,
+    normalizeCorpus: _normalizeCorpus,
     mergeIntoCorpus: mergeIntoCorpus,
     checkStats: checkStats,
     automationStats: automationStats,
     reviewRoute: reviewRoute,
     matchingStats: matchingStats,
+    actionDispositionStats: actionDispositionStats,
     llmAssistanceStats: llmAssistanceStats,
     corpusSummary: corpusSummary,
     topComments: topComments,
     curationSignals: curationSignals,
+    tagLearningProposals: tagLearningProposals,
+    decideTagProposal: decideTagProposal,
     mergeCorpusBackup: mergeCorpusBackup
   };
 })();

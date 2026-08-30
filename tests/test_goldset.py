@@ -6,11 +6,15 @@
 import sys
 from pathlib import Path
 
+import pytest
+
 sys.path.insert(0, str(Path(__file__).parent.parent / "build"))
 from goldset import run_goldset  # noqa: E402
 
 
-def test_goldset_all_pass():
+@pytest.mark.parametrize("tag_mode", ["shadow", "assist"])
+def test_goldset_all_pass(monkeypatch, tag_mode):
+    monkeypatch.setenv("CONTRACT_TAG_MATCH_MODE", tag_mode)
     rep = run_goldset()
     fails = [f"{r['id']}: {'; '.join(r['errors'])}" for r in rep["rows"] if not r["ok"]]
     assert rep["ok"], "골드셋 실패:\n" + "\n".join(fails)

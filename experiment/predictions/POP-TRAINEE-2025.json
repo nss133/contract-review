@@ -4,10 +4,58 @@
     "document_id": "POP-TRAINEE-2025",
     "contract_hash": "e6487b139ccac867a9653611106e25f388ea7763750f41ecbcd7765a0b12f073",
     "type_id": "procurement",
-    "generated": "2026-08-06",
-    "app_version": "1.21.0",
+    "generated": "2026-08-29",
+    "app_version": "1.47.0",
     "model": "qwen3:4b",
-    "llm_batch_failures": []
+    "llm_batch_failures": [
+      {
+        "batch": 1,
+        "check_ids": [
+          "RISK-02",
+          "CMN-02"
+        ],
+        "error": "HTTP 503: {\"error\": \"<urlopen error [Errno 61] Connection refused>\"}"
+      },
+      {
+        "batch": 2,
+        "check_ids": [
+          "CMN-06",
+          "CMN-15"
+        ],
+        "error": "HTTP 503: {\"error\": \"<urlopen error [Errno 61] Connection refused>\"}"
+      },
+      {
+        "batch": 3,
+        "check_ids": [
+          "CMN-20",
+          "CMN-21"
+        ],
+        "error": "HTTP 503: {\"error\": \"<urlopen error [Errno 61] Connection refused>\"}"
+      },
+      {
+        "batch": 4,
+        "check_ids": [
+          "RISK-06",
+          "CMN-12"
+        ],
+        "error": "HTTP 503: {\"error\": \"<urlopen error [Errno 61] Connection refused>\"}"
+      },
+      {
+        "batch": 5,
+        "check_ids": [
+          "CMN-08",
+          "CMN-16"
+        ],
+        "error": "HTTP 503: {\"error\": \"<urlopen error [Errno 61] Connection refused>\"}"
+      },
+      {
+        "batch": 6,
+        "check_ids": [
+          "CMN-19"
+        ],
+        "error": "HTTP 503: {\"error\": \"<urlopen error [Errno 61] Connection refused>\"}"
+      }
+    ]
   },
   "items": [
     {
@@ -60,10 +108,10 @@
           "rule_score": 16.81
         }
       ],
-      "llm_reviewed": true,
-      "llm_selected_clause_index": 1,
-      "llm_relation": "reference_only",
-      "llm_completeness": "partial",
+      "llm_reviewed": false,
+      "llm_selected_clause_index": null,
+      "llm_relation": "",
+      "llm_completeness": "",
       "hybrid_clause_index": null
     },
     {
@@ -200,11 +248,11 @@
           "rule_score": 13.62
         }
       ],
-      "llm_reviewed": true,
-      "llm_selected_clause_index": 2,
-      "llm_relation": "direct",
-      "llm_completeness": "complete",
-      "hybrid_clause_index": 2
+      "llm_reviewed": false,
+      "llm_selected_clause_index": null,
+      "llm_relation": "",
+      "llm_completeness": "",
+      "hybrid_clause_index": null
     },
     {
       "check_id": "CMN-07",
@@ -256,11 +304,11 @@
           "rule_score": 11.09
         }
       ],
-      "llm_reviewed": true,
-      "llm_selected_clause_index": 7,
-      "llm_relation": "direct",
-      "llm_completeness": "complete",
-      "hybrid_clause_index": 7
+      "llm_reviewed": false,
+      "llm_selected_clause_index": null,
+      "llm_relation": "",
+      "llm_completeness": "",
+      "hybrid_clause_index": null
     },
     {
       "check_id": "CMN-09",
@@ -368,11 +416,11 @@
           "rule_score": 13.67
         }
       ],
-      "llm_reviewed": true,
-      "llm_selected_clause_index": 5,
-      "llm_relation": "direct",
-      "llm_completeness": "complete",
-      "hybrid_clause_index": 5
+      "llm_reviewed": false,
+      "llm_selected_clause_index": null,
+      "llm_relation": "",
+      "llm_completeness": "",
+      "hybrid_clause_index": null
     },
     {
       "check_id": "CMN-14",
@@ -424,10 +472,10 @@
           "rule_score": 4.83
         }
       ],
-      "llm_reviewed": true,
-      "llm_selected_clause_index": 10,
-      "llm_relation": "reference_only",
-      "llm_completeness": "partial",
+      "llm_reviewed": false,
+      "llm_selected_clause_index": null,
+      "llm_relation": "",
+      "llm_completeness": "",
       "hybrid_clause_index": null
     },
     {
@@ -452,11 +500,11 @@
           "rule_score": 6.84
         }
       ],
-      "llm_reviewed": true,
-      "llm_selected_clause_index": 10,
-      "llm_relation": "direct",
-      "llm_completeness": "complete",
-      "hybrid_clause_index": 10
+      "llm_reviewed": false,
+      "llm_selected_clause_index": null,
+      "llm_relation": "",
+      "llm_completeness": "",
+      "hybrid_clause_index": null
     },
     {
       "check_id": "CMN-17",
@@ -489,30 +537,14 @@
     {
       "check_id": "CMN-18",
       "check": "제3자 지식재산권 침해 주장 시 수탁자의 방어·면책 의무 조항이 있는가",
-      "coverage": "addressed",
-      "rule_clause_index": 3,
-      "candidates": [
-        {
-          "clause_index": 3,
-          "heading": "제3조 (기획업자의 권한 및 의무) ① 기획업자는 연습생이 대중문화예술인으로 성",
-          "rule_score": 27.38
-        },
-        {
-          "clause_index": 4,
-          "heading": "제4조 (연습생의 권한 및 의무) ① 연습생은 기획업자가 제공하는 훈련활동에 충",
-          "rule_score": 17.52
-        },
-        {
-          "clause_index": 8,
-          "heading": "제8조 (계약해제ㆍ해지에 따른 손해배상의 청구 등) ① 기획업자 또는 연습생이",
-          "rule_score": 5.37
-        }
-      ],
-      "llm_reviewed": true,
-      "llm_selected_clause_index": 3,
-      "llm_relation": "direct",
-      "llm_completeness": "complete",
-      "hybrid_clause_index": 3
+      "coverage": "quiet",
+      "rule_clause_index": null,
+      "candidates": [],
+      "llm_reviewed": false,
+      "llm_selected_clause_index": null,
+      "llm_relation": "",
+      "llm_completeness": "",
+      "hybrid_clause_index": null
     },
     {
       "check_id": "CMN-19",
@@ -536,11 +568,11 @@
           "rule_score": 4.52
         }
       ],
-      "llm_reviewed": true,
-      "llm_selected_clause_index": 12,
-      "llm_relation": "direct",
-      "llm_completeness": "complete",
-      "hybrid_clause_index": 12
+      "llm_reviewed": false,
+      "llm_selected_clause_index": null,
+      "llm_relation": "",
+      "llm_completeness": "",
+      "hybrid_clause_index": null
     },
     {
       "check_id": "CMN-20",
@@ -552,22 +584,12 @@
           "clause_index": 3,
           "heading": "제3조 (기획업자의 권한 및 의무) ① 기획업자는 연습생이 대중문화예술인으로 성",
           "rule_score": 18.94
-        },
-        {
-          "clause_index": 4,
-          "heading": "제4조 (연습생의 권한 및 의무) ① 연습생은 기획업자가 제공하는 훈련활동에 충",
-          "rule_score": 16.81
-        },
-        {
-          "clause_index": 1,
-          "heading": "제1조 (목적 및 정의) ① 이 계약의 목적은 기획업자와 연습생이 상호 발전을 위해",
-          "rule_score": 12.06
         }
       ],
-      "llm_reviewed": true,
-      "llm_selected_clause_index": 4,
-      "llm_relation": "reference_only",
-      "llm_completeness": "partial",
+      "llm_reviewed": false,
+      "llm_selected_clause_index": null,
+      "llm_relation": "",
+      "llm_completeness": "",
       "hybrid_clause_index": null
     },
     {
@@ -592,11 +614,11 @@
           "rule_score": 5.67
         }
       ],
-      "llm_reviewed": true,
-      "llm_selected_clause_index": 6,
-      "llm_relation": "direct",
-      "llm_completeness": "complete",
-      "hybrid_clause_index": 6
+      "llm_reviewed": false,
+      "llm_selected_clause_index": null,
+      "llm_relation": "",
+      "llm_completeness": "",
+      "hybrid_clause_index": null
     },
     {
       "check_id": "RISK-02",
@@ -620,11 +642,11 @@
           "rule_score": 11.67
         }
       ],
-      "llm_reviewed": true,
-      "llm_selected_clause_index": 8,
-      "llm_relation": "direct",
-      "llm_completeness": "complete",
-      "hybrid_clause_index": 8
+      "llm_reviewed": false,
+      "llm_selected_clause_index": null,
+      "llm_relation": "",
+      "llm_completeness": "",
+      "hybrid_clause_index": null
     },
     {
       "check_id": "RISK-06",
@@ -648,11 +670,11 @@
           "rule_score": 13.13
         }
       ],
-      "llm_reviewed": true,
-      "llm_selected_clause_index": 8,
-      "llm_relation": "direct",
-      "llm_completeness": "complete",
-      "hybrid_clause_index": 8
+      "llm_reviewed": false,
+      "llm_selected_clause_index": null,
+      "llm_relation": "",
+      "llm_completeness": "",
+      "hybrid_clause_index": null
     }
   ]
 }

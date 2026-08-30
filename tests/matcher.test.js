@@ -5,7 +5,7 @@ const {
   detectType, suggestModules, analyze,
   checkText, clauseQuery, buildModel, citationHit,
   scoreClauseCheck, decideTier, normMatches, titleBonus,
-  alarmGate, coverageOf, preconditionMet, pickType, detectPartyContext, evaluatePerspective,
+  alarmGate, effectiveContractRequirement, coverageOf, preconditionMet, relationshipScopeAllows, pickType, detectPartyContext, evaluatePerspective,
 } = require("../src/matcher.js");
 const MC = require("../src/matcher_config.js");
 const ClauseRole = require("../src/clause_role.js");
@@ -45,6 +45,28 @@ test("checkText: 사람용 decision_question은 매칭 대표텍스트를 바꾸
   const withQuestion = Object.assign({}, base, { decision_question: "회사에 불리하지 않아 수정이 불필요한가?" });
   assert.strictEqual(checkText(withQuestion), checkText(base));
   assert.ok(!checkText(withQuestion).includes("수정이 불필요"));
+});
+
+test("relationshipScopeAllows: 처리위탁에서는 제3자 제공 전용 체크를 닫는다", () => {
+  const cp = { relationship_scope: ["third_party_provision", "mixed"] };
+  assert.strictEqual(relationshipScopeAllows(cp, { kind: "processing_outsourcing" }), false);
+  assert.strictEqual(relationshipScopeAllows(cp, { kind: "third_party_provision" }), true);
+  assert.strictEqual(relationshipScopeAllows({}, { kind: "processing_outsourcing" }), true);
+});
+
+test("analyze: 제공 금지문이 있는 처리위탁은 제3자 제공 체크를 채점 전에 제외한다", () => {
+  const cp = {
+    id: "ALL-PII-X", module: "M-PRIV", severity: "필수", norm_type: "강행",
+    check: "개인정보 제3자 제공 동의를 받는가", triggers: { keywords: ["개인정보", "제3자 제공", "동의"] },
+    absence_check: true, relationship_scope: ["third_party_provision", "mixed"], sources: []
+  };
+  const doc = { meta: { type_id: "outsourcing", modules: [{ id: "M-PRIV", always_on: true }] }, checkpoints: [cp] };
+  const out = analyze([{ index: 0, heading: "정보보호", body: "수탁자는 고객정보를 제3자에게 제공하여서는 아니 된다." }],
+    [doc], { modules: ["M-PRIV"], docTitle: "개인신용정보 보안관리 약정서(일반)" });
+  assert.equal(out.dataRelationship.kind, "processing_outsourcing");
+  assert.equal(out.results[0].coverage, "quiet");
+  assert.equal(out.results[0].relationshipGated, true);
+  assert.equal(out.results[0].best, null);
 });
 const CHECK_DECOY = {
   id: "DECOY", module: "M-CORE", norm_type: "실무", absence_check: true, severity: "참고",
@@ -288,6 +310,28 @@ test("alarmGate: 필수·권장은 통과, 참고는 미통과", () => {
   assert.strictEqual(alarmGate({ severity: "권장" }), true);
   assert.strictEqual(alarmGate({ severity: "참고" }), false);
   assert.strictEqual(alarmGate({}), false);
+});
+
+test("alarmGate: 법적 의무라도 계약 반영 불필요 항목은 부재 알람에서 제외하되 발견 문구는 보존", () => {
+  assert.strictEqual(alarmGate({ severity: "필수", contract_requirement: "none" }), false);
+  assert.strictEqual(coverageOf("none", {
+    severity: "필수", absence_check: true, contract_requirement: "none"
+  }), "quiet");
+  assert.strictEqual(coverageOf("confirmed", {
+    severity: "필수", absence_check: true, contract_requirement: "none"
+  }), "addressed");
+});
+
+test("contract_requirement: 권장은 부재 알람을 만들지 않고 이행 위치로 기본값을 보완", () => {
+  assert.strictEqual(alarmGate({ severity: "필수", contract_requirement: "recommended" }), false);
+  assert.strictEqual(coverageOf("none", { severity: "필수", absence_check: true,
+    contract_requirement: "recommended" }), "quiet");
+  assert.strictEqual(coverageOf("confirmed", { severity: "필수",
+    contract_requirement: "recommended" }), "addressed");
+  assert.strictEqual(effectiveContractRequirement({ implementation_channel: "internal_control" }), "none");
+  assert.strictEqual(effectiveContractRequirement({ implementation_channel: "cooperation_control" }), "derived");
+  assert.strictEqual(effectiveContractRequirement({ basis: "practice" }), "recommended");
+  assert.strictEqual(effectiveContractRequirement({ basis: "statute" }), "unclassified");
 });
 
 test("coverageOf: confirmed→addressed, review→verify", () => {

@@ -44,6 +44,21 @@ test("제N조 본문 안의 호 나열은 분할하지 않는다", () => {
   assert.match(clauses[1].body, /갱신 조건/);
 });
 
+test("줄 첫머리의 조·항 인용을 새 조문으로 분할하지 않는다", () => {
+  const text = [
+    "제1조 (목적) 이 계약의 목적을 정한다.",
+    "제2조 제3항에 따른 의무를 준수한다.",
+    "제2조 (의무) 당사자의 의무를 정한다.",
+    "① 첫째 의무",
+    "② 둘째 의무",
+    "③ 셋째 의무",
+  ].join("\n");
+  const clauses = segmentContract(text);
+  assert.strictEqual(clauses.length, 2);
+  assert.match(clauses[0].body, /제2조 제3항에 따른/);
+  assert.match(clauses[1].heading, /^제2조 \(의무\)/);
+});
+
 test("패턴 미검출 시 전체를 단일 블록으로 반환한다", () => {
   const clauses = segmentContract("아무 구조 없는 텍스트입니다.\n둘째 줄.");
   assert.strictEqual(clauses.length, 1);

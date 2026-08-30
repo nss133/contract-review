@@ -1,0 +1,12 @@
+id: event-product-solicitation-boundary
+desc: 단발 행사에서 보험상품 설명·가입권유가 섞인 드문 조합은 조달 유지·별도 준법경보
+detect_expected: procurement
+active_must_exclude: [X-FINOUT]
+active_must_include: [X-INSMOD]
+scope_expected: {financial_outsourcing: non_applicable}
+alert_must_include: [INS-EVENT-SOLICITATION]
+text: |
+  고객 초청 행사 대행계약서
+
+  을은 1회 고객행사의 대관과 현장 운영을 수행한다. 행사 중 보험상품 설명과 가입 권유,
+  모집 및 위탁판매 지원을 함께 수행하며 계약기간은 행사 종료 및 정산 완료일까지로 한다.

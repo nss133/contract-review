@@ -38,7 +38,9 @@ def run_goldset(knowledge_dir=None):
     """지식 로드 → node 러너(앱 파이프라인 재현) → 채점 리포트 반환."""
     k = load_knowledge(knowledge_dir or ROOT / "knowledge")
     cases = load_cases()
-    payload = {"common": k["common"], "types": k["types"], "cases": cases}
+    payload = {"common": k["common"], "types": k["types"], "cases": cases,
+               "regulatory_scopes": k.get("regulatory_scopes", {"scopes": {}}),
+               "legal_constraints": k.get("legal_constraints", {"rules": []})}
     with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False) as f:
         json.dump(payload, f, ensure_ascii=False)
         path = f.name
@@ -66,6 +68,18 @@ def score(cases, results):
         for mid in c.get("active_must_exclude") or []:
             if mid in active:
                 errs.append(f"모듈 오활성: {mid}가 activeModules에 있음")
+        scopes = r.get("scopeAssessments") or {}
+        for sid, expected in (c.get("scope_expected") or {}).items():
+            actual = (scopes.get(sid) or {}).get("status")
+            if actual != expected:
+                errs.append(f"적용범위: {sid} 기대 {expected} ≠ 실제 {actual}")
+        alert_ids = {item.get("id") for item in (r.get("legalAlerts") or [])}
+        for aid in c.get("alert_must_include") or []:
+            if aid not in alert_ids:
+                errs.append(f"준법경보 누락: {aid}")
+        for aid in c.get("alert_must_exclude") or []:
+            if aid in alert_ids:
+                errs.append(f"준법경보 오탐: {aid}")
         addressed = set(r.get("addressed") or [])
         verify = set(r.get("verify") or [])
         for cid in c.get("addressed_must_exclude") or []:

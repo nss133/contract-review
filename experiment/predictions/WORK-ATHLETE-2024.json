@@ -4,10 +4,99 @@
     "document_id": "WORK-ATHLETE-2024",
     "contract_hash": "7a00c4e31685a7255cea14e1c45fc75bee34034c2458575ddce0524cab40c187",
     "type_id": "procurement",
-    "generated": "2026-08-06",
-    "app_version": "1.21.0",
+    "generated": "2026-08-29",
+    "app_version": "1.47.0",
     "model": "qwen3:4b",
-    "llm_batch_failures": []
+    "llm_batch_failures": [
+      {
+        "batch": 1,
+        "check_ids": [
+          "SP-UNF-09",
+          "SP-UNF-10"
+        ],
+        "error": "HTTP 503: {\"error\": \"<urlopen error [Errno 61] Connection refused>\"}"
+      },
+      {
+        "batch": 2,
+        "check_ids": [
+          "SP-UNF-13",
+          "CMN-12"
+        ],
+        "error": "HTTP 503: {\"error\": \"<urlopen error [Errno 61] Connection refused>\"}"
+      },
+      {
+        "batch": 3,
+        "check_ids": [
+          "RISK-02",
+          "SP-UNF-02"
+        ],
+        "error": "HTTP 503: {\"error\": \"<urlopen error [Errno 61] Connection refused>\"}"
+      },
+      {
+        "batch": 4,
+        "check_ids": [
+          "CMN-01",
+          "CMN-02"
+        ],
+        "error": "HTTP 503: {\"error\": \"<urlopen error [Errno 61] Connection refused>\"}"
+      },
+      {
+        "batch": 5,
+        "check_ids": [
+          "CMN-17",
+          "CMN-20"
+        ],
+        "error": "HTTP 503: {\"error\": \"<urlopen error [Errno 61] Connection refused>\"}"
+      },
+      {
+        "batch": 6,
+        "check_ids": [
+          "CMN-21",
+          "SP-UNF-06"
+        ],
+        "error": "HTTP 503: {\"error\": \"<urlopen error [Errno 61] Connection refused>\"}"
+      },
+      {
+        "batch": 7,
+        "check_ids": [
+          "SP-UNF-01",
+          "SP-UNF-08"
+        ],
+        "error": "HTTP 503: {\"error\": \"<urlopen error [Errno 61] Connection refused>\"}"
+      },
+      {
+        "batch": 8,
+        "check_ids": [
+          "CMN-04",
+          "CMN-06"
+        ],
+        "error": "HTTP 503: {\"error\": \"<urlopen error [Errno 61] Connection refused>\"}"
+      },
+      {
+        "batch": 9,
+        "check_ids": [
+          "CMN-08",
+          "CMN-11"
+        ],
+        "error": "HTTP 503: {\"error\": \"<urlopen error [Errno 61] Connection refused>\"}"
+      },
+      {
+        "batch": 10,
+        "check_ids": [
+          "CMN-15",
+          "CMN-16"
+        ],
+        "error": "HTTP 503: {\"error\": \"<urlopen error [Errno 61] Connection refused>\"}"
+      },
+      {
+        "batch": 11,
+        "check_ids": [
+          "CMN-19",
+          "ITDL-01"
+        ],
+        "error": "HTTP 503: {\"error\": \"<urlopen error [Errno 61] Connection refused>\"}"
+      }
+    ]
   },
   "items": [
     {
@@ -32,11 +121,11 @@
           "rule_score": 6.4
         }
       ],
-      "llm_reviewed": true,
-      "llm_selected_clause_index": 19,
-      "llm_relation": "direct",
-      "llm_completeness": "complete",
-      "hybrid_clause_index": 19
+      "llm_reviewed": false,
+      "llm_selected_clause_index": null,
+      "llm_relation": "",
+      "llm_completeness": "",
+      "hybrid_clause_index": null
     },
     {
       "check_id": "CMN-02",
@@ -60,11 +149,11 @@
           "rule_score": 10.96
         }
       ],
-      "llm_reviewed": true,
-      "llm_selected_clause_index": 1,
-      "llm_relation": "direct",
-      "llm_completeness": "complete",
-      "hybrid_clause_index": 1
+      "llm_reviewed": false,
+      "llm_selected_clause_index": null,
+      "llm_relation": "",
+      "llm_completeness": "",
+      "hybrid_clause_index": null
     },
     {
       "check_id": "CMN-03",
@@ -97,7 +186,7 @@
     {
       "check_id": "CMN-04",
       "check": "대금의 지급 시기·방법과 정산 절차가 규정되어 있는가",
-      "coverage": "verify",
+      "coverage": "addressed",
       "rule_clause_index": 9,
       "candidates": [
         {
@@ -116,11 +205,11 @@
           "rule_score": 6.78
         }
       ],
-      "llm_reviewed": true,
-      "llm_selected_clause_index": 9,
-      "llm_relation": "direct",
-      "llm_completeness": "complete",
-      "hybrid_clause_index": 9
+      "llm_reviewed": false,
+      "llm_selected_clause_index": null,
+      "llm_relation": "",
+      "llm_completeness": "",
+      "hybrid_clause_index": null
     },
     {
       "check_id": "CMN-05",
@@ -181,7 +270,7 @@
     {
       "check_id": "CMN-06",
       "check": "계약기간의 시기·종기가 명시되어 있는가",
-      "coverage": "verify",
+      "coverage": "addressed",
       "rule_clause_index": 3,
       "candidates": [
         {
@@ -200,11 +289,11 @@
           "rule_score": 14.11
         }
       ],
-      "llm_reviewed": true,
-      "llm_selected_clause_index": 3,
-      "llm_relation": "direct",
-      "llm_completeness": "complete",
-      "hybrid_clause_index": 3
+      "llm_reviewed": false,
+      "llm_selected_clause_index": null,
+      "llm_relation": "",
+      "llm_completeness": "",
+      "hybrid_clause_index": null
     },
     {
       "check_id": "CMN-07",
@@ -237,7 +326,7 @@
     {
       "check_id": "CMN-08",
       "check": "해지·해제 사유(중대한 위반, 도산 등)가 규정되어 있고, 임의해지권·해지사유가 당사자 간 균형 있게(회사에만 불리하지 않게) 부여되어 있는가",
-      "coverage": "verify",
+      "coverage": "addressed",
       "rule_clause_index": 18,
       "candidates": [
         {
@@ -256,11 +345,11 @@
           "rule_score": 8.99
         }
       ],
-      "llm_reviewed": true,
-      "llm_selected_clause_index": 18,
-      "llm_relation": "direct",
-      "llm_completeness": "complete",
-      "hybrid_clause_index": 18
+      "llm_reviewed": false,
+      "llm_selected_clause_index": null,
+      "llm_relation": "",
+      "llm_completeness": "",
+      "hybrid_clause_index": null
     },
     {
       "check_id": "CMN-09",
@@ -321,7 +410,7 @@
     {
       "check_id": "CMN-11",
       "check": "손해배상 책임의 귀책사유와 배상 범위 조항이 있고, 그 책임이 어느 일방(특히 우리 회사)에만 편면적으로 부과되지 않는가",
-      "coverage": "verify",
+      "coverage": "addressed",
       "rule_clause_index": 18,
       "candidates": [
         {
@@ -340,11 +429,11 @@
           "rule_score": 9.77
         }
       ],
-      "llm_reviewed": true,
-      "llm_selected_clause_index": 18,
-      "llm_relation": "direct",
-      "llm_completeness": "complete",
-      "hybrid_clause_index": 18
+      "llm_reviewed": false,
+      "llm_selected_clause_index": null,
+      "llm_relation": "",
+      "llm_completeness": "",
+      "hybrid_clause_index": null
     },
     {
       "check_id": "CMN-12",
@@ -368,11 +457,11 @@
           "rule_score": 16.12
         }
       ],
-      "llm_reviewed": true,
-      "llm_selected_clause_index": 18,
-      "llm_relation": "direct",
-      "llm_completeness": "complete",
-      "hybrid_clause_index": 18
+      "llm_reviewed": false,
+      "llm_selected_clause_index": null,
+      "llm_relation": "",
+      "llm_completeness": "",
+      "hybrid_clause_index": null
     },
     {
       "check_id": "CMN-14",
@@ -424,11 +513,11 @@
           "rule_score": 5.9
         }
       ],
-      "llm_reviewed": true,
-      "llm_selected_clause_index": 20,
-      "llm_relation": "direct",
-      "llm_completeness": "complete",
-      "hybrid_clause_index": 20
+      "llm_reviewed": false,
+      "llm_selected_clause_index": null,
+      "llm_relation": "",
+      "llm_completeness": "",
+      "hybrid_clause_index": null
     },
     {
       "check_id": "CMN-16",
@@ -452,11 +541,11 @@
           "rule_score": 5.64
         }
       ],
-      "llm_reviewed": true,
-      "llm_selected_clause_index": 20,
-      "llm_relation": "direct",
-      "llm_completeness": "complete",
-      "hybrid_clause_index": 20
+      "llm_reviewed": false,
+      "llm_selected_clause_index": null,
+      "llm_relation": "",
+      "llm_completeness": "",
+      "hybrid_clause_index": null
     },
     {
       "check_id": "CMN-17",
@@ -480,39 +569,23 @@
           "rule_score": 13.14
         }
       ],
-      "llm_reviewed": true,
-      "llm_selected_clause_index": 14,
-      "llm_relation": "direct",
-      "llm_completeness": "complete",
-      "hybrid_clause_index": 14
+      "llm_reviewed": false,
+      "llm_selected_clause_index": null,
+      "llm_relation": "",
+      "llm_completeness": "",
+      "hybrid_clause_index": null
     },
     {
       "check_id": "CMN-18",
       "check": "제3자 지식재산권 침해 주장 시 수탁자의 방어·면책 의무 조항이 있는가",
-      "coverage": "addressed",
-      "rule_clause_index": 14,
-      "candidates": [
-        {
-          "clause_index": 14,
-          "heading": "제14조(지식재산권 등) ① 직장운동경기부는 계약기간 중 선수의 본명, 사진,",
-          "rule_score": 35.63
-        },
-        {
-          "clause_index": 8,
-          "heading": "제8조(선수의 일반적 권리 및 의무 등) ① 선수는 직장운동경기부와 약정된 후",
-          "rule_score": 16.74
-        },
-        {
-          "clause_index": 17,
-          "heading": "제17조(권리 등의 양도) 직장운동경기부는 권리 등의 양도가 발생하기 이전에",
-          "rule_score": 14.16
-        }
-      ],
-      "llm_reviewed": true,
-      "llm_selected_clause_index": 14,
-      "llm_relation": "direct",
-      "llm_completeness": "complete",
-      "hybrid_clause_index": 14
+      "coverage": "quiet",
+      "rule_clause_index": null,
+      "candidates": [],
+      "llm_reviewed": false,
+      "llm_selected_clause_index": null,
+      "llm_relation": "",
+      "llm_completeness": "",
+      "hybrid_clause_index": null
     },
     {
       "check_id": "CMN-19",
@@ -536,11 +609,11 @@
           "rule_score": 4.41
         }
       ],
-      "llm_reviewed": true,
-      "llm_selected_clause_index": 21,
-      "llm_relation": "direct",
-      "llm_completeness": "complete",
-      "hybrid_clause_index": 21
+      "llm_reviewed": false,
+      "llm_selected_clause_index": null,
+      "llm_relation": "",
+      "llm_completeness": "",
+      "hybrid_clause_index": null
     },
     {
       "check_id": "CMN-20",
@@ -559,15 +632,15 @@
           "rule_score": 11.41
         },
         {
-          "clause_index": 8,
-          "heading": "제8조(선수의 일반적 권리 및 의무 등) ① 선수는 직장운동경기부와 약정된 후",
-          "rule_score": 7.88
+          "clause_index": 14,
+          "heading": "제14조(지식재산권 등) ① 직장운동경기부는 계약기간 중 선수의 본명, 사진,",
+          "rule_score": 5.56
         }
       ],
-      "llm_reviewed": true,
-      "llm_selected_clause_index": 17,
-      "llm_relation": "reference_only",
-      "llm_completeness": "partial",
+      "llm_reviewed": false,
+      "llm_selected_clause_index": null,
+      "llm_relation": "",
+      "llm_completeness": "",
       "hybrid_clause_index": null
     },
     {
@@ -592,11 +665,11 @@
           "rule_score": 8.11
         }
       ],
-      "llm_reviewed": true,
-      "llm_selected_clause_index": 22,
-      "llm_relation": "direct",
-      "llm_completeness": "complete",
-      "hybrid_clause_index": 22
+      "llm_reviewed": false,
+      "llm_selected_clause_index": null,
+      "llm_relation": "",
+      "llm_completeness": "",
+      "hybrid_clause_index": null
     },
     {
       "check_id": "ITDL-01",
@@ -620,11 +693,11 @@
           "rule_score": 19.34
         }
       ],
-      "llm_reviewed": true,
-      "llm_selected_clause_index": 17,
-      "llm_relation": "direct",
-      "llm_completeness": "complete",
-      "hybrid_clause_index": 17
+      "llm_reviewed": false,
+      "llm_selected_clause_index": null,
+      "llm_relation": "",
+      "llm_completeness": "",
+      "hybrid_clause_index": null
     },
     {
       "check_id": "ITDL-02",
@@ -732,11 +805,11 @@
           "rule_score": 9.73
         }
       ],
-      "llm_reviewed": true,
-      "llm_selected_clause_index": 12,
-      "llm_relation": "direct",
-      "llm_completeness": "complete",
-      "hybrid_clause_index": 12
+      "llm_reviewed": false,
+      "llm_selected_clause_index": null,
+      "llm_relation": "",
+      "llm_completeness": "",
+      "hybrid_clause_index": null
     },
     {
       "check_id": "RISK-06",
@@ -788,11 +861,11 @@
           "rule_score": 12.23
         }
       ],
-      "llm_reviewed": true,
-      "llm_selected_clause_index": 12,
-      "llm_relation": "direct",
-      "llm_completeness": "complete",
-      "hybrid_clause_index": 12
+      "llm_reviewed": false,
+      "llm_selected_clause_index": null,
+      "llm_relation": "",
+      "llm_completeness": "",
+      "hybrid_clause_index": null
     },
     {
       "check_id": "SP-UNF-02",
@@ -816,10 +889,10 @@
           "rule_score": 11.33
         }
       ],
-      "llm_reviewed": true,
-      "llm_selected_clause_index": 4,
-      "llm_relation": "reference_only",
-      "llm_completeness": "partial",
+      "llm_reviewed": false,
+      "llm_selected_clause_index": null,
+      "llm_relation": "",
+      "llm_completeness": "",
       "hybrid_clause_index": null
     },
     {
@@ -872,11 +945,11 @@
           "rule_score": 14.73
         }
       ],
-      "llm_reviewed": true,
-      "llm_selected_clause_index": 8,
-      "llm_relation": "direct",
-      "llm_completeness": "complete",
-      "hybrid_clause_index": 8
+      "llm_reviewed": false,
+      "llm_selected_clause_index": null,
+      "llm_relation": "",
+      "llm_completeness": "",
+      "hybrid_clause_index": null
     },
     {
       "check_id": "SP-UNF-07",
@@ -928,11 +1001,11 @@
           "rule_score": 16.19
         }
       ],
-      "llm_reviewed": true,
-      "llm_selected_clause_index": 18,
-      "llm_relation": "direct",
-      "llm_completeness": "complete",
-      "hybrid_clause_index": 18
+      "llm_reviewed": false,
+      "llm_selected_clause_index": null,
+      "llm_relation": "",
+      "llm_completeness": "",
+      "hybrid_clause_index": null
     },
     {
       "check_id": "SP-UNF-09",
@@ -956,11 +1029,11 @@
           "rule_score": 13.35
         }
       ],
-      "llm_reviewed": true,
-      "llm_selected_clause_index": 18,
-      "llm_relation": "direct",
-      "llm_completeness": "complete",
-      "hybrid_clause_index": 18
+      "llm_reviewed": false,
+      "llm_selected_clause_index": null,
+      "llm_relation": "",
+      "llm_completeness": "",
+      "hybrid_clause_index": null
     },
     {
       "check_id": "SP-UNF-10",
@@ -984,11 +1057,11 @@
           "rule_score": 14.92
         }
       ],
-      "llm_reviewed": true,
-      "llm_selected_clause_index": 16,
-      "llm_relation": "direct",
-      "llm_completeness": "complete",
-      "hybrid_clause_index": 16
+      "llm_reviewed": false,
+      "llm_selected_clause_index": null,
+      "llm_relation": "",
+      "llm_completeness": "",
+      "hybrid_clause_index": null
     },
     {
       "check_id": "SP-UNF-11",
@@ -1068,11 +1141,11 @@
           "rule_score": 11.98
         }
       ],
-      "llm_reviewed": true,
-      "llm_selected_clause_index": 22,
-      "llm_relation": "direct",
-      "llm_completeness": "complete",
-      "hybrid_clause_index": 22
+      "llm_reviewed": false,
+      "llm_selected_clause_index": null,
+      "llm_relation": "",
+      "llm_completeness": "",
+      "hybrid_clause_index": null
     }
   ]
 }

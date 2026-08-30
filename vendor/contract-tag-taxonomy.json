@@ -1,0 +1,165 @@
+{
+  "profileVersion": "1.1.0",
+  "facets": {
+    "topics": {
+      "personal_information": {
+        "label": "개인정보"
+      },
+      "subcontracting": {
+        "label": "재위탁"
+      },
+      "confidentiality": {
+        "label": "비밀유지"
+      },
+      "damages": {
+        "label": "손해배상"
+      },
+      "termination": {
+        "label": "해지·해제"
+      },
+      "intellectual_property": {
+        "label": "지식재산권"
+      },
+      "contract_term": {
+        "label": "계약기간"
+      },
+      "assignment": {
+        "label": "양도"
+      },
+      "notice": {
+        "label": "통지·보고"
+      }
+    },
+    "actors": {
+      "trustee": {
+        "label": "수탁자"
+      },
+      "trustor": {
+        "label": "위탁자"
+      },
+      "company": {
+        "label": "회사"
+      },
+      "counterparty": {
+        "label": "상대방"
+      },
+      "disclosing_party": {
+        "label": "정보제공자"
+      },
+      "receiving_party": {
+        "label": "정보수령자"
+      },
+      "party_a": {
+        "label": "갑"
+      },
+      "party_b": {
+        "label": "을"
+      }
+    },
+    "actions": {
+      "subcontract": {
+        "label": "재위탁"
+      },
+      "process": {
+        "label": "처리"
+      },
+      "provide": {
+        "label": "제공"
+      },
+      "destroy": {
+        "label": "파기"
+      },
+      "disclose": {
+        "label": "공개·누설"
+      },
+      "notify": {
+        "label": "통지"
+      },
+      "report": {
+        "label": "보고"
+      },
+      "obtain_consent": {
+        "label": "동의취득"
+      },
+      "obtain_approval": {
+        "label": "승인취득"
+      },
+      "terminate": {
+        "label": "해지·해제"
+      },
+      "compensate": {
+        "label": "배상"
+      },
+      "assign": {
+        "label": "양도"
+      },
+      "use": {
+        "label": "사용"
+      }
+    },
+    "objects": {
+      "personal_information": {
+        "label": "개인정보"
+      },
+      "confidential_information": {
+        "label": "비밀정보"
+      },
+      "intellectual_property": {
+        "label": "지식재산권"
+      },
+      "contractual_position": {
+        "label": "계약상 지위"
+      },
+      "deliverable": {
+        "label": "산출물"
+      }
+    },
+    "modalities": {
+      "prior_written_consent": {
+        "label": "사전 서면동의"
+      },
+      "prior_consent": {
+        "label": "사전동의"
+      },
+      "prior_approval": {
+        "label": "사전승인"
+      },
+      "written": {
+        "label": "서면"
+      },
+      "prohibition": {
+        "label": "금지"
+      },
+      "obligation": {
+        "label": "의무"
+      },
+      "permission": {
+        "label": "허용"
+      },
+      "unconditional_permission": {
+        "label": "무조건 허용"
+      },
+      "notice_required": {
+        "label": "통지 필요"
+      },
+      "post_notice": {
+        "label": "사후 통지"
+      }
+    },
+    "conditions": {
+      "prior": {
+        "label": "사전"
+      },
+      "written": {
+        "label": "서면"
+      },
+      "within_period": {
+        "label": "기한"
+      },
+      "exception": {
+        "label": "예외·단서"
+      }
+    },
+    "provisions": {}
+  }
+}

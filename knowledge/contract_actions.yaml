@@ -1,0 +1,623 @@
+schema_version: contract-action-v1
+updated: "2026-08-29"
+scope: all_absence_checks
+policy: >-
+  법적 검토가치와 계약 문구 조치를 분리한다. 이 파일은 부재알람 항목 전체의
+  계약반영 필요성과 이행 위치를 명시한 사람 검수 정본이며, 미분류 법령 항목은
+  계약 필수로 자동 확정하지 않는다.
+
+actions:
+  ITCL-01:
+    contract_requirement: derived
+    text_effect: conditional
+    implementation_channel: cooperation_control
+    action_rationale: 중요도 평가를 회사가 수행하되 제공자의 자료 협조는 계약으로 확보할 필요가 있음
+  ITCL-02:
+    contract_requirement: derived
+    text_effect: conditional
+    implementation_channel: cooperation_control
+    action_rationale: 건전성·안전성 평가는 회사 의무이고 제공자 자료 협조만 계약 통제 대상임
+  ITCL-03:
+    contract_requirement: derived
+    text_effect: conditional
+    implementation_channel: contract_or_internal_control
+    action_rationale: 업무연속성 계획은 내부통제로 수립하되 제공자 역할은 계약으로 뒷받침할 수 있음
+  ITCL-05:
+    contract_requirement: derived
+    text_effect: conditional
+    implementation_channel: cooperation_control
+    action_rationale: 감독보고는 회사 의무이고 기한 준수를 위한 자료·통지 협조가 필요한 항목임
+  ITCL-06:
+    contract_requirement: express
+    text_effect: required_present
+    implementation_channel: contract
+    action_rationale: 제공자 지위·재위탁 등 중대 변경을 회사가 적시에 알 수 있는 계약 통제가 필요함
+  ITCL-07:
+    contract_requirement: express
+    text_effect: required_present
+    implementation_channel: contract
+    action_rationale: 정보처리시스템 설치 지역은 서비스 제공 조건이므로 계약에서 특정할 필요가 있음
+  SH-ANT-01:
+    contract_requirement: none
+    text_effect: none
+    implementation_channel: external_evidence
+    action_rationale: 기업결합 신고 판단·신고는 거래 외부의 법정 절차이며 계약문구 부재가 위반요건은 아님
+
+  ITSEC-11:
+    contract_requirement: express
+    text_effect: required_present
+    implementation_channel: cooperation_control
+    action_rationale: 재외부주문과 업체 변경을 사전에 통제하려면 상대방을 구속하는 계약 문구가 필요함
+  ITSEC-12:
+    contract_requirement: derived
+    text_effect: conditional
+    implementation_channel: cooperation_control
+    action_rationale: 외주인력 관리의 세부 이행은 운영사항이나 상대방 협조는 계약으로 확보할 필요가 있음
+
+  SOL-01:
+    contract_requirement: none
+    text_effect: none
+    implementation_channel: external_evidence
+    action_rationale: 모집자격 등록은 등록부·증빙으로 확인할 사실이며 계약 문구로 창설되지 않음
+  SOL-03:
+    contract_requirement: recommended
+    text_effect: advisory
+    implementation_channel: contract
+    action_rationale: 대외 법정책임과 별개로 당사자 사이 책임배분을 정하는 협상사항임
+  SOL-04:
+    contract_requirement: recommended
+    text_effect: advisory
+    implementation_channel: contract
+    action_rationale: 회사의 대외책임과 수탁자 구상은 구분되며 구상문구는 위험배분상 권고사항임
+  SOL-05:
+    contract_requirement: recommended
+    text_effect: advisory
+    implementation_channel: contract_or_internal_control
+    action_rationale: 교육·점검은 내부 운영으로도 입증 가능하고 필요한 협조 범위만 계약화할 사항임
+
+  PRIV-01:
+    contract_requirement: express
+    text_effect: required_present
+    implementation_channel: standard_subdoc
+    action_rationale: 처리위탁 법정사항은 주계약 또는 계약의 일부인 처리위탁·보안 특약으로 문서화해야 함
+  PRIV-02:
+    contract_requirement: express
+    text_effect: required_present
+    implementation_channel: standard_subdoc
+    action_rationale: 목적 외 처리 금지는 표준 보안관리약정으로 충족 가능한 법정 문서화 항목임
+  PRIV-03:
+    contract_requirement: express
+    text_effect: required_present
+    implementation_channel: standard_subdoc
+    action_rationale: 기술적·관리적 보호조치는 표준 보안관리약정에서 일괄 확인할 수 있음
+  PRIV-04:
+    contract_requirement: express
+    text_effect: required_present
+    implementation_channel: standard_subdoc
+    action_rationale: 위탁 목적과 범위는 주계약 또는 보안관리약정에서 특정해야 함
+  PRIV-05:
+    contract_requirement: express
+    text_effect: required_present
+    implementation_channel: standard_subdoc
+    action_rationale: 재위탁 제한은 계약의 일부인 보안관리약정으로 충족 가능한 항목임
+  PRIV-06:
+    contract_requirement: express
+    text_effect: required_present
+    implementation_channel: standard_subdoc
+    action_rationale: 접근 제한 등 안전성 조치는 표준 보안관리약정에서 확인할 수 있음
+  PRIV-07:
+    contract_requirement: express
+    text_effect: required_present
+    implementation_channel: standard_subdoc
+    action_rationale: 처리현황 점검·감독 수인 내용은 표준 보안관리약정으로 충족 가능함
+  PRIV-08:
+    contract_requirement: express
+    text_effect: required_present
+    implementation_channel: standard_subdoc
+    action_rationale: 수탁자 위반 책임은 주계약 또는 보안관리약정에 문서화할 항목임
+  PRIV-13:
+    contract_requirement: express
+    text_effect: required_present
+    implementation_channel: standard_subdoc
+    action_rationale: 교육·감독에 대한 수탁자 협조는 표준 보안관리약정에서 확인할 수 있음
+  PRIV-14:
+    contract_requirement: express
+    text_effect: required_present
+    implementation_channel: standard_subdoc
+    action_rationale: 업무범위 초과 이용·제공 금지는 표준 보안관리약정의 핵심 통제임
+  PRIV-15:
+    contract_requirement: express
+    text_effect: required_present
+    implementation_channel: standard_subdoc
+    action_rationale: 개인정보 재위탁 동의는 표준 보안관리약정에서 확인할 수 있음
+  PRIV-17:
+    contract_requirement: express
+    text_effect: required_present
+    implementation_channel: standard_subdoc
+    action_rationale: 개인신용정보 처리위탁 문서화 사항은 보안관리약정으로 통합 충족 가능함
+  PRIV-19:
+    contract_requirement: express
+    text_effect: required_present
+    implementation_channel: standard_subdoc
+    action_rationale: 암호화 등 보호조치는 표준 보안관리약정에서 확인할 수 있음
+  PRIV-20:
+    contract_requirement: express
+    text_effect: required_present
+    implementation_channel: standard_subdoc
+    action_rationale: 교육과 안전처리 내용은 표준 보안관리약정에서 확인할 수 있음
+  PRIV-21:
+    contract_requirement: express
+    text_effect: required_present
+    implementation_channel: standard_subdoc
+    action_rationale: 개인신용정보 재위탁 제한은 표준 보안관리약정에서 확인할 수 있음
+
+  REL-02:
+    contract_requirement: none
+    text_effect: none
+    implementation_channel: internal_control
+    action_rationale: 대주주 거래 이사회 의결은 회사 내부 승인절차이며 계약 기재 자체가 이행요건은 아님
+  REL-09:
+    contract_requirement: none
+    text_effect: none
+    implementation_channel: external_evidence
+    action_rationale: 계열사 여부는 법인·관계회사 자료로 확인할 사실이며 계약상 자기선언만으로 확정되지 않음
+
+  FIN-SEC-02:
+    contract_requirement: none
+    text_effect: none
+    implementation_channel: external_evidence
+    action_rationale: 지명채권 질권의 대항요건은 실제 통지·승낙 증빙으로 확인하며 계약 문구만으로 충족되지 않음
+  FIN-SEC-03:
+    contract_requirement: express
+    text_effect: required_present
+    implementation_channel: contract
+    action_rationale: 근저당 계약의 피담보채권과 채권최고액은 담보 범위를 정하는 본질적 문구임
+  FIN-SEC-05:
+    contract_requirement: none
+    text_effect: none
+    implementation_channel: external_evidence
+    action_rationale: 채권양도 대항요건은 실제 통지·승낙과 확정일자 증빙으로 확인할 사항임
+  FIN-SEC-P03:
+    contract_requirement: recommended
+    text_effect: advisory
+    implementation_channel: contract
+    action_rationale: 근담보 범위의 적정성은 법정 획일사항보다 위험배분·협상 판단에 가까움
+
+  SP-PAY-01:
+    contract_requirement: express
+    text_effect: required_present
+    implementation_channel: contract
+    action_rationale: 하도급대금 지급기일은 서면 기재와 지급기한 준수를 함께 확인할 핵심 조건임
+  SP-PAY-11:
+    contract_requirement: express
+    text_effect: required_present
+    implementation_channel: contract
+    action_rationale: 연동 또는 미연동 합의는 해당 거래의 서면에 구체화할 사항임
+
+  CH-01:
+    contract_requirement: recommended
+    text_effect: advisory
+    implementation_channel: contract
+    action_rationale: 수수료 산정·정산은 법정 획일문구가 아니라 거래조건 협상사항임
+  CH-02:
+    contract_requirement: recommended
+    text_effect: advisory
+    implementation_channel: contract
+    action_rationale: 종료 후 고객관리 책임은 운영방식과 위험배분에 따라 정할 협상사항임
+  CH-03:
+    contract_requirement: recommended
+    text_effect: advisory
+    implementation_channel: contract
+    action_rationale: 불완전판매·과태료의 대외책임과 내부 구상은 구분되며 계약상 배분은 협상사항임
+  FIN-LOAN-02:
+    contract_requirement: recommended
+    text_effect: advisory
+    implementation_channel: contract
+    action_rationale: 이자 약정의 내용은 계약조건이지만 특정 약정이 반드시 필요한지는 거래구조에 따라 달라짐
+  FIN-LOAN-04:
+    contract_requirement: recommended
+    text_effect: advisory
+    implementation_channel: contract
+    action_rationale: 지연손해금 약정은 법정 기준과 별개로 선택 가능한 위험배분 조항임
+  FIN-GUAR-01:
+    contract_requirement: express
+    text_effect: required_present
+    implementation_channel: contract
+    action_rationale: 보증의 효력에 서면과 기명날인·서명이 직접 요구되는 형식요건임
+  INV-MAN-03:
+    contract_requirement: none
+    text_effect: none
+    implementation_channel: internal_control
+    action_rationale: 일임재산 분별관리·예탁은 운용과 보관의 법정 의무로서 실제 운영·증적을 확인할 사항임
+  NDA-15:
+    contract_requirement: recommended
+    text_effect: advisory
+    implementation_channel: contract
+    action_rationale: 비밀침해 손해배상책임은 법률상 성립 가능하며 별도 문구는 입증·위험배분상 권고임
+
+  CORE-05:
+    contract_requirement: none
+    text_effect: none
+    implementation_channel: internal_control
+    action_rationale: 손해사정 수탁자 평가기준의 마련·선정은 회사 내부 승인·운영 절차임
+  CORE-06:
+    contract_requirement: recommended
+    text_effect: advisory
+    implementation_channel: contract
+    action_rationale: 법령준수의무는 법에서 직접 발생하고 포괄 준수문구는 계약상 보강수단임
+  CORE-07:
+    contract_requirement: derived
+    text_effect: conditional
+    implementation_channel: cooperation_control
+    action_rationale: 재위탁 통제의 실효성을 위해 수탁자를 구속하는 사전동의 문구가 필요함
+  CORE-09:
+    contract_requirement: recommended
+    text_effect: advisory
+    implementation_channel: contract
+    action_rationale: 수탁자 위반의 대외책임과 내부 구상은 구분되며 배상·구상 문구는 위험배분 사항임
+  CORE-10:
+    contract_requirement: derived
+    text_effect: conditional
+    implementation_channel: contract_or_internal_control
+    action_rationale: 관리·감독은 회사 의무이나 자료요구·감사 협조는 계약으로 확보할 필요가 있음
+  CORE-11:
+    contract_requirement: derived
+    text_effect: conditional
+    implementation_channel: cooperation_control
+    action_rationale: 감독보고는 회사 의무이고 개시일정·자료 제공에 대한 수탁자 협조가 필요함
+  CORE-13:
+    contract_requirement: recommended
+    text_effect: advisory
+    implementation_channel: cooperation_control
+    action_rationale: 감독당국 조치 시 변경협조 문구는 대응 편의를 위한 권고사항임
+  CORE-14:
+    contract_requirement: recommended
+    text_effect: advisory
+    implementation_channel: cooperation_control
+    action_rationale: 감독기관 검사·자료제출 협조는 실무상 유용하나 모든 계약의 획일적 필수문구는 아님
+
+  SP-DEL-02:
+    contract_requirement: recommended
+    text_effect: advisory
+    implementation_channel: contract
+    action_rationale: 지체상금은 법정 손해배상과 별개로 손해액을 예정하는 선택적 위험배분 조항임
+  SP-DEL-05:
+    contract_requirement: recommended
+    text_effect: advisory
+    implementation_channel: contract
+    action_rationale: 도급 하자구제는 법정 규율이 존재하며 세부 문구는 거래상 필요에 따른 협상사항임
+  SP-DEL-12:
+    contract_requirement: recommended
+    text_effect: advisory
+    implementation_channel: contract
+    action_rationale: 위임형 선관주의·구제는 법정 의무를 계약에서 구체화하는 선택사항임
+  SP-DEL-09:
+    contract_requirement: recommended
+    text_effect: advisory
+    implementation_channel: contract
+    action_rationale: 매매 하자담보의 세부 조정은 법정 규율을 전제로 회사 유불리를 보고 정할 협의사항임
+  ITDL-06:
+    contract_requirement: recommended
+    text_effect: advisory
+    implementation_channel: contract
+    action_rationale: SLA와 장애 보상은 서비스 위험을 배분하는 실무 협상사항임
+
+  SETTLE-01:
+    contract_requirement: express
+    text_effect: required_present
+    implementation_channel: contract
+    action_rationale: 화해 대상 분쟁의 특정은 합의 범위와 효력을 정하는 본질적 문구임
+  SETTLE-02:
+    contract_requirement: express
+    text_effect: required_present
+    implementation_channel: contract
+    action_rationale: 상호 양보 내용은 화해의 성립과 효력 범위를 정하는 본질적 문구임
+  SETTLE-05:
+    contract_requirement: recommended
+    text_effect: advisory
+    implementation_channel: contract
+    action_rationale: 부제소 합의의 범위는 유효성 위험을 줄이기 위한 협상·명확화 사항임
+  SETTLE-07:
+    contract_requirement: recommended
+    text_effect: advisory
+    implementation_channel: contract
+    action_rationale: 화해금 지급조건은 거래 이행을 위한 중요 조건이나 법정 획일문구는 아님
+
+  SH-SHARE-01:
+    contract_requirement: recommended
+    text_effect: advisory
+    implementation_channel: contract_or_internal_control
+    action_rationale: 정관상 승인과 계약상 양도제한은 효력 층위가 달라 정관 확인과 협상이 함께 필요함
+  SH-SHARE-05:
+    contract_requirement: recommended
+    text_effect: advisory
+    implementation_channel: contract
+    action_rationale: 우선매수권은 법정 기본권이 아니라 당사자 협상으로 창설하는 권리임
+  SH-SHARE-06:
+    contract_requirement: recommended
+    text_effect: advisory
+    implementation_channel: contract
+    action_rationale: 동반매도참여권은 소수주주 보호를 위해 선택적으로 설계하는 계약상 권리임
+  SH-SHARE-07:
+    contract_requirement: recommended
+    text_effect: advisory
+    implementation_channel: contract
+    action_rationale: 동반매도청구권은 지배주주 회수구조에 따라 선택적으로 설계하는 계약상 권리임
+  SH-SHARE-08:
+    contract_requirement: none
+    text_effect: none
+    implementation_channel: external_evidence
+    action_rationale: 주권 교부·명의개서는 실제 이행과 회사 장부 증빙으로 확인할 사항임
+  SH-GOV-04:
+    contract_requirement: recommended
+    text_effect: advisory
+    implementation_channel: contract
+    action_rationale: 법정 열람권을 넘는 정보접근권은 투자조건에 따라 회사 유불리를 보고 정할 협의사항임
+  SH-FIN-01:
+    contract_requirement: none
+    text_effect: none
+    implementation_channel: statutory_duty
+    action_rationale: 주주의 신주인수권은 법률에서 직접 발생하며 계약문구 부재만으로 권리가 사라지지 않음
+
+  # ── 전수 부재점검 명시분류 — v1.47.0 ──
+  CMN-01:
+    contract_requirement: recommended
+    text_effect: advisory
+    implementation_channel: contract
+    action_rationale: 당사자 표시는 분쟁 예방을 위한 기본 명확화 사항이나 모든 계약의 획일적 법정문구는 아님
+  CMN-02:
+    contract_requirement: recommended
+    text_effect: advisory
+    implementation_channel: contract
+    action_rationale: 목적조항은 계약 해석에 유용하지만 거래 실질과 다른 경우의 수정 필요성은 개별 판단사항임
+  CMN-03:
+    contract_requirement: recommended
+    text_effect: advisory
+    implementation_channel: contract
+    action_rationale: 대금 산정방식은 거래조건에 따른 협상사항이며 무상계약 등에는 필요하지 않을 수 있음
+  CMN-04:
+    contract_requirement: recommended
+    text_effect: advisory
+    implementation_channel: contract
+    action_rationale: 지급·정산 절차는 거래 운영을 위한 권고사항으로 구체적 방식은 계약별로 달라짐
+  CMN-05:
+    contract_requirement: recommended
+    text_effect: advisory
+    implementation_channel: contract
+    action_rationale: 부가가치세 부담 표시는 가격 분쟁을 줄이는 명확화 사항이며 적용 여부는 거래 성격에 따름
+  CMN-05-2:
+    contract_requirement: recommended
+    text_effect: advisory
+    implementation_channel: contract
+    action_rationale: 지연이자 약정은 법정 지연손해금과 별도로 선택하는 위험배분 조항임
+  CMN-06:
+    contract_requirement: recommended
+    text_effect: advisory
+    implementation_channel: contract
+    action_rationale: 계약기간 특정은 운영상 중요하지만 기간 없는 계약 등 거래구조에 따라 달라질 수 있음
+  CMN-07:
+    contract_requirement: recommended
+    text_effect: advisory
+    implementation_channel: contract
+    action_rationale: 갱신 방식과 거절기한은 거래 지속성을 고려해 회사 유불리를 보고 정할 협의사항임
+  CMN-08:
+    contract_requirement: recommended
+    text_effect: advisory
+    implementation_channel: contract
+    action_rationale: 해지·해제 사유의 범위와 균형은 법정 규율을 보완하는 위험배분 사항임
+  CMN-09:
+    contract_requirement: recommended
+    text_effect: advisory
+    implementation_channel: contract
+    action_rationale: 최고·통지 절차는 분쟁 예방에 유용하나 구체적 절차는 계약별 협상사항임
+  CMN-10:
+    contract_requirement: recommended
+    text_effect: advisory
+    implementation_channel: contract
+    action_rationale: 종료 시 정산·반환·이관은 업무 성격에 따라 필요한 범위가 달라지는 운영조건임
+  CMN-11:
+    contract_requirement: recommended
+    text_effect: advisory
+    implementation_channel: contract
+    action_rationale: 손해배상 귀책과 범위는 법정 책임을 전제로 당사자가 조정하는 위험배분 사항임
+  CMN-14:
+    contract_requirement: recommended
+    text_effect: advisory
+    implementation_channel: contract
+    action_rationale: 책임상한과 고의·중과실 예외는 거래 위험과 협상력에 따라 정하는 선택사항임
+  CMN-15:
+    contract_requirement: recommended
+    text_effect: advisory
+    implementation_channel: contract
+    action_rationale: 비밀정보 정의는 비밀유지 범위를 명확히 하는 권고사항이며 모든 계약에 필요한 문구는 아님
+  CMN-16:
+    contract_requirement: recommended
+    text_effect: advisory
+    implementation_channel: contract
+    action_rationale: 비밀유지 존속기간은 정보 성격과 거래 필요에 따라 정하는 협상사항임
+  CMN-17:
+    contract_requirement: recommended
+    text_effect: advisory
+    implementation_channel: contract
+    action_rationale: 산출물 권리귀속은 산출물이 발생하는 거래에서만 필요한 선택적 명확화 사항임
+  CMN-18:
+    contract_requirement: recommended
+    text_effect: advisory
+    implementation_channel: contract
+    action_rationale: 제3자 지식재산권 침해 대응은 산출물·라이선스 위험을 배분하는 협상사항임
+  CMN-19:
+    contract_requirement: recommended
+    text_effect: advisory
+    implementation_channel: contract
+    action_rationale: 분쟁해결 방식과 관할 합의는 절차 편의를 위한 선택적 계약조건임
+  CMN-20:
+    contract_requirement: recommended
+    text_effect: advisory
+    implementation_channel: contract
+    action_rationale: 양도제한은 상대방 변경 위험을 통제하기 위해 선택적으로 두는 계약상 제한임
+
+  CRS-03:
+    contract_requirement: recommended
+    text_effect: advisory
+    implementation_channel: contract
+    action_rationale: 언어본 우선순위는 복수 언어 계약의 해석 충돌을 줄이는 선택적 명확화 사항임
+  SOL-02:
+    contract_requirement: derived
+    text_effect: conditional
+    implementation_channel: cooperation_control
+    action_rationale: 해지절차 마련은 회사 내부통제 사항이고 상대방 설명·절차 준수를 위한 계약 협조가 필요함
+  ITDL-01:
+    contract_requirement: recommended
+    text_effect: advisory
+    implementation_channel: contract
+    action_rationale: 저작권법상 기본 귀속과 다른 결과나 2차적저작물작성권 확보가 필요할 때 계약으로 조정하는 사항임
+  ITDL-02:
+    contract_requirement: recommended
+    text_effect: advisory
+    implementation_channel: contract
+    action_rationale: 소스코드 인도·에스크로는 유지보수와 공급자 위험에 따라 선택하는 거래조건임
+  ITDL-07:
+    contract_requirement: recommended
+    text_effect: advisory
+    implementation_channel: contract
+    action_rationale: 오픈소스 고지·책임은 실제 사용 가능성과 라이선스 위험에 따라 구체화할 사항임
+  ITDL-08:
+    contract_requirement: recommended
+    text_effect: advisory
+    implementation_channel: contract
+    action_rationale: 악성코드·백도어 보증은 개발·납품 위험을 배분하는 선택적 보증사항임
+
+  PRIV-16:
+    contract_requirement: none
+    text_effect: none
+    implementation_channel: statutory_duty
+    action_rationale: 수탁자 소속직원 간주는 법률에서 직접 발생하므로 계약서에 반복 기재할 필요가 없음
+  ALL-PII-01:
+    contract_requirement: none
+    text_effect: none
+    implementation_channel: external_evidence
+    action_rationale: 제3자 제공의 법적근거·동의는 동의서와 처리기록에서 확인하며 계약문구로 충족되지 않음
+  ALL-PII-02:
+    contract_requirement: none
+    text_effect: none
+    implementation_channel: external_evidence
+    action_rationale: 법정 고지는 정보주체 대상 고지·동의 화면과 증빙에서 확인할 사항임
+  REL-08:
+    contract_requirement: none
+    text_effect: none
+    implementation_channel: external_evidence
+    action_rationale: 정상가격은 비교견적·시장자료·산정문서로 입증하며 계약 문구만으로 적정성이 확정되지 않음
+
+  NDA-01:
+    contract_requirement: recommended
+    text_effect: advisory
+    implementation_channel: contract
+    action_rationale: 비공지성은 영업비밀 성립요건이지만 이를 계약에 그대로 선언하는 것이 법정 성립요건은 아님
+  NDA-03:
+    contract_requirement: recommended
+    text_effect: advisory
+    implementation_channel: contract
+    action_rationale: 비밀관리 조치는 실제 관리상태가 핵심이고 계약상 의무는 그 이행을 보강하는 수단임
+  NDA-04:
+    contract_requirement: recommended
+    text_effect: advisory
+    implementation_channel: contract
+    action_rationale: 무단 사용·누설 금지는 법률상 보호와 별도로 계약책임 범위를 명확히 하는 권고사항임
+  NDA-05:
+    contract_requirement: recommended
+    text_effect: advisory
+    implementation_channel: contract
+    action_rationale: 목적 외 사용금지는 NDA의 보호범위를 구체화하는 계약상 권고사항임
+  NDA-06:
+    contract_requirement: recommended
+    text_effect: advisory
+    implementation_channel: contract
+    action_rationale: 제3자 제공 사전동의는 정보 유통을 통제하기 위한 선택적 계약조건임
+  NDA-07:
+    contract_requirement: recommended
+    text_effect: advisory
+    implementation_channel: contract
+    action_rationale: 취급자 한정과 동일의무는 비밀관리 수준을 구체화하는 계약상 통제임
+  NDA-12:
+    contract_requirement: recommended
+    text_effect: advisory
+    implementation_channel: contract
+    action_rationale: 반환·파기와 증빙은 정보 성격과 보관 필요에 따라 정하는 종료 후 통제사항임
+
+  CORE-01:
+    contract_requirement: express
+    text_effect: required_present
+    implementation_channel: contract
+    action_rationale: 적용되는 손해사정 위탁에서는 합의한 업무범위와 계약조건의 계약서 반영·교부가 요구됨
+  DIS-01:
+    contract_requirement: derived
+    text_effect: conditional
+    implementation_channel: contract_or_internal_control
+    action_rationale: 도급·파견 구별은 실제 지휘관계가 핵심이며 독립수행 문구와 운영 증적을 함께 확인해야 함
+  DIS-02:
+    contract_requirement: derived
+    text_effect: conditional
+    implementation_channel: contract_or_internal_control
+    action_rationale: 지시창구 문구는 직접 지휘 위험을 낮추는 보조통제이고 실제 운영도 함께 확인해야 함
+  DIS-03:
+    contract_requirement: derived
+    text_effect: conditional
+    implementation_channel: contract_or_internal_control
+    action_rationale: 인력·노무관리 주체는 계약 문구와 실제 근태·업무지시 체계를 함께 보아야 함
+
+  SP-DEL-01:
+    contract_requirement: recommended
+    text_effect: advisory
+    implementation_channel: contract
+    action_rationale: 검사·검수 기준과 보완 절차는 납품·용역의 품질위험을 배분하는 거래조건임
+  SP-DEL-03-2:
+    contract_requirement: recommended
+    text_effect: advisory
+    implementation_channel: contract
+    action_rationale: 불가항력 후 정산·해지·복구비용은 거래 특성에 따라 선택적으로 정할 사항임
+  SP-DEL-08-2:
+    contract_requirement: none
+    text_effect: none
+    implementation_channel: external_evidence
+    action_rationale: 이행·하자보증은 증권 징구와 유효기간 등 실제 증빙을 확인해야 하며 문구만으로 충족되지 않음
+
+  SH-GOV-03:
+    contract_requirement: recommended
+    text_effect: advisory
+    implementation_channel: contract
+    action_rationale: 사전동의권 대상은 투자자 보호와 경영자율성 사이에서 선택적으로 설계하는 권리임
+  SH-GOV-05:
+    contract_requirement: recommended
+    text_effect: advisory
+    implementation_channel: contract
+    action_rationale: 교착해소 방식은 주주구성과 회수전략에 따라 선택하는 계약상 절차임
+  SH-FIN-03:
+    contract_requirement: recommended
+    text_effect: advisory
+    implementation_channel: contract
+    action_rationale: 희석방지 조항은 투자조건과 후속 자금조달 계획에 따라 선택하는 권리임
+  SH-FIN-06:
+    contract_requirement: recommended
+    text_effect: advisory
+    implementation_channel: contract
+    action_rationale: 후속 출자의무는 법정 기본의무가 아니라 자금조달 합의에 따라 창설하는 의무임
+  SH-EXIT-01:
+    contract_requirement: recommended
+    text_effect: advisory
+    implementation_channel: contract
+    action_rationale: 경업·겸직 금지는 사업보호 필요성과 과도한 제한 위험을 함께 협상할 사항임
+  SH-EXIT-02:
+    contract_requirement: recommended
+    text_effect: advisory
+    implementation_channel: contract
+    action_rationale: 핵심주주 전업의무는 투자 전제와 역할분담에 따라 선택적으로 두는 의무임
+  SH-EXIT-03:
+    contract_requirement: recommended
+    text_effect: advisory
+    implementation_channel: contract
+    action_rationale: 이탈 시 지분정산은 창업자·투자자 간 위험과 회수구조를 정하는 협상사항임
+  SH-EXIT-05:
+    contract_requirement: recommended
+    text_effect: advisory
+    implementation_channel: contract
+    action_rationale: 진술·보장과 손해전보는 거래 실사와 책임배분에 따라 설계하는 계약상 구제임

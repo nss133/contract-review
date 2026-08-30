@@ -1,0 +1,12 @@
+{
+  "profileVersion": "1.1.0",
+  "producerPackage": "legal-opinion-tagger",
+  "producerPackageVersion": "0.6.3",
+  "sourceSha256": "42d2ecef11ae2204c1785e2671223f769adea17d73d042d374073cf354f42f91",
+  "artifactSha256": "90a106e962bef97d18c11c595a54a3d225206b1860f5bd9c749e388585186a90",
+  "cjsArtifactSha256": "917265bd542679f6e11d2920cebf600e13a4b1bce74c78e9a2ec5824cc2b58e5",
+  "taxonomySha256": "5256b8af6279f7cb1636b0ff141878c4d6f19215dd665e3ef0a3f0d0255907b0",
+  "artifact": "contract-tag-engine.js",
+  "cjsArtifact": "contract-tag-engine.cjs",
+  "taxonomy": "contract-tag-taxonomy.json"
+}

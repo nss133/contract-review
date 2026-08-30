@@ -12,6 +12,9 @@ if (typeof require !== "undefined") {
   var ClauseRole = require("./clause_role.js");
   var MatcherConfig = require("./matcher_config.js");
   var Sentence = require("./sentence.js");
+  var ContractTagsRef = require("./contract_tags.js");
+} else {
+  var ContractTagsRef = ContractTags;
 }
 
 // ── 유형 감지 v2 (제목 가중·길이 정규화·미확정) ──────────────────
@@ -86,12 +89,18 @@ function detectType(text, types, docTitle, fileName) {
   types.forEach(function (ty) {
     var sig = ty.meta.nature_signals, sup = ty.meta.suppresses;
     if (!sig || !sig.length || !sup || !sup.length) return;
+    var exempt = (ty.meta.suppress_exempt_signals || []).some(function (kw) {
+      return t.indexOf(kw) !== -1 || title.indexOf(kw) !== -1 || fname.indexOf(kw) !== -1;
+    });
+    if (exempt) return;
     var hits = sig.reduce(function (n, kw) { return n + (t.indexOf(kw) !== -1 ? 1 : 0); }, 0);
     if (hits >= NATURE_MIN) {
       sup.forEach(function (id) {
         // 제목 적중 유형은 억제 대상에서 제외(11.1차) — 제목이 성격 신호보다 강한 증거.
         // "업무위탁계약서"라는 제목이 있는데 본문 어휘로 outsourcing을 죽이면 안 됨.
-        if (byId[id] && !byId[id].titleHit) { byId[id].score = 0; byId[id].suppressed = true; }
+        if (byId[id] && (!byId[id].titleHit || ty.meta.suppress_title_hits)) {
+          byId[id].score = 0; byId[id].suppressed = true;
+        }
       });
     }
   });
@@ -418,6 +427,7 @@ function suggestModules(text, modules, opts) {
   var o = (opts && typeof opts === "object") ? opts : { stance: opts };
   var stance = o.stance;
   var docTitle = o.docTitle || "";
+  var scopeAssessments = o.scopeAssessments || {};
   // 국면 예외 사유 컨텍스트 — 미지정 시 본문에서 계열사 상대방 여부를 직접 판정.
   var ctx = o.stanceCtx || { affiliate_party: hasAffiliateParty(text) };
   var t = _stripStatuteCitations(String(text || ""));
@@ -425,6 +435,15 @@ function suggestModules(text, modules, opts) {
   modules
     .filter(function (m) { return !m.always_on && moduleAllowedInStance(m, stance, ctx); })
     .forEach(function (m) {
+      // 법규 적용범위 게이트가 있는 모듈은 단순 키워드 수로 켜지 않는다.
+      // scope engine의 3상태가 체크리스트 진입 여부를 단일하게 통제한다.
+      if (m.scope_rule) {
+        var scope = scopeAssessments[m.scope_rule];
+        if (!scope) { if (m.screening_question) ask.push(m.id); return; }
+        if (scope.status === "applicable") on.push(m.id);
+        else if (scope.status === "needs_confirmation") ask.push(m.id);
+        return;
+      }
       var kws = m.suggest_keywords || [];
       var distinct = 0, occ = 0;
       for (var i = 0; i < kws.length; i++) {
@@ -610,6 +629,24 @@ function subjectBonus(clause, check) {
   return -MatcherConfig.SUBJECT_PENALTY;
 }
 
+// 구조화 태그층은 shadow에서 관찰·비교 trace만 남기고, 배포 assist에서도 curated signature만 사용한다.
+// 점수 보정은 상한을 둔 재정렬 신호일 뿐
+// 노출 게이트나 자동판정의 독립 증거로 취급하지 않는다.
+function tagMatchTrace(clause, check) {
+  if (!ContractTagsRef || MatcherConfig.TAG_MATCH_MODE === "off") return null;
+  return ContractTagsRef.matchClause(check, clause);
+}
+function tagScoreAdjustment(trace) {
+  if (!trace || MatcherConfig.TAG_MATCH_MODE !== "assist") return 0;
+  if (trace.conflicts && trace.conflicts.length)
+    return -Math.min(MatcherConfig.TAG_PENALTY_CAP, Math.abs(trace.score || 0) || MatcherConfig.TAG_PENALTY_CAP);
+  // 일부 주제만 맞는 불완전 signature는 가점하지 않는다. 특히 일반 하도급 조항이
+  // 개인정보 재위탁 동의 체크를 밀어 올리는 식의 교차도메인 오부착을 차단한다.
+  if (trace.missing && trace.missing.length) return 0;
+  return Math.max(-MatcherConfig.TAG_PENALTY_CAP,
+    Math.min(MatcherConfig.TAG_BONUS_CAP, Number(trace.score || 0)));
+}
+
 // 노출 게이트: 명시 인용 · 복수 핵심어 겹침 · 표제 강일치 중 하나면 통과.
 function passesOverlapGate(clause, check, citation) {
   if (citation) return true;
@@ -691,12 +728,15 @@ function scoreClauseCheck(clause, checkEntry, model) {
   // 당사자 축(11.6차 사용자 요청) — 조항의 주어가 그 체크가 겨냥하는 주체와 맞는지.
   // 같은 문언이라도 "집합투자업자는 …" 조항과 "수익자는 …" 조항은 검토 의미가 다름.
   var subjBonus = subjectBonus(clause, checkEntry.cp);
-  var raw = tw * tfidf + jw * jaccard + nBonus + tBonus + fitBonus + subjBonus;
+  var tagTrace = tagMatchTrace(clause, checkEntry.cp);
+  var tagAdjustment = tagScoreAdjustment(tagTrace);
+  var raw = tw * tfidf + jw * jaccard + nBonus + tBonus + fitBonus + subjBonus + tagAdjustment;
   var score = Math.max(0, Math.min(100, raw));
   var signals = (tfidf > 0 ? 1 : 0) + (jaccard > 0 ? 1 : 0);
   return {
     score: score, tfidf: tfidf, jaccard: jaccard,
-    normMatch: nMatch, titleBonus: tBonus, citation: citation, signals: signals
+    normMatch: nMatch, titleBonus: tBonus, citation: citation, signals: signals,
+    tagTrace: tagTrace, tagAdjustment: tagAdjustment
   };
 }
 
@@ -767,7 +807,28 @@ function decideTier(ranked, check) {
 //   addressed=짚음 / verify=확인 권장 / consider=검토 제안(알람) / quiet=조용한 기타.
 // 알람 게이트: 확실 부재(absence_check && none)이고 severity가 필수·권장일 때만 consider.
 //   저위험(참고) 부재는 조용(quiet) — 저위험 알람 억제(스펙 B).
+function effectiveContractRequirement(check) {
+  if (!check) return "unclassified";
+  if (["express", "derived", "recommended", "none"].indexOf(check.contract_requirement) !== -1)
+    return check.contract_requirement;
+  // 실제 이행 위치가 이미 분류된 항목만 보완한다. 미분류 법령 항목을 일괄 express로
+  // 간주하면 법적 검토가치가 곧 계약 문구 의무로 바뀌므로 unclassified로 보존한다.
+  var byChannel = {
+    contract: "express", cooperation_control: "derived", contract_or_internal_control: "derived",
+    internal_control: "none", monitoring_evidence: "none", external_evidence: "none",
+    statutory_duty: "none", standard_subdoc: "none"
+  };
+  if (byChannel[check.implementation_channel]) return byChannel[check.implementation_channel];
+  if (check.basis === "practice") return "recommended";
+  return "unclassified";
+}
 function alarmGate(check) {
+  // 법령상 의무여도 계약서 명시가 이행요건이 아닌 항목은 "문구 부재" 알람을 만들지 않는다.
+  // 법적 중요도(severity)와 계약 반영 필요성(contract_requirement)은 서로 다른 축이다.
+  var req = effectiveContractRequirement(check);
+  if (req === "none" || req === "recommended") return false;
+  // 미분류 법령 항목은 계약 수정으로 단정하지 않되, 큐레이션 완료 전 누락 방지를 위해
+  // 기존 검토 후보는 유지한다. ActionRouter가 사용자 화면에서 '판단 보류'로 명시한다.
   return MatcherConfig.ALARM_SEVERITIES.indexOf(check && check.severity) !== -1;
 }
 // 조건부 부재체크(전제신호 게이트):
@@ -793,6 +854,15 @@ function preconditionMet(check, text) {
   for (var i = 0; i < pre.length; i++) if (t.indexOf(pre[i]) !== -1) return true;
   return false;
 }
+// 개인정보 법률관계 게이트(14차): 처리위탁과 제3자 제공은 같은 "제공" 단어를 쓰지만
+// 법적 구조와 필요한 증빙이 다르다. relationship_scope가 있는 체크는 문서 전체의
+// 구조화 관계 태그가 맞을 때만 채점·노출한다.
+function relationshipScopeAllows(check, relationship) {
+  var scope = check && check.relationship_scope;
+  if (!scope || !scope.length) return true;
+  var kind = typeof relationship === "string" ? relationship : relationship && relationship.kind;
+  return scope.indexOf(kind || "unknown") !== -1;
+}
 // 문서 성격 게이트(11.1차) — requires_doc_title이 선언된 체크는 "그 문서가 애초에 그런 계약일 때"만
 // 적용됨. 담보권 설정계약의 대항요건·점유이전 체크가, 본문에 "질권" 한 단어가 스쳐 나온 신탁계약서에
 // 붙던 오탐을 차단(2026-08-05 사용자 보고: 신탁계약은 질권 설정 시 전자등록 방식만 정하고 있고
@@ -809,6 +879,8 @@ function docTitleAllows(check, docTitle) {
 // docTitle 전달 시 문서 성격 게이트 적용 — 미적용 체크는 매칭 자체를 quiet로 접음.
 function coverageOf(tier, check, text, docTitle) {
   if (docTitle !== undefined && !docTitleAllows(check, docTitle)) return "quiet";
+  // none은 '문구 부재 알람을 만들지 않는다'는 뜻이지, 실제 발견된 문구까지 숨긴다는 뜻은 아님.
+  // 발견 문구는 감사 가능하게 유지하고 ActionRouter가 별도 자료 확인·수정 불필요로 분리한다.
   if (tier === "confirmed") return "addressed";
   if (tier === "review") return "verify";
   // tier === "none"
@@ -947,12 +1019,23 @@ function analyze(clauses, docs, opts) {
   var fullText = (clauses || []).concat(baseClauses).map(function (cl) {
     return String(cl.heading || "") + " " + String(cl.body || "");
   }).join("\n");
+  var dataRelationship = ContractTagsRef.detectDataRelationship(
+    (clauses || []).concat(baseClauses), docTitle || "");
   var partyContext = o.partyContext || detectPartyContext(fullText);
   // 조항 귀속(11.3차): 표제가 특정 체크를 정면으로 지시하는 조항을 미리 확정.
   var owners = computeClauseOwners(clauses, model.checks.map(function (e) { return e.cp; }));
 
   model.checks.forEach(function (entry) {
     var cp = entry.cp;
+    // 관계 불일치 항목은 비싼 조항별 채점 전에 종료한다. 예컨대 처리위탁 보안약정서의
+    // "제3자 제공 금지"가 §17 제3자 제공 동의·고지 카드로 번지는 일을 막는다.
+    var relationshipGated = !relationshipScopeAllows(cp, dataRelationship);
+    if (relationshipGated) {
+      results.push({ cpId: cp.id, tier: "none", coverage: "quiet", best: null, ranked: [],
+        inBase: null, roleGated: false, relationshipGated: true, autoClear: null,
+        perspective: null, serviceGated: false });
+      return;
+    }
     var scored = clauses.map(function (cl) {
       return { clause: cl, s: scoreClauseCheck(cl, entry, model) };
     }).sort(function (a, b) { return b.s.score - a.s.score; });
@@ -1016,7 +1099,10 @@ function analyze(clauses, docs, opts) {
       // 직접 겨냥한 체크(표제 강일치 — 예: '계약의 목적' 체크). 강등돼도 tier는 보존(매칭 존재 자체는 기록).
       if (coverage !== "quiet") {
         var bestRole = ClauseRole.clauseRole(bestClause.heading, bestClause.body);
-        if (bestRole.weak === true && !cited && !f.titleStrong && !acOk) {
+        // 동의서·고지문은 조 번호 없이 문서 전체가 한 세그먼트로 들어오는 경우가 흔하다.
+        // 관계 태그를 통과한 외부 증빙 체크는 '(전체)' weak-role만으로 숨기지 않는다.
+        if (bestRole.weak === true && cp.implementation_channel !== "external_evidence" &&
+            !cited && !f.titleStrong && !acOk) {
           coverage = "quiet";
           gate.weakRole = true;
         }
@@ -1027,7 +1113,9 @@ function analyze(clauses, docs, opts) {
     // 부재 알람이 아님 — 원계약이 적법하게 존재한다는 전제이므로 "원계약에 반영됨"으로 분류.
     // 검토 포커스는 변경된 내용에 두고, 원계약 커버분은 별도 표시로 접는다.
     var inBase = null;
-    if (coverage === "consider" && baseClauses.length) {
+    if ((coverage === "consider" ||
+        (coverage === "quiet" && cp.absence_check && effectiveContractRequirement(cp) === "recommended")) &&
+        baseClauses.length) {
       var baseScored = baseClauses.map(function (cl) {
         return { clause: cl, s: scoreClauseCheck(cl, entry, model) };
       }).sort(function (a, b) { return b.s.score - a.s.score; });
@@ -1055,17 +1143,21 @@ function analyze(clauses, docs, opts) {
       perspective = evaluatePerspective(cp, candidates[0].clause, partyContext);
     var reasons = _reasons(tier, candidates.length ? candidates : eligibleScored, cp);
     var rankedTop = eligibleScored.slice(0, 3).map(function (r) {
-      return { clauseIndex: r.clause.index, score: r.s.score };
+      return { clauseIndex: r.clause.index, score: r.s.score,
+        tagScore: r.s.tagTrace ? r.s.tagTrace.score : null,
+        tagAdjustment: r.s.tagAdjustment || 0 };
     });
 
     results.push({
       cpId: cp.id,
       tier: tier,
       coverage: coverage,
-      best: top ? { clauseIndex: top.clause.index, score: top.s.score, reasons: reasons, gate: gate } : null,
+      best: top ? { clauseIndex: top.clause.index, score: top.s.score, reasons: reasons, gate: gate,
+        tagTrace: top.s.tagTrace, tagAdjustment: top.s.tagAdjustment || 0 } : null,
       ranked: rankedTop,
       inBase: inBase,      // 원계약에서 커버된 위치(변경합의서 국면) — 없으면 null
       roleGated: roleGated, // 당사 지위 불일치로 접힘(11.1차) — 진단·설명용
+      relationshipGated: false, // 개인정보 처리위탁/제3자 제공 관계 불일치 여부
       autoClear: acHit,    // 문장 요건 판정(12차) — {ok, sentence} 또는 null. 자동 기재·빠른 확인 근거
       perspective: perspective, // 당사 관점 판정(13차) — 문구 존재와 회사 유불리를 분리
       serviceGated: serviceGated // 용역 성질 불일치로 부재알람 접힘(12차) — 진단·설명용
@@ -1078,7 +1170,8 @@ function analyze(clauses, docs, opts) {
         clauseIndex: top.clause.index,
         hits: {
           tier: tier, coverage: coverage, score: top.s.score, tfidf: top.s.tfidf, jaccard: top.s.jaccard,
-          citation: top.s.citation, normMatch: top.s.normMatch, reasons: reasons
+          citation: top.s.citation, normMatch: top.s.normMatch, reasons: reasons,
+          tagTrace: top.s.tagTrace, tagAdjustment: top.s.tagAdjustment || 0
         }
       });
     }
@@ -1089,6 +1182,7 @@ function analyze(clauses, docs, opts) {
     checkpoints: model.checks.map(function (e) { return e.cp; }),
     results: results,
     serviceNature: svc, // 용역 성질결정(12차) — {nature, hits}. UI 안내용
+    dataRelationship: dataRelationship, // 개인정보 관계 태그와 문장 근거(UI·감사용)
     matches: matches,   // 하위호환: tier!=="none" 인 best (app.js 소비)
     missing: missing    // 하위호환(재정의): coverage==="consider" — 알람 게이트 통과분만
   };
@@ -1104,6 +1198,8 @@ if (typeof module !== "undefined")
     checkAllowedInStance: checkAllowedInStance,
     STANCES: STANCES,
     subjectBonus: subjectBonus,
+    tagMatchTrace: tagMatchTrace,
+    tagScoreAdjustment: tagScoreAdjustment,
     detectFundKind: detectFundKind,
     detectServiceNature: detectServiceNature,
     serviceScopeAllows: serviceScopeAllows,
@@ -1134,7 +1230,9 @@ if (typeof module !== "undefined")
     evidenceRequirementsMet: evidenceRequirementsMet,
     decideTier: decideTier,
     alarmGate: alarmGate,
+    effectiveContractRequirement: effectiveContractRequirement,
     preconditionMet: preconditionMet,
+    relationshipScopeAllows: relationshipScopeAllows,
     coverageOf: coverageOf,
     subDocCoverage: subDocCoverage,
     detectSubdocRefs: detectSubdocRefs,

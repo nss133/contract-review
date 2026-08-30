@@ -4,11 +4,12 @@ id: mal-ga-recruit
 desc: 사내표준 GA에이전트 위촉 — 표준서식 회귀(사내표준층)
 detect_expected: channel
 # 2026-07-28 사용자 게이트: channel detect_keywords 보강("위촉")으로 outsourcing 오분류 해소.
-# outsourcing 재분류 시 발동하던 CORE-10·CORE-14(M-CORE 전속)는 재발 방지 고정.
+# outsourcing 재분류 시 발동하던 CORE-10·CORE-14(X-FINOUT 전속)는 재발 방지 고정.
 # CH-02·CH-03(해지 시 이관·채널 귀책 구상) consider 2건은 channel 정상 감지 후 신규 노출된
 # 항목 — 이번 게이트 결정 범위 밖(원문에 위촉기간·해지 조항은 있으나 이관/구상 문언과의
 # 매칭 여부 미확인). 라벨하지 않고 알람 유지 — 별도 트리아지 필요.
-active_must_exclude: [M-CORE]
+active_must_exclude: [X-FINOUT]
+scope_expected: {financial_outsourcing: non_applicable}
 text: "GA에이전트 신분 위촉 계약서\n\n미래에셋생명보험주식회사(이하”회사”라 한다)는 회사와 보험 대리점 표준위탁계약서(이하”GA 계약”이라\
   \ 한다)를 체결한 [              ]에게 “GA계약서” 제3조 ”위탁업무” 제 1항 제 7호, 및 “위탁계약에 대한 부속약정서” 제\
   \ 2조(위탁업무의 범위) 제 2항에 의거하여 GA에이전트로 위촉하고자 [              ] 와 합의하여 아래와 같이 신분 위촉 계약을\
