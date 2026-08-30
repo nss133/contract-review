@@ -248,6 +248,10 @@ var Loop = (function () {
       next.contracts[hash] = {
         date: String(date || ""), reviewer: String(reviewer || ""),
         app_version: String(meta.app_version || ""), type_id: meta.type_id || null,
+        type_classification: exportObj.type_classification
+          ? JSON.parse(JSON.stringify(exportObj.type_classification)) : null,
+        subdoc_confirmation: exportObj.subdoc_confirmation
+          ? JSON.parse(JSON.stringify(exportObj.subdoc_confirmation)) : null,
         stance: meta.stance || "party", active_modules: (meta.active_modules || []).slice(),
         party_roles: (meta.party_roles || []).slice(), scope_statuses: scopeStatuses,
         verdict_counts: contractVerdicts, reason_counts: contractReasons,
@@ -498,6 +502,29 @@ var Loop = (function () {
     return next;
   }
 
+  // 계약별 최초 자동 유형과 검토자 최종 유형을 비교한다. 과거 포맷처럼 비교축이 없는
+  // 계약은 분모에서 제외해 버전 혼합 시 정확도가 왜곡되지 않게 한다.
+  function typeClassificationStats(corpus) {
+    var out = { observed: 0, auto_evaluable: 0, matched: 0, corrected: 0,
+      rescued_from_undetermined: 0, unresolved: 0, accuracy: null, confusion: {} };
+    Object.keys((corpus && corpus.contracts) || {}).forEach(function (hash) {
+      var td = corpus.contracts[hash] && corpus.contracts[hash].type_classification;
+      if (!td || td.format !== "cr-type-classification-v1") return;
+      out.observed++;
+      var initial = td.initial_auto_type_id || null;
+      var finalType = td.final_type_id || null;
+      if (!finalType) { out.unresolved++; return; }
+      if (!initial) { out.rescued_from_undetermined++; return; }
+      out.auto_evaluable++;
+      var key = initial + "::" + finalType;
+      out.confusion[key] = (out.confusion[key] || 0) + 1;
+      if (initial === finalType) out.matched++;
+      else out.corrected++;
+    });
+    out.accuracy = out.auto_evaluable ? out.matched / out.auto_evaluable : null;
+    return out;
+  }
+
   // 코퍼스 백업({meta:{hashes…}, byCheck}) 병합 — export JSON이 아닌 이미 집계된 코퍼스.
   // 집계라 계약 단위 분해가 불가하므로 멱등 규칙: 백업 해시가 하나라도 기적재면 전체 스킵.
   function mergeCorpusBackup(corpus, backup) {
@@ -586,6 +613,7 @@ var Loop = (function () {
     matchingStats: matchingStats,
     actionDispositionStats: actionDispositionStats,
     llmAssistanceStats: llmAssistanceStats,
+    typeClassificationStats: typeClassificationStats,
     corpusSummary: corpusSummary,
     topComments: topComments,
     curationSignals: curationSignals,

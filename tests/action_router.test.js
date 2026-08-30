@@ -37,9 +37,20 @@ test("금지 문구는 발견될 때만 삭제·수정 대상으로 라우팅한
   assert.equal(A.route(cp, { cpId: "X", coverage: "quiet" }, {}).action, "no_action");
 });
 
-test("계약 밖 이행항목은 증빙 확인으로 보내고 부속서류 확인 시 조치 없음이다", () => {
+test("계약 밖 이행항목은 부속서류 후보만으로 완료하지 않고 사람 확인 후 조치 없음이다", () => {
   const cp = { contract_requirement: "none", text_effect: "none", implementation_channel: "standard_subdoc" };
   assert.equal(A.route(cp, { cpId: "X", coverage: "quiet" }, {}).action, "verify_elsewhere");
   assert.equal(A.route(cp, { cpId: "X", coverage: "consider" },
-    { subdoc_coverage: { X: { docName: "보안약정" } } }).action, "no_action");
+    { subdoc_coverage: { X: { docName: "보안약정" } } }).action, "verify_elsewhere");
+  assert.equal(A.route(cp, { cpId: "X", coverage: "consider" }, {
+    subdoc_coverage: { X: { docName: "보안약정" } }, confirmed_subdoc_checks: { X: true }
+  }).action, "no_action");
+});
+
+test("계약서의 약정서 참조도 체결 확인 전에는 별도 자료 확인으로 남긴다", () => {
+  const cp = { contract_requirement: "none", text_effect: "none", implementation_channel: "standard_subdoc" };
+  const candidate = A.route(cp, { cpId: "X", coverage: "consider" },
+    { ref_coverage: { X: { title: "보안약정", signal: "별도 체결" } } });
+  assert.equal(candidate.evidence_state, "external_unknown");
+  assert.equal(candidate.action, "verify_elsewhere");
 });

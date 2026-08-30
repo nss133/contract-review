@@ -194,6 +194,9 @@ textarea#contract-text { width: 100%; height: 200px; }
 .subdoc-use { flex-basis: 100%; font-size: 12.5px; color: #23477a; background: #eef4fb;
   border: 1px solid #cfdcee; border-radius: 6px; padding: 5px 10px; margin-top: 2px; cursor: pointer; }
 .subdoc-use .subdoc-use-hint { color: #7a8ba3; font-size: 11.5px; }
+.subdoc-use .subdoc-suggest { display: inline-block; margin-left: 5px; padding: 1px 5px;
+  border: 1px solid #d5aa5a; border-radius: 9px; background: #fff8e8; color: #8a5a08;
+  font-size: 10.5px; font-weight: 700; vertical-align: 1px; }
 .subdoc-use-list { flex: 1; min-width: 280px; }
 .subdoc-use-list .subdoc-use { display: block; margin: 0; padding: var(--sp-1) var(--sp-2); }
 .subdoc-use-list input { margin-right: 5px; }

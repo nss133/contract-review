@@ -41,14 +41,18 @@ var ActionRouter = (function () {
 
   function _coverageContext(result, ctx) {
     var id = result && result.cpId;
-    if (id && ctx && ctx.subdoc_coverage && ctx.subdoc_coverage[id]) return "subdoc";
-    if (id && ctx && ctx.ref_coverage && ctx.ref_coverage[id]) return "referenced_subdoc";
+    var confirmed = !!(id && ctx && ctx.confirmed_subdoc_checks && ctx.confirmed_subdoc_checks[id]);
+    if (id && ctx && ctx.subdoc_coverage && ctx.subdoc_coverage[id])
+      return confirmed ? "confirmed_subdoc" : "unconfirmed_subdoc";
+    if (id && ctx && ctx.ref_coverage && ctx.ref_coverage[id])
+      return confirmed ? "confirmed_reference" : "contract_reference";
     return "";
   }
 
   function evidenceState(result, ctx) {
     var outside = _coverageContext(result, ctx);
-    if (outside) return "external_found";
+    if (outside === "confirmed_subdoc" || outside === "confirmed_reference") return "external_found";
+    if (outside) return "external_unknown";
     if (!result) return "not_evaluated";
     if (result.coverage === "addressed" || result.coverage === "base_covered") return "found";
     if (result.coverage === "verify") return "partial";

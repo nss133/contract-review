@@ -75,6 +75,31 @@ test("mergeIntoCorpus: 직접 의견·완결성 판정·계약반영 라우팅�
   assert.deepStrictEqual(c.contract_requirement_counts, { express: 1, none: 1 });
 });
 
+test("유형 분류: 최초 자동유형과 검토자 최종유형을 계약별로 보존·비교", () => {
+  let c = L.emptyCorpus();
+  const accepted = exp("type-1", "손", {});
+  accepted.type_classification = { format: "cr-type-classification-v1",
+    initial_auto_type_id: "procurement", final_type_id: "procurement", outcome: "auto_accepted" };
+  const changed = exp("type-2", "손", {});
+  changed.type_classification = { format: "cr-type-classification-v1",
+    initial_auto_type_id: "outsourcing", final_type_id: "procurement", outcome: "reviewer_changed" };
+  changed.subdoc_confirmation = { format: "cr-subdoc-confirmation-v1", confirmed_ids: ["SUBDOC-PII"] };
+  const rescued = exp("type-3", "손", {});
+  rescued.type_classification = { format: "cr-type-classification-v1",
+    initial_auto_type_id: null, final_type_id: "nda", outcome: "reviewer_selected_after_undetermined" };
+  c = L.mergeIntoCorpus(c, accepted);
+  c = L.mergeIntoCorpus(c, changed);
+  c = L.mergeIntoCorpus(c, rescued);
+  assert.equal(c.contracts["type-2"].type_classification.final_type_id, "procurement");
+  assert.deepStrictEqual(c.contracts["type-2"].subdoc_confirmation.confirmed_ids, ["SUBDOC-PII"]);
+  const s = L.typeClassificationStats(c);
+  assert.deepStrictEqual({ observed: s.observed, auto_evaluable: s.auto_evaluable, matched: s.matched,
+    corrected: s.corrected, rescued: s.rescued_from_undetermined },
+    { observed: 3, auto_evaluable: 2, matched: 1, corrected: 1, rescued: 1 });
+  assert.equal(s.accuracy, 0.5);
+  assert.equal(s.confusion["outsourcing::procurement"], 1);
+});
+
 test("mergeIntoCorpus: 코멘트 이력 + 동일 텍스트 count 병합", () => {
   let c = L.emptyCorpus();
   c = L.mergeIntoCorpus(c, exp("h1", "손", { "CMN-11": { verdict: "검토의견", comment: "상한 확인 필요", date: "d" } }));

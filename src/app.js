@@ -9,6 +9,9 @@ if (CR.tag_match_mode && ["off", "shadow", "assist"].indexOf(CR.tag_match_mode) 
 var state = { text: "", clauses: [], typeId: null, activeModules: [], result: null,
   stance: "party", baseText: "", baseClauses: [], docTitle: "", partyRoles: [], partyContext: null, fileName: "",
   scopeAnswers: {}, scopeAssessments: {}, scopeModuleOverrides: {}, legalAlerts: [],
+  // 계약서 유형 분류 피드백: 같은 계약서에서 최초 자동분류와 검토자의 최종 선택을 분리 보존한다.
+  // 최종값은 내보내는 시점의 typeId를 사용하므로 분석 후 유형을 바꿔도 비교 기록에 반영된다.
+  typeDecision: null,
   // 수동 재지정(11.7차): cpId → clauseIndex. 자동 매칭이 엉뚱한 조항에 붙었을 때
   // 검토자가 올바른 조항으로 옮긴 기록. 재분석해도 유지되도록 계약서 해시별 저장.
   reassign: {},
@@ -570,6 +573,35 @@ function onTypeChanged(value) {
   }
   renderChecklist();
 }
+function captureInitialTypeDecision() {
+  var hash = hashText(state.text || "");
+  if (state.typeDecision && state.typeDecision.contract_hash === hash) return;
+  var ranked = state.detectRanked || [];
+  state.typeDecision = {
+    contract_hash: hash,
+    initial_auto_type_id: pickType(ranked) || null,
+    candidates: ranked.slice(0, 3).map(function (r) {
+      return { type_id: r.typeId || null, score: Number(r.score || 0),
+        hits: (r.hits || []).slice(0, 6), suppressed: !!r.suppressed };
+    })
+  };
+}
+function currentTypeDecision() {
+  captureInitialTypeDecision();
+  var initial = state.typeDecision && state.typeDecision.initial_auto_type_id || null;
+  var finalType = state.typeId || null;
+  var outcome = finalType
+    ? (initial ? (initial === finalType ? "auto_accepted" : "reviewer_changed") : "reviewer_selected_after_undetermined")
+    : "undetermined";
+  return {
+    format: "cr-type-classification-v1",
+    initial_auto_type_id: initial,
+    final_type_id: finalType,
+    outcome: outcome,
+    reviewer_changed: outcome === "reviewer_changed",
+    candidates: JSON.parse(JSON.stringify((state.typeDecision && state.typeDecision.candidates) || []))
+  };
+}
 function initChecklistType() {
   TYPE_SELECT_IDS.forEach(function (id) {
     var sel = document.getElementById(id);
@@ -597,6 +629,7 @@ function loadContractFile(f) {
     state.fileName = f.name || ""; // 파일명도 유형 신호(2026-08-19 피드백) — 수동 편집 시 해제
     state.scopeAnswers = {};
     state.scopeModuleOverrides = {};
+    state.subdocUse = {}; state.subdocUseHash = ""; // 계약별 체결 확인값이므로 새 계약에 이월하지 않음
     err.hidden = true;
     refreshInputSetup(); // 파일 적재 즉시 국면·유형·모듈 추정 프리필(11차)
   }).catch(function (ex) {
@@ -615,6 +648,7 @@ document.getElementById("docx-file").addEventListener("change", function (e) {
 var _stanceTouched = false;
 function refreshInputSetup() {
   state.text = document.getElementById("contract-text").value;
+  loadSubdocUse();
   var note = document.getElementById("stance-auto");
   if (!state.text.trim()) {
     state.scopeAssessments = {};
@@ -696,6 +730,7 @@ document.getElementById("contract-text").addEventListener("input", function () {
   // 적용범위 사람 보정은 계약별 판단이다. 본문이 바뀌면 이전 계약의 보정값을 이월하지 않는다.
   state.scopeAnswers = {};
   state.scopeModuleOverrides = {};
+  state.subdocUse = {}; state.subdocUseHash = ""; // 본문이 바뀌면 기존 계약의 약정서 체결 확인을 다시 받음
   clearTimeout(refreshInputSetup._t);
   refreshInputSetup._t = setTimeout(refreshInputSetup, 300); // 타이핑 중 과호출 방지
 });
@@ -740,8 +775,24 @@ document.getElementById("base-clear").addEventListener("click", function () {
 
 // 부속 서류(#3) — 검토 대상 아닌 별도 서류. 필수 항목 커버 확인용.
 state.subDocs = []; // [{name, text}]
-// 표준 부속서류 사용 체크(#B) — id → true/false 사용자 지정. 미지정(undefined)이면 자동 감지를 따름.
+// 표준 부속서류 사용 체크(#B) — id → true/false 사용자 지정. true만 검토자 확인으로 인정.
 state.subdocUse = {};
+state.subdocUseHash = "";
+var SUBDOC_USE_KEY_PREFIX = "cr-subdoc-confirm-v1-";
+function loadSubdocUse() {
+  var hash = hashText(state.text || "");
+  if (state.subdocUseHash === hash) return;
+  state.subdocUseHash = hash;
+  try {
+    var saved = JSON.parse(localStorage.getItem(SUBDOC_USE_KEY_PREFIX + hash) || "{}");
+    state.subdocUse = saved && typeof saved === "object" && !Array.isArray(saved) ? saved : {};
+  } catch (e) { state.subdocUse = {}; }
+}
+function saveSubdocUse() {
+  var hash = hashText(state.text || "");
+  state.subdocUseHash = hash;
+  try { localStorage.setItem(SUBDOC_USE_KEY_PREFIX + hash, JSON.stringify(state.subdocUse || {})); } catch (e) {}
+}
 function renderSubDocList() {
   var el = document.getElementById("subdoc-list");
   el.innerHTML = state.subDocs.map(function (d, i) {
@@ -857,7 +908,8 @@ document.getElementById("btn-analyze").addEventListener("click", function () {
   btn.disabled = true;
   btn.textContent = "분석 중…";
   state.clauses = segmentContract(state.text);
-  if (!state.detectRanked) refreshInputSetup(); // 입력 설정을 한 번도 안 돌린 경우(붙여넣기 직후 즉시 클릭)
+  refreshInputSetup(); // 마지막 타이핑 직후 클릭해도 현재 본문으로 유형 후보를 다시 계산
+  captureInitialTypeDecision();
   state.typeId = document.getElementById("input-type").value;
   syncTypeSelects(state.typeId);
   renderScreening();
@@ -921,20 +973,37 @@ function _detectInfoHtml() {
 }
 
 /* ---------- 표준 부속서류 사용 체크(#B) ---------- */
-// 자동 감지: (a) 본문이 약정서 체결을 참조하거나 (b) 해당 약정서가 부속서류 파일로 올라와 있으면 기본 ON.
-function _subdocAutoOn(def) {
-  if (detectSubdocRefs(state.text || "", [def]).length) return true;
+// 자동 감지는 체크박스를 켜지 않고 검토자에게 후보만 제안한다. 계약서의 단순 참조나
+// 비슷한 파일명만으로 실제 체결·적용 범위까지 확정하면 과잉 자동판정이 되기 때문이다.
+function _subdocSuggestion(def) {
+  if (detectSubdocRefs(state.text || "", [def]).length)
+    return { kind: "contract_reference", text: "계약서에서 약정서 참조를 찾았습니다. 실제 체결·사용이면 체크하세요." };
   var sigs = (def.ref_signals || []).concat(def.title ? [def.title] : []);
-  return (state.subDocs || []).some(function (d) {
+  var uploaded = (state.subDocs || []).some(function (d) {
     var hay = String(d.name || "") + "\n" + String(d.text || "");
     for (var i = 0; i < sigs.length; i++) if (hay.indexOf(sigs[i]) !== -1) return true;
     return false;
   });
+  return uploaded
+    ? { kind: "uploaded_candidate", text: "업로드한 부속서류에서 약정서 후보를 찾았습니다. 적용 대상·체결 상태를 확인해 체크하세요." }
+    : { kind: "", text: "체결·사용하는 경우 체크하세요." };
 }
-// 유효 사용 여부: 사용자 지정(체크박스 토글)이 있으면 그것, 없으면 자동 감지.
+// 유효 사용 여부는 검토자의 명시적 체크만 인정한다. 자동 감지는 위 제안 문구에만 사용한다.
 function subdocInUse(def) {
-  var u = state.subdocUse[def.id];
-  return u === undefined ? _subdocAutoOn(def) : u;
+  return state.subdocUse[def.id] === true;
+}
+function _subdocConfirmedForCp(cpId) {
+  return ((CR.common.meta || {}).standard_subdocs || []).some(function (d) {
+    return subdocInUse(d) && (d.covers || []).indexOf(cpId) !== -1;
+  });
+}
+function _confirmedSubdocChecks() {
+  var out = {};
+  ((CR.common.meta || {}).standard_subdocs || []).forEach(function (d) {
+    if (!subdocInUse(d)) return;
+    (d.covers || []).forEach(function (cpId) { out[cpId] = true; });
+  });
+  return out;
 }
 // 자동 기재 코멘트 — 토글 OFF 시 판정·이 문구가 원형 그대로인 항목만 자동 생성분으로 보고 제거.
 function subdocAutoComment(def) {
@@ -942,10 +1011,13 @@ function subdocAutoComment(def) {
 }
 function subdocUseRowsHtml(scope) {
   return ((CR.common.meta || {}).standard_subdocs || []).map(function (d) {
+    var suggestion = _subdocSuggestion(d);
     return '<label class="subdoc-use"><input type="checkbox" class="subdoc-use-cb" data-sdid="' + esc(d.id) +
       '" name="' + esc(scope) + '-subdoc-use-' + esc(d.id) + '"' + (subdocInUse(d) ? " checked" : "") +
       '> 『' + esc(d.title) + '』(표준서식) 체결 사용' +
-      ' <span class="subdoc-use-hint">체결하는 경우 체크 — 세부 항목은 자동 반영하고 검토 화면에는 하나의 묶음으로 표시</span></label>';
+      (suggestion.kind ? ' <span class="subdoc-suggest">자동 후보</span>' : '') +
+      ' <span class="subdoc-use-hint">' + esc(suggestion.text) +
+      ' 체크하면 세부 항목을 일괄 반영하고 검토 화면에는 하나의 묶음으로 표시합니다.</span></label>';
   }).join("") || '<span class="setup-auto">선택 가능한 표준 부속서류 없음</span>';
 }
 function bindSubdocUseControls(root, syncOther) {
@@ -953,6 +1025,7 @@ function bindSubdocUseControls(root, syncOther) {
   root.querySelectorAll(".subdoc-use-cb").forEach(function (cb) {
     cb.addEventListener("change", function () {
       state.subdocUse[cb.dataset.sdid] = cb.checked;
+      saveSubdocUse();
       if (syncOther) syncOther();
       if (_analyzedOnce) runAnalysis();
     });
@@ -1241,6 +1314,7 @@ function runAnalysis(opts) {
   var activeTabName = activeTab && activeTab.getAttribute("data-tab");
   var scrollY = window.scrollY;
   state.typeId = document.getElementById("checklist-type").value;
+  captureInitialTypeDecision();
   updateScopeAssessments();
   applyScopeModuleDecisions();
   var docs = analysisDocs();
@@ -1270,15 +1344,14 @@ function runAnalysis(opts) {
     }
   }
 
-  // 별첨 참조(#4): 부속서류 파일 미업로드분에 한해, 본문이 표준 부속서류 체결을 참조하면
-  // covers에 속한 consider 항목을 "별첨 참조" 그룹으로 분류(기계매칭 subDocCov 우선).
+  // 별첨 참조(#4): 본문의 참조는 사실 증거로 보존하되 사용 확정으로 취급하지 않는다.
+  // 검토자가 위 체크박스를 명시적으로 켜기 전에는 완료 판정·수정 불필요 판정을 만들지 않는다.
   var fullText = (state.clauses || []).map(function (cl) {
     return String(cl.heading || "") + " " + String(cl.body || "");
   }).join("\n"); // ↑ matcher.js analyze의 fullText 구성과 동일
   state.refCov = {};
   var subdocDefs = (CR.common.meta || {}).standard_subdocs || [];
   detectSubdocRefs(fullText, subdocDefs).forEach(function (ref) {
-    if (state.subdocUse[ref.id] === false) return; // 검토자가 미사용 지정(#B) — 참조 문구가 있어도 그룹핑 억제
     ref.covers.forEach(function (cpId) {
       if (!state.subDocCov[cpId]) state.refCov[cpId] = { title: ref.title, signal: ref.signal, quote: ref.quote };
     });
@@ -1746,6 +1819,16 @@ function curationPanelHtml() {
   } else {
     h += '<span class="curation-hint"> · 다음 검토부터 조항 확인·재지정 기록이 누적됩니다.</span>';
   }
+  h += '</div>';
+  var ts = Loop.typeClassificationStats(loopCorpus);
+  h += '<div class="matching-metrics"><b>계약 유형 분류</b> · 비교 표본 ' + ts.observed + '건';
+  if (ts.auto_evaluable) {
+    h += ' · 자동 일치율 ' + _pct(ts.accuracy) + ' · 검토자 변경 ' + ts.corrected + '건';
+  }
+  if (ts.rescued_from_undetermined)
+    h += ' · 자동 미확정 후 사람 선택 ' + ts.rescued_from_undetermined + '건';
+  if (!ts.observed)
+    h += '<span class="curation-hint"> · 이번 버전부터 최초 자동분류와 최종 유형을 함께 축적합니다.</span>';
   h += '</div>';
   var ad = sum.action_disposition;
   h += '<div class="matching-metrics"><b>계약서 반영 안내와 실제 처리 비교</b> · 처리 결과 표본 ' + ad.observed + '건';
@@ -2423,7 +2506,8 @@ function currentSystemAssessments() {
     data_relationship: state.result.dataRelationship || null,
     tag_engine: CR.tag_engine || null,
     subdoc_coverage: state.subDocCov || {},
-    ref_coverage: state.refCov || {}
+    ref_coverage: state.refCov || {},
+    confirmed_subdoc_checks: _confirmedSubdocChecks()
   });
 }
 function currentMatchingObservations() {
@@ -2505,6 +2589,9 @@ function currentLlmAssistance() {
 }
 function currentVerdictExport(meta) {
   var obj = Verdict.exportVerdicts(verdictStore, meta, currentSystemAssessments());
+  obj.type_classification = currentTypeDecision();
+  obj.subdoc_confirmation = { format: "cr-subdoc-confirmation-v1",
+    confirmed_ids: Object.keys(state.subdocUse || {}).filter(function (id) { return state.subdocUse[id] === true; }) };
   obj.reassign = JSON.parse(JSON.stringify(state.reassign || {}));
   obj.match_confirmation = JSON.parse(JSON.stringify(state.matchConfirm || {}));
   obj.matching_observations = currentMatchingObservations();
@@ -2979,7 +3066,8 @@ function _assessmentForResult(r) {
   return "not_surfaced";
 }
 function _actionContext() {
-  return { subdoc_coverage: state.subDocCov || {}, ref_coverage: state.refCov || {} };
+  return { subdoc_coverage: state.subDocCov || {}, ref_coverage: state.refCov || {},
+    confirmed_subdoc_checks: _confirmedSubdocChecks() };
 }
 function actionForResult(r) {
   return ActionRouter.route(_cpById(r && r.cpId), r, _actionContext());
@@ -3176,7 +3264,11 @@ var _considerList = [];   // 부재 알람(consider) — 조항 무관, 최하�
 function _requiresDecision(res) {
   var cp = _cpById(res.cpId);
   if (!cp) return false;
-  if (res.coverage === "consider" && ((state.subDocCov || {})[res.cpId] || (state.refCov || {})[res.cpId])) return false;
+  // 약정서 후보·본문 참조는 검토자 확인 전까지 완료로 세지 않는다. 명시 체크 후에는
+  // applySubdocVerdicts가 묶음 판정을 생성하므로 여기서 별도 클릭을 요구하지 않는다.
+  if (res.coverage === "consider" &&
+      ((state.subDocCov || {})[res.cpId] || (state.refCov || {})[res.cpId]) &&
+      !_subdocConfirmedForCp(res.cpId)) return true;
   var action = actionForResult(res);
   if (ActionRouter.requiresDecision(action)) return true;
   if (["consider", "verify"].indexOf(res.coverage) === -1) return false;
@@ -3551,12 +3643,17 @@ function renderConsiderBlock() {
     });
     return order.map(function (title) {
       var list = groups[title];
-      var badge = kind === "subdoc" ? "✓ 부속서류 자동 반영" : "◇ 표준약정서 반영 예정";
-      var hint = kind === "subdoc"
-        ? "업로드한 서류에서 관련 문구를 확인했습니다. 서류의 적용대상·체결 상태만 확인하세요."
-        : "표준 약정서가 세부 보호조항을 담당합니다. 체결·첨부·작성항목 완성 여부만 확인하세요.";
-      return '<details class="subdoc-bundle ' + (kind === "subdoc" ? "bundle-uploaded" : "bundle-referenced") + '">' +
-        '<summary><span class="badge ' + (kind === "subdoc" ? "cov-subdoc" : "cov-refdoc") + '">' + badge +
+      var confirmed = list.every(function (r) { return _subdocConfirmedForCp(r.cpId); });
+      var badge = confirmed
+        ? (kind === "subdoc" ? "✓ 부속서류 사용 확인" : "✓ 표준약정서 사용 확인")
+        : (kind === "subdoc" ? "◇ 업로드 서류 확인 필요" : "◇ 약정서 참조 확인 필요");
+      var hint = confirmed
+        ? "검토자가 이 약정서의 체결·사용을 확인했습니다. 세부 항목은 묶음으로 반영됩니다."
+        : (kind === "subdoc"
+          ? "업로드한 서류에서 관련 문구를 찾았습니다. 적용 대상·체결 상태를 확인한 뒤 위 약정서 사용 항목을 체크하세요."
+          : "계약서에서 약정서 참조를 찾았습니다. 실제 체결·첨부·작성항목 완성 여부를 확인한 뒤 위 약정서 사용 항목을 체크하세요.");
+      return '<details class="subdoc-bundle ' + (confirmed ? "bundle-confirmed" : "bundle-referenced") + '">' +
+        '<summary><span class="badge ' + (confirmed ? "cov-subdoc" : "cov-refdoc") + '">' + badge +
         '</span><strong>' + esc(title) + '</strong><span class="bundle-count">' + list.length +
         '개 항목</span><span class="bundle-action">세부내역</span></summary>' +
         '<p class="consider-hint">' + hint + '</p><div class="subdoc-bundle-items">' +
