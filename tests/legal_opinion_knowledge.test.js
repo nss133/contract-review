@@ -40,6 +40,32 @@ test("태거 5개 구조화 시트를 지식 데이터셋으로 변환한다", (
   assert.equal(dataset.tags["legal_relation-위탁"].aliases[0], "업무위탁");
 });
 
+test("태거 최신 문서대장의 신청·결과 분리 열을 그대로 읽는다", () => {
+  const current = tables("0.6.3", 95);
+  current["문서대장"].rows[0] = [
+    "문서 ID", "원본 행", "대표 계약명", "신청 계약명", "결과 계약명", "신청 작성일", "결과 작성일",
+    "신청부서", "결과 신청부서", "신청 유형", "결과 유형", "유형2", "난이도", "검토유형",
+    "신청 보안등급", "결과 보안등급", "원본 상태", "처리 상태", "검토 사유", "엔진 버전"
+  ];
+  current["문서대장"].rows[1] = [
+    "OP-1", 2, "대표 계약", "신청 계약", "결과 계약", "2026-01-01", "2026-01-03",
+    "신청부서", "결과부서", "신청유형", "결과유형", "행사", "중", "법률검토",
+    "일반", "대외비", "", "처리 성공", "", "0.6.3"
+  ];
+  current["문서별관계"] = { rows: [
+    ["문서 ID", "태그 A", "태그 B", "관계 유형", "연결 점수", "일반허브 감점", "공통 출처·근거", "공통 핵심쟁점 카드"],
+    ["OP-1", "#위탁", "#비적용", "결론", 93, 0, "결과", ""]
+  ] };
+  const dataset = Knowledge.datasetFromTables(current, { fingerprint: "new-format" });
+  assert.equal(dataset.documents[0].title, "대표 계약");
+  assert.equal(dataset.documents[0].date, "2026-01-01");
+  assert.equal(dataset.documents[0].processed_date, "2026-01-03");
+  assert.equal(dataset.documents[0].department, "결과부서");
+  assert.equal(dataset.documents[0].case_type, "결과유형");
+  assert.equal(dataset.documents[0].security_level, "대외비");
+  assert.equal(dataset.documents[0].relations[0].score, 93);
+});
+
 test("같은 자료 재반입은 중복되지 않고 변경 결과는 리비전으로 보존한다", () => {
   const first = Knowledge.datasetFromTables(tables("0.6.3", 95), { file_name: "a.xlsx", fingerprint: "f1" });
   const one = Knowledge.mergeDataset(Knowledge.emptyKnowledge(), first);

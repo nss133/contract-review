@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "cr-review-history-pack-v1.schema.json",
+  "title": "폐쇄망 계약검토 이력팩 v1",
+  "type": "object",
+  "required": ["meta", "snapshots", "records", "latest", "config", "benchmarks", "stats"],
+  "properties": {
+    "meta": {
+      "type": "object",
+      "required": ["format", "schema_version"],
+      "properties": {
+        "format": { "const": "cr-review-history-pack-v1" },
+        "schema_version": { "const": 1 },
+        "review_count": { "type": "integer", "minimum": 0 },
+        "revision_count": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "snapshots": { "type": "array", "items": { "type": "object" } },
+    "records": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["review_id", "id_quality", "fingerprint", "request", "result"],
+        "properties": {
+          "review_id": { "type": "string", "minLength": 1 },
+          "id_quality": { "enum": ["source", "provisional"] },
+          "fingerprint": { "type": "string", "minLength": 8 },
+          "request": { "type": "object" },
+          "result": { "type": "object" },
+          "conflicts": { "type": "array", "items": { "type": "string" } },
+          "diagnostic_codes": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    },
+    "latest": { "type": "object", "additionalProperties": { "type": "string" } },
+    "config": {
+      "type": "object",
+      "required": ["type_mappings"],
+      "properties": {
+        "type_mappings": { "type": "object", "additionalProperties": { "type": "string" } },
+        "aliases": { "type": "object" }
+      }
+    },
+    "benchmarks": {
+      "type": "object",
+      "required": ["labels", "runs"],
+      "properties": {
+        "labels": { "type": "object" },
+        "runs": { "type": "array", "items": { "type": "object" } }
+      }
+    },
+    "stats": { "type": "object" }
+  },
+  "additionalProperties": false
+}

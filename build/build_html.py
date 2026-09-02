@@ -22,7 +22,7 @@ SRC = ROOT / "src"
 JS_ORDER = [
     "sim.js", "clause_role.js", "contract_tags.js", "legal_constraints.js", "scope_assessment.js", "matcher_config.js", "segmenter.js", "sentence.js", "matcher.js", "action_router.js", "motion.js",
     "pf.js", "cfb.js", "extract-pdf.js", "extract-doc.js", "extract-hwp.js", "extract-zip.js", "extract.js",
-    "verify.js", "assessment.js", "local_llm.js", "experiment.js", "verdict.js", "findings.js", "integrity.js", "loop.js", "goldset.js", "tags.js", "formal.js", "evidence.js", "compare.js", "legal_opinion_knowledge.js", "app.js",
+    "verify.js", "assessment.js", "local_llm.js", "experiment.js", "verdict.js", "findings.js", "integrity.js", "loop.js", "goldset.js", "tags.js", "formal.js", "evidence.js", "compare.js", "legal_opinion_knowledge.js", "review_history.js", "app.js",
 ]
 
 
@@ -161,15 +161,17 @@ def build(knowledge_dir, out_path, law_dbs=None, news_db=None, corpus_path=None,
         "- 최초설치_계약서검토_실행기.html을 사용할 위치에 한 번만 저장합니다.\n"
         f"- 실행기를 열고 contract-review-v{version}.crupdate를 선택합니다.\n"
         "- 앱의 지식 데이터 탭에서 legal-opinion-tagger 결과 XLSX를 최초 1회 가져옵니다.\n"
-        "- 지식팩 백업 파일도 폐쇄망 내부의 승인된 폴더에 1회 보관합니다.\n\n"
+        "- 계약검토 이력 DB를 사용할 경우 같은 탭에서 33열 계약검토 XLSX를 최초 1회 가져옵니다.\n"
+        "- 지식팩(.crknowledge)과 이력팩(.crhistory) 백업은 폐쇄망 내부 승인 폴더에만 보관합니다.\n\n"
         "2. 이후 버전 업데이트\n"
         "- 새 ZIP의 실행기 파일을 새로 열지 않습니다. 최초 설치 때 쓰던 실행기를 엽니다.\n"
         "- 버전 설치·업데이트에서 새 .crupdate 파일만 선택합니다.\n"
-        "- 법률검토 태깅자료를 다시 넣을 필요가 없습니다.\n\n"
+        "- 법률검토 태깅자료와 계약검토 이력자료를 다시 넣을 필요가 없습니다.\n\n"
         "3. 주의\n"
         "- 실행기 파일의 위치를 옮기거나 이름을 바꾸면 브라우저가 다른 저장영역으로 인식할 수 있습니다.\n"
         "- 직접실행용 contract-review.html은 비상용입니다. 지속 사용은 실행기를 권장합니다.\n"
-        "- 브라우저 데이터 삭제·프로필 변경에 대비해 지식팩 백업을 보관하십시오.\n",
+        "- 브라우저 데이터 삭제·프로필 변경에 대비해 지식팩과 이력팩 백업을 보관하십시오.\n"
+        "- 이력팩에는 실제 계약명·상대방·검토결과가 포함되므로 폐쇄망 밖으로 반출하지 마십시오.\n",
         encoding="utf-8",
     )
 

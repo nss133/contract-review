@@ -18,7 +18,10 @@ var state = { text: "", clauses: [], typeId: null, activeModules: [], result: nu
   // 자동 Top1 조항이 실제 의견 대상이라는 검토자의 명시 확인. '이상없음' 판정과는 별도 축이다.
   matchConfirm: {},
   // 체크리스트에 종속되지 않는 자유 의견과 문서 완결성 룰의 사람 판정.
-  findingStore: { manual: {}, decisions: {} }, integrityFindings: [] };
+  findingStore: { manual: {}, decisions: {} }, integrityFindings: [],
+  // 폐쇄망 계약검토 이력에서 사용자가 명시적으로 선택한 참고 건. 자동판정에는 쓰지 않고
+  // 내보내기 계보와 입력 사전채움 근거로만 보존한다.
+  historyRef: null };
 var LOCAL_LLM_KEY = "cr-local-llm-enabled";
 var LOCAL_LLM_MODEL_KEY = "cr-local-llm-model";
 var MOTION_PREFERENCE_KEY = "cr-motion-preference-v1";
@@ -2123,6 +2126,9 @@ function exportGoldsetCase() {
     hash: verdictHash,
     checksCount: allChecksForType(state.typeId).length
   });
+  if (state.historyRef) caseObj.history_reference = {
+    review_id: state.historyRef.review_id || "", id_quality: state.historyRef.id_quality || ""
+  };
   var blob = new Blob([JSON.stringify(caseObj, null, 2)], { type: "application/json" });
   var url = URL.createObjectURL(blob);
   var a = document.createElement("a");
@@ -2589,6 +2595,14 @@ function currentLlmAssistance() {
 }
 function currentVerdictExport(meta) {
   var obj = Verdict.exportVerdicts(verdictStore, meta, currentSystemAssessments());
+  if (state.historyRef) obj.history_reference = {
+    format: "cr-review-history-reference-v1",
+    review_id: state.historyRef.review_id || "",
+    id_quality: state.historyRef.id_quality || "",
+    selected_at: state.historyRef.selected_at || "",
+    db_type: state.historyRef.db_type || "",
+    mapped_type_id: state.historyRef.mapped_type_id || ""
+  };
   obj.type_classification = currentTypeDecision();
   obj.subdoc_confirmation = { format: "cr-subdoc-confirmation-v1",
     confirmed_ids: Object.keys(state.subdocUse || {}).filter(function (id) { return state.subdocUse[id] === true; }) };
@@ -2641,10 +2655,12 @@ function exportVerdicts() {
 function finishReview() {
   if (!state.result) return;
   ingestCurrentToCorpus();
+  captureHistoryBenchmark();
   saveArchiveRegistry(Compare.registryPush(loadArchiveRegistry(), {
     name: _contractName(), date: verdictToday(), reviewer: getReviewer(),
     type_id: state.typeId || null, contract_hash: verdictHash, contract_text: state.text,
-    stance: state.stance, party_context: state.partyContext || null, active_modules: state.activeModules || []
+    stance: state.stance, party_context: state.partyContext || null, active_modules: state.activeModules || [],
+    history_review_id: state.historyRef && state.historyRef.review_id || ""
   }));
   renderReport(); renderClauses(); renderSuggestions(); // 코퍼스 카운트·추천 갱신
   var msg = document.getElementById("finish-msg");
@@ -4945,7 +4961,275 @@ function initLegalOpinionKnowledge() {
   });
 }
 
+/* ---------- 폐쇄망 계약검토 이력 DB ----------
+   실제 XLSX는 이 브라우저 안에서만 읽는다. 앱 코드·태깅 지식과 별도 IndexedDB에 보존하고,
+   과거 기재값은 검색·사전채움 후보로만 사용한다. */
+var reviewHistory = null;
+function historySetState(label, cls) {
+  var el = document.getElementById("history-store-state");
+  if (!el) return;
+  el.textContent = label;
+  el.className = "knowledge-store-state" + (cls ? " " + cls : "");
+}
+function historyMessage(message, isError) {
+  var el = document.getElementById("history-action-msg");
+  if (!el) return;
+  el.textContent = message || "";
+  el.style.color = isError ? "var(--c-red-fg)" : "";
+}
+function historyProgress(info) {
+  var box = document.getElementById("history-progress");
+  if (!box) return;
+  box.hidden = false;
+  var pct = info.total ? Math.round(info.completed / info.total * 100) : 0;
+  box.querySelector("span").style.width = pct + "%";
+  box.querySelector("p").textContent = "계약검토 XLSX 확인 중: " + (info.step || "") + " (" + info.completed + "/" + info.total + ")";
+}
+function finishHistoryProgress() {
+  var box = document.getElementById("history-progress");
+  if (box) box.hidden = true;
+}
+function historyTypeValues(summary) {
+  var seen = {}, values = [];
+  (summary.result_types || []).concat(summary.request_types || []).forEach(function (item) {
+    if (!item.key || item.key === "미기재" || seen[item.key]) return;
+    seen[item.key] = true; values.push({ key: item.key, count: item.count });
+  });
+  return values.sort(function (a, b) { return b.count - a.count || a.key.localeCompare(b.key, "ko"); });
+}
+function historyTypeOptions(selected) {
+  return '<option value="">연결하지 않음</option>' + CR.types.map(function (type) {
+    var id = type.meta.type_id;
+    return '<option value="' + esc(id) + '"' + (id === selected ? " selected" : "") + ">" +
+      esc(type.meta.type_name) + "</option>";
+  }).join("");
+}
+function renderHistoryTypeMap(summary) {
+  var box = document.getElementById("history-type-map"), filter = document.getElementById("history-filter-type");
+  if (!box || !filter || !reviewHistory) return;
+  var values = historyTypeValues(summary), mappings = reviewHistory.config.type_mappings || {};
+  filter.innerHTML = '<option value="">전체 DB 유형</option>' + values.map(function (item) {
+    return '<option value="' + esc(item.key) + '">' + esc(item.key) + " (" + item.count + "건)</option>";
+  }).join("");
+  box.innerHTML = values.length ? values.map(function (item) {
+    return '<label for="history-map-' + ReviewHistory.hashString(item.key) + '">' + esc(item.key) +
+      " <small>" + item.count + "건</small></label>" +
+      '<select id="history-map-' + ReviewHistory.hashString(item.key) + '" class="history-map-select" data-db-type="' + esc(item.key) + '">' +
+      historyTypeOptions(mappings[item.key] || "") + "</select>";
+  }).join("") : '<p class="report-none">이력자료를 넣으면 실제 DB 유형이 표시됩니다.</p>';
+  box.querySelectorAll(".history-map-select").forEach(function (select) {
+    select.addEventListener("change", function () {
+      reviewHistory = ReviewHistory.setTypeMapping(reviewHistory, select.getAttribute("data-db-type"), select.value);
+      ReviewHistory.save(reviewHistory).then(function (saved) {
+        reviewHistory = saved;
+        historyMessage("DB 유형 연결 설정이 폐쇄망 저장소에 저장되었습니다.");
+        renderHistorySearch();
+      }).catch(function (error) { historyMessage("설정 저장 실패: " + (error.message || error), true); });
+    });
+  });
+}
+function historyRecordName(record) {
+  return (record.result && record.result.contract_name) || (record.request && record.request.contract_name) || "계약명 미기재";
+}
+function historyRecordDbType(record) {
+  return (record.result && record.result.type) || (record.request && record.request.type) || "";
+}
+function renderHistoryPrefill() {
+  var box = document.getElementById("history-prefill");
+  if (!box) return;
+  if (!state.historyRef) { box.hidden = true; box.innerHTML = ""; return; }
+  var bits = ["과거 계약검토 참고: <strong>" + esc(state.historyRef.contract_name || "계약명 미기재") + "</strong>"];
+  if (state.historyRef.counterparty) bits.push("상대방 " + esc(state.historyRef.counterparty));
+  if (state.historyRef.db_type) bits.push("DB 유형 " + esc(state.historyRef.db_type));
+  if (state.historyRef.change_kind) bits.push(esc(state.historyRef.change_kind));
+  if (state.historyRef.contract_period) bits.push("기간 " + esc(state.historyRef.contract_period));
+  bits.push("ID " + esc(state.historyRef.review_id));
+  box.innerHTML = bits.join(" · ") + '<button id="history-prefill-clear" class="ghost" type="button">참고 해제</button>' +
+    '<div class="sec-hint">과거 기재값은 참고정보이며 현재 계약서의 유형·적용범위·수정 필요를 확정하지 않습니다.</div>';
+  box.hidden = false;
+  document.getElementById("history-prefill-clear").addEventListener("click", function () {
+    state.historyRef = null; renderHistoryPrefill();
+  });
+}
+function applyHistoryReference(reviewId) {
+  var record = ReviewHistory.latestRecord(reviewHistory, reviewId);
+  if (!record) return;
+  var dbType = historyRecordDbType(record), mapped = reviewHistory.config.type_mappings[dbType] || "";
+  state.historyRef = {
+    review_id: reviewId, id_quality: record.id_quality || "", selected_at: new Date().toISOString(),
+    contract_name: historyRecordName(record), counterparty: record.request.counterparty || "",
+    db_type: dbType, mapped_type_id: mapped,
+    change_kind: record.result.change_kind || record.request.change_kind || "",
+    contract_period: record.result.contract_period || record.request.contract_period || ""
+  };
+  if (mapped && typeDoc(mapped)) onTypeChanged(mapped);
+  renderHistoryPrefill();
+  activatePane("input");
+  window.scrollTo(0, 0);
+}
+function historyResultHtml(item) {
+  var record = item.record, request = record.request || {}, result = record.result || {};
+  var meta = [result.created_at || request.created_at, result.department || request.department,
+    historyRecordDbType(record), result.change_kind || request.change_kind,
+    request.counterparty, record.id_quality === "source" ? "원천 ID" : "임시 ID"].filter(Boolean);
+  var context = textForHistory(request.context || result.review_text || "");
+  return '<div class="history-result"><div><strong>' + esc(historyRecordName(record)) + '</strong>' +
+    '<div class="history-result-meta">' + esc(meta.join(" · ")) + " · " + esc(record.review_id) + "</div>" +
+    (context ? '<p class="history-result-context">' + esc(context) + "</p>" : "") +
+    ((record.conflicts || []).length ? '<span class="history-diag-chip warn">신청·결과 불일치 ' + record.conflicts.length + "개</span>" : "") +
+    '</div><button class="ghost history-apply" data-review-id="' + esc(record.review_id) + '">입력 설정에 참고</button></div>';
+}
+function textForHistory(value) {
+  var valueText = String(value || "").replace(/\s+/g, " ").trim();
+  return valueText.length > 260 ? valueText.slice(0, 260) + "…" : valueText;
+}
+function renderHistorySearch() {
+  var box = document.getElementById("history-search-results"), input = document.getElementById("history-search");
+  var filter = document.getElementById("history-filter-type");
+  if (!box || !input || !filter || !reviewHistory) return;
+  if (!reviewHistory.meta.review_count) { box.innerHTML = '<p class="report-none">적재된 계약검토 이력이 없습니다.</p>'; return; }
+  var found = ReviewHistory.search(reviewHistory, input.value, { type: filter.value, limit: 30 });
+  box.innerHTML = found.length ? found.map(historyResultHtml).join("") : '<p class="report-none">조건에 맞는 과거 검토가 없습니다.</p>';
+  box.querySelectorAll(".history-apply").forEach(function (button) {
+    button.addEventListener("click", function () { applyHistoryReference(button.getAttribute("data-review-id")); });
+  });
+}
+function renderHistoryDiagnostics(summary) {
+  var box = document.getElementById("history-diagnostics");
+  if (!box) return;
+  var snapshot = summary.snapshots[0];
+  if (!snapshot) { box.innerHTML = ""; return; }
+  var diagnostics = snapshot.diagnostics || {}, errors = diagnostics.error_counts || {};
+  var chips = Object.keys(errors).sort().map(function (code) {
+    return '<span class="history-diag-chip warn">' + esc(code) + " " + errors[code] + "건</span>";
+  });
+  if (!chips.length) chips.push('<span class="history-diag-chip">구조 오류 없음</span>');
+  box.innerHTML = '<div class="history-diagnostic-card"><h3>최근 현장 진단</h3>' +
+    '<p class="sec-hint">' + esc(snapshot.file_name || "계약검토 XLSX") + " · 실제 행 " + Number(snapshot.row_count || 0) +
+    "건 · 머리글 일치 " + Number(diagnostics.header_score || 0) + "/33 · " +
+    (diagnostics.stable_id_available ? "원천 검토번호 열 확인됨" : "원천 검토번호 없음 — 임시 로컬 ID 사용") + "</p>" +
+    '<div class="history-diag-list">' + chips.join("") + "</div></div>";
+  var benchmark = ReviewHistory.benchmarkSummary(reviewHistory), latest = benchmark.versions[0];
+  box.innerHTML += '<div class="history-diagnostic-card"><h3>폐쇄망 내부 유형평가</h3>' +
+    (latest ? '<p class="sec-hint">앱 v' + esc(latest.app_version) + " · 평가가능 " + latest.evaluable +
+      "건 · 자동유형과 검토자 최종유형 일치 " + (latest.auto_agreement_rate === null ? "측정 전" : latest.auto_agreement_rate + "%") +
+      " · 검토자 변경 " + latest.reviewer_changed + "건</p>" :
+      '<p class="sec-hint">과거 이력을 선택해 계약을 검토한 뒤 검토 완료를 누르면 앱 버전별 유형 일치도가 여기에 누적됩니다.</p>') +
+    '<div class="history-diag-list"><span class="history-diag-chip">사람확정 라벨 ' + benchmark.label_count +
+    '건</span><span class="history-diag-chip">평가 실행 ' + benchmark.run_count + "건</span></div></div>";
+}
+function captureHistoryBenchmark() {
+  if (!reviewHistory || !state.historyRef || !state.historyRef.review_id) return;
+  var decision = currentTypeDecision();
+  try {
+    reviewHistory = ReviewHistory.addBenchmarkRun(reviewHistory, {
+      review_id: state.historyRef.review_id,
+      app_version: CR.app_version || "",
+      contract_hash: verdictHash || "",
+      initial_auto_type_id: decision.initial_auto_type_id || "",
+      final_type_id: decision.final_type_id || "",
+      outcome: decision.outcome || "",
+      captured_at: new Date().toISOString()
+    });
+    ReviewHistory.save(reviewHistory).then(function (saved) {
+      reviewHistory = saved;
+      historyMessage("선택한 과거 이력과 이번 최종유형을 폐쇄망 내부 평가에 반영했습니다.");
+      renderReviewHistory();
+    }).catch(function (error) {
+      historyMessage("내부 평가 저장 실패: " + (error && error.message || error), true);
+    });
+  } catch (error) {
+    historyMessage("내부 평가 반영 실패: " + (error && error.message || error), true);
+  }
+}
+function renderReviewHistory() {
+  if (!reviewHistory) return;
+  var summary = ReviewHistory.summary(reviewHistory), meta = summary.meta, stats = summary.stats;
+  var status = document.getElementById("history-status");
+  if (status) status.innerHTML = [
+    [meta.review_count, "현재 이력"], [meta.revision_count, "보존 리비전"], [meta.snapshot_count, "적재 이력"],
+    [stats.stable_ids, "원천 ID"], [stats.conflict_records, "신청·결과 불일치"]
+  ].map(function (item) { return '<div class="knowledge-stat"><strong>' + item[0] + "</strong><span>" + item[1] + "</span></div>"; }).join("");
+  var backup = document.getElementById("history-backup");
+  if (backup) backup.disabled = !meta.review_count;
+  historySetState(meta.review_count ? "이력자료 사용 가능" : "자료 미적재", meta.review_count ? "ready" : "");
+  renderHistoryDiagnostics(summary);
+  renderHistoryTypeMap(summary);
+  renderHistorySearch();
+  renderHistoryPrefill();
+}
+function importHistoryXlsx(file) {
+  if (!file) return;
+  historyMessage("폐쇄망에서 XLSX 구조를 확인하고 있습니다.");
+  historySetState("적재 중", "");
+  ReviewHistory.workbookRows(file, historyProgress).then(function (parsed) {
+    var dataset = ReviewHistory.datasetFromRows(parsed.rows, parsed.source);
+    var merged = ReviewHistory.mergeDataset(reviewHistory, dataset);
+    return ReviewHistory.save(merged.history).then(function (saved) {
+      reviewHistory = saved;
+      return ReviewHistory.requestPersistence().then(function (persistent) {
+        return { result: merged.result, diagnostics: dataset.diagnostics, persistent: persistent };
+      });
+    });
+  }).then(function (out) {
+    finishHistoryProgress(); renderReviewHistory();
+    historyMessage("적재 완료: 신규 " + out.result.added + "건, 갱신 " + out.result.updated +
+      "건, 중복 제외 " + out.result.skipped + "건" +
+      (out.diagnostics.stable_id_available ? " · 원천 검토번호 사용" : " · 원천 검토번호 없음: 임시 ID 사용") +
+      (out.persistent ? " · 브라우저 영구저장 허용됨" : "") + " — 이력팩 백업은 폐쇄망 내부에만 보관하세요.");
+  }).catch(function (error) {
+    finishHistoryProgress(); historySetState("적재 실패", "error");
+    historyMessage("적재 실패: " + (error && error.message || "알 수 없는 오류"), true);
+  });
+}
+function downloadHistoryPack() {
+  if (!reviewHistory) return;
+  var blob = new Blob([ReviewHistory.packJson(reviewHistory)], { type: "application/json" });
+  var url = URL.createObjectURL(blob), a = document.createElement("a"), date = verdictToday();
+  a.href = url; a.download = "contract-review-history_" + date + "_" + reviewHistory.meta.review_count + "건.crhistory";
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(function () { URL.revokeObjectURL(url); }, 3000);
+  historyMessage("이력팩 내부 백업 생성됨 — 실제 검토정보가 포함되므로 폐쇄망 밖으로 반출하지 마세요.");
+}
+function restoreHistoryPack(file) {
+  if (!file) return;
+  file.text().then(function (raw) {
+    var incoming = ReviewHistory.fromPack(raw);
+    return ReviewHistory.save(ReviewHistory.mergeHistory(reviewHistory, incoming));
+  }).then(function (saved) {
+    reviewHistory = saved; renderReviewHistory();
+    historyMessage("이력팩 복구·병합 완료 — 현재 이력 " + saved.meta.review_count + "건");
+  }).catch(function (error) { historyMessage("복구 실패: " + (error && error.message || "이력팩 형식 오류"), true); });
+}
+function initReviewHistory() {
+  ReviewHistory.load().then(function (loaded) {
+    reviewHistory = loaded; renderReviewHistory();
+  }).catch(function (error) {
+    reviewHistory = ReviewHistory.emptyHistory(); renderReviewHistory();
+    historySetState("저장소 사용 불가", "error");
+    historyMessage("브라우저 계약검토 이력 저장소를 열 수 없습니다: " + (error && error.message || ""), true);
+  });
+  var xlsx = document.getElementById("history-xlsx");
+  if (xlsx) xlsx.addEventListener("change", function () {
+    if (xlsx.files.length) importHistoryXlsx(xlsx.files[0]);
+    xlsx.value = "";
+  });
+  var backup = document.getElementById("history-backup");
+  if (backup) backup.addEventListener("click", downloadHistoryPack);
+  var restore = document.getElementById("history-restore");
+  if (restore) restore.addEventListener("change", function () {
+    if (restore.files.length) restoreHistoryPack(restore.files[0]);
+    restore.value = "";
+  });
+  var search = document.getElementById("history-search"), filter = document.getElementById("history-filter-type");
+  if (search) search.addEventListener("input", function () {
+    clearTimeout(renderHistorySearch._timer); renderHistorySearch._timer = setTimeout(renderHistorySearch, 120);
+  });
+  if (filter) filter.addEventListener("change", renderHistorySearch);
+}
+
 initVerify();
 initLocalLlm();
 initMotionPreference();
 initLegalOpinionKnowledge();
+initReviewHistory();

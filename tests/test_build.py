@@ -16,6 +16,10 @@ def test_build_produces_single_html(knowledge_dir, law_db, tmp_path):
     assert "segmentContract" in html          # JS 인라인 확인
     assert "JSZip" in html                    # vendor 인라인 확인
     assert "ContractTagEngine" in html        # 구조화 태그 엔진도 단일 HTML에 인라인
+    assert "var ReviewHistory" in html        # 폐쇄망 계약검토 이력 스키마·저장소 인라인
+    assert 'id="history-xlsx"' in html         # 33열 계약검토 XLSX 현장 반입
+    assert 'id="history-search"' in html       # 폐쇄망 과거검토 검색
+    assert "폐쇄망 밖으로 반출하지 마세요" in html
     assert 'id="analysis-progress"' in html   # 최초 분석 단계 안내
     assert 'id="input-subdoc-use"' in html    # 보안관리약정서 사용 여부를 분석 전에 지정
     assert "function activatePane" in html    # 탭 전환을 클릭·자동 이동에서 공통 사용

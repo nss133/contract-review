@@ -11,6 +11,7 @@ var LegalOpinionKnowledge = (function () {
   var STORE_NAME = "knowledge";
   var RECORD_KEY = "legal-opinion-corpus";
   var REQUIRED_SHEETS = ["문서대장", "문서별태그", "태그정본", "태그별근거", "태그연결성"];
+  var LOAD_SHEETS = REQUIRED_SHEETS.concat(["문서별관계"]);
 
   function nowIso() { return new Date().toISOString(); }
   function clone(value) { return JSON.parse(JSON.stringify(value)); }
@@ -20,6 +21,13 @@ var LegalOpinionKnowledge = (function () {
   }
   function sourceList(value) {
     return text(value).split(/\s*\+\s*/).map(function (item) { return item.trim(); }).filter(Boolean);
+  }
+  function firstText(row, names) {
+    for (var i = 0; i < names.length; i++) {
+      var value = text(row[names[i]]);
+      if (value) return value;
+    }
+    return "";
   }
   function hashString(value) {
     var s = String(value || ""), h = 2166136261;
@@ -81,19 +89,29 @@ var LegalOpinionKnowledge = (function () {
 
   function requireColumns(tables) {
     var required = {
-      "문서대장": ["문서 ID", "제목", "처리 상태", "엔진 버전"],
+      "문서대장": ["문서 ID", "처리 상태", "엔진 버전"],
       "문서별태그": ["문서 ID", "태그 ID", "해시태그", "유형", "점수", "출처"],
       "태그정본": ["태그 ID", "정규 태그명", "해시태그", "유형"],
-      "태그별근거": ["문서 ID", "태그 ID", "근거 출처", "근거 문장"],
-      "태그연결성": ["문서 ID", "태그 A", "태그 B", "관계 유형", "연결 점수"]
+      "태그별근거": ["문서 ID", "태그 ID", "근거 출처", "근거 문장"]
     };
-    REQUIRED_SHEETS.forEach(function (name) {
+    Object.keys(required).forEach(function (name) {
       if (!tables[name]) throw new Error("필수 시트가 없습니다: " + name);
       var headers = (tables[name].rows[0] || []).map(text);
       required[name].forEach(function (column) {
         if (headers.indexOf(column) === -1) throw new Error(name + " 시트에 필수 열이 없습니다: " + column);
       });
+      if (name === "문서대장" && !["대표 계약명", "제목", "신청 계약명", "결과 계약명"].some(function (column) {
+        return headers.indexOf(column) !== -1;
+      })) throw new Error("문서대장 시트에 계약명 열이 없습니다: 대표 계약명 또는 제목");
     });
+    var relationName = tables["문서별관계"] ? "문서별관계" : "태그연결성";
+    if (!tables[relationName]) throw new Error("필수 시트가 없습니다: 문서별관계 또는 태그연결성");
+    var relationHeaders = (tables[relationName].rows[0] || []).map(text);
+    ["문서 ID", "태그 A", "태그 B", "관계 유형"].forEach(function (column) {
+      if (relationHeaders.indexOf(column) === -1) throw new Error(relationName + " 시트에 필수 열이 없습니다: " + column);
+    });
+    if (relationHeaders.indexOf("연결 점수") === -1 && relationHeaders.indexOf("최종 연결 점수") === -1)
+      throw new Error(relationName + " 시트에 연결 점수 열이 없습니다");
   }
 
   function datasetFromTables(tables, sourceMeta) {
@@ -123,20 +141,23 @@ var LegalOpinionKnowledge = (function () {
       evidenceByDocument[documentId].push({ tag_id: tagId, hashtag: text(row["해시태그"]),
         source: text(row["근거 출처"]), sentence: text(row["근거 문장"]), at: Number(row["원문 위치"] || 0) });
     });
-    rowsToObjects(tables["태그연결성"]).forEach(function (row) {
+    var relationTable = tables["문서별관계"] || tables["태그연결성"];
+    rowsToObjects(relationTable).forEach(function (row) {
       var documentId = text(row["문서 ID"]);
       if (!documentId) return;
       if (!relationsByDocument[documentId]) relationsByDocument[documentId] = [];
       relationsByDocument[documentId].push({ source_tag: text(row["태그 A"]), target_tag: text(row["태그 B"]),
-        relation: text(row["관계 유형"]), score: Number(row["연결 점수"] || 0),
-        source: text(row["공통 출처"]), issue_card: text(row["공통 핵심쟁점 카드"]) });
+        relation: text(row["관계 유형"]), score: Number(row["연결 점수"] || row["최종 연결 점수"] || 0),
+        source: firstText(row, ["공통 출처·근거", "공통 출처"]), issue_card: text(row["공통 핵심쟁점 카드"]) });
     });
     var documents = rowsToObjects(tables["문서대장"]).map(function (row, index) {
       var sourceId = text(row["문서 ID"]) || "ROW-" + (index + 2);
-      var doc = { source_id: sourceId, source_row: Number(row["원본 행"] || 0), title: text(row["제목"]),
-        date: text(row["작성일"]), processed_date: text(row["처리일"]), department: text(row["신청부서"]),
-        case_type: text(row["유형"]), case_type_detail: text(row["유형2"]), review_type: text(row["검토유형"]),
-        difficulty: text(row["난이도"]), security_level: text(row["보안등급"]), source_status: text(row["원본 상태"]),
+      var doc = { source_id: sourceId, source_row: Number(row["원본 행"] || 0),
+        title: firstText(row, ["대표 계약명", "제목", "결과 계약명", "신청 계약명"]),
+        date: firstText(row, ["신청 작성일", "작성일"]), processed_date: firstText(row, ["결과 작성일", "처리일"]),
+        department: firstText(row, ["결과 신청부서", "신청부서"]),
+        case_type: firstText(row, ["결과 유형", "신청 유형", "유형"]), case_type_detail: text(row["유형2"]), review_type: text(row["검토유형"]),
+        difficulty: text(row["난이도"]), security_level: firstText(row, ["결과 보안등급", "신청 보안등급", "보안등급"]), source_status: text(row["원본 상태"]),
         process_status: text(row["처리 상태"]), review_reason: text(row["검토 사유"]), engine_version: text(row["엔진 버전"]),
         tags: (byDocument[sourceId] || []).sort(function (a, b) { return a.rank - b.rank; }),
         evidence: evidenceByDocument[sourceId] || [], relations: relationsByDocument[sourceId] || [] };
@@ -387,15 +408,15 @@ var LegalOpinionKnowledge = (function () {
       var rid = sheet.getAttribute("r:id") || sheet.getAttributeNS("http://schemas.openxmlformats.org/officeDocument/2006/relationships", "id");
       return { name: sheet.getAttribute("name"), path: targets[rid] };
     });
-    var tables = {};
+    var tables = {}, loadTotal = sheetDefs.filter(function (def) { return LOAD_SHEETS.indexOf(def.name) !== -1; }).length;
     for (var i = 0; i < sheetDefs.length; i++) {
       var def = sheetDefs[i];
-      if (REQUIRED_SHEETS.indexOf(def.name) === -1) continue;
-      if (onProgress) onProgress({ completed: Object.keys(tables).length, total: REQUIRED_SHEETS.length, sheet: def.name });
+      if (LOAD_SHEETS.indexOf(def.name) === -1) continue;
+      if (onProgress) onProgress({ completed: Object.keys(tables).length, total: loadTotal, sheet: def.name });
       tables[def.name] = { rows: sheetRows(await entry(def.path, true), shared) };
       await new Promise(function (resolve) { setTimeout(resolve, 0); });
     }
-    if (onProgress) onProgress({ completed: REQUIRED_SHEETS.length, total: REQUIRED_SHEETS.length, sheet: "완료" });
+    if (onProgress) onProgress({ completed: loadTotal, total: loadTotal, sheet: "완료" });
     var versionRows = tables["문서대장"] ? rowsToObjects(tables["문서대장"]) : [];
     var versions = Array.from(new Set(versionRows.map(function (row) { return text(row["엔진 버전"]); }).filter(Boolean)));
     return { tables: tables, source: { file_name: file.name, file_size: file.size,

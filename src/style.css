@@ -94,6 +94,7 @@ textarea#contract-text { width: 100%; height: 200px; }
 
 /* 법률검토 태깅자료 — 앱 버전과 독립된 지식 저장소 */
 .knowledge-page { max-width: 1080px; margin: 0 auto; }
+.knowledge-section-title { margin: var(--sp-4) 0 var(--sp-1); font-size: 17px; }
 .knowledge-head { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--sp-3);
   padding: var(--sp-3); border: 1px solid var(--border-card); border-radius: 10px; background: var(--bg-card); }
 .knowledge-head h2 { margin: 0 0 6px; font-size: 21px; }
@@ -129,9 +130,35 @@ textarea#contract-text { width: 100%; height: 200px; }
 .knowledge-tag { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 14px;
   border: 1px solid #bdc7d6; background: #fff; color: var(--c-slate-fg); font-size: var(--fs-meta); }
 .knowledge-tag small { color: var(--ink-faint); }
+.history-section { margin-top: var(--sp-4); padding-top: var(--sp-4); border-top: 2px solid var(--border-card); }
+.history-head h3 { margin: 0 0 6px; font-size: 19px; }
+.history-status { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.history-diagnostics { margin-top: var(--sp-3); }
+.history-diagnostic-card { padding: var(--sp-3); border: 1px solid var(--border-card); border-radius: 8px; background: var(--bg-card); }
+.history-diagnostic-card h3 { margin: 0 0 var(--sp-1); font-size: var(--fs-heading); }
+.history-diag-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: var(--sp-1); }
+.history-diag-chip { padding: 4px 8px; border-radius: 14px; background: var(--c-slate-bg); color: var(--ink-soft); font-size: var(--fs-meta); }
+.history-diag-chip.warn { background: var(--c-amber-bg); color: var(--c-amber-fg); }
+.history-type-map-fold, .history-search-box { margin-top: var(--sp-3); padding: var(--sp-3); border: 1px solid var(--border-card); border-radius: 8px; background: var(--bg-card); }
+.history-type-map-fold > summary { cursor: pointer; font-weight: 700; }
+.history-type-map { display: grid; grid-template-columns: minmax(160px, 1fr) minmax(200px, 1fr); gap: 7px var(--sp-2); align-items: center; margin-top: var(--sp-2); }
+.history-type-map label { color: var(--ink-soft); font-size: var(--fs-body-sub); }
+.history-search-box h3 { margin: 0 0 var(--sp-2); font-size: var(--fs-heading); }
+.history-search-controls { display: grid; grid-template-columns: minmax(260px, 1fr) minmax(180px, .35fr); gap: var(--sp-2); }
+.history-search-controls input, .history-search-controls select, .history-type-map select { width: 100%; }
+.history-search-results { display: grid; gap: 8px; margin-top: var(--sp-2); }
+.history-result { display: grid; grid-template-columns: 1fr auto; gap: var(--sp-2); padding: var(--sp-2); border: 1px solid var(--border-card); border-radius: 7px; background: var(--bg-page); }
+.history-result strong { display: block; margin-bottom: 3px; }
+.history-result-meta { color: var(--ink-mute); font-size: var(--fs-meta); line-height: 1.5; }
+.history-result-context { margin: 5px 0 0; color: var(--ink-soft); font-size: var(--fs-body-sub); white-space: pre-wrap; }
+.history-prefill { margin: 0 0 var(--sp-3); padding: var(--sp-2) var(--sp-3); border: 1px solid var(--c-blue-line); border-radius: 8px; background: var(--c-blue-bg); color: var(--c-blue-fg); font-size: var(--fs-body-sub); }
+.history-prefill strong { color: inherit; }
+.history-prefill .ghost { margin-left: var(--sp-2); }
 @media (max-width: 850px) {
   .knowledge-status { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .knowledge-insights { grid-template-columns: 1fr; }
+  .history-type-map, .history-search-controls { grid-template-columns: 1fr; }
+  .history-result { grid-template-columns: 1fr; }
 }
 /* 칩 문법 분리(§7): 토글 가능한 칩(모듈 on/off)만 파란 채움 — "눌러도 되는 것".
    표시 전용 정보(.module-chip.fixed — always_on 모듈)는 채움 없는 회색 외곽선으로 — "정보". */

@@ -61,6 +61,7 @@
              본문을 넣으면 자동 추정값이 프리필되고, 검토자가 그 위에서 정밀 조정함. -->
         <div id="input-setup" class="input-setup">
           <h3 class="setup-title">검토 설정 <span class="setup-hint-inline">— 본문을 넣으면 자동 추정되며, 검토자가 바꿀 수 있습니다</span></h3>
+          <div id="history-prefill" class="history-prefill" hidden></div>
           <!-- 읽어낸 문서 제목·당사 지위 — 유형·모듈·체크 게이트가 이 값으로 동작하므로 노출 -->
           <p id="doc-title-info" class="setup-auto setup-doctitle" hidden></p>
 
@@ -264,16 +265,17 @@
     </div>
   </section>
 
-  <!-- 법률검토의견 전건 태깅자료 — 앱 버전과 분리된 영구 지식 저장소 -->
+  <!-- 폐쇄망 내부 지식자료 — 앱 버전과 분리된 영구 저장소 -->
   <section id="pane-knowledge" class="pane">
     <div class="knowledge-page">
       <div class="knowledge-head">
         <div>
-          <h2>법률검토 태깅자료</h2>
-          <p>legal-opinion-tagger에서 만든 XLSX를 최초 1회 적재합니다. 자료는 앱 코드와 분리된 브라우저 지식 저장소에 남고, 새 버전은 같은 저장소를 이어서 사용합니다.</p>
+          <h2>내부 지식 데이터</h2>
+          <p>실제 자료는 폐쇄망 안에서만 읽고 앱 코드와 분리해 저장합니다. 새 버전은 같은 실행기와 저장소를 이어서 사용합니다.</p>
         </div>
         <span id="knowledge-store-state" class="knowledge-store-state">저장소 확인 중</span>
       </div>
+      <h3 class="knowledge-section-title">법률검토 태깅자료</h3>
       <div id="knowledge-status" class="knowledge-status"></div>
       <div class="knowledge-actions">
         <label class="filebtn primary-like">태깅 XLSX 가져오기<input id="knowledge-xlsx" type="file" accept=".xlsx" hidden></label>
@@ -295,6 +297,51 @@
         </ul>
       </div>
       <div id="knowledge-insights" class="knowledge-insights"></div>
+
+      <section class="history-section" aria-labelledby="history-title">
+        <div class="knowledge-head history-head">
+          <div>
+            <h3 id="history-title">계약검토 이력 DB</h3>
+            <p>계약검토 산출 XLSX를 폐쇄망에서 직접 적재합니다. 실제 행·검토결과·파일명은 외부로 전송되지 않습니다.</p>
+          </div>
+          <span id="history-store-state" class="knowledge-store-state">저장소 확인 중</span>
+        </div>
+        <div id="history-status" class="knowledge-status history-status"></div>
+        <div class="knowledge-actions">
+          <label class="filebtn primary-like">계약검토 XLSX 가져오기<input id="history-xlsx" type="file" accept=".xlsx" hidden></label>
+          <button id="history-backup" class="ghost" disabled>이력팩 내부 백업</button>
+          <label class="filebtn ghost">이력팩 복구<input id="history-restore" type="file" accept=".json,.crhistory" hidden></label>
+          <span id="history-action-msg" class="report-actions-note"></span>
+        </div>
+        <div id="history-progress" class="knowledge-progress" hidden>
+          <div class="knowledge-progress-bar"><span></span></div>
+          <p></p>
+        </div>
+        <div class="knowledge-policy history-policy">
+          <h3>폐쇄망 처리 원칙</h3>
+          <ul>
+            <li>가져오기·진단·검색·백업은 현재 브라우저와 폐쇄망 안에서만 수행합니다.</li>
+            <li>신청값과 결과값을 분리 보존하며, 서로 다르면 자동으로 하나를 정답으로 선택하지 않습니다.</li>
+            <li>원천 검토번호가 없으면 임시 로컬 ID를 사용하므로 같은 계약의 변경·연장을 자동 확정하지 않습니다.</li>
+            <li>과거 검토는 검색·입력 참고자료이며 현재 계약의 유형·적용범위·수정 필요를 자동 확정하지 않습니다.</li>
+          </ul>
+        </div>
+        <div id="history-diagnostics" class="history-diagnostics"></div>
+        <details id="history-type-map-fold" class="history-type-map-fold">
+          <summary>DB 유형 연결 설정</summary>
+          <p class="sec-hint">과거 DB 유형을 현재 계약 유형에 연결합니다. 이 설정은 폐쇄망 저장소에 남고 업데이트 후에도 유지됩니다.</p>
+          <div id="history-type-map" class="history-type-map"></div>
+        </details>
+        <div class="history-search-box">
+          <h3>과거 계약검토 찾기</h3>
+          <div class="history-search-controls">
+            <input id="history-search" type="search" aria-label="과거 계약검토 검색" placeholder="계약명·상대방·부서·유형 검색">
+            <select id="history-filter-type" aria-label="DB 유형 필터"><option value="">전체 DB 유형</option></select>
+          </div>
+          <p class="sec-hint">검색 결과에서 선택하면 계약서 입력 화면에 과거 기재값을 참고정보로 붙입니다. 계약서 본문은 자동으로 바꾸지 않습니다.</p>
+          <div id="history-search-results" class="history-search-results"></div>
+        </div>
+      </section>
     </div>
   </section>
 
