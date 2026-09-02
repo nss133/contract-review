@@ -134,7 +134,7 @@ actions:
     contract_requirement: express
     text_effect: required_present
     implementation_channel: standard_subdoc
-    action_rationale: 개인신용정보 처리위탁 문서화 사항은 보안관리약정으로 통합 충족 가능함
+    action_rationale: 개인신용정보 처리위탁 문서화는 PRIV-01~15의 세부 항목과 표준 보안관리약정 적용으로 통합 판단하며 독립 계약수정 항목으로 노출하지 않음
   PRIV-19:
     contract_requirement: express
     text_effect: required_present

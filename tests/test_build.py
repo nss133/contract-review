@@ -22,6 +22,8 @@ def test_build_produces_single_html(knowledge_dir, law_db, tmp_path):
     assert "폐쇄망 밖으로 반출하지 마세요" in html
     assert 'id="analysis-progress"' in html   # 최초 분석 단계 안내
     assert 'id="input-subdoc-use"' in html    # 보안관리약정서 사용 여부를 분석 전에 지정
+    assert "표준서식 적용" in html
+    assert "실제 체결·이행 확인은 계약검토 범위에서 제외" in html
     assert "function activatePane" in html    # 탭 전환을 클릭·자동 이동에서 공통 사용
     assert "prefers-reduced-motion: reduce" in html
     assert "계약서 반영 안내와 실제 처리 비교" in html

@@ -38,3 +38,15 @@ def test_contract_action_examples_separate_text_and_execution_location():
     assert checks["PRIV-16"]["contract_requirement"] == "none"
     assert checks["ITDL-01"]["contract_requirement"] == "recommended"
     assert checks["DIS-01"]["implementation_channel"] == "contract_or_internal_control"
+
+
+def test_security_standard_form_scope_and_low_value_cards():
+    knowledge = load_knowledge(ROOT / "knowledge")
+    checks = {cp["id"]: cp for doc in [knowledge["common"], *knowledge["types"]]
+              for cp in doc["checks"]}
+    standard = next(sd for sd in knowledge["common"]["meta"]["standard_subdocs"]
+                    if sd["id"] == "SUBDOC-PII")
+    assert {"PRIV-01", "PRIV-17"}.issubset(set(standard["covers"]))
+    assert "체결" not in standard["auto_comment"]
+    assert checks["PRIV-17"]["surface_policy"] == "aggregate_only"
+    assert checks["CMN-02"]["surface_policy"] == "anomaly_only"

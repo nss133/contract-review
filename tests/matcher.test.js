@@ -79,6 +79,16 @@ const CHECK_ALARM = {
   check: "이행보증을 위한 보증보험 가입 의무가 규정되어 있는가",
   triggers: { keywords: ["보증보험", "이행보증", "지급보증"] }, sources: [],
 };
+
+test("일반 매칭은 집계 전용·이상징후 전용 체크를 노출하지 않는다", () => {
+  const doc = { meta: { type_id: "common" }, checkpoints: [
+    { id: "NORMAL", check: "일반 항목", triggers: { keywords: ["일반"] }, sources: [] },
+    { id: "AGG", surface_policy: "aggregate_only", check: "집계 항목", triggers: { keywords: ["집계"] }, sources: [] },
+    { id: "ANOM", surface_policy: "anomaly_only", check: "이상징후 항목", triggers: { keywords: ["이상"] }, sources: [] },
+  ] };
+  const ids = buildModel([doc], [], "party", "").checks.map(x => x.cp.id);
+  assert.deepStrictEqual(ids, ["NORMAL"]);
+});
 // weak-role(목적) 조항으로 매칭돼 verify로 남는 케이스용 — 인용 근거 없음
 const CHECK_PURPOSE = {
   id: "PURP", module: "M-CORE", norm_type: "실무", absence_check: true, severity: "참고",

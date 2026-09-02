@@ -122,6 +122,13 @@
       if (c.nodeType === 3) continue; // 텍스트 노드는 't' 요소 단위로만 수집
       if (c.nodeType !== 1) continue;
       var ln = c.localName;
+      if (ln === 'AlternateContent') {
+        // DOCX 호환성 마크업은 Choice와 Fallback에 같은 내용을 중복 보관한다.
+        // 두 분기를 모두 순회하면 계약 본문이 두 번 추출되므로 사용할 한 분기만 고른다.
+        var choice = children(c, 'Choice')[0] || children(c, 'Fallback')[0];
+        if (choice) collectText(choice, out);
+        continue;
+      }
       if (ln === 't') out.text += c.textContent;
       else if (ln === 'tab') out.text += '\t';
       else if (ln === 'br' || ln === 'cr' || ln === 'lineBreak') out.text += '\n';
@@ -145,6 +152,11 @@
       for (var c = node.firstChild; c; c = c.nextSibling) {
         if (c.nodeType !== 1) continue;
         var ln = c.localName;
+        if (ln === 'AlternateContent') {
+          var branch = children(c, 'Choice')[0] || children(c, 'Fallback')[0];
+          if (branch) walk(branch);
+          continue;
+        }
         if (ln === 'p') {
           var tmp = { text: '' }; collectText(c, tmp);
           var raw = tmp.text.replace(/\n+$/, '');

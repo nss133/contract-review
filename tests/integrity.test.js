@@ -64,3 +64,35 @@ test("제N조 번호가 빠진 복수 표제는 개별 오류 대신 파싱 실�
   assert.ok(items.some(x => x.rule_id === "PARSE-01" && x.confidence === "high"));
   assert.ok(!items.some(x => x.rule_id === "NUM-01"));
 });
+
+test("본문 제1조와 부칙 제1조는 서로 다른 번호 영역으로 구분한다", () => {
+  const text = "계약서\n제1조(목적)\n계약의 목적을 정한다.\n제2조(기간)\n1년으로 한다.\n부칙\n제1조(시행일)\n이 계약은 체결일부터 시행한다.";
+  const items = run(text);
+  assert.ok(!items.some(x => x.rule_id === "NUM-01"));
+});
+
+test("같은 본문 영역의 실제 중복 조 번호는 계속 찾는다", () => {
+  const text = "계약서\n제1조(목적)\n계약의 목적을 정한다.\n제1조(범위)\n업무 범위를 정한다.";
+  const items = run(text);
+  assert.ok(items.some(x => x.rule_id === "NUM-01"));
+});
+
+test("본문 전체가 중복 추출되면 조 번호 오류 대신 추출 품질 신호 하나를 낸다", () => {
+  const once = "제1조(목적)\n계약의 목적과 업무 범위를 명확하게 정한다.\n제2조(기간)\n계약기간은 체결일부터 1년으로 하고 합의로 갱신한다.\n제3조(책임)\n당사자는 계약상 의무 위반으로 발생한 손해를 배상한다.";
+  const items = run("계약서\n" + once + "\n" + once);
+  assert.ok(items.some(x => x.rule_id === "PARSE-DUP" && x.scope === "contract"));
+  assert.ok(!items.some(x => x.rule_id === "NUM-01"));
+});
+
+test("괄호 숫자 항 표지가 있으면 해당 항의 존재를 인식한다", () => {
+  const items = run("계약서\n제1조(인용)\n제2조 제3항에 따른다.\n제2조(기간)\n(1) 1년으로 한다.\n(2) 합의로 갱신한다.\n(3) 갱신 기간은 1년이다.");
+  assert.ok(!items.some(x => x.rule_id === "REF-02" || x.rule_id === "REF-02U"));
+});
+
+test("1)·1. 표지는 존재 번호는 인정하고 누락은 고확신으로 단정하지 않는다", () => {
+  const present = run("계약서\n제1조(인용)\n제2조 제3항에 따른다.\n제2조(기간)\n1) 최초 기간\n2) 갱신 기간\n3) 종료 기간");
+  assert.ok(!present.some(x => x.rule_id === "REF-02" || x.rule_id === "REF-02U"));
+  const uncertain = run("계약서\n제1조(인용)\n제2조 제4항에 따른다.\n제2조(기간)\n1. 최초 기간\n2. 갱신 기간\n3. 종료 기간");
+  assert.ok(!uncertain.some(x => x.rule_id === "REF-02"));
+  assert.ok(uncertain.some(x => x.rule_id === "REF-02U"));
+});

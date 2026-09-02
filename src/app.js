@@ -977,10 +977,10 @@ function _detectInfoHtml() {
 
 /* ---------- 표준 부속서류 사용 체크(#B) ---------- */
 // 자동 감지는 체크박스를 켜지 않고 검토자에게 후보만 제안한다. 계약서의 단순 참조나
-// 비슷한 파일명만으로 실제 체결·적용 범위까지 확정하면 과잉 자동판정이 되기 때문이다.
+// 비슷한 파일명만으로 표준약정 적용 대상을 확정하면 과잉 자동판정이 되기 때문이다.
 function _subdocSuggestion(def) {
   if (detectSubdocRefs(state.text || "", [def]).length)
-    return { kind: "contract_reference", text: "계약서에서 약정서 참조를 찾았습니다. 실제 체결·사용이면 체크하세요." };
+    return { kind: "contract_reference", text: "계약서에서 약정서 참조를 찾았습니다. 표준약정 적용 대상이면 선택하세요." };
   var sigs = (def.ref_signals || []).concat(def.title ? [def.title] : []);
   var uploaded = (state.subDocs || []).some(function (d) {
     var hay = String(d.name || "") + "\n" + String(d.text || "");
@@ -988,10 +988,10 @@ function _subdocSuggestion(def) {
     return false;
   });
   return uploaded
-    ? { kind: "uploaded_candidate", text: "업로드한 부속서류에서 약정서 후보를 찾았습니다. 적용 대상·체결 상태를 확인해 체크하세요." }
-    : { kind: "", text: "체결·사용하는 경우 체크하세요." };
+    ? { kind: "uploaded_candidate", text: "업로드한 부속서류에서 약정서 후보를 찾았습니다. 표준약정 적용 대상이면 선택하세요." }
+    : { kind: "", text: "이 계약에 회사 표준약정을 적용하는 경우 선택하세요." };
 }
-// 유효 사용 여부는 검토자의 명시적 체크만 인정한다. 자동 감지는 위 제안 문구에만 사용한다.
+// 표준약정 적용 여부는 검토자의 명시적 체크만 인정한다. 자동 감지는 위 제안 문구에만 사용한다.
 function subdocInUse(def) {
   return state.subdocUse[def.id] === true;
 }
@@ -1010,14 +1010,14 @@ function _confirmedSubdocChecks() {
 }
 // 자동 기재 코멘트 — 토글 OFF 시 판정·이 문구가 원형 그대로인 항목만 자동 생성분으로 보고 제거.
 function subdocAutoComment(def) {
-  return def.auto_comment || ("표준 " + def.title + " 체결로 반영 — 별첨 체결·간인 확인");
+  return def.auto_comment || ("표준 " + def.title + " 적용으로 관련 문서화 항목 반영");
 }
 function subdocUseRowsHtml(scope) {
   return ((CR.common.meta || {}).standard_subdocs || []).map(function (d) {
     var suggestion = _subdocSuggestion(d);
     return '<label class="subdoc-use"><input type="checkbox" class="subdoc-use-cb" data-sdid="' + esc(d.id) +
       '" name="' + esc(scope) + '-subdoc-use-' + esc(d.id) + '"' + (subdocInUse(d) ? " checked" : "") +
-      '> 『' + esc(d.title) + '』(표준서식) 체결 사용' +
+      '> 『' + esc(d.title) + '』 표준서식 적용' +
       (suggestion.kind ? ' <span class="subdoc-suggest">자동 후보</span>' : '') +
       ' <span class="subdoc-use-hint">' + esc(suggestion.text) +
       ' 체크하면 세부 항목을 일괄 반영하고 검토 화면에는 하나의 묶음으로 표시합니다.</span></label>';
@@ -1364,7 +1364,7 @@ function runAnalysis(opts) {
     if (!subdocInUse(d)) return;
     (d.covers || []).forEach(function (cpId) {
       if (!state.subDocCov[cpId] && !state.refCov[cpId])
-        state.refCov[cpId] = { title: d.title, signal: "수동 체크", quote: "검토자 확인 — 표준 약정서 체결 사용" };
+        state.refCov[cpId] = { title: d.title, signal: "수동 체크", quote: "검토자 확인 — 표준 약정서 적용" };
     });
   });
 
@@ -1690,7 +1690,7 @@ function applyActionDisposition(cpId, disposition) {
   verdictStore = Verdict.setActionDisposition(verdictStore, cpId, disposition);
   saveVerdicts();
 }
-// 사용 체크 상태를 검토의견에 반영(#B): ON → covers 중 현재 분석에 존재하는 미판정 항목에
+// 표준약정 적용 상태를 검토의견에 반영(#B): ON → covers 중 현재 분석에 존재하는 미판정 항목에
 // 이상없음+자동 코멘트 일괄 기재. OFF → 자동 기재분(판정·코멘트 원형 그대로)만 제거.
 // 사람이 찍었거나 손댄 판정은 어느 방향에서도 불변.
 function applySubdocVerdicts() {
@@ -3661,13 +3661,13 @@ function renderConsiderBlock() {
       var list = groups[title];
       var confirmed = list.every(function (r) { return _subdocConfirmedForCp(r.cpId); });
       var badge = confirmed
-        ? (kind === "subdoc" ? "✓ 부속서류 사용 확인" : "✓ 표준약정서 사용 확인")
-        : (kind === "subdoc" ? "◇ 업로드 서류 확인 필요" : "◇ 약정서 참조 확인 필요");
+        ? (kind === "subdoc" ? "✓ 부속서류 적용 확인" : "✓ 표준약정 적용 확인")
+        : (kind === "subdoc" ? "◇ 표준약정 적용 판단" : "◇ 표준약정 적용 판단");
       var hint = confirmed
-        ? "검토자가 이 약정서의 체결·사용을 확인했습니다. 세부 항목은 묶음으로 반영됩니다."
+        ? "검토자가 이 계약에 표준약정이 적용됨을 확인했습니다. 관련 세부 항목은 묶음으로 반영되며 실제 체결·이행 확인은 계약검토 범위에서 제외됩니다."
         : (kind === "subdoc"
-          ? "업로드한 서류에서 관련 문구를 찾았습니다. 적용 대상·체결 상태를 확인한 뒤 위 약정서 사용 항목을 체크하세요."
-          : "계약서에서 약정서 참조를 찾았습니다. 실제 체결·첨부·작성항목 완성 여부를 확인한 뒤 위 약정서 사용 항목을 체크하세요.");
+          ? "업로드한 서류에서 관련 문구를 찾았습니다. 이 계약의 표준약정 적용 대상 여부만 확인하세요."
+          : "계약서에서 약정서 참조를 찾았습니다. 이 계약의 표준약정 적용 대상 여부만 확인하세요.");
       return '<details class="subdoc-bundle ' + (confirmed ? "bundle-confirmed" : "bundle-referenced") + '">' +
         '<summary><span class="badge ' + (confirmed ? "cov-subdoc" : "cov-refdoc") + '">' + badge +
         '</span><strong>' + esc(title) + '</strong><span class="bundle-count">' + list.length +

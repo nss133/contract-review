@@ -483,6 +483,9 @@ function suggestModules(text, modules, opts) {
 
 function activeCheckpoints(doc, activeModules, stance, fundKind) {
   return doc.checkpoints.filter(function (cp) {
+    // 과거 판정·근거 ID는 지식에 보존하되, 독립 카드 가치가 없는 집계항목과
+    // 별도 이상징후 탐지기가 필요한 항목은 일반 조항 매칭에서 노출하지 않는다.
+    if (cp.surface_policy === "aggregate_only" || cp.surface_policy === "anomaly_only") return false;
     if (!checkAllowedInStance(cp, stance)) return false;
     if (!fundScopeAllows(cp, fundKind)) return false;
     return !cp.module || activeModules.indexOf(cp.module) !== -1;

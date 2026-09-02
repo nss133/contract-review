@@ -30,6 +30,8 @@ var Verdict = (function () {
   // 계약 반영 필요성은 matcher의 contract_requirement에서 선행 라우팅한다.
   var LEGACY_OK_REASONS = ["계약 반영 불필요"];
   var LEGACY_NA = "해당없음"; // 구 판정값 — 이상없음 + '해당사항 없음'으로 이관
+  var LEGACY_SUBDOC_COMMENT = "표준 개인(신용)정보 보안관리약정서(2025.01) 체결로 반영 — 별첨 체결·간인 확인";
+  var CURRENT_SUBDOC_COMMENT = "표준 개인(신용)정보 보안관리약정서 적용으로 관련 문서화 항목 반영";
   // "auto" = 시스템 자동 기재(참고 항목 매칭 확인 등) — 사람 판정과 구분해 코퍼스 집계됨.
   var ORIGINS = ["manual", "bulk", "subdoc", "prior_review", "llm_draft", "legacy", "auto"];
 
@@ -53,7 +55,11 @@ var Verdict = (function () {
     var origin = ORIGINS.indexOf(item.origin) !== -1 ? item.origin : "legacy";
     var actionDisposition = ACTION_DISPOSITIONS.indexOf(item.action_disposition) !== -1
       ? item.action_disposition : "";
-    return { verdict: v, reason: reason, comment: item.comment || "", date: item.date || "", origin: origin,
+    var comment = item.comment || "";
+    // 과거 시스템이 자동 생성한 정확한 원문만 범위 변경에 맞춰 이관한다.
+    // 검토자가 작성·수정한 일반 코멘트는 일절 치환하지 않는다.
+    if (comment === LEGACY_SUBDOC_COMMENT) comment = CURRENT_SUBDOC_COMMENT;
+    return { verdict: v, reason: reason, comment: comment, date: item.date || "", origin: origin,
       action_disposition: actionDisposition };
   }
   // 저장소 전체 정규화(로드 직후 1회).

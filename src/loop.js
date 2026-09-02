@@ -10,6 +10,8 @@ var Loop = (function () {
   var VERDICTS = ["이상없음", "검토의견", "해당없음"];
   var NA_REASON = "해당사항 없음";
   var ORIGINS = ["manual", "bulk", "subdoc", "prior_review", "llm_draft", "legacy", "auto"];
+  var LEGACY_SUBDOC_COMMENT = "표준 개인(신용)정보 보안관리약정서(2025.01) 체결로 반영 — 별첨 체결·간인 확인";
+  var CURRENT_SUBDOC_COMMENT = "표준 개인(신용)정보 보안관리약정서 적용으로 관련 문서화 항목 반영";
 
   function emptyCorpus() {
     return { meta: { format: "cr-loop-corpus-v2", schema_version: 2, updated: "",
@@ -36,6 +38,24 @@ var Loop = (function () {
       next.meta.legacy_matching_excluded = sourceVersion < 2 ? next.meta.contract_count : 0;
     if (!next.contracts || typeof next.contracts !== "object" || Array.isArray(next.contracts)) next.contracts = {};
     if (!next.byCheck || typeof next.byCheck !== "object" || Array.isArray(next.byCheck)) next.byCheck = {};
+    // 과거 시스템 자동문구만 새 업무범위 문구로 이관하고, 같은 문구가 이미 있으면
+    // 건수·검토자를 합친다. 사람 작성 코멘트와 다른 문구는 보존한다.
+    Object.keys(next.byCheck).forEach(function (cpId) {
+      var slot = next.byCheck[cpId], merged = [];
+      (slot.comments || []).forEach(function (cm) {
+        if (cm.text === LEGACY_SUBDOC_COMMENT) cm.text = CURRENT_SUBDOC_COMMENT;
+        var found = null;
+        for (var i = 0; i < merged.length; i++) if (merged[i].text === cm.text) { found = merged[i]; break; }
+        if (!found) { merged.push(cm); return; }
+        found.count = (found.count || 0) + (cm.count || 0);
+        if (!found.reviewers) found.reviewers = [];
+        (cm.reviewers || []).forEach(function (reviewer) {
+          if (reviewer && found.reviewers.indexOf(reviewer) === -1) found.reviewers.push(reviewer);
+        });
+        if (cm.date && cm.date > (found.date || "")) found.date = cm.date;
+      });
+      slot.comments = merged;
+    });
     if (!next.tag_proposal_decisions) next.tag_proposal_decisions = {};
     return next;
   }

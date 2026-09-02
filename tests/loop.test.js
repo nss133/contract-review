@@ -28,6 +28,15 @@ test("normalizeCorpus: v1 판정은 보존하고 손상 가능 매칭·태그 �
   assert.strictEqual(c.meta.schema_version, 2);
 });
 
+test("normalizeCorpus: 구 보안약정 자동문구만 현행 범위 문구로 이관한다", () => {
+  const old = "표준 개인(신용)정보 보안관리약정서(2025.01) 체결로 반영 — 별첨 체결·간인 확인";
+  const corpus = L.emptyCorpus();
+  corpus.byCheck["PRIV-01"] = { counts: {}, comments: [{ text: old, count: 2, reviewers: ["A"] }] };
+  const out = L.normalizeCorpus(corpus);
+  assert.strictEqual(out.byCheck["PRIV-01"].comments[0].text,
+    "표준 개인(신용)정보 보안관리약정서 적용으로 관련 문서화 항목 반영");
+});
+
 test("mergeIntoCorpus: 이상없음 사유를 체크별·계약별로 보존", () => {
   const e = exp("reason-1", "김", {
     A: { verdict: "이상없음", reason: "계약 반영 불필요", comment: "", date: "d" },

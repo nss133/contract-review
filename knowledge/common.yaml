@@ -119,11 +119,11 @@ meta:
       title: 개인(신용)정보 보안관리약정서
       ref_signals: [보안관리약정서, 보안관리 약정, 개인(신용)정보보안관리약정, 정보보안관리약정]
       # covers는 Task 4 매처의 5/13 auto-confirm 결과가 아니라 약정서가 실질적으로 다루는
-      # 전체 PRIV 항목(13개) — 참조 전환은 사람 확인용 그룹핑이지 매칭 성공 여부와 무관함.
-      covers: [PRIV-02, PRIV-03, PRIV-04, PRIV-05, PRIV-06, PRIV-07, PRIV-08, PRIV-13, PRIV-14, PRIV-15, PRIV-19, PRIV-20, PRIV-21]
-      # 사용 체크(#B) ON 시 covers의 미판정 항목에 자동 기재되는 검토의견 코멘트.
+      # 전체 PRIV 항목(15개) — 참조 전환은 사람 확인용 그룹핑이지 매칭 성공 여부와 무관함.
+      covers: [PRIV-01, PRIV-02, PRIV-03, PRIV-04, PRIV-05, PRIV-06, PRIV-07, PRIV-08, PRIV-13, PRIV-14, PRIV-15, PRIV-17, PRIV-19, PRIV-20, PRIV-21]
+      # 표준약정 적용 체크(#B) ON 시 covers의 미판정 항목에 자동 기재되는 검토의견 코멘트.
       # 토글 OFF 시 판정 '이상없음' + 이 문구 원형 그대로인 항목만 제거(사람 수정분 보존).
-      auto_comment: "표준 개인(신용)정보 보안관리약정서(2025.01) 체결로 반영 — 별첨 체결·간인 확인"
+      auto_comment: "표준 개인(신용)정보 보안관리약정서 적용으로 관련 문서화 항목 반영"
 checks:
   - id: CMN-01
     check: 계약 당사자가 법인 명의로 정확히 특정되어 있는가(영업점·부서 명의 아님)
@@ -143,6 +143,9 @@ checks:
     severity_basis: "실무 관행 항목(법령 강제 아님)"
     norm_type: 실무
     basis: practice
+    # 통상적인 목적조항 자체는 검토가치가 낮다. 계약 제목·유형과 목적이 정면 충돌하는
+    # 이상징후 탐지에서만 활용하고 일반 조항 매칭·부재알람에는 노출하지 않는다.
+    surface_policy: anomaly_only
     triggers:
       keywords: [목적, 계약의 목적]
     # 코퍼스 16/16 이상없음. 목적 문장 존재는 확정하되 실제 법적 성격과의 부합은 사람이 판단.
@@ -1746,6 +1749,9 @@ checks:
     severity_basis: "근거 조문이 강행규정(의무)임 — 신용정보의 이용 및 보호에 관한 법률 제17조"
     norm_type: 강행
     basis: statute
+    # 개인정보 보호법 제26조 준용 여부를 요약하는 집계항목이다. PRIV-01~15의 세부 판정과
+    # 중복되므로 독립 카드로 노출하지 않고 표준 보안관리약정 커버 집계에만 보존한다.
+    surface_policy: aggregate_only
     triggers:
       keywords: [개인신용정보, 신용정보, 처리위탁]
     absence_check: true

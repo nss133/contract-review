@@ -117,7 +117,7 @@ test("bulkVerdict: 잘못된 verdict는 무시(원본 반환)", () => {
 });
 
 // ── 일괄 판정+코멘트(보안관리약정서 자동 기재 #B) ────────────────────
-const AUTO = "표준 개인(신용)정보 보안관리약정서(2025.01) 체결로 반영 — 별첨 체결·간인 확인";
+const AUTO = "표준 개인(신용)정보 보안관리약정서 적용으로 관련 문서화 항목 반영";
 
 test("bulkVerdictComment: 미판정만 verdict+코멘트로 채움, 기판정 보존", () => {
   let store = V.setVerdict({}, "PRIV-02", "검토의견", "사람이 찍은 의견", "d1");
@@ -140,6 +140,12 @@ test("bulkVerdictComment: 재실행해도 이중 기재 없음(멱등)", () => {
 test("bulkVerdictComment: 잘못된 verdict는 무시(원본 반환)", () => {
   const r = V.bulkVerdictComment({}, ["A-1"], "없는판정", AUTO, "d");
   assert.strictEqual(r.applied, 0);
+});
+
+test("구 보안약정 자동문구는 실제 체결 확인 없는 현행 문구로 이관한다", () => {
+  const old = "표준 개인(신용)정보 보안관리약정서(2025.01) 체결로 반영 — 별첨 체결·간인 확인";
+  const migrated = V.migrateStore({ "PRIV-01": { verdict: "이상없음", comment: old, origin: "subdoc" } });
+  assert.strictEqual(migrated["PRIV-01"].comment, AUTO);
 });
 
 test("revertBulkVerdict: 자동 기재분(판정·코멘트 원형)만 제거", () => {
