@@ -27,7 +27,7 @@ def build(api_base="/api/v1"):
     for name in ['style.css', 'ui_layout.css']:
         shutil.copyfile(FRONTEND / 'assets' / name, out / 'assets' / name)
     shutil.copyfile(FRONTEND / 'src/session.css', out / 'assets/session.css')
-    for name in ['app.mjs', 'api-client.mjs']:
+    for name in ['app.mjs', 'api-client.mjs', 'review-ui.mjs']:
         shutil.copyfile(FRONTEND / 'src' / name, out / name)
     (out / 'config.json').write_text(json.dumps({'apiBase': api_base, 'apiVersion': '1'}) + '\n', encoding="utf-8")
     print('Frontend built independently:', out)

@@ -5,3 +5,13 @@
 .server-session label {display: flex; gap: 6px; align-items: center; flex-wrap: wrap;}
 #service-status {overflow-wrap: anywhere;}
 @media print {.server-session {display: none;}}
+.server-quote { white-space:pre-wrap; overflow-wrap:anywhere; font:inherit; margin:8px 0; max-height:420px; overflow:auto; }
+.server-review-row select,.server-review-row textarea,.server-review-row input { display:block; width:100%; box-sizing:border-box; margin:8px 0; }
+.server-review-row h3 { font-size:14px; }
+.server-row-status { font-size:12px; color:var(--ink-mute); }
+.server-original-confirm { display:flex; align-items:center; gap:8px; margin:12px 0; }
+#server-summary { width:100%; box-sizing:border-box; }
+#subdoc-list>div { border-bottom:1px solid var(--border-hair); padding:8px 0; }
+#subdoc-list button { margin-left:12px; }
+.server-report-item { border-bottom:1px solid var(--border-hair); padding:12px 0; }
+@media print { .server-session,.tabs,.controls,nav,#document-review-block { display:none!important; } .server-quote { max-height:none; overflow:visible; } }

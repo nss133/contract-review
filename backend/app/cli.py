@@ -8,6 +8,7 @@ from app.auth.service import create_user
 from app.config import Settings
 from app.main import create_app
 from app.repositories.database import Database
+from app.repositories.backup import create_backup, restore_backup
 
 
 def main():
@@ -19,14 +20,25 @@ def main():
     user.add_argument("--role", choices=["operator", "knowledge_manager", "reviewer", "reader"], default="reviewer")
     export = sub.add_parser("export-openapi")
     export.add_argument("output", type=Path)
+    backup = sub.add_parser("backup-db")
+    backup.add_argument("output", type=Path)
+    restore = sub.add_parser("restore-db")
+    restore.add_argument("bundle", type=Path)
+    restore.add_argument("destination", type=Path)
     args = parser.parse_args()
     if args.command == "export-openapi":
         args.output.parent.mkdir(parents=True, exist_ok=True)
         args.output.write_text(json.dumps(create_app(Settings(environment="test")).openapi(), ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
         return
+    if args.command == "restore-db":
+        print(restore_backup(args.bundle, args.destination))
+        return
     settings = Settings.from_env()
     if not settings.database_path:
         parser.error("CR_DATABASE_PATH is required")
+    if args.command == "backup-db":
+        print(json.dumps(create_backup(settings.database_path, args.output), ensure_ascii=False))
+        return
     db = Database(settings.database_path, settings.database_timeout)
     db.initialize()
     if args.command == "create-user":

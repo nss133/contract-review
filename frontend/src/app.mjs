@@ -1,124 +1,65 @@
 import {ApiClient} from './api-client.mjs';
-
-const byId = id => document.getElementById(id);
-const status = message => { byId('service-status').textContent = message; };
-let api, user = null, accountId = '', reviewId = '', revision = 0, loadSequence = 0, generation = 0;
-
-function activate(name) {
-  document.querySelectorAll('.pane').forEach(element => element.classList.toggle('active', element.id === 'pane-' + name));
-  document.querySelectorAll('[data-tab]').forEach(element => element.classList.toggle('active', element.dataset.tab === name));
+import {renderReview,renderReport,downloadJSON} from './review-ui.mjs';
+const byId=id=>document.getElementById(id);
+const status=message=>{byId('service-status').textContent=message;};
+let api,user=null,catalog=null,state=null,reviewId='',revision=0,generation=0,busy=false,savedText='',settingsDirty=false,draftRevision=0,savedSummary='',moduleOverride=null;
+const dirtyVerdicts=new Set();
+const supported=['docx-file','base-file','subdoc-file','base-clear','btn-analyze','input-type','checklist-type','input-department','server-save-text','server-new-review','server-review-list','server-reload','session-logout','review-done-cta','btn-reanalyze','verdict-export'];
+function activate(name){document.querySelectorAll('.pane').forEach(e=>e.classList.toggle('active',e.id==='pane-'+name));document.querySelectorAll('[data-tab]').forEach(e=>e.classList.toggle('active',e.dataset.tab===name));if(name==='report')showReport();}
+function editable(){return !!user&&['reviewer','knowledge_manager'].includes(user.role);}
+function summaryDirty(){return byId('server-summary').value!==savedSummary;}
+function unsaved(){return dirtyVerdicts.size||summaryDirty()||byId('contract-text').value!==savedText;}
+function setControls(){
+  for(const id of supported){const e=byId(id);if(e)e.disabled=busy||!editable();}
+  for(const e of document.querySelectorAll('input[name="stance"], [data-module], [data-workflow-control]'))e.disabled=busy||!editable()||e.dataset.alwaysOn==='true'||(!!e.closest('.server-review-row')&&!analysisCurrent());
+  byId('contract-text').disabled=busy||!editable();
+  byId('server-review-list').disabled=busy||!user;
+  byId('session-logout').disabled=busy||!user;
+  updateProgress();
 }
-
-function session(value) {
-  generation++;
-  if (value && accountId && accountId !== value.id) byId('contract-text').value = '';
-  if (value) accountId = value.id;
-  user = value;
-  byId('login-form').hidden = !!value;
-  byId('session-tools').hidden = !value;
-  byId('session-user').textContent = value ? value.display_name : '';
-  byId('server-save-text').disabled = !value || !['reviewer', 'knowledge_manager'].includes(value.role);
-  if (!value) {
-    reviewId = ''; revision = 0; loadSequence++;
-    byId('server-review-list').replaceChildren(new Option('선택하세요', ''));
-  }
-}
-
-function failed(error) {
-  status(error.message);
-  if (error.status === 401) session(null); // Keep current text until explicit logout/account change.
-}
-
-async function listReviews() {
-  const current = generation;
-  const result = await api.request('/reviews');
-  if (current !== generation || !user) return;
-  const select = byId('server-review-list');
-  select.replaceChildren(new Option('선택하세요', ''));
-  result.reviews.forEach(row => select.add(new Option(row.title || '제목 없는 본문 초안', row.id)));
-  select.value = reviewId;
-}
-
-async function loadCatalog() {
-  const current = generation;
-  const result = await api.request('/catalog');
-  if (current !== generation || !user) return;
-  ['input-type', 'checklist-type'].forEach(id => {
-    const select = byId(id);
-    if (select) {
-      select.replaceChildren(new Option('계약 유형', ''));
-      result.types.forEach(type => select.add(new Option(type.meta.type_name, type.meta.type_id)));
-    }
-  });
-}
-
-// The foundation is not the finished migration. Unsupported actions stay disabled;
-// no legacy engine, fixtures or fake analysis results are used in this application.
-document.querySelectorAll('main button, main input, main select').forEach(element => {
-  if (!element.closest('.server-session')) element.disabled = true;
-});
-document.querySelectorAll('[data-tab]').forEach(element => element.addEventListener('click', () => activate(element.dataset.tab)));
-byId('btn-analyze').title = '계약 분석 기능 준비 중';
-
-byId('login-form').addEventListener('submit', async event => {
-  event.preventDefault();
-  byId('login-submit').disabled = true;
-  try {
-    const next = await api.login(byId('login-username').value, byId('login-password').value);
-    session(next);
-    await Promise.all([listReviews(), loadCatalog()]);
-    status('로그인했습니다. 본문 초안을 저장할 수 있습니다. 계약 분석 기능은 준비 중입니다.');
-  } catch (error) { failed(error); }
-  finally { byId('login-password').value = ''; byId('login-submit').disabled = false; }
-});
-
-byId('session-logout').addEventListener('click', async () => {
-  try {
-    await api.logout();
-    byId('contract-text').value = ''; session(null); status('로그아웃했습니다.');
-  } catch (error) { failed(error); }
-});
-
-byId('server-save-text').addEventListener('click', async () => {
-  const button = byId('server-save-text');
-  button.disabled = true;
-  byId('server-review-list').disabled = true;
-  const current = generation;
-  const text = byId('contract-text').value;
-  try {
-    const result = await api.request(reviewId ? '/reviews/' + reviewId : '/reviews', {
-      method: reviewId ? 'PATCH' : 'POST', body: {text, title: Array.from(text.split(/\r?\n/)[0]).slice(0, 250).join(''), revision}
-    });
-    if (current !== generation || !user) return;
-    reviewId = result.review_id || reviewId; revision = result.revision;
-    await listReviews();
-    status(byId('contract-text').value === text ? '본문 초안을 저장했습니다.' : '저장 후 추가 입력이 있습니다. 다시 저장하세요.');
-  } catch (error) { failed(error); }
-  finally {
-    button.disabled = !user || !['reviewer', 'knowledge_manager'].includes(user.role);
-    byId('server-review-list').disabled = false;
-  }
-});
-
-byId('server-review-list').addEventListener('change', async event => {
-  const id = event.target.value, sequence = ++loadSequence;
-  if (!id) return;
-  try {
-    const result = await api.request('/reviews/' + id);
-    if (sequence !== loadSequence || !user) return;
-    reviewId = id; revision = result.review.revision;
-    byId('contract-text').value = result.review.text;
-    activate('input'); status('저장한 본문 초안을 불러왔습니다.');
-  } catch (error) { failed(error); }
-});
-
-try {
-  const config = await fetch('./config.json', {cache: 'no-store'}).then(response => response.json());
-  api = new ApiClient(config.apiBase);
-  const current = await api.me();
-  session(current); await Promise.all([listReviews(), loadCatalog()]);
-  status('로그인 상태입니다. 계약 분석 기능은 준비 중입니다.');
-} catch (error) {
-  session(null);
-  if (error.status !== 401) failed(error);
-}
+function clearReview(){reviewId='';revision=0;state=null;savedText='';settingsDirty=false;draftRevision=0;savedSummary='';moduleOverride=null;dirtyVerdicts.clear();byId('contract-text').value='';byId('server-summary').value='';byId('original-confirmed').checked=false;byId('clause-rows').replaceChildren();byId('report-body').replaceChildren();byId('analyze-result').hidden=true;byId('clauses-empty').hidden=false;byId('report-empty').hidden=false;byId('subdoc-list').replaceChildren();byId('base-clear').hidden=true;byId('input-type').value='';byId('checklist-type').value='';byId('input-department').value='';document.querySelector('input[name="stance"][value="party"]').checked=true;renderModules();activate('input');}
+function session(value){generation++;if(user&&value&&user.id!==value.id)clearReview();user=value;byId('login-form').hidden=!!value;byId('session-tools').hidden=!value;byId('session-user').textContent=value?.display_name||'';if(!value){clearReview();byId('server-review-list').replaceChildren(new Option('선택하세요',''));}setControls();}
+function failed(error){status(error.message);if(error.status===401){session(null);status('세션이 만료되었습니다. 다시 로그인하세요.');}}
+async function perform(fn){if(busy){status('현재 작업이 끝난 뒤 다시 시도하세요.');return;}busy=true;setControls();try{return await fn();}catch(error){failed(error);}finally{busy=false;setControls();}}
+async function listReviews(){const token=generation;const result=await api.request('/reviews');if(token!==generation||!user)return;const select=byId('server-review-list');select.replaceChildren(new Option('선택하세요',''));for(const row of result.reviews)select.add(new Option(row.title||'제목 없는 계약',row.id));select.value=reviewId;}
+async function loadCatalog(){const token=generation;const result=await api.request('/catalog');if(token!==generation||!user)return;catalog=result;for(const id of ['input-type','checklist-type']){const select=byId(id);select.replaceChildren(new Option('자동 추정 (필요하면 직접 선택)',''));for(const type of result.types)select.add(new Option(type.meta.type_name,type.meta.type_id));}renderModules();}
+function renderModules(active){const root=byId('input-screening');root.replaceChildren();const type=catalog?.types.find(t=>t.meta.type_id===byId('input-type').value);for(const module of type?.meta.modules||[]){const label=document.createElement('label'),check=document.createElement('input');check.type='checkbox';check.dataset.module=module.id;check.checked=module.always_on||!!active?.includes(module.id);check.disabled=busy||!editable()||!!module.always_on;check.dataset.alwaysOn=String(!!module.always_on);check.addEventListener('change',()=>{settingsDirty=true;moduleOverride=[...document.querySelectorAll('[data-module]:checked')].map(e=>e.dataset.module);byId('original-confirmed').checked=false;setControls();});label.append(check,document.createTextNode(module.name));root.append(label);}}
+async function saveText(){const text=byId('contract-text').value;if(!text.trim())throw new Error('본문을 입력하거나 파일을 선택하세요.');if(reviewId&&text===savedText)return;const result=await api.request(reviewId?'/reviews/'+reviewId:'/reviews',{method:reviewId?'PATCH':'POST',body:{text,title:Array.from(text.split(/\r?\n/)[0]).slice(0,250).join(''),revision}});reviewId=result.review_id||reviewId;revision=result.revision;savedText=text;if(state){state.review.revision=revision;if(state.analysis)state.analysis.stale=true;}await listReviews();}
+async function reloadState(){state=await api.request('/reviews/'+reviewId+'/state');revision=state.review.revision;savedText=state.review.text;byId('contract-text').value=savedText;if(state.analysis){const o=state.analysis.result.options;byId('input-type').value=o.type_id;byId('checklist-type').value=o.type_id;byId('input-department').value=o.department||'';const stance=document.querySelector('input[name="stance"][value="'+o.stance+'"]');if(stance)stance.checked=true;moduleOverride=o.modules;renderModules(o.modules);}renderDocuments();renderReview(state,{save:saveVerdict,dirty:id=>{dirtyVerdicts.add(id);byId('original-confirmed').checked=false;updateProgress();},canEdit:()=>editable()&&!busy&&!state?.analysis?.stale&&!settingsDirty});updateProgress();}
+function renderDocuments(){const root=byId('subdoc-list');root.replaceChildren();for(const doc of state?.documents||[]){const row=document.createElement('div'),label=document.createElement('a'),button=document.createElement('button');label.textContent=({main:'본문',annex:'별첨',base:'원계약'})[doc.kind]+': '+doc.name;label.href=api.base+'/reviews/'+reviewId+'/documents/'+doc.id+'/file';label.download=doc.name;button.textContent='첨부 해제';button.dataset.workflowControl='true';button.addEventListener('click',()=>perform(async()=>{const result=await api.request('/reviews/'+reviewId+'/documents/'+doc.id+'?revision='+revision,{method:'DELETE'});revision=result.revision;await reloadState();status('첨부를 해제했습니다. 다시 분석하세요.');}));row.append(label,button);for(const warning of doc.extraction.warnings||[]){const p=document.createElement('p');p.textContent=warning;p.className='sec-hint';row.append(p);}root.append(row);}}
+async function uploadFiles(files,kind){if(!files?.length)return;await perform(async()=>{if(dirtyVerdicts.size)throw new Error('작성 중인 항목 의견을 먼저 저장하세요.');if(!reviewId&&!byId('contract-text').value.trim())byId('contract-text').value='새 계약 문서';await saveText();for(const file of files){status(file.name+' 본문을 추출하고 있습니다.');const form=new FormData();form.append('file',file);form.append('kind',kind);form.append('revision',String(revision));const result=await api.request('/reviews/'+reviewId+'/documents',{method:'POST',form});revision=result.revision;}await reloadState();await listReviews();byId('original-confirmed').checked=false;status('파일 본문을 읽었습니다. 추출 내용과 계약 유형을 확인하고 분석을 시작하세요.');});}
+async function analyse(){await perform(async()=>{if(dirtyVerdicts.size)throw new Error('작성 중인 항목 의견을 먼저 저장하세요.');await saveText();status('계약 원문과 체크리스트를 분석하고 있습니다.');byId('analysis-progress').hidden=false;try{await api.request('/reviews/'+reviewId+'/analyses',{method:'POST',body:{revision,type_id:byId('input-type').value,stance:document.querySelector('input[name="stance"]:checked')?.value||'party',modules:moduleOverride,department:byId('input-department').value}});settingsDirty=false;dirtyVerdicts.clear();await reloadState();byId('original-confirmed').checked=false;activate('clauses');status('분석했습니다. 관련 원문을 확인하고 항목별 검토의견을 저장하세요.');}finally{byId('analysis-progress').hidden=true;}});}
+function analysisCurrent(){return state?.analysis&&!state.analysis.stale&&!settingsDirty&&byId('contract-text').value===savedText;}
+async function saveVerdict(checkId,payload){if(busy||!analysisCurrent())throw new Error('현재 원문과 설정으로 다시 분석한 뒤 의견을 저장하세요.');busy=true;setControls();try{const old=state.verdicts.find(v=>v.check_id===checkId);const saved=await api.request('/reviews/'+reviewId+'/verdicts/'+encodeURIComponent(checkId),{method:'PUT',body:{...payload,analysis_id:state.analysis.id,revision:old?.revision||0,origin:'manual'}});const next={...payload,origin:'manual',check_id:checkId,analysis_id:state.analysis.id,revision:saved.revision,needs_reconfirmation:false};if(old)Object.assign(old,next);else state.verdicts.push(next);dirtyVerdicts.delete(checkId);if(state.completion)state.completion.current=false;status('검토의견을 저장했습니다.');}catch(error){failed(error);throw error;}finally{busy=false;setControls();}}
+function updateProgress(){const autos=state?.verdicts.filter(v=>v.origin==='auto'&&!v.needs_reconfirmation).length||0;if(state?.analysis)byId('standard-auto-summary').textContent='자동 확인 '+autos+'건 · '+(analysisCurrent()?'자동 근거와 남은 항목을 검토한 뒤 원본 대조를 확인하세요.':'본문 또는 설정이 바뀌었습니다. 다시 분석하세요.');const items=state?.analysis?.result.items.filter(r=>r.required)||[];const done=items.filter(i=>state.verdicts.some(v=>v.check_id===i.cpId&&!v.needs_reconfirmation)&&!dirtyVerdicts.has(i.cpId)).length;byId('clause-progress').textContent=items.length?'검토 '+done+' / '+items.length+' · '+(analysisCurrent()?'현재 분석':'다시 분석 필요'):'';const button=byId('review-done-cta');button.hidden=!items.length;button.disabled=busy||!editable()||!analysisCurrent()||done!==items.length||(!(state?.completion?.current&&!summaryDirty())&&!byId('original-confirmed').checked);button.textContent=state?.completion?.current&&!summaryDirty()?'완료 기록 확인 →':'검토 완료 — 종합 리포트 →';byId('server-draft-save').disabled=busy||!editable()||!reviewId;}
+async function showReport(){if(!state?.analysis)return;const currentId=reviewId,token=generation;try{if(state.completion?.current&&!summaryDirty()){const value=await api.request('/reviews/'+currentId+'/completions/'+state.completion.id);if(token===generation&&currentId===reviewId)renderReport(value.snapshot);}else renderReport({review:state.review,analysis:state.analysis.result,verdicts:state.verdicts,summary:byId('server-summary').value},true);}catch(error){failed(error);}}
+// Preserve the existing screen and IDs. Only controls with real server actions are enabled.
+for(const e of document.querySelectorAll('main button,main input,main select'))if(!e.closest('.server-session'))e.disabled=true;
+for(const e of document.querySelectorAll('[data-tab]'))e.addEventListener('click',()=>activate(e.dataset.tab));
+for(const id of ['auto-tools','bulk-dropdown'])byId(id).hidden=true;
+byId('standard-auto-summary').textContent='본문을 분석하면 현재 약정과 예외를 확인해 자동판정합니다. 자동 확인 근거와 남은 항목을 검토하세요.';
+const notes=byId('document-review-block');const title=document.createElement('h3');title.textContent='종합 검토의견';const summary=document.createElement('textarea');summary.id='server-summary';summary.rows=4;summary.maxLength=100000;summary.setAttribute('aria-label','종합 검토의견');summary.dataset.workflowControl='true';const draftButton=document.createElement('button');draftButton.id='server-draft-save';draftButton.textContent='종합 의견 초안 저장';const label=document.createElement('label');label.className='server-original-confirm';const confirm=document.createElement('input');confirm.id='original-confirmed';confirm.type='checkbox';confirm.dataset.workflowControl='true';confirm.addEventListener('change',updateProgress);label.append(confirm,document.createTextNode('원본과 추출 본문·별첨을 대조하고 모든 항목의 의견을 확인했습니다.'));notes.append(title,summary,draftButton,label);
+byId('login-form').addEventListener('submit',async event=>{event.preventDefault();byId('login-submit').disabled=true;try{const next=await api.login(byId('login-username').value,byId('login-password').value);session(next);await Promise.all([listReviews(),loadCatalog()]);status('로그인했습니다. 계약 파일을 열거나 본문을 붙여넣어 분석하세요.');}catch(error){failed(error);}finally{byId('login-password').value='';byId('login-submit').disabled=false;}});
+byId('session-logout').addEventListener('click',()=>perform(async()=>{if(unsaved())throw new Error('저장하지 않은 본문 또는 의견을 먼저 저장하세요.');await api.logout();session(null);status('로그아웃했습니다.');}));
+byId('server-save-text').addEventListener('click',()=>perform(async()=>{await saveText();status('본문 초안을 저장했습니다.');}));
+byId('server-new-review').addEventListener('click',()=>{if(unsaved()){status('작성 중인 본문 또는 의견을 먼저 저장하세요.');return;}clearReview();byId('server-review-list').value='';setControls();status('새 계약 파일을 열거나 본문을 입력하세요.');});
+byId('server-review-list').addEventListener('change',event=>perform(async()=>{const next=event.target.value;if(!next)return;if(unsaved()){event.target.value=reviewId;throw new Error('작성 중인 본문 또는 의견을 먼저 저장하세요.');}clearReview();reviewId=next;byId('server-review-list').value=next;await reloadState();const draft=await api.request('/reviews/'+reviewId+'/draft');byId('server-summary').value=draft.draft.text;savedSummary=draft.draft.text;draftRevision=draft.draft.revision;activate(state.analysis?'clauses':'input');status('저장한 검토를 불러왔습니다.');}));
+byId('server-reload').addEventListener('click',()=>perform(async()=>{
+  if(!reviewId)throw new Error('저장한 검토를 먼저 선택하세요.');
+  if(unsaved())downloadJSON('계약검토-작성중-백업.json',{review_id:reviewId,text:byId('contract-text').value,summary:summary.value,verdicts:[...document.querySelectorAll('.server-review-row')].filter(row=>row.querySelector('select')).map(row=>({check_id:row.dataset.checkId,verdict:row.querySelector('select').value,reason:row.querySelector('input').value,comment:row.querySelector('textarea').value}))});
+  const selected=reviewId;clearReview();reviewId=selected;byId('server-review-list').value=selected;await reloadState();const draft=await api.request('/reviews/'+reviewId+'/draft');summary.value=draft.draft.text;savedSummary=draft.draft.text;draftRevision=draft.draft.revision;activate(state.analysis?'clauses':'input');status('최신 저장본을 불러왔습니다. 작성 중이던 변경이 있으면 백업 파일로 내려받았습니다.');
+}));
+byId('docx-file').accept='.txt,.pdf,.docx,.hwpx,.doc,.hwp';
+for(const [id,kind] of [['docx-file','main'],['subdoc-file','annex'],['base-file','base']])byId(id).addEventListener('change',async e=>{await uploadFiles([...e.target.files],kind);e.target.value='';});
+byId('drop-zone').addEventListener('dragover',e=>e.preventDefault());byId('drop-zone').addEventListener('drop',e=>{e.preventDefault();if(editable())uploadFiles([...e.dataTransfer.files].slice(0,1),'main');});
+byId('contract-text').addEventListener('input',()=>{byId('original-confirmed').checked=false;setControls();});
+for(const name of ['input-type','checklist-type'])byId(name).addEventListener('change',e=>{byId('input-type').value=e.target.value;byId('checklist-type').value=e.target.value;settingsDirty=true;moduleOverride=null;renderModules();byId('original-confirmed').checked=false;setControls();});
+for(const e of document.querySelectorAll('input[name="stance"]'))e.addEventListener('change',()=>{settingsDirty=true;byId('original-confirmed').checked=false;setControls();});
+byId('input-department').addEventListener('input',()=>{settingsDirty=true;confirm.checked=false;setControls();});
+summary.addEventListener('input',()=>{if(state?.completion)state.completion.current=false;confirm.checked=false;updateProgress();});
+byId('btn-analyze').addEventListener('click',analyse);byId('btn-reanalyze').addEventListener('click',analyse);
+draftButton.addEventListener('click',()=>perform(async()=>{const saved=await api.request('/reviews/'+reviewId+'/draft',{method:'PUT',body:{text:summary.value,revision:draftRevision}});draftRevision=saved.revision;savedSummary=summary.value;status('종합 의견 초안을 저장했습니다.');}));
+byId('review-done-cta').addEventListener('click',()=>perform(async()=>{if(!analysisCurrent()||dirtyVerdicts.size)throw new Error('최신 분석과 저장되지 않은 의견을 확인하세요.');if(state.completion?.current&&!summaryDirty()){activate('report');return;}if(summaryDirty()){const draft=await api.request('/reviews/'+reviewId+'/draft',{method:'PUT',body:{text:summary.value,revision:draftRevision}});draftRevision=draft.revision;savedSummary=summary.value;}const response=await api.request('/reviews/'+reviewId+'/complete',{method:'POST',body:{analysis_id:state.analysis.id,revision,summary:summary.value,reviewed_original:confirm.checked,verdict_revisions:Object.fromEntries(state.verdicts.filter(v=>!v.needs_reconfirmation).map(v=>[v.check_id,v.revision]))}});state.completion={id:response.completion_id,current:true};renderReport(response.snapshot);activate('report');status('최종 검토를 완료하고 저장했습니다. 저장한 검토 목록에서 다시 열 수 있습니다.');}));
+byId('verdict-export').addEventListener('click',()=>perform(async()=>{if(state?.completion?.current){const response=await api.request('/reviews/'+reviewId+'/completions/'+state.completion.id);downloadJSON('계약검토-완료.json',response.snapshot);}else downloadJSON('계약검토-진행중.json',await api.request('/reviews/'+reviewId+'/state'));}));
+window.addEventListener('beforeunload',e=>{if(busy||unsaved()){e.preventDefault();e.returnValue='';}});
+try{const config=await fetch('./config.json',{cache:'no-store'}).then(r=>r.json());api=new ApiClient(config.apiBase);session(await api.me());await Promise.all([listReviews(),loadCatalog()]);status('계약 파일을 열거나 저장한 검토를 불러오세요.');}catch(error){session(null);if(error.status!==401)failed(error);}

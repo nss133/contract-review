@@ -1,0 +1,343 @@
+{
+  "source_hash": "f6bf53437bf1d45d4a67169a6226e4670515c7c233a9a74e3f462d2bfd9f5506",
+  "knownRoles": [
+    "수탁자",
+    "위탁자",
+    "수급인",
+    "발주자",
+    "정보제공자",
+    "정보수령자",
+    "제공자",
+    "수령자",
+    "전자금융보조업자",
+    "클라우드컴퓨팅서비스제공자",
+    "클라우드서비스제공자",
+    "재수탁업자",
+    "원수탁업자",
+    "매도인",
+    "매수인",
+    "양도인",
+    "양수인",
+    "질권설정자",
+    "질권자",
+    "투자일임업자",
+    "집합투자업자",
+    "수탁회사",
+    "회사",
+    "주주"
+  ],
+  "role": "(?:수탁자|위탁자|수급인|발주자|정보제공자|정보수령자|제공자|수령자|전자금융보조업자|클라우드컴퓨팅서비스제공자|클라우드서비스제공자|재수탁업자|원수탁업자|매도인|매수인|양도인|양수인|질권설정자|질권자|투자일임업자|집합투자업자|수탁회사|회사|주주|각당사자|본재보험계약|당사자일방|갑|을)",
+  "frontConditions": [
+    "업무수행인력이변경되는경우",
+    "신탁계약을변경하는경우",
+    "완성물에하자가있는경우",
+    "완성물의하자로계약목적을달성할수없는경우",
+    "소수주주의동반매도참여권행사시",
+    "주식양도시",
+    "주주의요청이있는경우",
+    "기업결합신고가필요한경우",
+    "감독당국의변경권고등조치가있는경우"
+  ],
+  "restrictionTargets": {
+    "신용정보처리업무재위탁금지": [
+      "credit_subcontract",
+      "prior_consent"
+    ],
+    "재위탁금지": [
+      "prior_consent",
+      "credit_subcontract"
+    ],
+    "개인정보처리현황점검": [
+      "inspection",
+      "privacy_supervision"
+    ],
+    "개인정보관리현황점검": [
+      "inspection",
+      "privacy_supervision"
+    ],
+    "개인정보접근권한제한": [
+      "least_access",
+      "access_control"
+    ],
+    "개인정보기술적·관리적보호조치": [
+      "protection"
+    ],
+    "개인신용정보식별정보암호화": [
+      "encryption"
+    ],
+    "업무수행인력신원조회": [
+      "personnel_screening"
+    ],
+    "인수인계": [
+      "personnel_handover"
+    ]
+  },
+  "questionTopics": {
+    "CORE-07": [
+      "prior_consent"
+    ],
+    "PRIV-03": [
+      "protection"
+    ],
+    "PRIV-06": [
+      "least_access",
+      "access_control"
+    ],
+    "PRIV-07": [
+      "inspection"
+    ],
+    "PRIV-19": [
+      "encryption"
+    ],
+    "CORE-06": [
+      "law_compliance"
+    ],
+    "CORE-10": [
+      "work_supervision",
+      "work_supervision_right"
+    ],
+    "CORE-13": [
+      "supervisory_correction"
+    ],
+    "ITCL-01": [
+      "cloud_importance"
+    ],
+    "ITCL-02": [
+      "cloud_soundness"
+    ],
+    "ITSEC-10": [
+      "service_quality"
+    ],
+    "ITSEC-01": [
+      "separate_facilities"
+    ],
+    "ITSEC-02": [
+      "protected_data"
+    ],
+    "ITSEC-03": [
+      "financial_info"
+    ],
+    "ITSEC-04": [
+      "security_plan"
+    ],
+    "ITSEC-05": [
+      "dedicated_connection"
+    ],
+    "ITSEC-06": [
+      "continuity_plan"
+    ],
+    "ITSEC-07": [
+      "security_stages"
+    ],
+    "ITSEC-08": [
+      "backup_plan"
+    ],
+    "ITSEC-09": [
+      "financial_monitoring"
+    ],
+    "ITSEC-13": [
+      "security_inspection"
+    ],
+    "ITCL-05": [
+      "cloud_reporting"
+    ],
+    "ITCL-06": [
+      "cloud_changes"
+    ],
+    "ITSEC-11": [
+      "resourcing_consent"
+    ],
+    "ITSEC-12": [
+      "personnel_screening",
+      "personnel_handover"
+    ],
+    "ITSEC-14": [
+      "subtrustee_instruction"
+    ],
+    "ITSEC-15": [
+      "subtrustee_location"
+    ],
+    "SOL-03": [
+      "consumer_liability"
+    ],
+    "SOL-05": [
+      "consumer_supervision",
+      "consumer_supervision_records"
+    ],
+    "ITDL-07": [
+      "license_inventory",
+      "license_compliance",
+      "license_liability"
+    ],
+    "ITDL-08": [
+      "clean_deliverable",
+      "clean_deliverable_remedy"
+    ],
+    "PRIV-13": [
+      "privacy_training",
+      "privacy_supervision"
+    ],
+    "PRIV-20": [
+      "credit_training",
+      "credit_safety"
+    ],
+    "PRIV-21": [
+      "credit_subcontract"
+    ],
+    "ALL-PII-03": [
+      "privacy_purpose"
+    ],
+    "ALL-REINS-01": [
+      "reinsurance_independence"
+    ],
+    "FIN-SEC-01": [
+      "pledge_delivery"
+    ],
+    "FIN-SEC-02": [
+      "pledge_notice",
+      "pledge_cooperation"
+    ],
+    "FIN-SEC-05": [
+      "security_assignment_notice",
+      "security_assignment_cooperation",
+      "security_assignment_condition"
+    ],
+    "INV-MAN-01": [
+      "mandate_care",
+      "mandate_loyalty"
+    ],
+    "INV-BEN-04": [
+      "trust_change_notice"
+    ],
+    "INV-BEN-07": [
+      "fund_notice"
+    ],
+    "INV-MAN-03": [
+      "mandate_segregation",
+      "mandate_deposit"
+    ],
+    "SP-DEL-04": [
+      "contractor_payment"
+    ],
+    "SP-DEL-05": [
+      "defect_repair"
+    ],
+    "SP-DEL-06": [
+      "defect_damages"
+    ],
+    "SP-DEL-07": [
+      "defect_rescission"
+    ],
+    "SH-SHARE-06": [
+      "tag_along"
+    ],
+    "SH-SHARE-08": [
+      "share_delivery",
+      "share_registration"
+    ],
+    "SH-GOV-04": [
+      "shareholder_access",
+      "shareholder_statutory_rights"
+    ],
+    "SH-ANT-01": [
+      "merger_filing",
+      "merger_closing"
+    ]
+  },
+  "securityRules": [
+    {
+      "topic": "separate_facilities",
+      "pattern": "^외부주문개발업무에사용되는(?:업무장소(?:[·ㆍ,]|및)전산설비|전산설비(?:[·ㆍ,]|및)업무장소)를내부업무용과분리하여설치(?:[·ㆍ,]|및)운영(?:하여야한다|해야한다|한다)$",
+      "fields": {
+        "object": "외부주문개발업무장소·전산설비",
+        "action": "분리설치·운영",
+        "condition": "내부업무용과분리",
+        "modality": "obligation"
+      }
+    },
+    {
+      "topic": "protected_data",
+      "pattern": "^금융회사와이용자간암호화정보를해독하거나원장등중요데이터를변경(?:하여서는아니된다|해서는안된다|할수없다|하지못한다)$",
+      "fields": {
+        "object": "금융회사·이용자간암호화정보·원장등중요데이터",
+        "action": "해독·변경금지",
+        "modality": "prohibition"
+      }
+    },
+    {
+      "topic": "financial_info",
+      "pattern": "^계좌번호(?:[·ㆍ,]|및)비밀번호등이용자금융정보를무단으로보관하거나유출(?:하여서는아니된다|해서는안된다|할수없다|하지못한다)$",
+      "fields": {
+        "object": "계좌번호·비밀번호등이용자금융정보",
+        "action": "무단보관·유출금지",
+        "modality": "prohibition"
+      }
+    },
+    {
+      "topic": "security_plan",
+      "pattern": "^접근매체(?:위(?:[·ㆍ,]|및)변조|위조(?:[·ㆍ,]|및)변조)[·ㆍ,]해킹(?:[·ㆍ,]|및)개인정보유출에대비한보안대책을수립(?:하여야한다|해야한다|한다)$",
+      "fields": {
+        "object": "접근매체위변조·해킹·개인정보유출",
+        "action": "보안대책수립",
+        "modality": "obligation"
+      }
+    },
+    {
+      "topic": "dedicated_connection",
+      "pattern": "^금융회사와전자금융보조업자간접속에전용회선을사용(?:하여야한다|해야한다|한다)$",
+      "fields": {
+        "object": "금융회사·전자금융보조업자간접속",
+        "action": "전용회선사용",
+        "modality": "obligation"
+      }
+    },
+    {
+      "topic": "dedicated_connection",
+      "pattern": "^금융회사와전자금융보조업자간접속에전용회선과동등한보안수준의가상전용회선을사용(?:하여야한다|해야한다|한다)$",
+      "fields": {
+        "object": "금융회사·전자금융보조업자간접속",
+        "action": "동등보안가상전용회선사용",
+        "modality": "obligation"
+      }
+    },
+    {
+      "topic": "continuity_plan",
+      "pattern": "^정보처리시스템장애등서비스중단에대비(?:한비상대책을수립|하여비상대책을수립)(?:하여야한다|해야한다|한다)$",
+      "fields": {
+        "object": "정보처리시스템장애등서비스중단",
+        "action": "비상대책수립",
+        "modality": "obligation"
+      }
+    },
+    {
+      "topic": "security_stages",
+      "pattern": "^외부주문의입찰[·ㆍ,]계약[·ㆍ,]수행(?:[·ㆍ,]|및)완료(?:등)?각단계별로금융감독원장이정하는보안관리방안을준수(?:하여야한다|해야한다|한다)$",
+      "fields": {
+        "object": "외부주문입찰·계약·수행·완료각단계",
+        "action": "보안관리방안준수",
+        "condition": "금융감독원장이정하는방안",
+        "modality": "obligation"
+      }
+    },
+    {
+      "topic": "backup_plan",
+      "pattern": "^중요전산자료의백업자료보존(?:[·ㆍ,]|및)백업설비확보를포함한백업대책을수립(?:하여야한다|해야한다|한다)$",
+      "fields": {
+        "object": "중요전산자료",
+        "action": "백업대책수립",
+        "condition": "백업자료보존·백업설비확보",
+        "modality": "obligation"
+      }
+    },
+    {
+      "topic": "security_inspection",
+      "pattern": "^외부주문에대한자체보안성검토(?:[·ㆍ,]|및)정기보안점검(?:실시)?에협조(?:하여야한다|해야한다|한다)$",
+      "fields": {
+        "object": "외부주문자체보안성검토·정기보안점검",
+        "action": "협조",
+        "modality": "obligation"
+      }
+    }
+  ],
+  "financialPattern": "^(?:자신의|수탁자의|전자금융보조업자의)재무건전성(?:에대한)?연([1-9][0-9]?)회이상평가(?:[·ㆍ,]|및)상시모니터링에필요한자료(?:를제공|제공에협조)(?:하여야한다|해야한다|한다)$"
+}

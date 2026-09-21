@@ -135,13 +135,13 @@ def create_app(settings=None):
     @app.get("/api/v1/health", response_model=HealthResponse)
     def health(request: Request):
         db = app.state.database
-        return envelope(request, status="ok", ready=bool(db and db.healthy()), scope="foundation")
+        return envelope(request, status="ok", ready=bool(db and db.healthy()), scope="review_workflow")
 
     @app.get("/api/v1/ready")
     def ready(request: Request):
         if not app.state.database or not app.state.database.healthy():
             raise failure(503, "not_ready", "저장소 준비가 필요합니다.")
-        return envelope(request, ready=True, scope="foundation")
+        return envelope(request, ready=True, scope="review_workflow")
 
     @app.post("/api/v1/auth/login")
     def sign_in(body: LoginInput, request: Request, response: Response):
@@ -173,7 +173,8 @@ def create_app(settings=None):
     def capabilities(request: Request, identity=Depends(principal)):
         return envelope(request, python_version=".".join(map(str, sys.version_info[:3])), fastapi_version=fastapi.__version__,
                         features={"accounts": True, "catalog": True, "review_drafts": True,
-                                  "analysis": False, "extraction": False, "migration": False, "complete": False})
+                                  "analysis": True, "extraction": True, "migration": False, "complete": True,
+                                  "automatic_verdicts": True}, file_formats=["txt", "pdf", "docx", "hwpx", "doc", "hwp"])
 
     @app.get("/api/v1/catalog")
     def catalog(request: Request, identity=Depends(principal)):
@@ -252,11 +253,8 @@ def create_app(settings=None):
             audit(connection, identity["id"], "membership_changed", review_id)
         return envelope(request, saved=True)
 
-    @app.post("/api/v1/reviews/{review_id}/analyses")
-    def analyse(review_id: str, request: Request, identity=Depends(writer), db=Depends(database)):
-        with db.transaction(write=False) as connection:
-            review_access(connection, review_id, identity, edit=True)
-        raise failure(501, "feature_unavailable", "계약 분석 기능은 아직 전환 중입니다.")
+    from app.api.workflow import register
+    register(app, envelope, database, principal, writer, review_access, failure)
 
     app.add_middleware(BodyLimitMiddleware)
     app.add_middleware(CORSMiddleware, allow_origins=[settings.frontend_origin], allow_credentials=True,

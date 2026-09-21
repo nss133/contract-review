@@ -15,14 +15,14 @@ export class ApiClient {
     this.csrfToken = '';
   }
 
-  async request(path, {method = 'GET', body, signal} = {}) {
+  async request(path, {method = 'GET', body, form, signal} = {}) {
     const headers = {Accept: 'application/json'};
     if (body !== undefined) headers['Content-Type'] = 'application/json';
     if (method !== 'GET' && this.csrfToken) headers['X-CSRF-Token'] = this.csrfToken;
     let response;
     try {
       response = await this.transport(this.base + path, {method, headers, credentials: 'include',
-        cache: 'no-store', signal, ...(body !== undefined ? {body: JSON.stringify(body)} : {})});
+        cache: 'no-store', signal, ...(form ? {body:form} : body !== undefined ? {body: JSON.stringify(body)} : {})});
     } catch (error) {
       if (error.name === 'AbortError') throw error;
       throw new ApiError(0, null);

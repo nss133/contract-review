@@ -30,3 +30,16 @@ test('network failure and malformed/version-incompatible responses never become 
   api.transport = async () => ({ok: true, status: 200, json: async () => ({api_version: '2'})});
   await assert.rejects(api.me(), error => error.code === 'api_version_mismatch');
 });
+
+test('multipart upload preserves binary body and lets browser set the boundary', async () => {
+  const form = new FormData(); form.append('file', new Blob(['한글 원문']), 'contract.txt');
+  let received;
+  const api = new ApiClient('/api/v1', async (_, options) => {received = options;
+    return {ok:true,json:async()=>({api_version:'1'})};});
+  api.csrfToken='upload-csrf';
+  await api.request('/reviews/r/documents',{method:'POST',form});
+  assert.equal(received.body, form);
+  assert.equal(received.headers['Content-Type'], undefined);
+  assert.equal(received.headers['X-CSRF-Token'], 'upload-csrf');
+  assert.equal(received.credentials, 'include');
+});

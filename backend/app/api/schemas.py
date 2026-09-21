@@ -97,7 +97,7 @@ class HealthResponse(ContractModel):
     request_id: str
     status: Literal["ok"] = "ok"
     ready: bool
-    scope: Literal["foundation"] = "foundation"
+    scope: Literal["foundation", "review_workflow"] = "review_workflow"
 
 
 class CapabilitiesResponse(ContractModel):
@@ -109,3 +109,23 @@ class CapabilitiesResponse(ContractModel):
     baseline_version: Literal["1.90.8"] = "1.90.8"
     features: Dict[str, bool]
     file_formats: List[str] = Field(default_factory=list)
+
+
+class AnalyseInput(ContractModel):
+    revision: int = Field(ge=0)
+    type_id: str = Field(default="", max_length=80)
+    stance: Literal["party", "beneficiary"] = "party"
+    modules: Optional[List[str]] = Field(default=None, max_length=80)
+    department: str = Field(default="", max_length=100)
+
+
+class SaveVerdictInput(VerdictInput):
+    analysis_id: str = Field(min_length=1, max_length=80)
+
+
+class CompleteInput(ContractModel):
+    analysis_id: str = Field(min_length=1, max_length=80)
+    revision: int = Field(ge=0)
+    summary: str = Field(default="", max_length=100000)
+    reviewed_original: Literal[True]
+    verdict_revisions: Dict[str, int]

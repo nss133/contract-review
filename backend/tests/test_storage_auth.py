@@ -46,7 +46,8 @@ def test_authenticated_catalog_and_capabilities_match_baseline(setup):
     caps = client.get("/api/v1/capabilities").json()
     assert caps["python_version"].startswith("3.9.")
     assert caps["fastapi_version"] == "0.128.8"
-    assert not caps["features"]["analysis"]
+    assert caps["features"]["analysis"]
+    assert caps["features"]["extraction"] and caps["features"]["complete"]
     assert client.get("/api/v1/ready").status_code == 200
 
 
@@ -121,7 +122,7 @@ def test_ten_concurrent_writers_cannot_overwrite_same_revision(setup):
     assert client.get(url).json()["draft"]["revision"] == 1
 
 
-def test_input_revision_conflicts_and_unimplemented_analysis_are_explicit(setup):
+def test_input_revision_conflicts_and_analysis_validation_are_explicit(setup):
     client, _, _, _ = setup
     headers = signin(client)
     key = review(client, headers)
@@ -129,7 +130,8 @@ def test_input_revision_conflicts_and_unimplemented_analysis_are_explicit(setup)
     assert client.patch(url, headers=headers, json={"text": "최신 원문", "revision": 0}).status_code == 200
     assert client.patch(url, headers=headers, json={"text": "뒤늦은 원문", "revision": 0}).status_code == 409
     assert client.get(url).json()["review"]["text"] == "최신 원문"
-    assert client.post(url + "/analyses", headers=headers).status_code == 501
+    assert client.post(url + "/analyses", headers=headers).status_code == 422
+    assert client.post(url + "/analyses", headers=headers, json={"revision":0,"type_id":"procurement"}).status_code == 409
 
 
 def test_busy_database_is_retryable_not_false_success(setup):
