@@ -56,31 +56,65 @@
     return out;
   }
 
-  function pageText(page) {
+  function pageBlocks(items,pageNumber,height) {
+    var rows=[];
+    (items||[]).filter(function(it){return it.str&&it.transform;}).forEach(function(it){var x=it.transform[4],y=it.transform[5],h=Math.abs(it.transform[3])||Math.abs(it.transform[0])||12;
+      var row=rows.filter(function(r){return Math.abs(r.y-y)<=Math.max(2,Math.min(r.h,h)*0.45);})[0];
+      if(!row){row={y:y,h:h,items:[]};rows.push(row);}row.items.push(it);
+    });
+    rows.sort(function(a,b){return b.y-a.y;});
+    var blocks=[],table=null,tableNo=0;
+    rows.forEach(function(row){row.items.sort(function(a,b){return a.transform[4]-b.transform[4];});var group=[],end=null;
+      var headerItems=row.items.filter(function(it){return it.str.trim();}),heads=headerItems.map(function(it){return DocumentStructure.tableHeader(it.str);});
+      if(heads.length>=2&&heads.every(Boolean)&&new Set(heads).size===heads.length&&heads.includes('actor')&&heads.includes('action'))table={id:'pdf-'+pageNumber+'-table-'+(++tableNo),xs:headerItems.map(function(it){return it.transform[4];}),row:0,y:row.y};
+      else if(table){if(table.y-row.y>row.h*3||/^(?:제\s*\d+\s*조|[①-⑳]|\[?별첨|\[?붙임)/.test(itemsToText(row.items)))table=null;else {table.row++;table.y=row.y;}}
+      if(table){var cells=table.xs.map(function(){return [];}),bad=false;
+        row.items.forEach(function(it){if(!it.str.trim())return;var x=it.transform[4],col=table.xs.findIndex(function(left,i){return x>=left-3&&(i===table.xs.length-1||x<table.xs[i+1]-3);});
+          if(col<0){bad=true;return;}if(col+1<table.xs.length&&x+(it.width||0)>table.xs[col+1]-3)bad=true;cells[col].push(it);});
+        if(cells.some(function(c){return !c.length;}))bad=true;
+        cells.forEach(function(items,col){blocks.push({text:itemsToText(items),source:{page:pageNumber,x:table.xs[col],y:row.y,height:row.h,page_height:height,
+          table:{id:table.id,row:table.row,col:col,colspan:1,rowspan:1,invalid:bad},cell:table.id+':'+table.row+':'+col}});});
+        if(bad)table=null;return;
+      }
+      function emit(){if(!group.length)return;var first=group[0],last=group[group.length-1];
+        blocks.push({text:itemsToText(group),source:{page:pageNumber,x:first.transform[4],y:row.y,width:last.transform[4]+(last.width||0)-first.transform[4],height:row.h,page_height:height,
+          spans:group.map(function(it){return {text:it.str,x:it.transform[4],y:it.transform[5],width:it.width,font:it.fontName};})}});group=[];}
+      row.items.forEach(function(it){if(end!==null&&it.transform[4]-end>Math.max(80,row.h*6))emit();group.push(it);end=it.transform[4]+(it.width||0);});emit();
+    });
+    return blocks;
+  }
+  function pageText(page,structured) {
     return page.getTextContent().then(function (tc) {
-      return itemsToText(tc.items);
+      return structured?pageBlocks(tc.items,page.pageNumber,page.getViewport({scale:1}).height):itemsToText(tc.items);
     });
   }
 
-  function extractPdf(arrayBuffer) {
+  function extractPdf(arrayBuffer,structured) {
     var mode = setupWorker();
     if (mode === 'unavailable' || mode === 'failed')
       return Promise.reject(new Error('pdf.js 사용 불가 (워커 모드: ' + mode + ')'));
     return pdfjsLib.getDocument({ data: arrayBuffer, isEvalSupported: false }).promise
       .then(function (doc) {
-        var chain = Promise.resolve('');
+        var chain = Promise.resolve(structured?[]:'');
         var total = doc.numPages;
         for (var p = 1; p <= total; p++) {
           (function (pageNum) {
             chain = chain.then(function (acc) {
-              return doc.getPage(pageNum).then(pageText).then(function (t) {
-                return acc + t + '\n\n';
+              return doc.getPage(pageNum).then(function(page){return pageText(page,structured);}).then(function (t) {
+                return structured?acc.concat(t):acc + t + '\n\n';
               });
             });
           })(p);
         }
         return chain.then(function (text) {
           doc.destroy();
+          if(structured){
+            var margins={};text.forEach(function(b){var s=b.source,key=b.text.trim();if(s.y>s.page_height*.92||s.y<s.page_height*.08){if(!margins[key])margins[key]={};margins[key][s.page]=true;}});
+            text.forEach(function(b){var s=b.source,key=b.text.trim();if(margins[key]&&Object.keys(margins[key]).length>=2&&(s.y>s.page_height*.92||s.y<s.page_height*.08))s.repeated_margin=true;});
+            var present={};text.forEach(function(b){present[b.source.page]=true;});
+            var warnings=Object.keys(present).length<total?['텍스트층이 없는 페이지가 있습니다. 해당 페이지는 내부 OCR 또는 원본 대조가 필요합니다.']:[];
+            return DocumentStructure.fromBlocks('pdf',text,warnings);
+          }
           return text;
         });
       });
@@ -88,5 +122,6 @@
 
   PF.extractPdf = extractPdf;
   PF._pdfItemsToText = itemsToText; // 테스트용
+  PF._pdfPageBlocks = pageBlocks;
   PF.pdfWorkerMode = function () { setupWorker(); return workerMode; };
 })();

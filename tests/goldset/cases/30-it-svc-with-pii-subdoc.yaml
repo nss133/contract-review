@@ -6,12 +6,12 @@ detect_expected: procurement
 # 않아(괄호로 끊김) 본문만으로는 X-PII가 활성화되지 않음 — 실사용에서는 검토자가 스크리닝 질문에
 # 수동 체크하는 경로. 골드셋에서 이를 재현하기 위해 force_active_modules로 X-PII를 강제 활성.
 force_active_modules: [X-PII]
-# 실측(1차 실행): force_active_modules로 X-PII 활성 시 본계약 consider = [ITDL-06, PRIV-03, PRIV-05,
-# PRIV-06, PRIV-15] — 부속서류(약정서)가 4건 모두 커버(PRIV-05는 subDocCoverage 자체가 confirmed·
-# review 둘 다 커버로 인정하는 관대한 게이트라 review-tier로도 포착됨). 브리프 시드(PRIV-02·03·05)의
-# PRIV-02는 애초 본계약 consider에 없어(케이스29에서도 weak-role로 confirmed 불가한 항목) 제외,
+# 실측(1차 실행): force_active_modules로 X-PII 활성 시 본계약 consider = [ITDL-06, PRIV-03, CNS-PRIVSUB,
+# PRIV-06, CNS-PRIVSUB] — 부속서류(약정서)가 4건 모두 커버(CNS-PRIVSUB는 subDocCoverage 자체가 confirmed·
+# review 둘 다 커버로 인정하는 관대한 게이트라 review-tier로도 포착됨). 브리프 시드(CNS-PRIVSCOPE·03·05)의
+# CNS-PRIVSCOPE는 애초 본계약 consider에 없어(케이스29에서도 weak-role로 confirmed 불가한 항목) 제외,
 # 실측된 4건 전체를 어서션으로 채택.
-subdoc_must_cover: [PRIV-03, PRIV-05, PRIV-06, PRIV-15]
+subdoc_must_cover: [PRIV-03, CNS-PRIVSUB, PRIV-06, CNS-PRIVSUB]
 text: "\n\n\n\n\nOOOO 프로젝트 용역 위탁 계약서\n\n 계약서\n\nOOOO 프로젝트 용역 위탁 계약서\n\n 계약서\n\n\n\n\n\n\n\n\n\n\n\n\n\n\
   \n\n\n2016. 00. 00.\n\n\n\n\n\n\n미래에셋생명보험 주식회사\nOOOO 주식회사\n\f\n미래에셋생명보험 주식회사(이하 “갑”이라 한다.)와 OOOO 주식회사(이하\
   \ “을”이라 한다)는 “OOOOO OOO 프로젝트”(이하 “프로젝트” 이라 한다) 에 대하여 다음과 같이 계약을 체결한다.\n\n제1조(계약의 목적 및 배경)\n\t•\t본 계약의\

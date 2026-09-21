@@ -1,9 +1,9 @@
-# 독립적 제3자 제공은 계약 조항이 아니라 동의서·고지자료 증빙 확인 카드가 열려야 한다.
+# v1.71: 실제 동의 취득·고지 증빙 확인은 계약 내용 검토의 완료 대상이 아니다.
 id: third-party-provision-evidence
-desc: 개인정보 제3자 제공 동의서 — 법적근거·법정고지 체크 노출
+desc: 개인정보 제공 동의 실적 자료를 약정상 협력 의무로 오매핑하지 않음
 force_type: nda
 force_active_modules: [X-PII]
-shown_must_include: [ALL-PII-01, ALL-PII-02]
+shown_must_exclude: [ALL-PII-01, ALL-PII-02]
 text: |
   개인정보 제3자 제공 동의서
 

@@ -7,15 +7,15 @@
 # 임의 삭제 금지, 사유 명시).
 #
 # 제외 8건 사유:
-# - PRIV-02, PRIV-04: 최상위 매칭 조항이 제2조(정보이전의 범위·목적 및 기간)인데, clause_role.js의
+# - CNS-PRIVSCOPE, CNS-PRIVSCOPE: 최상위 매칭 조항이 제2조(정보이전의 범위·목적 및 기간)인데, clause_role.js의
 #   제목 기반 분류가 "목적" 키워드만으로 purpose/weak로 분류함(전문·순수목적조항 억제 규칙). 제2조는
 #   실질적으로 "이전 범위·기간"까지 규정하는 실체조항이나 표제에 "목적"이 포함돼 weak-role 게이트에
-#   걸림(PRIV-04는 margin 7.3으로 weak만 아니면 confirmed 도달권). clause_role 분류기 자체 변경은
+#   걸림(CNS-PRIVSCOPE는 margin 7.3으로 weak만 아니면 confirmed 도달권). clause_role 분류기 자체 변경은
 #   전역 회귀 위험이 있어 범위 밖 — matcher 튜닝 백로그로 이관.
-# - PRIV-14: 최상위 매칭 조항 제3조(업무 목적 외 이용 금지)도 동일하게 "목적" 표제로 weak 분류.
+# - CNS-PRIVSCOPE: 최상위 매칭 조항 제3조(업무 목적 외 이용 금지)도 동일하게 "목적" 표제로 weak 분류.
 #   margin 15.4로 weak만 아니면 confirmed. 위와 동일 사유.
-# - PRIV-05, PRIV-07, PRIV-13, PRIV-15: weak-role 아님(제5조·제10조·제16조는 general/!weak)이나
-#   REVIEW_FLOOR(15) 통과 후보가 1개뿐이거나(PRIV-05) 1·2위 점수차가 MARGIN_HIGH(5) 미만이라
+# - CNS-PRIVSUB, PRIV-07, PRIV-13, CNS-PRIVSUB: weak-role 아님(제5조·제10조·제16조는 general/!weak)이나
+#   REVIEW_FLOOR(15) 통과 후보가 1개뿐이거나(CNS-PRIVSUB) 1·2위 점수차가 MARGIN_HIGH(5) 미만이라
 #   자동확정(confirmed) 문턱을 못 넘음. 실제 조항 매칭 자체는 존재(tier=review)하나 confirmed 승격은
 #   임계값 완화 없이는 불가 — 정상 보수 동작.
 # - PRIV-21: 위 review-tier 한계에 더해 규범 내용 자체도 불일치 — PRIV-21은 "재위탁 금지(금융위 인정

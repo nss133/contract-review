@@ -29,6 +29,11 @@ checks:
         verified: true
         source_type: self_regulation
     note: 자율규제(손해사정 업무위탁 모범규준)는 손해사정 위탁에 한해 업무범위 계약서 반영 의무를 부과 — 일반 위탁의 참고 근거
+    active: true
+    disposition: keep
+    meaning_revision: 1.87.0
+    judgment_level: clarity
+    judgment_scope: financial_outsourcing
   - id: CORE-02
     module: X-FINOUT
     check: 위탁 업무가 인가받은 금융업 또는 다른 금융업의 본질적 요소를 포함하지 않는가
@@ -49,6 +54,11 @@ checks:
         quote: '인가 등을 받은 금융업 또는 다른 금융업의 본질적 요소를 포함하는 업무를 위탁하는 경우'
         verified: true
     note: 본질적 요소의 범위는 제3조 제2항 별표 2 — 별표는 DB 미수록(원문 미확인)
+    active: true
+    disposition: keep
+    meaning_revision: 1.87.0
+    judgment_level: appropriateness
+    judgment_scope: financial_outsourcing
   - id: CORE-03
     module: X-FINOUT
     check: 본질적 요소를 포함하는 업무라면 제3조 제1항 제1호 가목·나목의 예외에 해당하는 근거가 확인되는가
@@ -66,6 +76,11 @@ checks:
         clause: 제1항 제1호 단서
         quote: '다만, 다음 각 목의 어느 하나에 해당하는 업무의 경우에는 위탁할 수 있다'
         verified: true
+    active: true
+    disposition: keep
+    meaning_revision: 1.87.0
+    judgment_level: appropriateness
+    judgment_scope: financial_outsourcing
   - id: CORE-04
     module: X-FINOUT
     check: 위탁 업무가 관련 법령에서 금융기관이 직접 수행하도록 의무를 부여한 업무에 해당하지 않는가
@@ -84,7 +99,13 @@ checks:
         clause: 제1항 제2호
         quote: '관련 법령에서 금융기관이 수행하도록 의무를 부여하고 있는 경우'
         verified: true
+    active: true
+    disposition: keep
+    meaning_revision: 1.87.0
+    judgment_level: appropriateness
+    judgment_scope: financial_outsourcing
   - id: CORE-05
+    review_scope: execution_only
     module: X-FINOUT
     check: 보험회사가 손해사정 업무 위탁을 위한 평가기준을 마련·준수하여 수탁자(손해사정사·손해사정업자)를 선정하는 절차가 있는가
     label: "손해사정 평가기준 선정"
@@ -111,6 +132,11 @@ checks:
         quote: '보험회사는 손해사정 업무 위탁을 위한 평가기준을 마련하고, 이를 준수하여 업무를 위탁할 손해사정사 또는 손해사정업자를 선정하여야 한다'
         verified: true
         source_type: self_regulation
+    active: false
+    disposition: retire
+    meaning_revision: 1.88.1
+    judgment_level: execution_excluded
+    judgment_scope: financial_outsourcing
   - id: CORE-06
     module: X-FINOUT
     check: 위탁업무 처리가 금융실명법 등 관련 법령에 저촉되지 않도록 하는 법령 준수 조항이 있는가
@@ -129,6 +155,14 @@ checks:
         clause: 제3항 제5호
         quote: '「금융실명거래 및 비밀보장에 관한 법률」 등 관련 법령에의 저촉 여부'
         verified: true
+    active: true
+    disposition: keep
+    meaning_revision: 1.87.0
+    judgment_level: presence
+    judgment_scope: financial_outsourcing
+    decision_question: 위탁업무 처리가 금융실명법 등 관련 법령에 저촉되지 않도록 하는 법령 준수 조항이 있는가?
+    pass_guidance: 이 질문의 약정 내용이 확인되고 구체적인 반대 내용이 없는 경우
+    opinion_guidance: 본건에서 확인된 구체적인 문제와 근거를 작성
   - id: CORE-07
     module: X-FINOUT
     check: 수탁자가 위탁자의 사전 동의 없이 재위탁하지 못하도록 하는 조항이 있는가
@@ -153,6 +187,14 @@ checks:
         quote: '제1항에 따라 금융기관의 업무를 위탁받은 자는 위탁자의 동의를 얻어 위탁받은 업무를 제3자에게 재위탁할 수 있다'
         verified: true
     note: 임의 서술이나 위탁자 동의는 강행적 전제이며 제2조·제3조·제4항 내지 제6항 준용 — 무단 재위탁은 감독규정 위반. PRIV-15·IT-09와 정합 위해 필수
+    active: true
+    disposition: keep
+    meaning_revision: 1.87.0
+    judgment_level: presence
+    judgment_scope: financial_outsourcing
+    decision_question: 수탁자가 위탁자의 사전 동의 없이 재위탁하지 못하도록 하는 조항이 있는가?
+    pass_guidance: 이 질문의 약정 내용이 확인되고 구체적인 반대 내용이 없는 경우
+    opinion_guidance: 본건에서 확인된 구체적인 문제와 근거를 작성
   - id: CORE-08
     module: X-FINOUT
     check: 재위탁 시 감독원장(감독당국)에 대한 보고의 주체가 원위탁 금융회사로 정해져 있는가
@@ -170,6 +212,11 @@ checks:
         clause: 제4항 후문
         quote: '재위탁시 보고의 주체는 원위탁 금융회사로 한다'
         verified: true
+    active: true
+    disposition: keep
+    meaning_revision: 1.87.0
+    judgment_level: clarity
+    judgment_scope: financial_outsourcing
   - id: CORE-09
     module: X-FINOUT
     check: 수탁자의 금융관련법령·업무위수탁기준 위반으로 발생한 손해에 대한 배상·구상 조항이 있는가
@@ -194,10 +241,15 @@ checks:
         quote: '수탁자가 제2항에 따른 업무위수탁기준에서 정하는 의무를 위반하여 발생하는 손해에 대해서 업무위탁 규정 제3조 제5항에 따라 배상책임을 진다'
         verified: true
         source_type: self_regulation
+    active: true
+    disposition: keep
+    meaning_revision: 1.87.0
+    judgment_level: clarity
+    judgment_scope: financial_outsourcing
   - id: CORE-10
     module: X-FINOUT
-    check: 위탁자의 업무 처리 현황 점검·자료 요구·감사권 등 수탁자 관리·감독 조항이 있는가
-    label: "수탁자 관리·감독권"
+    check: 위탁자의 점검·관리·시정 요구 또는 수탁자의 협조가 약정되어 있는가
+    label: 점검·관리·시정 협조
     severity: 필수
     severity_basis: "근거 조문이 강행규정(의무)임 — 금융기관의 업무위탁 등에 관한 규정 제3조의2"
     norm_type: 강행
@@ -222,7 +274,18 @@ checks:
         quote: '보험회사는 제1항에 따른 수탁자를 관리하기 위하여 업무위탁 규정 제3조의2에 따른 업무위수탁운영기준을 마련하고 이를 준수하여야 한다'
         verified: true
         source_type: self_regulation
-    note: 별표 3 업무위수탁기준 세부 문언은 DB 미수록 — 원문 미확인. 자율규제(의료자문 표준내부통제기준 제4조)는 수탁자 준수 점검·관리·보고·조치를 업무위수탁운영기준에 포함하도록 요구
+    note: 업무·정보의 점검·관리·자료 요구·시정 협조 중 해당 약정을 확인한다. CORE-13의 독립 질문은 통합하되 감독기관의 계약문언 변경권까지 있다고 추정하지 않는다. 보안약정 제10조도 본건에 적용되면 근거로 인정한다.
+    active: true
+    disposition: reword
+    meaning_revision: 1.88.1
+    judgment_level: presence
+    judgment_scope: financial_outsourcing
+    decision_question: 위탁자의 점검·관리·시정 요구 또는 수탁자의 협조가 약정되어 있는가?
+    pass_guidance: 이 질문의 약정 내용이 확인되고 구체적인 반대 내용이 없는 경우
+    opinion_guidance: 본건에서 확인된 구체적인 문제와 근거를 작성
+    checklist_revision: content-v3
+    legacy_check_ids:
+    - CORE-13
   - id: CORE-11
     module: X-FINOUT
     check: 감독원장 사전보고(수탁자의 업무 개시 7영업일 이전) 일정·자료 협조가 계약 발효와 연동되어 있는가
@@ -244,6 +307,11 @@ checks:
         quote: '그 사실을 업무를 위탁받은 자가 그 위탁받은 업무를 실제로 수행하려는 날의 7영업일 이전에 <별지 제1호 서식>에 따라 다음 각호의 서류를 첨부하여 감독원장에게 보고하여야 한다'
         verified: true
   # CORE-12 삭제(2026-07-29 지식 다이어트) — 계약 문언이 아닌 절차 해당성 판단(프로세스성)으로 별도 행 실익 없음. CORE-11(사전보고 연동, 존치) 판정 시 사람이 함께 결정(triage §2 참조)
+    active: true
+    disposition: keep
+    meaning_revision: 1.87.0
+    judgment_level: appropriateness
+    judgment_scope: financial_outsourcing
   - id: CORE-13
     module: X-FINOUT
     check: 감독당국의 변경권고 등 조치가 있는 경우 계약 변경·시정에 협조하는 조항이 있는가
@@ -261,10 +329,16 @@ checks:
         article: 제5조
         quote: '감독원장은 업무위탁 또는 수탁이 제3조의 규정에 적합하지 아니하다고 판단하는 경우에는 당해 금융기관에 대하여 그 내용의 변경권고 등 필요한 조치를 할 수 있다'
         verified: true
+    active: false
+    disposition: merge
+    meaning_revision: 1.88.1
+    judgment_level: presence
+    judgment_scope: financial_outsourcing
+    successor: CORE-10
   - id: CORE-14
     module: X-FINOUT
-    check: 수탁자가 위탁업무와 관련한 금융감독원장의 검사·자료제출 요구에 응하도록 하는 조항이 있는가
-    label: "감독원 검사·자료제출 응함"
+    check: 감독기관의 검사·자료 요구에 대한 협조 약정이 있는가
+    label: 감독기관 검사 협조
     severity: 권장
     severity_override: true
     severity_basis: "실무 관행 항목이나 회사 감독대응 리스크가 큼 — 회사가 감독원 검사·자료요구에 응할 의무를 지므로, 수탁자 협조 계약근거 부재는 회사의 대응불능 리스크. 업무위수탁기준(별표3) 근거."
@@ -274,46 +348,54 @@ checks:
       keywords: [검사, 자료제출, 감독원, 검사에 응]
     absence_check: true
     sources: []
-    note: (업무위탁규정 제3조의2 별표 3 근거 — DB 미수록, 원문 미확인)
+    note: 감독기관의 검사 또는 자료 요구에 응하는 약정을 확인한다. 금융감독원장이라는 정확한 직함이나 이미 검사에 응했다는 실적을 요구하지 않는다.
   # CORE-15 통합 제거(2026-07-29 지식 다이어트) — 위수탁 5케이스 전부 quiet, 이관 실질을 공통 CMN-10(종료 시 정산·반환, 발화 5회) 문안에 병기(triage §3 G12 참조)
   # CORE-16 삭제(2026-07-29 지식 다이어트) — 골드셋 위수탁 5케이스 전부 quiet. BCP의 규제 실질은 전자금융(ITSEC-06 비상대책)·클라우드(ITCL-03 업무연속성)가 강행 근거로 존치 — 일반 위수탁 참고 부재확인의 부가가치 낮음(triage §2 참조)
+    active: true
+    disposition: reword
+    meaning_revision: 1.88.1
+    judgment_level: presence
+    judgment_scope: financial_outsourcing
+    decision_question: 감독기관의 검사·자료 요구에 대한 협조 약정이 있는가?
+    pass_guidance: 이 질문의 약정 내용이 확인되고 구체적인 반대 내용이 없는 경우
+    opinion_guidance: 본건에서 확인된 구체적인 문제와 근거를 작성
+    checklist_revision: content-v3
+
   # ── M-PRIV: 개인정보 보호법 제26조·시행령 제28조·신용정보법 제17조 ──
-  - id: DIS-01
+  - id: CNS-LABOR
     module: M-DISPATCH
-    check: 업무 수행 방법을 수탁자가 독립적으로 결정하고 위탁자의 직접 지휘·명령을 배제하는 문언이 있는가
-    label: "직접 지휘·명령 배제"
+    check: 수탁자가 업무 수행과 인사·노무 관리를 독립적으로 담당하고 위탁자의 요청은 지정 책임자를 통해 전달되도록 정해져 있는가
+    label: 수탁자 업무·인력 운영의 독립성
     severity: 참고
-    severity_basis: "실무 관행 항목(법령 강제 아님)"
+    severity_basis: 실무 관행 항목(법령 강제 아님)
     norm_type: 실무
     basis: practice
     triggers:
-      keywords: [지휘, 명령, 독립적으로, 업무 수행 방법]
+      keywords:
+      - 지휘
+      - 명령
+      - 독립적으로
+      - 업무 수행 방법
+      - 현장 책임자
+      - 창구
+      - 업무 요청
+      - 근태
+      - 인력 배치
+      - 노무관리
     absence_check: true
     sources: []
-    note: (파견법 제6조의2·제7조 근거 — 원문 미확인, 검수 시 확인 필요)
-  - id: DIS-02
-    module: M-DISPATCH
-    check: 위탁자의 업무 요청이 수탁자의 현장 책임자를 통해서만 전달되도록 하는 창구 단일화 조항이 있는가
-    label: "지시 창구 단일화"
-    severity: 참고
-    severity_basis: "실무 관행 항목(법령 강제 아님)"
-    norm_type: 실무
-    basis: practice
-    triggers:
-      keywords: [현장 책임자, 창구, 업무 요청]
-    absence_check: true
-    sources: []
-    note: (파견법 제6조의2·제7조 근거 — 원문 미확인, 검수 시 확인 필요)
-  - id: DIS-03
-    module: M-DISPATCH
-    check: 인력 배치·근태·노무 관리를 수탁자가 독립적으로 수행한다는 조항이 있는가
-    label: "인력·노무 독립 관리"
-    severity: 참고
-    severity_basis: "실무 관행 항목(법령 강제 아님)"
-    norm_type: 실무
-    basis: practice
-    triggers:
-      keywords: [근태, 인력 배치, 노무관리]
-    absence_check: true
-    sources: []
-    note: (파견법 제6조의2·제7조 근거 — 원문 미확인, 검수 시 확인 필요)
+    note: 직접 지휘·명령 배제, 요청 창구, 인력 배치·근태·노무 권한을 함께 검토한다. 계약 문구만으로 실제 운영의 독립성까지 확인한 것으로 보지 않는다.
+    decision_question: 수탁자가 업무 수행과 인사·노무 관리를 독립적으로 담당하고 위탁자의 요청은 지정 책임자를 통해 전달되도록 정해져 있는가?
+    pass_guidance: 위 설명의 검토 관점에 비추어 본건에서 수정이 불필요하면 선택
+    opinion_guidance: 본건에서 수정·추가 확인이 필요한 내용을 의견으로 작성
+    auto_verdict: false
+    checklist_revision: content-v2
+    legacy_check_ids:
+    - DIS-01
+    - DIS-02
+    - DIS-03
+    active: true
+    disposition: keep
+    meaning_revision: 1.87.0
+    judgment_level: clarity
+    judgment_scope: module

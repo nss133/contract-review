@@ -129,6 +129,18 @@ var Assessment = (function () {
         coverage: r.coverage || "",
         tier: r.tier || "",
         relationship_gated: !!r.relationshipGated,
+        structured_evidence: r.structuredEvidence || [],
+        auto_safety: r.autoSafety ? {
+          policy_version: r.autoSafety.policy_version,
+          mode: r.autoSafety.mode,
+          allowed: r.autoSafety.allowed === true,
+          requires_review: r.autoSafety.requires_review === true,
+          legacy_candidate: r.autoSafety.candidate === true,
+          reasons: (r.autoSafety.reasons || []).slice(),
+          signal_locations: (r.autoSafety.signals || []).map(function (s) {
+            return { document: s.document, sentence: s.line };
+          })
+        } : null,
         evidence: evidence,
         candidate_clauses: ranked,
         reasons: r.best && r.best.reasons ? r.best.reasons.slice() : [],

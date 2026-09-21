@@ -3,6 +3,16 @@ const { test } = require("node:test");
 const assert = require("node:assert");
 const A = require("../src/assessment.js");
 
+test("안전 관찰 결과는 회사관점 통과 신호와 독립된 감사 기록이다", () => {
+  const out = A.build([{ cpId: "X", coverage: "addressed", best: null,
+    autoSafety: { policy_version: "safe-shadow-v1", mode: "shadow", allowed: false,
+      candidate: true, reasons: ["shadow_only"], signals: [{ document: "별첨", line: 3 }] }
+  }], [{ id: "X" }], [], {});
+  assert.strictEqual(out.items.X.auto_safety.allowed, false);
+  assert.strictEqual(out.items.X.auto_safety.legacy_candidate, true);
+  assert.deepStrictEqual(out.items.X.auto_safety.signal_locations, [{ document: "별첨", sentence: 3 }]);
+});
+
 const CHECKS = [
   { id: "A", severity: "필수" },
   { id: "B", severity: "권장" },

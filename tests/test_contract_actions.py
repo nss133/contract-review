@@ -16,8 +16,8 @@ def test_all_absence_checks_have_curated_contract_actions():
     checks = _checks()
     curated = [cp for cp in checks.values() if cp.get("contract_action_curated")]
     absence = [cp for cp in checks.values() if cp.get("absence_check")]
-    assert len(absence) == 119
-    assert len(curated) == 119
+    assert len(absence) == 96
+    assert len(curated) == 96
     assert {cp["id"] for cp in absence} == {cp["id"] for cp in curated}
     assert all(cp.get("contract_requirement") in {"express", "derived", "recommended", "none"}
                for cp in curated)
@@ -36,8 +36,8 @@ def test_contract_action_examples_separate_text_and_execution_location():
     assert checks["CORE-07"]["contract_requirement"] == "derived"
     assert checks["FIN-GUAR-01"]["text_effect"] == "required_present"
     assert checks["PRIV-16"]["contract_requirement"] == "none"
-    assert checks["ITDL-01"]["contract_requirement"] == "recommended"
-    assert checks["DIS-01"]["implementation_channel"] == "contract_or_internal_control"
+    assert checks["CNS-IP"]["contract_requirement"] == "recommended"
+    assert checks["CNS-LABOR"]["implementation_channel"] == "contract_or_internal_control"
 
 
 def test_security_standard_form_scope_and_low_value_cards():
@@ -46,7 +46,7 @@ def test_security_standard_form_scope_and_low_value_cards():
               for cp in doc["checks"]}
     standard = next(sd for sd in knowledge["common"]["meta"]["standard_subdocs"]
                     if sd["id"] == "SUBDOC-PII")
-    assert {"PRIV-01", "PRIV-17"}.issubset(set(standard["covers"]))
+    assert {"CNS-PRIVSCOPE", "PRIV-17"}.issubset(set(standard["covers"]))
     assert "체결" not in standard["auto_comment"]
     assert checks["PRIV-17"]["surface_policy"] == "aggregate_only"
     assert checks["CMN-02"]["surface_policy"] == "anomaly_only"

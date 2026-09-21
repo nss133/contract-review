@@ -13,8 +13,10 @@ if (typeof require !== "undefined") {
   var MatcherConfig = require("./matcher_config.js");
   var Sentence = require("./sentence.js");
   var ContractTagsRef = require("./contract_tags.js");
+  var HistoryAssistRef = require("./history_assist.js");
 } else {
   var ContractTagsRef = ContractTags;
+  var HistoryAssistRef = HistoryAssist;
 }
 
 // ── 유형 감지 v2 (제목 가중·길이 정규화·미확정) ──────────────────
@@ -299,27 +301,31 @@ function detectPartyRoles(text) {
 // 당사 상호가 계약상 어떤 호칭(갑·을·병)으로 정의됐는지 읽는다. 지위를 못 읽더라도
 // 호칭을 알면 개별 조항의 의무주체가 당사인지 상대방인지 구별할 수 있다.
 function detectPartyContext(text) {
-  var t = String(text || "");
+  var t = String(text || "").normalize('NFC');
   var ours = [], seen = {};
   function add(alias) {
     if (alias && !seen[alias]) { seen[alias] = true; ours.push(alias); }
   }
-  OUR_NAMES.forEach(function (name) {
-    var from = 0, idx;
-    while ((idx = t.indexOf(name, from)) !== -1) {
-      from = idx + name.length;
-      var scope = t.slice(Math.max(0, idx - 80), Math.min(t.length, idx + name.length + 120));
-      var after = scope.slice(scope.indexOf(name) + name.length);
-      var m = after.match(/(?:이하\s*)?["'“”‘’]?(갑|을|병)["'“”‘’]?(?:이라\s*(?:한다|칭한다)|로\s*(?:한다|칭한다)|이라고\s*한다)?/);
-      if (m) add(m[1]);
-      var before = scope.slice(0, scope.indexOf(name));
-      var all = before.match(/["'“”‘’]?(갑|을|병)["'“”‘’]?\s*(?:[:：]|은|는|이|가)/g) || [];
-      if (all.length) {
-        var bm = all[all.length - 1].match(/(갑|을|병)/);
-        if (bm) add(bm[1]);
-      }
-    }
-  });
+  // 근접한 갑/을을 줍지 않고 상호에 직접 붙은 정의만 읽는다. 특히
+  // "갑: 당사\n을: 다른 회사"에서 다음 줄의 을을 당사로 연결하면 면책 방향이 뒤집힌다.
+  // 긴 상호부터 한 번만 매칭하여 "미래에셋생명보험" 안의 짧은 별칭을 중복 처리하지 않는다.
+  var names = OUR_NAMES.slice().sort(function(a,b){return b.length-a.length;})
+    .map(function(name){return name.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');});
+  var namePattern = new RegExp(names.join('|'),'g'),match;
+  while ((match=namePattern.exec(t))) {
+    var before=t.slice(Math.max(0,match.index-100),match.index),after=t.slice(match.index+match[0].length);
+    // 법인 형태는 상호의 일부로 허용하되 임의의 단어나 다음 당사자 이름을 건너뛰지 않는다.
+    before=before.replace(/(?:주식회사|㈜|\(\s*주\s*\))\s*$/,'');
+    after=after.replace(/^[ \t]*(?:주식회사|㈜|\([ \t]*주[ \t]*\))/,'');
+    var postfix=after.match(/^\s*(?:[（(]\s*)?이하\s*["'“”‘’「」]?(갑|을|병)(?=["'“”‘’「」\s)）]|이라|으로|로)/)||
+      after.match(/^\s*[（(]\s*["'“”‘’「」]?(갑|을|병)["'“”‘’「」]?\s*[)）]/);
+    if(postfix)add(postfix[1]);
+    var prefix=before.match(/(?:^|[\s,;；|/([（])["'“”‘’「」]?(갑|을|병)["'“”‘’「」]?\s*(?:\([^()\n]{1,12}\)\s*)?[:：]\s*$/);
+    // "갑은 당사에게 지급한다"는 당사의 호칭 정의가 아니다. 조사형은 정의 종결까지 확인한다.
+    var definition=before.match(/(?:^|[\s,;；|/([（])["'“”‘’「」]?(갑|을|병)["'“”‘’「」]?\s*(?:은|는|이란|이라\s*함은)\s*$/);
+    if(prefix&&/^(?:$|\s|[,.，;；|/()（）]|이고|이며|이다)/.test(after))add(prefix[1]);
+    else if(definition&&/^\s*(?:(?:을|를)\s*(?:말한다|의미한다)|(?:주식회사)?(?:이다|이고|이며)|[,.，;；|/]|$)/.test(after))add(definition[1]);
+  }
   var counterparts = [];
   ["갑", "을", "병"].forEach(function (a) {
     if (ours.indexOf(a) === -1 && new RegExp("(?:[\\\"'“”‘’]?" + a + "[\\\"'“”‘’]?\\s*(?:[:：]|은|는|이|가|에게|의))").test(t))
@@ -483,6 +489,7 @@ function suggestModules(text, modules, opts) {
 
 function activeCheckpoints(doc, activeModules, stance, fundKind) {
   return doc.checkpoints.filter(function (cp) {
+    if (cp.review_scope === "execution_only") return false;
     // 과거 판정·근거 ID는 지식에 보존하되, 독립 카드 가치가 없는 집계항목과
     // 별도 이상징후 탐지기가 필요한 항목은 일반 조항 매칭에서 노출하지 않는다.
     if (cp.surface_policy === "aggregate_only" || cp.surface_policy === "anomaly_only") return false;
@@ -542,6 +549,26 @@ function buildModel(docs, activeModules, stance, fundKind) {
   });
   var idf = Sim.buildIdf(checks.map(function (c) { return c.text; }));
   return { idf: idf, checks: checks };
+}
+
+// 한 번의 동기 매핑 안에서만 사용한다. 본문/질문/IDF/동의어가 다음 호출에서 바뀌면 전부 새로 계산한다.
+// 조항×질문마다 같은 TF-IDF 벡터·키워드·표제를 생성하지 않는다.
+function prepareMatching(model, clauses, entries) {
+  var prepared={clauses:new WeakMap(),checks:new WeakMap(),entries:new WeakMap()};
+  (entries||model.checks).forEach(function(e){var vector=Sim.tfidfVec(e.text,model.idf),words=Sim.keywords(e.text);
+    prepared.entries.set(e,{vector:vector,vectorKeys:Object.keys(vector),words:words,wordKeys:Object.keys(words)});
+    prepared.checks.set(e.cp,Sim.preprocess(e.text+' '+String(e.cp.check||'')+' '+String(e.cp.label||'')).replace(/\s+/g,''));
+  });
+  clauses.forEach(function(cl){var query=clauseQuery(cl),vector=Sim.tfidfVec(query,model.idf),words=Sim.keywords(query),title=ClauseRole.parseTitle(cl.heading||'');
+    prepared.clauses.set(cl,{vector:vector,vectorKeys:Object.keys(vector),words:words,wordKeys:Object.keys(words),norm:ClauseRole.normType(cl.body),titleWords:Sim.keywords(title),
+      titleParts:Sim.preprocess(title).split(/[\s·ㆍ,()（）]+/).filter(function(p){return p.length>=2;})});
+  });return prepared;
+}
+function preparedSimilarity(a,b){
+  var small=a.vectorKeys.length>b.vectorKeys.length?b:a,large=small===a?b:a,sum=0,intersection=0;
+  small.vectorKeys.forEach(function(k){if(large.vector[k]!==undefined)sum+=small.vector[k]*large.vector[k];});
+  a.wordKeys.forEach(function(k){if(b.words[k])intersection++;});
+  return {tfidf:sum*100,jaccard:!a.wordKeys.length||!b.wordKeys.length?0:intersection/(a.wordKeys.length+b.wordKeys.length-intersection)*100};
 }
 
 // ── 명시 인용 감지 (comp citation_extract 차용, 축약) ─────────────
@@ -671,15 +698,15 @@ function passesOverlapGate(clause, check, citation) {
 // 복합어 한 덩어리로 나와, check 문장의 분리된 어절("수익증권", "매수를 청구")과 토큰이
 // 절대 일치하지 않아 항상 0이 됨(11.3차 실측). 부분문자열 포함으로 판정한다.
 // 표제를 2글자 이상 조각으로 나눠, check 대표텍스트에 포함되는 조각의 길이 비중을 본다.
-function titleFitRatio(clause, check) {
+function titleFitRatio(clause, check, prepared) {
   var title = ClauseRole.parseTitle(clause.heading || "");
   if (!title) return 0;
+  var cpPrepared=prepared&&prepared.checks.get(check),clPrepared=prepared&&prepared.clauses.get(clause);
   // 이형어 정규화 후 비교(11.7차) — "기밀유지" 표제에 "비밀정보" 체크가 0점 나오던 문제.
-  title = Sim.preprocess(title);
-  var ck = checkText(check) + " " + String(check.check || "") + " " + String(check.label || "");
-  ck = Sim.preprocess(ck).replace(/\s+/g, "");
+  title = clPrepared?'':Sim.preprocess(title);
+  var ck = cpPrepared===undefined?Sim.preprocess(checkText(check) + " " + String(check.check || "") + " " + String(check.label || "")).replace(/\s+/g, ""):cpPrepared;
   // 표제를 어절 단위로 자르고, 각 어절에서 조사·접미를 떼어 핵심부만 비교.
-  var parts = title.split(/[\s·ㆍ,()（）]+/).filter(function (p) { return p.length >= 2; });
+  var parts = clPrepared?clPrepared.titleParts:title.split(/[\s·ㆍ,()（）]+/).filter(function (p) { return p.length >= 2; });
   if (!parts.length) return 0;
   var totLen = 0, hitLen = 0;
   parts.forEach(function (p) {
@@ -693,12 +720,12 @@ function titleFitRatio(clause, check) {
   return totLen > 0 ? hitLen / totLen : 0;
 }
 // clauseIndex → 소유 체크 id. 소유자가 없는 조항은 키 자체가 없음.
-function computeClauseOwners(clauses, checks) {
+function computeClauseOwners(clauses, checks, prepared) {
   var owners = {};
   (clauses || []).forEach(function (cl) {
     var best = null, bestRatio = 0, tie = false;
     checks.forEach(function (cp) {
-      var r = titleFitRatio(cl, cp);
+      var r = titleFitRatio(cl, cp, prepared);
       if (r < MatcherConfig.TITLE_STRONG_RATIO) return;
       if (r > bestRatio) { bestRatio = r; best = cp.id; tie = false; }
       else if (r === bestRatio && best !== null && cp.id !== best) tie = true;
@@ -709,23 +736,24 @@ function computeClauseOwners(clauses, checks) {
 }
 
 // ── 조항×체크 점수 ───────────────────────────────────────────────
-function scoreClauseCheck(clause, checkEntry, model) {
-  var cq = clauseQuery(clause);
-  var tfidf = Sim.cosine(Sim.tfidfVec(cq, model.idf), Sim.tfidfVec(checkEntry.text, model.idf)) * 100;
-  var jaccard = Sim.jaccard(cq, checkEntry.text) * 100;
+function scoreClauseCheck(clause, checkEntry, model, prepared) {
+  var a=prepared&&prepared.clauses.get(clause),b=prepared&&prepared.entries.get(checkEntry),similar=a&&b?preparedSimilarity(a,b):null;
+  var cq = similar?'':clauseQuery(clause);
+  var tfidf = similar?similar.tfidf:Sim.cosine(Sim.tfidfVec(cq, model.idf), Sim.tfidfVec(checkEntry.text, model.idf)) * 100;
+  var jaccard = similar?similar.jaccard:Sim.jaccard(cq, checkEntry.text) * 100;
   var isShort = String(clause.body || "").length < MatcherConfig.SHORT_LEN;
   var tw = isShort ? MatcherConfig.TW_SHORT : MatcherConfig.TW;
   var jw = isShort ? MatcherConfig.JW_SHORT : MatcherConfig.JW;
-  var clauseNorm = ClauseRole.normType(clause.body);
+  var clauseNorm = a?a.norm:ClauseRole.normType(clause.body);
   var nMatch = normMatches(clauseNorm, checkEntry.cp.norm_type);
   var nBonus = nMatch ? MatcherConfig.NORM_BONUS : 0;
-  var tBonus = titleBonus(clause, checkEntry.text);
+  var tBonus;if(a&&b){var overlap=0;for(var word in a.titleWords)if(b.words[word])overlap++;tBonus=Math.min(overlap*2,MatcherConfig.TITLE_BONUS_MAX);}else tBonus=titleBonus(clause, checkEntry.text);
   var citation = citationHit(String(clause.heading || "") + " " + String(clause.body || ""), checkEntry.cp);
   // 조 표제 직접 대응 보너스(11.5차 사용자 요청) — "제35조(반대수익자 매수청구권)"처럼
   // 표제가 그 체크를 정면으로 지시하면 강한 신호. 기존 titleBonus(상한 5)는 어휘 겹침
   // 개수 기반이라 복합어 표제에서 거의 작동하지 않았음(한국어 법령 표제는 한 덩어리).
   // titleFitRatio(부분문자열 기반)에 비례해 최대 CLAUSE_TITLE_BONUS_MAX까지 가산.
-  var fit = titleFitRatio(clause, checkEntry.cp);
+  var fit = titleFitRatio(clause, checkEntry.cp, prepared);
   var fitBonus = fit >= MatcherConfig.TITLE_STRONG_RATIO
     ? fit * MatcherConfig.CLAUSE_TITLE_BONUS_MAX : 0;
   // 당사자 축(11.6차 사용자 요청) — 조항의 주어가 그 체크가 겨냥하는 주체와 맞는지.
@@ -942,14 +970,15 @@ function _reasons(tier, ranked, check) {
 function subDocCoverage(considerCps, subDocs, model) {
   var out = {};
   if (!considerCps || !considerCps.length || !subDocs || !subDocs.length) return out;
-  considerCps.forEach(function (cp) {
-    var entry = { cp: cp, text: checkText(cp), doc: null };
+  var entries=considerCps.map(function(cp){return {cp:cp,text:checkText(cp),doc:null};}),prepared=prepareMatching(model,subDocs.flatMap(function(d){return d.clauses||[];}),entries);
+  entries.forEach(function (entry) {
+    var cp=entry.cp;
     for (var d = 0; d < subDocs.length; d++) {
       var doc = subDocs[d];
       var clauses = doc.clauses || [];
       if (!clauses.length) continue;
       var scored = clauses.map(function (cl) {
-        return { clause: cl, s: scoreClauseCheck(cl, entry, model) };
+        return { clause: cl, s: scoreClauseCheck(cl, entry, model, prepared) };
       }).sort(function (a, b) { return b.s.score - a.s.score; });
       var candidates = scored.filter(function (r) {
         return (r.s.citation === true || evidenceRequirementsMet(r.clause, cp)) &&
@@ -960,7 +989,8 @@ function subDocCoverage(considerCps, subDocs, model) {
       if ((tier === "confirmed" || tier === "review") && candidates.length) {
         var best = candidates[0];
         if (passesOverlapGate(best.clause, cp, best.s.citation === true)) {
-          out[cp.id] = { docName: doc.name, score: best.s.score };
+          out[cp.id] = { docName: doc.name, score: best.s.score,
+            heading: best.clause.heading || "", quote: String(best.clause.body || "").slice(0, 1200) };
           break; // 첫 커버 서류에서 확정
         }
       }
@@ -1009,6 +1039,7 @@ function analyze(clauses, docs, opts) {
     : detectFundKind((clauses || []).map(function (cl) {
         return String(cl.heading || "") + " " + String(cl.body || ""); }).join("\n"));
   var model = buildModel(docs, activeModules, stance, fundKind);
+  var prepared=prepareMatching(model,clauses.concat(baseClauses));
   // 용역 성질결정(12차) — 계약서 문언으로 자동 판별. 부재알람 게이트에만 쓰임.
   var svc = o.serviceNature !== undefined
     ? { nature: o.serviceNature, hits: [] }
@@ -1026,7 +1057,7 @@ function analyze(clauses, docs, opts) {
     (clauses || []).concat(baseClauses), docTitle || "");
   var partyContext = o.partyContext || detectPartyContext(fullText);
   // 조항 귀속(11.3차): 표제가 특정 체크를 정면으로 지시하는 조항을 미리 확정.
-  var owners = computeClauseOwners(clauses, model.checks.map(function (e) { return e.cp; }));
+  var owners = computeClauseOwners(clauses, model.checks.map(function (e) { return e.cp; }),prepared);
 
   model.checks.forEach(function (entry) {
     var cp = entry.cp;
@@ -1040,13 +1071,22 @@ function analyze(clauses, docs, opts) {
       return;
     }
     var scored = clauses.map(function (cl) {
-      return { clause: cl, s: scoreClauseCheck(cl, entry, model) };
+      return { clause: cl, s: scoreClauseCheck(cl, entry, model, prepared) };
     }).sort(function (a, b) { return b.s.score - a.s.score; });
 
     // 핵심 근거어가 선언된 체크는 그 요건을 갖춘 조항만 후보가 된다. 명시 법령 인용은 예외.
     // 필터를 tier 판정 전에 적용해야 높은 점수의 decoy 뒤에 있는 진짜 조항을 선택할 수 있다.
     var eligibleScored = scored.filter(function (r) {
       return r.s.citation === true || evidenceRequirementsMet(r.clause, cp);
+    }).map(function (r) {
+      r.s.baseScore = r.s.score;
+      // 이미 본건 최소 근거 점수를 통과한 후보 안에서만 재정렬한다.
+      r.s.historySupport = r.s.score >= MatcherConfig.REVIEW_FLOOR ?
+        HistoryAssistRef.clauseSupport(o.historyRelated || [], cp, r.clause) : null;
+      if (r.s.historySupport) r.s.score += r.s.historySupport.bonus;
+      return r;
+    }).sort(function (a, b) {
+      return b.s.score - a.s.score;
     });
     var candidates = eligibleScored.filter(function (r) { return r.s.score >= MatcherConfig.REVIEW_FLOOR; });
     var tier = decideTier(candidates, cp);
@@ -1120,7 +1160,7 @@ function analyze(clauses, docs, opts) {
         (coverage === "quiet" && cp.absence_check && effectiveContractRequirement(cp) === "recommended")) &&
         baseClauses.length) {
       var baseScored = baseClauses.map(function (cl) {
-        return { clause: cl, s: scoreClauseCheck(cl, entry, model) };
+        return { clause: cl, s: scoreClauseCheck(cl, entry, model, prepared) };
       }).sort(function (a, b) { return b.s.score - a.s.score; });
       var baseCand = baseScored.filter(function (r) {
         return (r.s.citation === true || evidenceRequirementsMet(r.clause, cp)) &&
@@ -1156,6 +1196,7 @@ function analyze(clauses, docs, opts) {
       tier: tier,
       coverage: coverage,
       best: top ? { clauseIndex: top.clause.index, score: top.s.score, reasons: reasons, gate: gate,
+        baseScore: top.s.baseScore, historySupport: top.s.historySupport,
         tagTrace: top.s.tagTrace, tagAdjustment: top.s.tagAdjustment || 0 } : null,
       ranked: rankedTop,
       inBase: inBase,      // 원계약에서 커버된 위치(변경합의서 국면) — 없으면 null

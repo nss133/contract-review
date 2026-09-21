@@ -34,6 +34,11 @@ checks:
         quote: 금전 기타 대체물의 소유권을 상대방에게 이전할 것을 약정하고 상대방은 그와 같은 종류, 품질 및 수량으로 반환할 것을 약정
         verified: true
         source_type: law
+    active: true
+    disposition: keep
+    meaning_revision: 1.87.0
+    judgment_level: clarity
+    judgment_scope: module
   - id: FIN-LOAN-02
     check: 이자율과 이자 기산일(인도일 기준)이 명시되어 있는가
     label: "이자율·기산일"
@@ -54,6 +59,11 @@ checks:
         quote: 이자있는 소비대차는 차주가 목적물의 인도를 받은 때로부터 이자를 계산하여야 하며
         verified: true
         source_type: law
+    active: true
+    disposition: keep
+    meaning_revision: 1.87.0
+    judgment_level: clarity
+    judgment_scope: module
   - id: FIN-LOAN-03
     check: 약정이자율이 이자제한법상 최고이자율(연 25% 이내 대통령령)을 초과하지 않는가
     label: "최고이자율 준수"
@@ -73,6 +83,11 @@ checks:
         verified: true
         source_type: law
     note: 대차원금 10만원 미만·법인 대상 여신 등 적용범위 확인 필요(이자제한법 제2조 제5항·대부업법 등)
+    active: true
+    disposition: keep
+    meaning_revision: 1.87.0
+    judgment_level: appropriateness
+    judgment_scope: module
   - id: FIN-LOAN-04
     check: 지연손해금(연체이자)의 이율 또는 산정방법이 정해져 있는가
     label: "지연손해금 이율"
@@ -93,6 +108,12 @@ checks:
         quote: 금전채무불이행의 손해배상액은 법정이율에 의한다. 그러나 법령의 제한에 위반하지 아니한 약정이율이 있으면 그 이율에 의한다
         verified: true
         source_type: law
+    active: true
+    disposition: keep
+    meaning_revision: 1.87.0
+    judgment_level: clarity
+    judgment_scope: module
+
 
   # ── M-SEC 담보 ────────────────────────────────────────────────
   - id: FIN-GUAR-01
@@ -113,6 +134,11 @@ checks:
         quote: 보증은 그 의사가 보증인의 기명날인 또는 서명이 있는 서면으로 표시되어야 효력이 발생한다
         verified: true
         source_type: law
+    active: true
+    disposition: keep
+    meaning_revision: 1.87.0
+    judgment_level: appropriateness
+    judgment_scope: module
   - id: FIN-GUAR-02
     check: 연대보증인 경우 최고·검색의 항변권 배제가 명확히 규정되어 있는가
     label: "연대보증 항변권 배제"
@@ -131,6 +157,11 @@ checks:
         quote: 보증인이 주채무자와 연대하여 채무를 부담한 때에는 그러하지 아니하다
         verified: true
         source_type: law
+    active: true
+    disposition: keep
+    meaning_revision: 1.87.0
+    judgment_level: clarity
+    judgment_scope: module
   - id: FIN-GUAR-03
     check: 보증인의 구상권(수탁보증인·공동보증인) 관련 사항이 정리되어 있는가
     label: "보증인 구상권"
@@ -150,5 +181,11 @@ checks:
         quote: 보증인이 된 자가 과실없이 변제 기타의 출재로 주채무를 소멸하게 한 때에는 주채무자에 대하여 구상권이 있다
         verified: true
         source_type: law
+    active: true
+    disposition: keep
+    meaning_revision: 1.87.0
+    judgment_level: clarity
+    judgment_scope: module
+
 
   # ── M-ASSET 보험업 자산운용 규제 ──────────────────────────────

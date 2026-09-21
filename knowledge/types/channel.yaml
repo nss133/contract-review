@@ -14,20 +14,6 @@ meta:
       screening_question: null
       suggest_keywords: []
 checks:
-  - id: CH-01
-    module: M-CH
-    check: 모집·판매 수수료의 산정 기준과 정산 주기·방법이 특정되어 있는가
-    label: "수수료 산정·정산"
-    severity: 권장
-    severity_override: true
-    severity_basis: "실무 관행 항목(법령 강제 아님) — 수수료 분쟁이 채널 계약 최다 분쟁 유형(practice=참고 도출규칙 override)"
-    norm_type: 실무
-    basis: practice
-    triggers:
-      keywords: [수수료, 정산, 산정, 지급 기준, 환수]
-    absence_check: true
-    sources: []
-    note: 선지급 수수료의 환수 조건(해약·승환 시)과 정산 이의절차를 함께 확인.
   - id: CH-02
     module: M-CH
     check: 계약 해지·종료 시 기존 계약자 관리(이관·유지관리 책임)와 고객보호 조치가 규정되어 있는가
@@ -42,6 +28,11 @@ checks:
     absence_check: true
     sources: []
     note: 채널 부실·폐업 시 보유계약의 유지관리 주체와 고객 통지 절차 확인.
+    active: true
+    disposition: keep
+    meaning_revision: 1.87.0
+    judgment_level: clarity
+    judgment_scope: module
   - id: CH-03
     module: M-CH
     check: 채널의 부실·귀책으로 인한 손해(불완전판매 배상·과태료 구상)의 분담·구상 구조가 규정되어 있는가
@@ -56,3 +47,8 @@ checks:
     absence_check: true
     sources: []
     note: 회사가 1차 배상 후 채널에 구상하는 구조의 실효성(담보·보증과 연계)을 확인. §102 원문 확인 후 statute 승격 후보.
+    active: true
+    disposition: keep
+    meaning_revision: 1.87.0
+    judgment_level: clarity
+    judgment_scope: module

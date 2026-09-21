@@ -3,7 +3,8 @@ id: evidence-gate-positive
 desc: IP침해 방어·보증보험·채권자귀책 대금청구 — 진성 근거 노출 유지
 force_type: procurement
 force_active_modules: [M-DELIVERY]
-shown_must_include: [CMN-18, SP-DEL-04, SP-DEL-08-2]
+shown_must_include: [CMN-18, SP-DEL-04]
+shown_must_exclude: [SP-DEL-08-2, RISK-02]
 text: |
   IT 용역계약서
 

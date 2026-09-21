@@ -3,9 +3,9 @@
 id: mal-ad-media
 desc: 사내표준 언론사 광고 — 표준서식 회귀(사내표준층)
 detect_expected: procurement
-# 2026-07-28 사용자 게이트: SP-DEL-09에 absence_precondition(매도인·매수인 등) 신설로
+# 2026-07-28 사용자 게이트: CNS-SALEDEFECT에 absence_precondition(매도인·매수인 등) 신설로
 # 오탐 해소(광고계약은 매매 관계 자체가 없음) — 재발 방지 고정.
-consider_must_exclude: [SP-DEL-09]
+consider_must_exclude: [CNS-SALEDEFECT]
 text: "광고 계약서 \n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n갑: 미래에셋생명보험㈜\n\
   을: OOOOOOOOOOO\n\n\n\n\n미래에셋생명보험 주식회사(이하 “갑”이라 한다)와 [OOOOO 주식회사](이하 “을”이라 한다)는 [\
   \             ]광고에 대한 계약을 다음과 같이 체결한다. \n\n\n제 1 조 (계약의 목적) \n본 계약은 “을”이 제공하는 광고매체에\

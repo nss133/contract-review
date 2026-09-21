@@ -1,7 +1,7 @@
 "use strict";
-/* 앱 내장 골드셋(폐쇄망) 순수 로직 — 스냅샷 생성·재현 실행·차이 채점·반출 요약.
+/* 앱 내장 골드셋(폐쇄망) 순수 로직 — 스냅샷 생성·재현 실행·차이 채점·내부 요약.
    설계: 실계약은 폐쇄망 밖으로 못 나가므로 채점기를 앱에 내장한다. 케이스(계약 본문 포함)는
-   폐쇄망 공유폴더에만 축적하고, 밖으로는 요약(check id·유형명·통과/실패 — 본문 0자)만 내보낸다.
+   폐쇄망 공유폴더에만 축적한다. 요약·식별자·통계도 반출 허용자료가 아니다.
    브라우저 전역 Goldset + node require 겸용. */
 var Goldset = (function () {
 
@@ -122,10 +122,10 @@ var Goldset = (function () {
     };
   }
 
-  // 반출용 요약 텍스트 — 계약 본문·조항 문언 포함 금지(check id·유형명·카운트만).
+  // 내부용 요약 텍스트. 자유기재 메타데이터도 민감할 수 있으므로 반출 금지.
   function summaryText(diffs, meta) {
     var L = [];
-    L.push("# 골드셋 채점 요약 (본문 미포함 — 반출용)");
+    L.push("# 골드셋 채점 요약 (폐쇄망 내부 전용 — 반출 금지)");
     if (meta) L.push("빌드 check 수: " + (meta.checksCount || "?") + " · 채점일: " + (meta.date || "?"));
     var pass = diffs.filter(function (d) { return d.status === "통과"; }).length;
     var chg = diffs.filter(function (d) { return d.status === "변화"; }).length;

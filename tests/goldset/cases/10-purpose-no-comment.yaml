@@ -5,7 +5,7 @@
 id: purpose-no-comment
 desc: 목적 조항 단독 계약 — 구체 항목의 목적 조항 부착 금지(weak-role)
 detect_expected: outsourcing
-addressed_must_exclude: [CORE-01, CORE-02, CORE-03, CORE-07, PRIV-01]
+addressed_must_exclude: [CORE-01, CORE-02, CORE-03, CORE-07, CNS-PRIVSCOPE]
 text: |
   업무위탁계약서
 

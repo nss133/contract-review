@@ -1,10 +1,11 @@
 "use strict";
 /* 계약서 자체의 구조·내부 인용 완결성 검사. 법률 판단이나 외부 법령 유효성 검사는 하지 않는다. */
 var Integrity = (function () {
+  var DS=typeof DocumentStructure!=="undefined"?DocumentStructure:require('./document_structure');
   // segmenter가 문장 첫머리의 "제2조에 따른다"도 별도 조각으로 나눌 수 있으므로
   // 실제 표제(제N조 또는 제N조(표제))만 조 정의로 인정한다.
-  var ARTICLE_BARE_RE = /^\s*제\s*(\d+)\s*조(?:의\s*(\d+))?\s*$/;
-  var ARTICLE_TITLE_RE = /^\s*제\s*(\d+)\s*조(?:의\s*(\d+))?\s*\([^\n)]+\)([\s\S]*)$/;
+  var ARTICLE_BARE_RE = /^\s*(?:제\s*)?(\d+)\s*조(?:의\s*(\d+))?\s*$/;
+  var ARTICLE_TITLE_RE = /^\s*(?:제\s*)?(\d+)\s*조(?:의\s*(\d+))?\s*[([【「][^\n)\]】」]+[)\]】」]([\s\S]*)$/;
   var REF_RE = /제\s*(\d+)\s*조(?:의\s*(\d+))?(?:\s*제\s*(\d+)\s*항)?(?:\s*제\s*(\d+)\s*호)?/g;
   var EXTERNAL_BEFORE_RE = /(?:법|법률|시행령|시행규칙|감독규정|규정|고시|규칙|모범규준)\s*$/;
   var CIRCLED = "①②③④⑤⑥⑦⑧⑨⑩⑪⑫⑬⑭⑮⑯⑰⑱⑲⑳";
@@ -31,10 +32,42 @@ var Integrity = (function () {
     return next;
   }
   function _articleHeading(text) {
-    var m = ARTICLE_TITLE_RE.exec(String(text || ""));
-    if (m) return { number: m[1], sub: m[2], remainder: String(m[3] || "").trim(), prefixLength: m[0].length - String(m[3] || "").length };
-    m = ARTICLE_BARE_RE.exec(String(text || ""));
-    return m ? { number: m[1], sub: m[2], remainder: "", prefixLength: m[0].length } : null;
+    var t = _normalize(text), m = ARTICLE_TITLE_RE.exec(t);
+    if (m) return { number: m[1], sub: m[2], remainder: String(m[3] || "").trim(), prefixLength: m[0].length - String(m[3] || "").length, explicit: true };
+    m = ARTICLE_BARE_RE.exec(t);
+    if (m) return { number: m[1], sub: m[2], remainder: "", prefixLength: m[0].length, explicit: true };
+    m = /^\s*(?:제\s*)?(\d+)\s*조(?:의\s*(\d+))?\s+(.+)$/.exec(t);
+    if (m && _shortTitle(m[3])) return { number:m[1], sub:m[2], remainder:"", prefixLength:t.length, explicit:true };
+    // 숫자 목록은 조/항/호를 확정하지 않는다. 존재 후보로만 사용한다.
+    m = /^\s*(?:(\d+)\s*[.)]\s*|\((\d+)\)\s*|Article\s+(\d+)\s*[.:]?\s*)(.+)$/i.exec(t);
+    if (m && _shortTitle(m[4])) return { number:m[1]||m[2]||m[3], sub:null, remainder:"", prefixLength:t.length, explicit:false };
+    return null;
+  }
+  function _normalize(text) {
+    return String(text || "").normalize("NFC").replace(/[０-９]/g,function(c){return String(c.charCodeAt(0)-0xFF10);})
+      .replace(/（/g,"(").replace(/）/g,")").replace(/［/g,"[").replace(/］/g,"]")
+      .replace(/[\u200B\uFEFF]/g,"").replace(/\u00a0/g," ");
+  }
+  function _shortTitle(s) {
+    return s.trim().length > 0 && s.length <= 60 && !/[。.;:!?]/.test(s) &&
+      !/^(?:에|의|을|를|에서|부터|까지|및|또는|내지|제\s*\d+\s*(?:항|호))(?:\s|$)/.test(s) &&
+      !/(?:따른|따라|의한|의해|규정|참조|적용한|준용|한다|된다|있다|없다|한다는|경우)/.test(s);
+  }
+  // 완결성 주소록은 매핑용 segmenter의 제N조 분할 여부에 의존하지 않는다.
+  // 원래 clause index는 유지하여 원문 이동·사람 의견의 주소를 바꾸지 않는다.
+  function _structureClauses(clauses,model,text) {
+    var out=[],current=null,explicit={},starts=DS.clauseStarts(text,clauses),ci=0;
+    model.lines.forEach(function(l){var h=_articleHeading(l.text);if(h&&h.explicit)explicit[l.section]=true;});
+    model.lines.forEach(function(l){
+      while(ci+1<starts.length&&starts[ci+1].start<=l.offset)ci++;
+      if(l.boundary || l.source&&l.source.repeated_margin){if(current){out.push(current);current=null;}return;}
+      var h=_articleHeading(l.text),start=h&&(h.explicit||!explicit[l.section]),index=starts[ci]?starts[ci].index:0;
+      if(current&&(start||current.section!==l.section)){out.push(current);current=null;}
+      if(!current)current={heading:start?_normalize(l.text):"",body:"",index:index,section:l.section,source:l.source,line:l.index};
+      if(!start)current.body+=(current.body?"\n":"")+_normalize(l.text);
+    });
+    if(current)out.push(current);
+    return out;
   }
   function _headingText(c) { return String(c && c.heading || ""); }
   function _bodyText(c) { return _headingText(c) + "\n" + String(c && c.body || ""); }
@@ -88,9 +121,16 @@ var Integrity = (function () {
   }
   function analyze(text, clauses, opts) {
     opts = opts || {};
-    var items = [], articles = {}, articleList = [], clauseSections = {}, section = "main";
+    var model=DS.inspect(text,opts.structure,opts.boundaries),sectionById={};
+    model.sections.forEach(function(s){sectionById[s.id]=s;});
+    var originalText=text;
+    text = _normalize(text);
+    clauses = _structureClauses(clauses && clauses.length ? clauses : [{heading:"",body:text,index:0}],model,originalText);
+    var items = [], articles = {}, articleList = [], clauseSections = {}, section = "main", limitations = [];
     (clauses || []).forEach(function (c, index) {
+      section=c.section||"main";
       clauseSections[index] = section;
+      if(sectionById[section]&&sectionById[section].kind==='excluded')return;
       var info = _articleHeading(_headingText(c));
       if (info) {
         var simpleKey = articleKey(info.number, info.sub);
@@ -101,12 +141,12 @@ var Integrity = (function () {
           clause_index: typeof c.index === "number" ? c.index : index, heading: _headingText(c),
           text: _bodyText(c), structural_text: structuralText, paragraphs: _paragraphs(structuralText),
           items: _items(structuralText), substantive: !!structuralText.trim(),
-          heading_prefix_length: info.prefixLength };
+          heading_prefix_length: info.prefixLength, explicit: info.explicit,source:c.source,line:c.line };
         if (articles[key]) {
           // 본문 중 독립된 '제1조' 참조가 세그먼트로 잘린 경우에는 중복 조항으로 단정하지 않는다.
-          if (articles[key].substantive && a.substantive) {
+          if (articles[key].substantive && a.substantive && articles[key].explicit && a.explicit) {
             items.push(_finding("NUM-01", "중요", "high", "조 번호 중복",
-              _sectionLabel(section) + "에 동일한 제" + info.number + "조" +
+              (sectionById[section]||{}).label + "에 동일한 제" + info.number + "조" +
               (info.sub ? "의" + info.sub : "") + "가 두 번 존재합니다.",
               a.clause_index, a.heading, { target: key, section: section,
                 anchors: [{ document: "main", clause_index: articles[key].clause_index, heading: articles[key].heading },
@@ -116,7 +156,6 @@ var Integrity = (function () {
         } else articles[key] = a;
         articleList.push(a);
       }
-      section = _nextSection(String(c && c.body || ""), section);
     });
 
     // XML 선택분기·텍스트상자 등의 동일 내용이 두 번 추출되면 조 번호 중복을 사실 오류로
@@ -131,6 +170,16 @@ var Integrity = (function () {
       fp[k] = true;
     });
     var extractionDuplicate = repeated >= 2 || repeatedLong;
+    var explicitCount=articleList.filter(function(a){return a.explicit&&a.substantive;}).length;
+    var lostLabels=model.lines.filter(function(l){return !l.boundary&&/^\s*(?:조\s*)?[([【][^\n)\]】]+[)\]】]\s*$/.test(l.text);}).length;
+    var sectionCounts={};
+    articleList.forEach(function(a){if(a.explicit&&a.substantive)sectionCounts[a.section]=(sectionCounts[a.section]||0)+1;});
+    var uncertainSections={};model.lines.forEach(function(l){if(l.numbering&&l.numbering.confirmed===false)uncertainSections[l.section]=true;});
+    var extractionIncomplete=model.warnings.some(function(w){return /실패|텍스트층이 없는|잘림/.test(w);});
+    var reliable = explicitCount >= 2 && !lostLabels && !extractionDuplicate && !/�/.test(text) && !extractionIncomplete;
+    if (!reliable) limitations.push(extractionDuplicate ? "동일 본문 반복 추출로 번호 구조를 신뢰하기 어렵습니다." :
+      "조 번호의 층위 또는 추출 보존 상태가 불확실하여 조·항·호의 부재를 자동 판단하지 않았습니다.");
+    var unresolved=0;
 
     // 모든 segment를 인용 출처로 검사한다. 조 정의가 아닌 segment도 앞 조문 본문의
     // 일부일 수 있으므로 누락시키지 않는다.
@@ -139,6 +188,8 @@ var Integrity = (function () {
       var sourceHeading = _headingText(clause);
       var headingMatch = _articleHeading(sourceHeading);
       var sourceSection = clauseSections[sourceIndex] || "main";
+      if(sectionById[sourceSection]&&sectionById[sourceSection].kind==='excluded')return;
+      if(uncertainSections[sourceSection]){unresolved++;return;}
       var sourceKey = headingMatch ? articleKey(headingMatch.number, headingMatch.sub, sourceSection) : "";
       var clauseIndex = typeof clause.index === "number" ? clause.index : sourceIndex;
       REF_RE.lastIndex = 0;
@@ -149,40 +200,46 @@ var Integrity = (function () {
             articleKey(m[1], m[2], sourceSection) === sourceKey) continue;
         if (_isExternal(sourceText, m.index)) continue;
         var simple = articleKey(m[1], m[2]);
-        var key = articleKey(m[1], m[2], sourceSection);
-        var target = articles[key] || (sourceSection !== "main" && articles[articleKey(m[1], m[2], "main")]);
-        if (!target) {
-          var candidates = articleList.filter(function (a) { return a.simple_key === simple; });
-          if (candidates.length === 1) target = candidates[0];
-        }
+        var referenceSection=sourceSection,prefix=sourceText.slice(Math.max(0,m.index-100),m.index);
+        var named=/(별첨|별표|별지|붙임|부록|첨부|Annex|Appendix)\s*(?:제\s*)?([0-9]+(?:[-.][0-9]+)*|[A-Z])\s*(?:호)?\s*(?:의\s*)?$/i.exec(prefix);
+        if(/(?:본\s*계약(?:서)?|본문)\s*(?:의\s*)?$/.test(prefix))referenceSection='main';
+        if(named){var token=named[1].toLowerCase()+named[2],scopes=model.sections.filter(function(s){return s.token===token;});
+          if(scopes.length!==1){unresolved++;continue;}referenceSection=scopes[0].id;}
+        if(sectionById[referenceSection]&&sectionById[referenceSection].kind==='excluded'){unresolved++;continue;}
+        var key = articleKey(m[1], m[2], referenceSection);
+        if(uncertainSections[referenceSection]){unresolved++;continue;}
+        var target = articles[key];
+        // 이름 없는 인용의 타 구역 자동 승계는 하지 않는다.
+        if(!target&&!named&&referenceSection===sourceSection&&articleList.some(function(a){return a.simple_key===simple&&a.section!==sourceSection;})){unresolved++;continue;}
         var targetLabel = "제" + Number(m[1]) + "조" + (m[2] ? "의" + Number(m[2]) : "");
         if (!target) {
-          items.push(_finding("REF-01", "중요", "high", "존재하지 않는 조항 인용",
-            sourceHeading + "에서 " + targetLabel + "를 인용하지만 해당 조항이 없습니다.",
+          if(!reliable || (sectionCounts[referenceSection]||0)<2){unresolved++;continue;}
+          items.push(_finding("REF-01", "중요", "high", "내부 인용 대상 확인",
+            sourceHeading + "에서 " + targetLabel + "를 인용하지만 인식된 조 표제에서 찾지 못했습니다. 원문 또는 별도 계약의 인용인지 확인하세요.",
             clauseIndex, sourceHeading, { target: key, reference_text: m[0] }));
           continue;
         }
         if (m[3] && target.paragraphs.set[Number(m[3])]) {
           // 표지 형식이 달라도 실제 번호가 있으면 존재 확인으로 충분하다.
-        } else if (m[3] && !target.paragraphs.reliable) {
+        } else if (m[3] && (!reliable || !target.paragraphs.reliable)) {
           items.push(_finding("REF-02U", "일반", "medium", "항 번호 추출 상태 확인",
             targetLabel + "의 항 번호가 원문에서 보존되었는지 확인할 수 없어 제" + Number(m[3]) + "항의 존재 여부를 자동판정하지 않았습니다.",
             clauseIndex, sourceHeading, { target: key + "-p-unknown", reference_text: m[0] }));
         } else if (m[3] && !target.paragraphs.set[Number(m[3])]) {
-          items.push(_finding("REF-02", "중요", "high", "존재하지 않는 항 인용",
-            sourceHeading + "에서 " + targetLabel + " 제" + Number(m[3]) + "항을 인용하지만 해당 항이 없습니다.",
+          items.push(_finding("REF-02", "중요", "high", "내부 인용 항 확인",
+            sourceHeading + "에서 " + targetLabel + " 제" + Number(m[3]) + "항을 인용하지만 추출된 항 표지에서 찾지 못했습니다. 원문과 대조하세요.",
             clauseIndex, sourceHeading, { target: key + "-p" + Number(m[3]), reference_text: m[0],
               anchors: [{ document: "main", clause_index: clauseIndex, heading: sourceHeading },
                 { document: "main", clause_index: target.clause_index, heading: target.heading }] }));
         } else if (m[4] && target.items.set[Number(m[4])]) {
           // 실제 호 번호 확인됨.
-        } else if (m[4] && !target.items.reliable) {
+        } else if (m[4] && (!reliable || !target.items.reliable)) {
           items.push(_finding("REF-03U", "일반", "medium", "호 번호 추출 상태 확인",
             targetLabel + "의 숫자 표지가 항·호 중 어느 층위인지 불명확해 제" + Number(m[4]) + "호의 존재 여부를 자동판정하지 않았습니다.",
             clauseIndex, sourceHeading, { target: key + "-i-unknown", reference_text: m[0] }));
         } else if (m[4] && !target.items.set[Number(m[4])]) {
-          items.push(_finding("REF-03", "중요", "high", "존재하지 않는 호 인용",
-            sourceHeading + "에서 " + targetLabel + " 제" + Number(m[4]) + "호를 인용하지만 해당 호가 없습니다.",
+          items.push(_finding("REF-03", "중요", "high", "내부 인용 호 확인",
+            sourceHeading + "에서 " + targetLabel + " 제" + Number(m[4]) + "호를 인용하지만 추출된 호 표지에서 찾지 못했습니다. 원문과 대조하세요.",
             clauseIndex, sourceHeading, { target: key + "-i" + Number(m[4]), reference_text: m[0],
               anchors: [{ document: "main", clause_index: clauseIndex, heading: sourceHeading },
                 { document: "main", clause_index: target.clause_index, heading: target.heading }] }));
@@ -223,22 +280,35 @@ var Integrity = (function () {
           anchors: [{ document: "main", clause_index: 0, heading: _headingText((clauses || [])[0]) }] }));
     }
 
-    var subNames = (opts.subdocs || []).map(function (d) { return String(d.name || ""); }).join(" ");
-    var attRe = /(별첨|별표|별지|붙임)\s*(?:제\s*)?(\d+)\s*(?:호)?/g, am;
+    var attachments=model.sections.filter(function(s){return s.kind==='annex';}).map(function(s){return s.token;});
+    (opts.subdocs||[]).forEach(function(d){var b=DS.boundary(String(d.name||'').replace(/\.[a-z0-9]+$/i,''));if(b)attachments.push(b.token);});
+    var attRe = /(별첨|별표|별지|붙임)\s*(?:제\s*)?(\d+(?:[-.]\d+)*)\s*(?:호)?/g, am;
     while ((am = attRe.exec(String(text || "")))) {
       var token = am[1] + " " + am[2];
-      var occurrences = String(text || "").split(new RegExp(am[1] + "\\s*(?:제\\s*)?" + am[2], "g")).length - 1;
-      if (occurrences > 1 || subNames.indexOf(am[1]) !== -1 || subNames.indexOf(am[2]) !== -1) continue;
-      var ci = 0;
+      if (attachments.indexOf(am[1]+am[2])!==-1)continue;
+      var refLine=text.slice(0,am.index).split('\n').length-1;
+      if(model.lines[refLine]&&model.lines[refLine].boundary)continue;
+      var ci = 0, attachmentHeading = "";
       for (var j = 0; j < (clauses || []).length; j++) {
-        if (_bodyText(clauses[j]).indexOf(am[0]) !== -1) { ci = j; break; }
+        if (_bodyText(clauses[j]).indexOf(am[0]) !== -1) { ci = clauses[j].index; attachmentHeading = _headingText(clauses[j]); break; }
       }
       items.push(_finding("ATT-01", "일반", "medium", "인용 별첨 확인 필요",
         token + "을 인용하지만 업로드된 부속서류나 본문 내 별첨 표제를 확인하지 못했습니다.",
-        ci, _headingText((clauses || [])[ci]), { target: token, reference_text: am[0] }));
+        ci, attachmentHeading, { target: token, reference_text: am[0] }));
     }
+    // 추출 불확실성은 오류 카드나 사람의 처리 의무로 만들지 않고 한 안내로 모은다.
+    var uncertain=items.filter(function(item){return /^PARSE-|^REF-0[23]U$/.test(item.rule_id);});
+    if(uncertain.length)limitations.push("일부 번호·본문 추출을 확정할 수 없어 관련 개별 경고를 생략했습니다.");
+    items=items.filter(function(item){return !/^PARSE-|^REF-0[23]U$/.test(item.rule_id)&&
+      !(item.section&&uncertainSections[item.section])&&
+      (reliable || !/^(NUM|REF|HIER)-/.test(item.rule_id));});
     var seen = {};
-    return { format: "cr-document-integrity-v1", items: items.filter(function (item) {
+    if(unresolved)limitations.push("일부 인용의 대상 구역을 확정하지 않았습니다.");
+    return { format: "cr-document-integrity-v1", structure:model, assessment:{status:limitations.length?"limited":"checked",
+      label:limitations.length?"자동 점검 범위 제한":"인식된 구조 점검",
+      detail:limitations.length?limitations.join(" ")+" 오류 또는 검토 미완료를 뜻하지 않으며, 원본 완결성을 확인한 결과도 아닙니다.":
+        "인식된 조 표제를 기준으로 점검했습니다. 원본 전체의 완결성 보증은 아닙니다.",
+      article_count:articleList.length, explicit_article_count:explicitCount, section_count:model.sections.length,unresolved_reference_count:unresolved}, items: items.filter(function (item) {
       if (seen[item.id]) return false; seen[item.id] = true; return true;
     }) };
   }

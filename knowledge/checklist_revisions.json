@@ -1,0 +1,183 @@
+{
+  "version": "content-v3",
+  "before_count": 238,
+  "after_count": 184,
+  "replacements": [
+    {
+      "id": "CNS-DAMAGE",
+      "label": "책임 배분 약정 확인",
+      "legacy_ids": [
+        "CMN-05-2",
+        "CMN-11",
+        "CMN-12",
+        "CMN-14",
+        "RISK-06",
+        "SP-DEL-02",
+        "PRIV-08",
+        "NDA-15",
+        "SP-DEL-06"
+      ]
+    },
+    {
+      "id": "CNS-SECRET",
+      "label": "비밀 범위·사용 제한 확인",
+      "legacy_ids": [
+        "CMN-15",
+        "CMN-16",
+        "NDA-01",
+        "NDA-02",
+        "NDA-03",
+        "NDA-04",
+        "NDA-05",
+        "NDA-06",
+        "NDA-07",
+        "NDA-08",
+        "NDA-09",
+        "NDA-10",
+        "NDA-21"
+      ]
+    },
+    {
+      "id": "CNS-END",
+      "label": "해제·해지 약정 확인",
+      "legacy_ids": [
+        "CMN-08",
+        "CMN-09"
+      ]
+    },
+    {
+      "id": "CNS-PRICE",
+      "label": "대가·산정 방식 확인",
+      "legacy_ids": [
+        "CMN-03",
+        "CMN-04",
+        "CH-01"
+      ]
+    },
+    {
+      "id": "CNS-TERM",
+      "label": "효력·기간 확인",
+      "legacy_ids": [
+        "CMN-06",
+        "CMN-07"
+      ]
+    },
+    {
+      "id": "CNS-IP",
+      "label": "산출물 권리·사용권 확인",
+      "legacy_ids": [
+        "CMN-17",
+        "ITDL-01"
+      ]
+    },
+    {
+      "id": "CNS-PRIVSCOPE",
+      "label": "개인정보 위탁 범위·목적 제한",
+      "legacy_ids": [
+        "PRIV-01",
+        "PRIV-02",
+        "PRIV-04",
+        "PRIV-14"
+      ]
+    },
+    {
+      "id": "CNS-PRIVSUB",
+      "label": "개인정보 재위탁 통제",
+      "legacy_ids": [
+        "PRIV-05",
+        "PRIV-15"
+      ]
+    },
+    {
+      "id": "CNS-PRIVNOTICE",
+      "label": "개인정보 위탁 사실 공개",
+      "legacy_ids": [
+        "PRIV-09",
+        "PRIV-10"
+      ]
+    },
+    {
+      "id": "CNS-LABOR",
+      "label": "수탁자 업무·인력 운영의 독립성",
+      "legacy_ids": [
+        "DIS-01",
+        "DIS-02",
+        "DIS-03"
+      ]
+    },
+    {
+      "id": "CNS-SALEDEFECT",
+      "label": "매매 목적물의 하자 구제",
+      "legacy_ids": [
+        "SP-DEL-09",
+        "SP-DEL-10",
+        "SP-DEL-11"
+      ]
+    },
+    {
+      "id": "CNS-SHCOMMIT",
+      "label": "핵심주주 경업·전업 의무",
+      "legacy_ids": [
+        "SH-EXIT-01",
+        "SH-EXIT-02"
+      ]
+    },
+    {
+      "id": "CORE-10",
+      "label": "점검·관리·시정 협조",
+      "legacy_ids": [
+        "CORE-13"
+      ]
+    }
+  ],
+  "inventory": "checklist_inventory_v188.json",
+  "stored_count": 206,
+  "active_count": 184,
+  "archived_count": 22,
+  "previous_after_count": 206,
+  "retired_ids": [
+    "CRS-03",
+    "FIN-SEC-01",
+    "FIN-SEC-05",
+    "ITDL-08",
+    "SH-ANT-01",
+    "SH-ANT-02",
+    "SOL-03",
+    "SP-DEL-04",
+    "SP-DEL-07"
+  ],
+  "execution_excluded_ids": [
+    "CORE-05",
+    "FIN-ASSET-04",
+    "INV-FUND-03",
+    "ITCL-04",
+    "PRIV-18",
+    "REL-02",
+    "REL-03",
+    "REL-09",
+    "SOL-01"
+  ],
+  "new_merges": [
+    {
+      "legacy_id": "CORE-13",
+      "id": "CORE-10",
+      "copy_old_pass": false
+    },
+    {
+      "legacy_id": "PRIV-08",
+      "id": "CNS-DAMAGE",
+      "copy_old_pass": false
+    },
+    {
+      "legacy_id": "NDA-15",
+      "id": "CNS-DAMAGE",
+      "copy_old_pass": false
+    },
+    {
+      "legacy_id": "SP-DEL-06",
+      "id": "CNS-DAMAGE",
+      "copy_old_pass": false
+    }
+  ],
+  "migration_note": "과거 238→206 통합의 before_count 및 replacements 계보는 보존한다. 현재 active_count는 실제 이행 제외·제품 제외·추가 통합을 뺀 수이며 자동판정 성공 수가 아니다."
+}

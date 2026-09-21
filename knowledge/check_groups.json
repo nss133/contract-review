@@ -1,0 +1,351 @@
+{
+  "version": "review-groups-v1",
+  "groups": [
+    {
+      "id": "DAMAGE",
+      "title": "손해배상·면책·지연책임의 합리성",
+      "action": "통합",
+      "members": [
+        "CMN-05-2",
+        "CMN-11",
+        "CMN-12",
+        "CMN-14",
+        "RISK-06",
+        "SP-DEL-02"
+      ],
+      "safeguard": "귀책·범위·상한·면책·지급지연·이행지연을 조건부 세부요건으로 보존. 약정이 없는 선택특약을 일률적으로 누락 처리하지 않음."
+    },
+    {
+      "id": "SECRET",
+      "title": "비밀정보 보호 범위·의무·존속기간",
+      "action": "통합",
+      "members": [
+        "CMN-15",
+        "CMN-16",
+        "NDA-01",
+        "NDA-02",
+        "NDA-03",
+        "NDA-04",
+        "NDA-05",
+        "NDA-06",
+        "NDA-07",
+        "NDA-08",
+        "NDA-09",
+        "NDA-10",
+        "NDA-21"
+      ],
+      "safeguard": "공통은 정의·기간 중심, NDA 유형에서만 보호의무·예외 세부요건 확장. 정의 존재만으로 기간·예외까지 충족시키지 않음."
+    },
+    {
+      "id": "END",
+      "title": "계약 종료 사유·절차의 합리성",
+      "action": "통합",
+      "members": [
+        "CMN-08",
+        "CMN-09",
+        "SP-UNF-09",
+        "SOL-02"
+      ],
+      "safeguard": "해지권 배분·시정·통지는 각각 근거 보존. 약관/모집 위탁 조건을 분리하고 하자해제권은 별도 구제수단에 유지."
+    },
+    {
+      "id": "EXIT",
+      "title": "종료 후 정산·반환·이관",
+      "action": "조건부 묶음",
+      "members": [
+        "CMN-10",
+        "NDA-12",
+        "CH-02"
+      ],
+      "safeguard": "정산, 비밀정보 파기, 고객보호는 서로 대체 불가. 적용되는 세부요건 전부를 확인해야 묶음 완료."
+    },
+    {
+      "id": "SCOPE",
+      "title": "계약 목적·수행 범위",
+      "action": "통합",
+      "members": [
+        "CMN-02",
+        "ALL-CORE-01",
+        "CORE-01"
+      ],
+      "safeguard": "제휴 역할과 위탁 업무범위를 유형별 하위요건으로 보존. 목적 문장만으로 실제 수행범위까지 충족시키지 않음."
+    },
+    {
+      "id": "PRICE",
+      "title": "대가 산정·지급·정산",
+      "action": "통합",
+      "members": [
+        "CMN-03",
+        "CMN-04",
+        "CH-01",
+        "INV-BEN-06",
+        "SETTLE-07"
+      ],
+      "safeguard": "산정식·지급조건·정산 근거는 별도 슬롯. 수수료/화해금 등 유형별 조건을 유지. VAT는 자동 확인 사실을 이 화면에 표시."
+    },
+    {
+      "id": "TERM",
+      "title": "계약기간·갱신",
+      "action": "통합",
+      "members": [
+        "CMN-06",
+        "CMN-07"
+      ],
+      "safeguard": "최초 기간과 갱신거절 기한은 다른 사실. 기간 자동확인 결과를 갱신 공정성 판정으로 확대하지 않음."
+    },
+    {
+      "id": "IP",
+      "title": "산출물 권리·인도·사용 가능성",
+      "action": "조건부 묶음",
+      "members": [
+        "CMN-17",
+        "ITDL-01",
+        "ITDL-02"
+      ],
+      "safeguard": "저작권 귀속과 소스 인도/에스크로는 대체 불가. 인도가 필요한 계약만 하위요건 활성화."
+    },
+    {
+      "id": "LICENSE",
+      "title": "제3자 권리·라이선스 대응",
+      "action": "조건부 묶음",
+      "members": [
+        "CMN-18",
+        "ITDL-07"
+      ],
+      "safeguard": "침해 시 방어·책임과 오픈소스 이용조건을 구별. 손해배상 일반조항만으로 라이선스 준수 충족 불가."
+    },
+    {
+      "id": "PRIVSCOPE",
+      "title": "개인정보 위탁 범위·목적 제한",
+      "action": "통합",
+      "members": [
+        "PRIV-01",
+        "PRIV-02",
+        "PRIV-04",
+        "PRIV-14"
+      ],
+      "safeguard": "위탁 문서화, 범위 특정, 목적 외 처리/제공 금지를 모두 보존. 제3자 제공과 혼합하지 않음."
+    },
+    {
+      "id": "PRIVSEC",
+      "title": "개인정보 안전조치",
+      "action": "조건부 묶음",
+      "members": [
+        "PRIV-03",
+        "PRIV-06",
+        "PRIV-19"
+      ],
+      "safeguard": "안전조치 총칙으로 접근통제·신용정보 암호화까지 충족시키지 않음. 정보종류별 조건 보존."
+    },
+    {
+      "id": "PRIVMON",
+      "title": "수탁자 교육·점검·감독",
+      "action": "조건부 묶음",
+      "members": [
+        "PRIV-07",
+        "PRIV-13",
+        "PRIV-20"
+      ],
+      "safeguard": "감독권, 교육, 실제 점검/안전처리 책임을 보존. 신용정보 조건은 독립 활성화."
+    },
+    {
+      "id": "PRIVSUB",
+      "title": "개인정보 재위탁 통제",
+      "action": "통합",
+      "members": [
+        "PRIV-05",
+        "PRIV-15"
+      ],
+      "safeguard": "재위탁 제한과 동의 요건을 한 질문에 표시. 신용정보 재위탁(PRIV-21)은 별도 규칙 유지."
+    },
+    {
+      "id": "PRIVNOTICE",
+      "title": "위탁 사실 공개",
+      "action": "통합",
+      "members": [
+        "PRIV-09",
+        "PRIV-10"
+      ],
+      "safeguard": "공개 내용과 공개 수단을 세부요건으로 유지. 홍보 통지/감독기관 통지는 별도."
+    },
+    {
+      "id": "OUTSUB",
+      "title": "업무 재위탁 동의·보고",
+      "action": "조건부 묶음",
+      "members": [
+        "CORE-07",
+        "CORE-08",
+        "ITSEC-11"
+      ],
+      "safeguard": "당사자 동의와 감독 보고는 대체 불가. 업무/전산 위탁 적용조건 및 보고 주체 유지."
+    },
+    {
+      "id": "OUTAUDIT",
+      "title": "감독·검사·시정 협조",
+      "action": "조건부 묶음",
+      "members": [
+        "CORE-10",
+        "CORE-13",
+        "CORE-14"
+      ],
+      "safeguard": "회사 감독권과 감독기관 검사권을 분리. 변경권고 협조도 고유 요건 유지."
+    },
+    {
+      "id": "LABOR",
+      "title": "수탁자 인력 운영의 독립성",
+      "action": "통합",
+      "members": [
+        "DIS-01",
+        "DIS-02",
+        "DIS-03"
+      ],
+      "safeguard": "직접 명령, 지시 창구, 인사노무 권한을 하위 질문으로 보존. 계약 문구로 실제 운영 적법성을 확정하지 않음."
+    },
+    {
+      "id": "CONTINUITY",
+      "title": "중단 대응·백업·업무연속성",
+      "action": "조건부 묶음",
+      "members": [
+        "ITCL-03",
+        "ITSEC-06",
+        "ITSEC-08"
+      ],
+      "safeguard": "비상대응과 복구/백업을 별도 확인. 클라우드의 안전성 요건을 단순 백업 유무로 축소하지 않음."
+    },
+    {
+      "id": "VENDOR",
+      "title": "수탁자 건전성·서비스 평가",
+      "action": "조건부 묶음",
+      "members": [
+        "ITCL-02",
+        "ITSEC-09",
+        "ITSEC-10"
+      ],
+      "safeguard": "최초 안전성 평가와 정기 재무/품질평가 주기·대상을 유지."
+    },
+    {
+      "id": "SECOPS",
+      "title": "보안관리·검토·점검",
+      "action": "조건부 묶음",
+      "members": [
+        "ITSEC-07",
+        "ITSEC-13"
+      ],
+      "safeguard": "개발단계별 관리와 보안성검토/정기점검은 별도 근거 필요. 보안약정 제목만으로 통과 불가."
+    },
+    {
+      "id": "UNFAIR",
+      "title": "부당특약·불공정 약관",
+      "action": "조건부 묶음",
+      "members": [
+        "SP-UNF-01",
+        "SP-UNF-02",
+        "SP-UNF-05",
+        "SP-UNF-06"
+      ],
+      "safeguard": "하도급 특약과 약관 규율의 적용조건을 보존. 전반 점검은 구체적 위반 결과를 요약하고 같은 판정을 반복 요구하지 않음."
+    },
+    {
+      "id": "DEFECT",
+      "title": "도급 하자·불완전이행 구제",
+      "action": "조건부 묶음",
+      "members": [
+        "SP-DEL-05",
+        "SP-DEL-06",
+        "SP-DEL-07",
+        "SP-DEL-08",
+        "SP-DEL-12"
+      ],
+      "safeguard": "보수·배상·해제·기간은 대체 불가. 도급/위임 성격별 분기 유지; 이행보증보험 항목은 복원하지 않음."
+    },
+    {
+      "id": "SALEDEFECT",
+      "title": "매매 하자 구제·기간",
+      "action": "통합",
+      "members": [
+        "SP-DEL-09",
+        "SP-DEL-10",
+        "SP-DEL-11"
+      ],
+      "safeguard": "완전물 청구와 행사기간 보존. 도급 하자 묶음과 별도 계약 성격 분기."
+    },
+    {
+      "id": "FORCE",
+      "title": "위험부담·불가항력 처리",
+      "action": "조건부 묶음",
+      "members": [
+        "SP-DEL-03",
+        "SP-DEL-03-2",
+        "SP-DEL-04"
+      ],
+      "safeguard": "무귀책 위험, 불가항력 사후처리, 채권자 귀책을 구별. 동일 결과로 일괄 판정하지 않음."
+    },
+    {
+      "id": "SUBPAY",
+      "title": "하도급 지급기한·지연 처리",
+      "action": "조건부 묶음",
+      "members": [
+        "SP-PAY-01",
+        "SP-PAY-02",
+        "SP-PAY-03",
+        "SP-PAY-06"
+      ],
+      "safeguard": "기산점·간주기일·수령 후 지급·지연이자를 각각 유지. 일반 지연이자 약정과 자동 대체 불가."
+    },
+    {
+      "id": "LOANINT",
+      "title": "대출 이자·지연손해금",
+      "action": "조건부 묶음",
+      "members": [
+        "FIN-LOAN-02",
+        "FIN-LOAN-03",
+        "FIN-LOAN-04"
+      ],
+      "safeguard": "약정이율/기산일/상한/연체이율을 분리. 비율 존재만으로 상한 적합성 자동판정 금지."
+    },
+    {
+      "id": "SETTLESCOPE",
+      "title": "화해 범위·권리 포기의 합리성",
+      "action": "조건부 묶음",
+      "members": [
+        "SETTLE-03",
+        "SETTLE-05",
+        "SETTLE-06",
+        "RISK-SET-01"
+      ],
+      "safeguard": "정산범위·부제소·포기는 효과가 달라 각각 기록. 알려지지 않은 권리까지 포괄 포기하는 위험 유지."
+    },
+    {
+      "id": "SHAPPROVE",
+      "title": "주식 양도 승인·효력·우선매수 절차",
+      "action": "조건부 묶음",
+      "members": [
+        "SH-SHARE-01",
+        "SH-SHARE-02",
+        "SH-SHARE-04",
+        "SH-SHARE-05"
+      ],
+      "safeguard": "정관 제한, 미승인 효력, 승인/우선매수 순서와 절차 보존. tag/drag는 독립 유지."
+    },
+    {
+      "id": "SHCOMMIT",
+      "title": "핵심주주 경업·전업 의무",
+      "action": "통합",
+      "members": [
+        "SH-EXIT-01",
+        "SH-EXIT-02"
+      ],
+      "safeguard": "경업금지 범위·기간과 전업/겸직 의무를 구별. 퇴사 시 정산은 독립 유지."
+    },
+    {
+      "id": "INVNOTICE",
+      "title": "투자자 공시·통지",
+      "action": "조건부 묶음",
+      "members": [
+        "INV-BEN-04",
+        "INV-BEN-07"
+      ],
+      "safeguard": "규약 변경 공시와 일반 통지의 대상·시점·수단 보존. 변경 결의나 반대권까지 대체하지 않음."
+    }
+  ]
+}

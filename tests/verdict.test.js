@@ -145,7 +145,8 @@ test("bulkVerdictComment: 잘못된 verdict는 무시(원본 반환)", () => {
 test("구 보안약정 자동문구는 실제 체결 확인 없는 현행 문구로 이관한다", () => {
   const old = "표준 개인(신용)정보 보안관리약정서(2025.01) 체결로 반영 — 별첨 체결·간인 확인";
   const migrated = V.migrateStore({ "PRIV-01": { verdict: "이상없음", comment: old, origin: "subdoc" } });
-  assert.strictEqual(migrated["PRIV-01"].comment, AUTO);
+  assert.strictEqual(migrated["PRIV-01"].verdict, "");
+  assert.strictEqual(migrated["PRIV-01"].safety_hold.previous.comment, AUTO);
 });
 
 test("revertBulkVerdict: 자동 기재분(판정·코멘트 원형)만 제거", () => {
@@ -350,23 +351,24 @@ test("setReason: 이상없음일 때만 사유가 붙는다", () => {
 });
 
 // ── 자동 기재 origin(2026-08-19, 참고 항목 자동 완료) ──────────────
-test("origin 'auto': 보존되고, 원형 그대로면 revertBulkVerdict로 회수된다", () => {
+test("origin 'auto': 보류 이력은 보존되고 사람 확인은 독립 판정이 된다", () => {
   const CMT = "참고 항목 — 관련 문구가 계약서에서 확인되어 자동 기재됨";
   const fill = V.bulkVerdictComment({}, ["R1", "R2"], "이상없음", CMT, "2026-08-20", "반영되어 있음", "auto");
   assert.strictEqual(fill.store.R1.origin, "auto");
-  assert.strictEqual(fill.store.R1.reason, "반영되어 있음");
+  assert.strictEqual(fill.store.R1.verdict, "");
+  assert.strictEqual(fill.store.R1.safety_hold.previous.reason, "반영되어 있음");
   // 사람이 코멘트를 손댄 항목은 회수되지 않음
   const touched = V.setVerdict(fill.store, "R2", "이상없음", "확인함", "2026-08-20", "반영되어 있음");
   const rm = V.revertBulkVerdict(touched, ["R1", "R2"], "이상없음", CMT);
-  assert.strictEqual(rm.removed, 1);
-  assert.ok(!rm.store.R1 && rm.store.R2);
+  assert.strictEqual(rm.removed, 0);
+  assert.ok(rm.store.R1.safety_hold && rm.store.R2.verdict === "이상없음");
 });
 
 test("canAutoPass: 복합 체크의 auto_verdict false는 증거 확정 후에도 자동판정 차단", () => {
   const addressed = { coverage: "addressed", autoClear: { ok: true } };
-  assert.ok(V.canAutoPass({ severity: "참고" }, addressed));
-  assert.ok(V.canAutoPass({ severity: "참고", auto_clear: {} }, addressed));
-  assert.ok(V.canAutoPass({ severity: "권장" }, addressed));
+  assert.ok(!V.canAutoPass({ severity: "참고" }, addressed));
+  assert.ok(!V.canAutoPass({ severity: "참고", auto_clear: {} }, addressed));
+  assert.ok(!V.canAutoPass({ severity: "권장" }, addressed));
   assert.ok(!V.canAutoPass({ severity: "필수" }, addressed));
   assert.ok(!V.canAutoPass({ severity: "참고", auto_verdict: false }, addressed));
   assert.ok(!V.canAutoPass({ severity: "권장" }, { coverage: "addressed", autoClear: { ok: false } }));
@@ -375,10 +377,10 @@ test("canAutoPass: 복합 체크의 auto_verdict false는 증거 확정 후에�
   assert.ok(!V.canAutoPass({ severity: "참고" }, { coverage: "verify", autoClear: { ok: true } }));
 });
 
-test("canAutoPass: 참고 항목의 보수적 회사관점 통과는 auto_clear와 별도로 인정", () => {
+test("canAutoPass: 회사관점 신호도 관찰 모드의 안전 관문을 우회하지 않는다", () => {
   const favorable = { coverage: "addressed", autoClear: { ok: false },
     perspective: { auto_pass: true } };
-  assert.ok(V.canAutoPass({ severity: "참고", auto_clear: {} }, favorable));
+  assert.ok(!V.canAutoPass({ severity: "참고", auto_clear: {} }, favorable));
   assert.ok(!V.canAutoPass({ severity: "참고", auto_clear: {}, auto_verdict: false }, favorable));
   assert.ok(!V.canAutoPass({ severity: "권장", auto_clear: {} }, favorable));
 });

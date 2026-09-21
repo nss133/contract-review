@@ -17,16 +17,17 @@ def test_curated_tag_signatures_are_attached_and_valid():
         for cp in doc["checks"]
     }
     assert knowledge["tag_taxonomy"]["profile_version"] == "1.1.0"
-    assert checks["PRIV-15"]["tag_signature"]["modalities"] == ["prior_consent"]
-    assert checks["NDA-06"]["tag_signature"]["status"] == "curated"
+    assert checks["CNS-PRIVSUB"]["tag_signature"]["modalities"] == ["prior_consent"]
+    assert checks["CNS-SECRET"]["tag_signature"]["status"] == "candidate"
 
 
 def test_initial_curated_scope_is_explicit_not_all_checks():
     knowledge = load_knowledge(ROOT / "knowledge")
     all_checks = [cp for doc in [knowledge["common"], *knowledge["types"]] for cp in doc["checks"]]
     curated = [cp for cp in all_checks if cp.get("tag_signature", {}).get("status") == "curated"]
-    assert len(all_checks) == 240
-    assert len(curated) == 16
+    assert len(all_checks) == 206
+    assert not {"SP-DEL-08-2", "RISK-02"} & {cp["id"] for cp in all_checks}
+    assert len(curated) == 6
 
 
 def test_vendor_taxonomy_matches_local_registry():
@@ -41,8 +42,8 @@ def test_vendor_taxonomy_matches_local_registry():
         }
 
 
-def test_candidate_generator_covers_all_240_checks_without_overwriting_curated_source():
+def test_candidate_generator_covers_all_active_checks_without_overwriting_curated_source():
     generated = generate(ROOT / "knowledge")
-    assert len(generated["checks"]) == 240
-    assert generated["checks"]["PRIV-15"]["status"] == "candidate"
-    assert "subcontracting" in generated["checks"]["PRIV-15"]["topics"]
+    assert len(generated["checks"]) == 206
+    assert generated["checks"]["CNS-PRIVSUB"]["status"] == "candidate"
+    assert "subcontracting" in generated["checks"]["CNS-PRIVSUB"]["topics"]

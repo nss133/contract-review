@@ -6,8 +6,8 @@ detect_expected: procurement
 # 2026-07-28 사용자 게이트: FIN-SEC-02·FIN-SEC-03의 absence_precondition을 "설정" 결합형으로
 # 좁혀 오탐 해소 — "임대보증금 반환청구권을 질권... 제공할 수 없다"(설정 금지 조항)·
 # "[근저당권/전세권 설정용] 첨부서류"(조건부 안내문)가 실제 담보설정 문언으로 오매칭되던
-# 문제 교정. SP-DEL-09(absence_precondition 신설)도 함께 해소 — 재발 방지 고정.
-consider_must_exclude: [FIN-SEC-02, FIN-SEC-03, SP-DEL-09]
+# 문제 교정. CNS-SALEDEFECT(absence_precondition 신설)도 함께 해소 — 재발 방지 고정.
+consider_must_exclude: [FIN-SEC-02, FIN-SEC-03, CNS-SALEDEFECT]
 text: "관리번호\n사옥임대지침 - 별첨 제1호 (2011. 01. 01 제정시행)\n서 식 명\n임대차계약서\n계약서 작성 요령\n\n\n\n\
   \  1. 이 계약서는 회사의 표준계약서로서 필요에 따라 임차인의 요구사항에 대하여\n     사옥임대지침의 요건 범위 내에서 추가로 반영 하거나\
   \ 수정, 삭제 등을 할\n     수 있다.\n\n2. 표준계약서의 내용 중 “              ” 안에 해당 하는 내용은 임대차계약\n\

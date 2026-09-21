@@ -3,7 +3,7 @@ id: corpus-semantic-decoys
 desc: 계약당사자 변경·일반해지·일반손해배상 — 조달 특수쟁점 오부착 금지
 force_type: procurement
 force_active_modules: [M-DELIVERY]
-matched_must_exclude: [SP-DEL-03, SP-DEL-05, SP-DEL-07, SP-DEL-08, SP-DEL-10, ITDL-06]
+matched_must_exclude: [SP-DEL-03, SP-DEL-05, SP-DEL-07, SP-DEL-08, CNS-SALEDEFECT, ITDL-06]
 text: |
   일반 용역계약서
 

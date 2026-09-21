@@ -4,7 +4,7 @@ id: mal-sponsor
 desc: 사내표준 후원약정 — 표준서식 회귀(사내표준층)
 detect_expected: alliance
 # 2026-07-28 사용자 게이트: alliance detect_keywords 보강("후원"·"후원계약"·"후원약정")으로
-# procurement 오분류 해소 — 재발 방지 고정. SP-DEL-02·SP-DEL-09(M-DELIVERY 전속, alliance
+# procurement 오분류 해소 — 재발 방지 고정. CNS-DAMAGE·CNS-SALEDEFECT(M-DELIVERY 전속, alliance
 # 재분류 후 모듈 자체 비활성)는 하위파생으로 자동 소멸 확인.
 active_must_exclude: [M-DELIVERY]
 text: "<포럼, 시상, 박람회용>\n<포럼, 시상, 박람회용>\n\n\n\n\n\n\n\n\n\n\n갑: 미래에셋생명보험㈜\n을: OOOOOOOOOOOO\n\

@@ -1,8 +1,7 @@
 "use strict";
 /* 법률검토의견 전건 태깅자료 저장소.
-   legal-opinion-tagger의 6시트 XLSX 중 중복 원문 시트를 제외한 구조화 시트를 읽어
-   앱 버전과 독립된 IndexedDB에 보존한다. 자동판정 규칙은 바꾸지 않고, 향후
-   유형·적용범위·체크 매핑의 shadow 분석 기반만 제공한다. */
+   태거 XLSX의 구조화 시트와 원본 시트를 읽어 앱 버전과 독립된 IndexedDB에 보존한다.
+   HistoryAssist가 내용 중심 후보를 제한적으로 보강하며 과거 판정을 승계하지 않는다. */
 var LegalOpinionKnowledge = (function () {
   var FORMAT = "cr-legal-opinion-knowledge-v1";
   var SCHEMA_VERSION = 1;
@@ -11,7 +10,7 @@ var LegalOpinionKnowledge = (function () {
   var STORE_NAME = "knowledge";
   var RECORD_KEY = "legal-opinion-corpus";
   var REQUIRED_SHEETS = ["문서대장", "문서별태그", "태그정본", "태그별근거", "태그연결성"];
-  var LOAD_SHEETS = REQUIRED_SHEETS.concat(["문서별관계"]);
+  var LOAD_SHEETS = REQUIRED_SHEETS.concat(["문서별관계", "원본+태깅결과", "계약서 검토"]);
 
   function nowIso() { return new Date().toISOString(); }
   function clone(value) { return JSON.parse(JSON.stringify(value)); }
@@ -114,7 +113,7 @@ var LegalOpinionKnowledge = (function () {
       throw new Error(relationName + " 시트에 연결 점수 열이 없습니다");
   }
 
-  function datasetFromTables(tables, sourceMeta) {
+  function datasetFromTables(tables, sourceMeta, historyDataset) {
     requireColumns(tables);
     var canonical = {}, byDocument = {}, evidenceByDocument = {}, relationsByDocument = {};
     rowsToObjects(tables["태그정본"]).forEach(function (row) {
@@ -128,6 +127,7 @@ var LegalOpinionKnowledge = (function () {
       if (!documentId || !tagId) return;
       if (!byDocument[documentId]) byDocument[documentId] = [];
       byDocument[documentId].push({ rank: Number(row["순위"] || 0), tag_id: tagId,
+        layer: text(row["태그 계층"]), origin: text(row["생성 방식"]),
         hashtag: text(row["해시태그"]), label: text(row["정규 태그명"]), status: text(row["후보 상태"]),
         type: text(row["유형"]), score: Number(row["점수"] || 0), confidence: text(row["신뢰도"]),
         sources: sourceList(row["출처"]), occurrences: Number(row["등장 횟수"] || 0) });
@@ -154,6 +154,11 @@ var LegalOpinionKnowledge = (function () {
       var sourceId = text(row["문서 ID"]) || "ROW-" + (index + 2);
       var doc = { source_id: sourceId, source_row: Number(row["원본 행"] || 0),
         title: firstText(row, ["대표 계약명", "제목", "결과 계약명", "신청 계약명"]),
+        request_context: firstText(row, ["계약배경 및 요청내용", "신청내용"]),
+        request_title: text(row["신청 계약명"]), result_title: text(row["결과 계약명"]),
+        request_privacy: text(row["신청 개인정보 제공·(재)위탁"]),
+        result_privacy: text(row["결과 개인정보 제공·(재)위탁"]),
+        request_outsourcing: text(row["신청 업무위탁"]), result_outsourcing: text(row["결과 업무위탁"]),
         date: firstText(row, ["신청 작성일", "작성일"]), processed_date: firstText(row, ["결과 작성일", "처리일"]),
         department: firstText(row, ["결과 신청부서", "신청부서"]),
         case_type: firstText(row, ["결과 유형", "신청 유형", "유형"]), case_type_detail: text(row["유형2"]), review_type: text(row["검토유형"]),
@@ -161,8 +166,32 @@ var LegalOpinionKnowledge = (function () {
         process_status: text(row["처리 상태"]), review_reason: text(row["검토 사유"]), engine_version: text(row["엔진 버전"]),
         tags: (byDocument[sourceId] || []).sort(function (a, b) { return a.rank - b.rank; }),
         evidence: evidenceByDocument[sourceId] || [], relations: relationsByDocument[sourceId] || [] };
-      doc.fingerprint = hashString(JSON.stringify([doc.title, doc.date, doc.department, doc.case_type,
+      // 같은 통합문서의 행 위치와 계약명이 모두 일치할 때만 원본 필드를 연결한다.
+      var originals = historyDataset && historyDataset.diagnostics.source_layout !== "document_ledger" ?
+        historyDataset.records.filter(function (r) {
+          return r.source_row === doc.source_row && [r.request.contract_name, r.result.contract_name]
+            .filter(Boolean).some(function (name) {
+              return [doc.title, doc.request_title, doc.result_title].indexOf(name) !== -1;
+            });
+        }) : [];
+      if (originals.length === 1) {
+        var original = originals[0];
+        doc.original = { request: clone(original.request), result: clone(original.result),
+          conflicts: clone(original.conflicts), review_id: original.review_id };
+        doc.request_title = original.request.contract_name || doc.request_title;
+        doc.result_title = original.result.contract_name || doc.result_title;
+        doc.request_context = original.request.context || original.request.request_content || doc.request_context;
+      }
+      doc.fingerprint = hashString(JSON.stringify([doc.original || null, doc.request_context, doc.request_title, doc.result_title,
+        doc.request_privacy, doc.result_privacy, doc.request_outsourcing, doc.result_outsourcing,
+        doc.title, doc.date, doc.department, doc.case_type,
         doc.case_type_detail, doc.review_type, doc.engine_version, doc.tags, doc.evidence, doc.relations]));
+      doc.tagger_document_id = sourceId;
+      doc.id_quality = /^ROW-\d+$/i.test(sourceId) ? "provisional" : "source";
+      if (doc.id_quality === "provisional") {
+        doc.source_id = "LOCAL-" + hashString(String((sourceMeta || {}).fingerprint ||
+          (sourceMeta || {}).file_name || doc.fingerprint) + "|" + sourceId);
+      }
       return doc;
     });
     return { source: sourceMeta || {}, tags: canonical, documents: documents };

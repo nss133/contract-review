@@ -3,7 +3,7 @@ id: corpus-semantic-positive
 desc: 위험부담·하자구제·하자기간·완전물·SLA 진성 근거 보존
 force_type: procurement
 force_active_modules: [M-DELIVERY]
-shown_must_include: [SP-DEL-03, SP-DEL-05, SP-DEL-07, SP-DEL-08, SP-DEL-10, ITDL-06]
+shown_must_include: [SP-DEL-03, SP-DEL-05, SP-DEL-07, SP-DEL-08, CNS-SALEDEFECT, ITDL-06]
 text: |
   시스템 납품계약서
 

@@ -62,6 +62,11 @@ checks:
         verified: true
         source_type: law
     note: "화해의 창설적 효력·부제소 효과는 '분쟁이 된 법률관계'의 범위에 미침. 대상 분쟁이 불특정이면 효력 범위 다툼이 발생. 묵시적 화해는 엄격해석됨 — 대법원 2021. 9. 9. 선고 2016다203933 판결(원문확인): '화해계약이 성립하기 위해서는 분쟁이 된 법률관계에 관하여 당사자 쌍방이 서로 양보함으로써 분쟁을 끝내기로 하는 의사의 합치가 있어야 하는데, 화해계약이 성립한 이후에는 그 목적이 된 사항에 관하여 나중에 다시 이행을 구하는 등으로 다툴 수 없는 것이 원칙'. 대상·범위의 명시가 중요. 주주간계약의 SH-SET-01(화해 상호양보·종결) 흡수(2026-07-29 지식 다이어트 G10) — §731 성립요건 판정은 본 항·SETTLE-02가 커버."
+    active: true
+    disposition: keep
+    meaning_revision: 1.87.0
+    judgment_level: clarity
+    judgment_scope: module
   - id: SETTLE-02
     module: M-SETTLE
     check: 당사자 상호의 양보 내용(각자 무엇을 포기·인정하는지)이 기재되어 있는가
@@ -81,6 +86,11 @@ checks:
         verified: true
         source_type: law
     note: "'상호양보'가 없으면 §731의 화해가 아니라 편면적 채무면제(§506)·권리포기로 성질결정될 수 있어 창설적 효력·착오취소 제한 법리가 적용되지 않을 수 있음."
+    active: true
+    disposition: keep
+    meaning_revision: 1.87.0
+    judgment_level: clarity
+    judgment_scope: module
   - id: SETTLE-03
     module: M-SETTLE
     check: 화해로 종전 권리관계가 소멸하고 새 법률관계가 창설된다는 취지(창설적 효력)가 반영되어 정산 범위가 특정되어 있는가
@@ -100,6 +110,11 @@ checks:
         verified: true
         source_type: law
     note: "화해 성립 후에는 종전 법률관계를 다시 다툴 수 없음(창설적 효력) — 대법원 2020. 10. 15. 선고 2020다227523,227530 판결(원문확인): '화해계약이 성립되면 특별한 사정이 없는 한 그 창설적 효력에 따라 종전의 법률관계를 바탕으로 한 권리의무관계는 소멸하고, 계약 당사자 사이에 종전의 법률관계가 어떠하였는지를 묻지 않고 화해계약에 따라 새로운 법률관계가 생긴다'. 정산 범위를 명확히 특정하지 않으면 어느 권리가 소멸했는지 분쟁 재발. 주주간계약의 SH-SET-02(화해 창설적 효력) 흡수(2026-07-29 지식 다이어트 G10, cos 0.40)."
+    active: true
+    disposition: keep
+    meaning_revision: 1.87.0
+    judgment_level: clarity
+    judgment_scope: module
   - id: SETTLE-04
     module: M-SETTLE
     check: 착오취소 제한(§733)을 고려하여, 화해의 전제·기초가 된 사실(분쟁 외 사항)을 명확히 기재하였는가
@@ -118,6 +133,12 @@ checks:
         verified: true
         source_type: law
     note: "분쟁 자체(화해 목적)에 관한 착오는 취소 불가(§733 본문). 다만 '분쟁의 전제·기초로서 다툼 없이 양해된 사항'의 착오는 취소 가능(단서) — 대법원 2020. 10. 15. 선고 2020다227523,227530 판결(원문확인): '화해의 목적인 분쟁 이외의 사항이라 함은 분쟁의 대상이 아니라 분쟁의 전제 또는 기초가 된 사항으로서, 쌍방 당사자가 예정한 것이어서 상호 양보의 내용으로 되지 않고 다툼이 없는 사실로 양해된 사항을 말한다'. 전제사실을 명시하면 분쟁 외 사항 착오 다툼을 줄임. 주주간계약의 SH-SET-03(화해 착오취소 제한, 필수) 흡수(2026-07-29 지식 다이어트 G10) — 흡수 후 본 항의 권장 유지(사용자 결정: §733 착오취소는 임의규정 법리로 강행 이행체크가 아니므로 필수→권장이 정합)."
+    active: true
+    disposition: keep
+    meaning_revision: 1.87.0
+    judgment_level: clarity
+    judgment_scope: module
+
   # ── M-SETTLE: 부제소·청구권 처리 ──
   - id: SETTLE-05
     module: M-SETTLE
@@ -138,6 +159,11 @@ checks:
       부제소특약의 문언이 불명확하면 그 범위(합의 이전 사유·계속 중 소송 포함 여부 등)를 엄격히 해석함 — 대법원 2025. 5. 29. 선고 2024다256932 판결(원문확인): "부제소합의는 소송당사자에게 헌법상 보장된 재판청구권의 포기와 같은 중대한 소송법상의 효과를 발생시키는 것이다"(합의 당시 계속 중이던 소송에까지 효력이 미친다고 보기 어렵다고 판시). 대상 청구·기준시점·계속 중 소송 포함 여부를 명확히 특정할 것. 부제소 의무가 회사에만(또는 회사에 광범위하게) 부과되는 편면 구조인지도 확인(회사 리스크 관점).
       ※ '부제소합의는 특정한 법률관계에 한정되고 당사자가 예상할 수 있는 상황이어야 유효하다'는 확립된 법리가 있으나, 본 지식화 시점에 원문 대조를 완료하지 못하여 판례 source로 등재하지 않음(미확인).
       주주간계약의 SH-SET-04(부제소 특약 범위) 흡수(2026-07-29 지식 다이어트 G10) — 부제소·청구권 포기 범위 특정은 본 항·SETTLE-06이 커버.
+    active: true
+    disposition: keep
+    meaning_revision: 1.87.0
+    judgment_level: clarity
+    judgment_scope: module
   - id: SETTLE-06
     module: M-SETTLE
     check: 청구권 포기(권리 포기)의 대상과 범위가 특정되어 있는가(포괄적 포기는 해석상 제한될 수 있음)
@@ -152,6 +178,12 @@ checks:
     absence_check: false
     sources: []
     note: "포괄적·전면적 청구권 포기는 그 범위를 두고 다툼이 생기며, 채권 포기 인정은 엄격 해석됨 — 대법원 2020. 10. 15. 선고 2020다227523,227530 판결(원문확인): '채무의 면제는 반드시 명시적인 의사표시만에 의하여야 하는 것이 아니고 채권자의 어떠한 행위 내지 의사표시의 해석에 의하여 그것이 채권의 포기라고 볼 수 있는 경우에도 이를 인정하여야 하나, 그와 같이 인정하기 위해서는 당해 권리관계의 내용에 따라 이에 대한 채권자의 행위 내지 의사표시의 해석을 엄격히 하여 적용 여부를 결정하여야 한다'. 포기 대상 채권·범위를 열거·특정할 것. 주주간계약의 SH-SET-04(부제소 특약 범위) 흡수분의 청구권 포기 측면은 본 항이 커버(2026-07-29 지식 다이어트 G10)."
+    active: true
+    disposition: keep
+    meaning_revision: 1.87.0
+    judgment_level: clarity
+    judgment_scope: module
+
   # ── M-SETTLE-PAY: 화해금 지급 ──
   - id: SETTLE-07
     module: M-SETTLE-PAY
@@ -167,6 +199,11 @@ checks:
     absence_check: true
     sources: []
     note: 화해가 금전지급을 수반하면 금액·기한·방법·분할여부를 특정. 지급이 화해의 이행조건이면 미이행 시 효과(SETTLE-08)와 연계.
+    active: true
+    disposition: keep
+    meaning_revision: 1.87.0
+    judgment_level: clarity
+    judgment_scope: module
   - id: SETTLE-08
     module: M-SETTLE-PAY
     check: 화해금 불이행 시 효과(기한이익 상실·지연손해금·해제·부제소 효력 유지 여부 등)가 규정되어 있는가
@@ -180,6 +217,12 @@ checks:
     absence_check: false
     sources: []
     note: 화해금 미지급이 화해 자체의 해제사유인지, 아니면 화해는 유지되고 지급의무만 강제되는지를 명확히 할 것. 공정증서(집행권원) 작성 여부도 실무상 고려.
+    active: true
+    disposition: keep
+    meaning_revision: 1.87.0
+    judgment_level: clarity
+    judgment_scope: module
+
   # ── M-SETTLE-CAP: 당사자·처분권한 ──
   - id: SETTLE-09
     module: M-SETTLE-CAP
@@ -199,6 +242,12 @@ checks:
         verified: true
         source_type: law
     note: 화해당사자의 자격에 관한 착오는 §733 단서상 취소 가능 사유. 대리인 체결 시 위임범위(화해·청구권 포기 권한 포함 여부), 법인은 대표권·내부수권을 확인. 처분권한 없는 자의 권리 포기는 효력 문제 발생.
+    active: true
+    disposition: keep
+    meaning_revision: 1.87.0
+    judgment_level: appropriateness
+    judgment_scope: module
+
   # ── 회사 리스크(⑤ C4 신설) ──
   - id: RISK-SET-01
     module: M-SETTLE
@@ -214,3 +263,8 @@ checks:
     absence_check: false
     sources: []
     note: "회사가 포기측이면 '일체의 청구권 포기'는 화해대상 외 별개 채권·구상권·미확정 손해까지 상실시킬 수 있음(창설적 효력·부제소 효과가 포괄범위에 미침). 포기대상을 화해 분쟁으로 한정·열거하고, 회사가 보유·유보할 권리(별건 구상권 등)를 명시적으로 제외할 것. SETTLE-06과 방향 반대(SETTLE-06은 상대방 포기의 특정성, 본항은 회사 포기의 과다 방지)."
+    active: true
+    disposition: keep
+    meaning_revision: 1.87.0
+    judgment_level: appropriateness
+    judgment_scope: module

@@ -1,0 +1,20 @@
+{
+  "source": "dist/contract-review.html",
+  "source_sha256": "33334e83db5aa8191f2406d9316c02ba6164f989859f3301f21b5848adaf31cb",
+  "prototype_sha256": "3e375001d92d12420337da32242de9154461b460673278d4e7574420d486e8e3",
+  "original_script_blocks": 5,
+  "original_script_hashes": [
+    "d5b233953ce5e847a81e38e51ebc427c3c69963fd10c75bb71c53db442c14040",
+    "fde2ae4d21b6de38eeecaee39f552d390d02bb89f206389720f7357eaf58bb25",
+    "38cde5311957b86bc3669f93e7d2566de333a90055ed6635bef60d9bf00e96f2",
+    "9aadd864d998dbe6fbec094521ff40ad8e86aefacdf420b46d363c45c6094867",
+    "28b521e23ec591e471b89bb18ef105c0a4d18e9568b4918d7403113346d2a2e9"
+  ],
+  "original_document_byte_preserved": true,
+  "added_files": [
+    "preserved-ui.css",
+    "preserved-ui.js"
+  ],
+  "source_bytes": 5797513,
+  "prototype_bytes": 5813116
+}

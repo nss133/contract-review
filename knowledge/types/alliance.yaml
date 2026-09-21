@@ -24,6 +24,11 @@ checks:
       keywords: [역할, 분담, 협력 범위, 상호]
     absence_check: false
     sources: []
+    active: true
+    disposition: keep
+    meaning_revision: 1.87.0
+    judgment_level: clarity
+    judgment_scope: module
   - id: ALL-CORE-02
     check: 협약(MOU)의 법적 구속력 유무(구속력 있는 조항과 없는 조항)가 명확한가
     label: "MOU 구속력 명확화"
@@ -38,5 +43,11 @@ checks:
     evidence_required_groups: [[법적 구속력, 구속력, 법적 효력]]
     absence_check: false
     sources: []
+    active: true
+    disposition: keep
+    meaning_revision: 1.87.0
+    judgment_level: clarity
+    judgment_scope: module
+
 
   # ── M-PII 개인정보 제공·공동이용 ─────────────────────────────

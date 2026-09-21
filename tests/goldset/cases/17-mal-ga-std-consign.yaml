@@ -5,7 +5,7 @@ desc: 사내표준 개인보험대리점 위탁 — 표준서식 회귀(사내�
 detect_expected: channel
 # 2026-07-28 사용자 게이트: channel detect_keywords 보강("보험대리점")으로 outsourcing 오분류
 # 해소. X-EFIN 신호 정비(금융거래/전자금융 부분문자열 제거)로 ITSEC-01~13 대량 오탐 해소.
-# CORE-*(X-FINOUT 전속)·ITSEC-*(X-EFIN)는 재발 방지 고정. PRIV-05·PRIV-06(재위탁 제한·접근
+# CORE-*(X-FINOUT 전속)·ITSEC-*(X-EFIN)는 재발 방지 고정. CNS-PRIVSUB·PRIV-06(재위탁 제한·접근
 # 제한, X-PII)·CH-02·CH-03은 channel 정상 감지 후에도 잔존하는 별건 — 라벨하지 않고 알람
 # 유지(진성 공백 가능성, 별도 트리아지 필요).
 active_must_exclude: [X-FINOUT, X-EFIN]

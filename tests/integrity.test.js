@@ -5,6 +5,7 @@ const I = require("../src/integrity.js");
 const S = require("../src/segmenter.js");
 
 function run(text, opts) { return I.analyze(text, S.segmentContract(text), opts).items; }
+function assessment(text) { return I.analyze(text, S.segmentContract(text)).assessment; }
 
 test("존재하지 않는 내부 조항 인용을 찾는다", () => {
   const items = run("계약서\n제1조(목적)\n본 계약은 제8조에 따른다.\n제2조(기간)\n1년으로 한다.");
@@ -41,7 +42,8 @@ test("별첨 인용은 업로드된 부속서류가 있으면 경고하지 않�
 test("항 번호가 추출되지 않은 문서는 없는 항으로 단정하지 않는다", () => {
   const items = run("계약서\n제1조(목적)\n제2조 제3항에 따른다.\n제2조(기간)\n계약은 1년간 유효하다.");
   assert.ok(!items.some(x => x.rule_id === "REF-02"));
-  assert.ok(items.some(x => x.rule_id === "REF-02U" && x.confidence === "medium"));
+  assert.ok(!items.some(x => x.rule_id === "REF-02U"));
+  assert.equal(assessment("제1조(목적)\n제2조 제3항에 따른다.\n제2조(기간)\n계약은 1년간 유효하다.").status,"limited");
 });
 
 test("본문의 독립된 제1조 참조 조각은 중복 조항으로 판정하지 않는다", () => {
@@ -61,7 +63,8 @@ test("표제와 본문이 같은 줄이어도 항 구조를 인식한다", () =>
 test("제N조 번호가 빠진 복수 표제는 개별 오류 대신 파싱 실패로 알린다", () => {
   const text = "계약서\n조(목적)\n목적을 정한다.\n조(기간)\n1년이다.";
   const items = I.analyze(text, S.segmentContract(text)).items;
-  assert.ok(items.some(x => x.rule_id === "PARSE-01" && x.confidence === "high"));
+  assert.equal(assessment(text).status,"limited");
+  assert.ok(!items.some(x => x.rule_id === "PARSE-01"));
   assert.ok(!items.some(x => x.rule_id === "NUM-01"));
 });
 
@@ -80,7 +83,8 @@ test("같은 본문 영역의 실제 중복 조 번호는 계속 찾는다", () 
 test("본문 전체가 중복 추출되면 조 번호 오류 대신 추출 품질 신호 하나를 낸다", () => {
   const once = "제1조(목적)\n계약의 목적과 업무 범위를 명확하게 정한다.\n제2조(기간)\n계약기간은 체결일부터 1년으로 하고 합의로 갱신한다.\n제3조(책임)\n당사자는 계약상 의무 위반으로 발생한 손해를 배상한다.";
   const items = run("계약서\n" + once + "\n" + once);
-  assert.ok(items.some(x => x.rule_id === "PARSE-DUP" && x.scope === "contract"));
+  assert.equal(assessment("계약서\n" + once + "\n" + once).status,"limited");
+  assert.ok(!items.some(x => x.rule_id === "PARSE-DUP"));
   assert.ok(!items.some(x => x.rule_id === "NUM-01"));
 });
 
@@ -94,5 +98,34 @@ test("1)·1. 표지는 존재 번호는 인정하고 누락은 고확신으로 �
   assert.ok(!present.some(x => x.rule_id === "REF-02" || x.rule_id === "REF-02U"));
   const uncertain = run("계약서\n제1조(인용)\n제2조 제4항에 따른다.\n제2조(기간)\n1. 최초 기간\n2. 갱신 기간\n3. 종료 기간");
   assert.ok(!uncertain.some(x => x.rule_id === "REF-02"));
-  assert.ok(uncertain.some(x => x.rule_id === "REF-02U"));
+  assert.ok(!uncertain.some(x => x.rule_id === "REF-02U"));
+});
+
+test("비정형 숫자 표제는 존재 후보를 읽되 없는 조항 경고를 만들지 않는다",()=>{
+  ["1. 목적","1) 목적","(1) 목적","Article 1 (Purpose)"].forEach(first=>{
+    const text=first+"\n제2조 및 제99조에 따른다.\n"+first.replace("1","2").replace("목적","기간")+"\n계약기간은 1년이다.";
+    assert.equal(assessment(text).status,"limited");
+    assert.ok(assessment(text).article_count>=2);
+    assert.ok(!run(text).some(x=>/^REF-/.test(x.rule_id)),first);
+  });
+});
+test("대괄호·띄어쓴 표제·제 없는 조·전각 문자를 읽는다",()=>{
+  [n=>`제${n}조[기간]`,n=>`제 ${n} 조 기간`,n=>`${n}조(기간)`,n=>`제${n===1?'１':'２'}조（기간）`].forEach(heading=>{
+    const text=heading(1)+"\n본 계약은 제2조에 따른다.\n"+heading(2)+"\n계약기간은 1년이다.";
+    assert.equal(assessment(text).explicit_article_count,2,text);
+    assert.ok(!run(text).some(x=>x.rule_id==='REF-01'),text);
+  });
+});
+test("번호 유실·제목뿐인 문서는 경고 폭주 없이 제한 상태로 남긴다",()=>{
+  const text="목적\n제1조 및 제2조 및 제3조에 따른다.\n기간\n제4조에 따른다.";
+  assert.equal(run(text).length,0);
+  assert.equal(assessment(text).status,"limited");
+  assert.ok(assessment(text).unresolved_reference_count>=4);
+});
+test("일부 조 표지만 남아도 번호 없는 표제·깨진 글자가 있으면 누락을 단정하지 않는다",()=>{
+  ["(보안)\n제3조의 업무를 정한다.","�"].forEach(suffix=>{
+    const text="제1조(목적)\n제9조에 따른다.\n제2조(기간)\n1년으로 한다.\n"+suffix;
+    assert.equal(assessment(text).status,"limited");
+    assert.ok(!run(text).some(x=>/^REF-/.test(x.rule_id)));
+  });
 });

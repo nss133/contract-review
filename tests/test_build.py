@@ -23,7 +23,11 @@ def test_build_produces_single_html(knowledge_dir, law_db, tmp_path):
     assert 'id="analysis-progress"' in html   # 최초 분석 단계 안내
     assert 'id="input-subdoc-use"' in html    # 보안관리약정서 사용 여부를 분석 전에 지정
     assert "표준서식 적용" in html
-    assert "실제 체결·이행 확인은 계약검토 범위에서 제외" in html
+    assert "실제 이행 여부는 확인하지 않습니다." in html
+    assert "실제 체결·교육·신고 등 이행 실적은 검사하지 않습니다." in html
+    assert 'id="action-queue-block"' not in html
+    assert 'id="action-anchor"' not in html
+    assert "본문·부속서류 근거의 검토항목" not in html
     assert "function activatePane" in html    # 탭 전환을 클릭·자동 이동에서 공통 사용
     assert "prefers-reduced-motion: reduce" in html
     assert "계약서 반영 안내와 실제 처리 비교" in html
@@ -51,14 +55,25 @@ def test_build_produces_single_html(knowledge_dir, law_db, tmp_path):
         assert any(name.endswith(".docx") for name in names)
 
 
-def test_build_embeds_curated_corpus(knowledge_dir, law_db, tmp_path):
-    # 기본 corpus_path = data/curated_corpus.json (repo 실파일)과 동일한 seed를 내장한다.
+def test_build_never_embeds_corpus_by_default(knowledge_dir, law_db, tmp_path):
     out = tmp_path / "out.html"
-    build(knowledge_dir, out, law_dbs=[law_db], news_db=None)
+    seed = tmp_path / "synthetic-corpus.json"
+    seed.write_text(json.dumps({"marker": "synthetic-test-only"}))
+    build(knowledge_dir, out, law_dbs=[law_db], news_db=None, corpus_path=seed)
     m = re.search(r'<script id="cr-data"[^>]*>(.*?)</script>', out.read_text(), re.S)
-    corpus = json.loads(m.group(1))["curated_corpus"]
-    expected = json.loads((Path(__file__).parents[1] / "data" / "curated_corpus.json").read_text())
-    assert corpus == expected
+    assert json.loads(m.group(1))["curated_corpus"] is None
+    assert "synthetic-test-only" not in out.read_text()
+
+
+def test_build_explicit_synthetic_seed(knowledge_dir, law_db, tmp_path):
+    out = tmp_path / "out.html"
+    seed = tmp_path / "synthetic-corpus.json"
+    expected = {"marker": "synthetic-test-only"}
+    seed.write_text(json.dumps(expected))
+    build(knowledge_dir, out, law_dbs=[law_db], news_db=None,
+          corpus_path=seed, include_corpus=True, app_only=True)
+    m = re.search(r'<script id="cr-data"[^>]*>(.*?)</script>', out.read_text(), re.S)
+    assert json.loads(m.group(1))["curated_corpus"] == expected
 
 
 def test_build_without_corpus_file(knowledge_dir, law_db, tmp_path):

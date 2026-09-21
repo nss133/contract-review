@@ -78,6 +78,15 @@ var ActionRouter = (function () {
   }
 
   function route(check, result, context) {
+    if(result&&result.autoSafety&&result.autoSafety.allowed===true)
+      return _out("no_action",check,result,context||{},"verified_contract_content");
+    var action = _route(check, result, context);
+    // 원문을 찾았다는 이유로 재확인 중인 자동 후보를 전체 검토 완료에서 빼지 않는다.
+    if ((action.action === "no_action" || action.action === "negotiate") && result && result.autoSafety && result.autoSafety.requires_review)
+      return _out("hold", check, result, context || {}, "auto_candidate_requires_review");
+    return action;
+  }
+  function _route(check, result, context) {
     var ctx = context || {};
     var req = effectiveRequirement(check);
     var effect = effectiveTextEffect(check);

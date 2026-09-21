@@ -2,7 +2,7 @@
 
 1. 최초 설치
 - 최초설치_계약서검토_실행기.html을 사용할 위치에 한 번만 저장합니다.
-- 실행기를 열고 contract-review-v1.51.0.crupdate를 선택합니다.
+- 실행기를 열고 contract-review-v1.90.8.crupdate를 선택합니다.
 - 앱의 지식 데이터 탭에서 legal-opinion-tagger 결과 XLSX를 최초 1회 가져옵니다.
 - 계약검토 이력 DB를 사용할 경우 같은 탭에서 33열 계약검토 XLSX를 최초 1회 가져옵니다.
 - 지식팩(.crknowledge)과 이력팩(.crhistory) 백업은 폐쇄망 내부 승인 폴더에만 보관합니다.

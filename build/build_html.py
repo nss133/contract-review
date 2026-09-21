@@ -20,10 +20,49 @@ ROOT = Path(__file__).parent.parent
 SRC = ROOT / "src"
 # pf.js는 추출기(cfb·extract-*)보다 먼저. cfb는 doc·hwp보다 먼저.
 JS_ORDER = [
-    "sim.js", "clause_role.js", "contract_tags.js", "legal_constraints.js", "scope_assessment.js", "matcher_config.js", "segmenter.js", "sentence.js", "matcher.js", "action_router.js", "motion.js",
-    "pf.js", "cfb.js", "extract-pdf.js", "extract-doc.js", "extract-hwp.js", "extract-zip.js", "extract.js",
-    "verify.js", "assessment.js", "local_llm.js", "experiment.js", "verdict.js", "findings.js", "integrity.js", "loop.js", "goldset.js", "tags.js", "formal.js", "evidence.js", "compare.js", "legal_opinion_knowledge.js", "review_history.js", "app.js",
+    "history_eval.js",
+    "safety_digest.js", "evidence_rules.js", "sim.js", "clause_role.js", "contract_tags.js", "legal_constraints.js", "scope_assessment.js", "history_assist.js", "matcher_config.js", "segmenter.js", "sentence.js", "matcher.js", "action_router.js", "motion.js",
+    "document_structure.js", "pf.js", "cfb.js", "extract-pdf.js", "extract-doc.js", "extract-hwp.js", "extract-zip.js", "extract.js",
+    "verify.js", "assessment.js", "local_llm.js", "experiment.js", "auto_safety.js", "safety_eval.js", "safety_workbench.js", "verdict.js", "findings.js", "integrity.js", "loop.js", "goldset.js", "tags.js", "formal.js", "evidence.js", "compare.js", "legal_opinion_knowledge.js", "review_history.js", "check_groups.js", "app.js", "structure_review.js", "safety_runtime.js", "safety_eval_ui.js", "safety_workbench_ui.js",
 ]
+JS_ORDER.append("history_eval_ui.js")
+JS_ORDER.insert(JS_ORDER.index("app.js"), "review_core.js")
+JS_ORDER.insert(JS_ORDER.index("review_core.js"), "judgment_hints.js")
+JS_ORDER.insert(JS_ORDER.index("app.js"), "review_replay.js")
+JS_ORDER.insert(JS_ORDER.index("verdict.js"), "presence_profiles.js")
+JS_ORDER.insert(JS_ORDER.index("verdict.js"), "agreement_evidence.js")
+JS_ORDER.insert(JS_ORDER.index("verdict.js"), "clause_semantics.js")
+JS_ORDER.insert(JS_ORDER.index("verdict.js"), "decision_evidence.js")
+JS_ORDER.insert(JS_ORDER.index("verdict.js"), "decision_references.js")
+JS_ORDER.insert(JS_ORDER.index("verdict.js"), "decision_evaluation.js")
+JS_ORDER.insert(JS_ORDER.index("verdict.js"), "judgment_sources.js")
+JS_ORDER.insert(JS_ORDER.index("verdict.js"), "human_precedent.js")
+JS_ORDER.insert(JS_ORDER.index("verdict.js"), "judgment_policy.js")
+JS_ORDER.insert(JS_ORDER.index("verdict.js"), "requirement_rules.js")
+JS_ORDER.insert(JS_ORDER.index("verdict.js"), "agreement_judgment.js")
+JS_ORDER.insert(JS_ORDER.index("verdict.js"), "standard_auto.js")
+JS_ORDER.insert(JS_ORDER.index("verdict.js"), "clause_equivalence.js")
+JS_ORDER.insert(JS_ORDER.index("verdict.js"), "template_fields.js")
+JS_ORDER.insert(JS_ORDER.index("verdict.js"), "registered_presence.js")
+JS_ORDER.insert(JS_ORDER.index("verdict.js"), "template_assist.js")
+JS_ORDER.insert(JS_ORDER.index("verdict.js"), "template_library.js")
+JS_ORDER.insert(JS_ORDER.index("verdict.js"), "template_register.js")
+JS_ORDER.insert(JS_ORDER.index("app.js"), "review_groups.js")
+JS_ORDER.extend(["eval_prepare.js", "eval_prepare_ui.js"])
+JS_ORDER.extend(["eval_trial.js", "eval_trial_ui.js"])
+JS_ORDER.append("eval_resolve_ui.js")
+JS_ORDER.extend(["auto_pilot.js", "auto_pilot_ui.js"])
+JS_ORDER.extend(["eval_batch.js", "eval_batch_ui.js"])
+JS_ORDER.extend(["eval_operational.js", "eval_operational_ui.js"])
+JS_ORDER.extend(["standard_auto_archive.js", "standard_auto_ui.js"])
+JS_ORDER.append("template_library_ui.js")
+JS_ORDER.insert(JS_ORDER.index("app.js"), "analysis_runtime.js")
+JS_ORDER.insert(JS_ORDER.index("app.js"), "checklist_presentation.js")
+JS_ORDER.insert(JS_ORDER.index("app.js"), "report_layout.js")
+# Pure engine code only: file extraction, UI and storage adapters stay on the page.
+WORKER_JS_ORDER = [f for f in JS_ORDER[:JS_ORDER.index("app.js")]
+                   if f not in {"analysis_runtime.js", "checklist_presentation.js", "report_layout.js", "pf.js", "cfb.js", "extract-pdf.js", "extract-doc.js",
+                                "extract-hwp.js", "extract-zip.js", "extract.js", "local_llm.js", "motion.js"}]
 
 
 def attach_std_refs(knowledge, refs_path):
@@ -45,7 +84,7 @@ def attach_std_refs(knowledge, refs_path):
 
 
 def build(knowledge_dir, out_path, law_dbs=None, news_db=None, corpus_path=None,
-          tag_match_mode=None):
+          tag_match_mode=None, app_only=False, include_docx=True, include_corpus=False):
     k = load_knowledge(knowledge_dir)
     warnings = enrich(
         k,
@@ -55,15 +94,17 @@ def build(knowledge_dir, out_path, law_dbs=None, news_db=None, corpus_path=None,
     for w in warnings:
         print(f"경고: {w}", file=sys.stderr)
     attach_std_refs(k, Path(knowledge_dir) / "std_refs.yaml")
+    # 원본 YAML과 이력은 보존하되 제품에서 제외·통합된 질문은 새 검토에 넣지 않는다.
+    for doc in [k["common"], *k["types"]]:
+        doc["checks"] = [cp for cp in doc["checks"] if cp.get("active") is not False]
 
-    # 검수자 판정 코퍼스 내장: 반출 백업(data/curated_corpus.json)을 페이지에 seed로 실음 —
-    # 새 환경(다른 PC·localStorage 초기화)에서도 판정 분포·추천 코멘트가 보이게.
-    # 파일 없으면 빈 코퍼스로 빌드 진행(경고만, 실패 아님).
+    # 배포 기본값은 코퍼스 미내장이다. 개인·폐쇄망 판정 자료를 ZIP에 넣지 않는다.
+    # 합성 데이터 개발 시험의 명시적 include_corpus=True 호출만 seed를 허용한다.
     cpath = Path(corpus_path) if corpus_path is not None else ROOT / "data" / "curated_corpus.json"
     corpus = None
-    if cpath.exists():
+    if include_corpus and cpath.exists():
         corpus = json.loads(cpath.read_text())
-    else:
+    elif include_corpus:
         print(f"경고: 내장 코퍼스 없음({cpath}) — seed 없이 빌드", file=sys.stderr)
 
     # 앱 버전(2026-08-03 도입) — 루트 VERSION 파일이 단일 소스. UI 표기·zip 파일명·
@@ -103,11 +144,16 @@ def build(knowledge_dir, out_path, law_dbs=None, news_db=None, corpus_path=None,
     if tag_mode not in {"off", "shadow", "assist"}:
         raise ValueError(f"알 수 없는 tag_match_mode: {tag_mode}")
     payload = {"common": k["common"], "types": k["types"],
+               "checklist_revision": json.loads((ROOT / "knowledge/checklist_revisions.json").read_text()),
+               "judgment_policies": json.loads((ROOT / "knowledge/judgment_policies.json").read_text()),
                "regulatory_scopes": k.get("regulatory_scopes", {"scopes": {}}),
                "legal_constraints": k.get("legal_constraints", {"rules": []}),
                "contract_action_profile": k.get("contract_actions", {}),
                "tag_taxonomy": k.get("tag_taxonomy", {}), "tag_engine": tag_manifest,
                "tag_match_mode": tag_mode, "curated_corpus": corpus, "app_version": version}
+    # 코드·지식·태그 설정 변경은 기존 자동허용의 재평가를 요구한다. 빌드일은 지문에 넣지 않는다.
+    engine_material = json.dumps(payload, ensure_ascii=False, sort_keys=True) + "\n" + "\n".join((SRC / f).read_text() for f in JS_ORDER + ["analysis_worker.js"])
+    payload["engine_fingerprint"] = hashlib.sha256(engine_material.encode("utf-8")).hexdigest()
     # </script> 조기 종료 방지: JSON 문자열 내 </ 를 <\/ 로 (JSON 유효 이스케이프)
     data_json = json.dumps(payload, ensure_ascii=False).replace("</", "<\\/")
 
@@ -123,9 +169,13 @@ def build(knowledge_dir, out_path, law_dbs=None, news_db=None, corpus_path=None,
     worker_src = (ROOT / "vendor" / "pdf.worker.min.js").read_text().replace("</script", "<\\/script")
 
     html = (SRC / "template.html").read_text()
-    html = html.replace("/*__STYLE__*/", (SRC / "style.css").read_text())
+    html = html.replace("/*__STYLE__*/", (SRC / "style.css").read_text() + "\n" + (SRC / "ui_layout.css").read_text())
     html = html.replace("/*__VENDOR_JS__*/", vendor_js)
     html = html.replace("/*__PDF_WORKER_SRC__*/", worker_src)
+    analysis_worker = ("var CR=" + data_json + ";\n" + (ROOT / "vendor" / "contract-tag-engine.js").read_text()
+                       + "\n" + "\n".join((SRC / f).read_text() for f in WORKER_JS_ORDER)
+                       + "\n" + (SRC / "analysis_worker.js").read_text())
+    html = html.replace("/*__ANALYSIS_WORKER_SRC__*/", analysis_worker.replace("</script", "<\\/script"))
     html = html.replace("/*__APP_JS__*/", "\n".join((SRC / f).read_text() for f in JS_ORDER))
     html = html.replace("__DATA_JSON__", data_json)
     html = html.replace("__APP_VERSION__", version)
@@ -135,6 +185,9 @@ def build(knowledge_dir, out_path, law_dbs=None, news_db=None, corpus_path=None,
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(html)
     _smoke(out)
+    # 소스 변경 브라우저 검증은 배포 ZIP·안내 DOCX를 덮어쓰지 않고 수행한다.
+    if app_only:
+        return out
 
     # 폐쇄망 영구 실행기: 실행기 파일은 최초 설치 후 같은 위치에서 계속 사용하고,
     # 이후에는 .crupdate만 가져온다. 앱 HTML을 실행기 IndexedDB에 교체하므로
@@ -175,13 +228,11 @@ def build(knowledge_dir, out_path, law_dbs=None, news_db=None, corpus_path=None,
         encoding="utf-8",
     )
 
-    # 배포 zip 자동 생성 — 파일명에 버전 포함(팀 배포본 식별). 구버전 zip은 정리해
-    # dist에 최신 배포본 하나만 유지(zip은 파생물 — git 미추적).
-    for old in out.parent.glob("contract-review*.zip"):
-        old.unlink()
+    # 안전정책 변경 배포는 이전 버전 비교·복구가 필요하므로 구버전 ZIP을 보존한다.
     zpath = out.parent / f"contract-review-v{version}.zip"
     guide_path = out.parent / f"contract-review-user-guide-v{version}.docx"
-    build_guide(version, guide_path)
+    if include_docx:
+        build_guide(version, guide_path)
     labeling_path = build_labeling_form()
     with zipfile.ZipFile(zpath, "w", zipfile.ZIP_DEFLATED) as zf:
         zf.write(launcher_path, "최초설치_계약서검토_실행기.html")
@@ -189,8 +240,66 @@ def build(knowledge_dir, out_path, law_dbs=None, news_db=None, corpus_path=None,
         zf.write(out, out.name)
         zf.write(out, "비상용_직접실행_contract-review.html")
         zf.write(install_guide_path, install_guide_path.name)
-        zf.write(guide_path, guide_path.name)
+        if include_docx:
+            zf.write(guide_path, guide_path.name)
         zf.write(labeling_path, "matching-labeling-form.html")
+        zf.write(ROOT / "docs" / "safe-auto-verdict-v1.54.md", ("이전버전_참고기록/" if version.startswith(("1.88.", "1.89.", "1.90.")) else "") + "자동판정_안전성_내부평가_안내.md")
+        zf.write(ROOT / "docs" / "safe-auto-verdict-v1.55.md", ("이전버전_참고기록/" if version.startswith(("1.88.", "1.89.", "1.90.")) else "") + "자동판정_안전성_작업대_안내.md")
+        zf.write(ROOT / "docs" / "release-v1.56.md", ("이전버전_참고기록/" if version.startswith(("1.88.", "1.89.", "1.90.")) else "") + "v1.56_변경안내.md")
+        zf.write(ROOT / "docs" / "release-v1.57.md", ("이전버전_참고기록/" if version.startswith(("1.88.", "1.89.", "1.90.")) else "") + "v1.57_구조추출_별첨구역_안내.md")
+        zf.write(ROOT / "docs" / "release-v1.58.md", ("이전버전_참고기록/" if version.startswith(("1.88.", "1.89.", "1.90.")) else "") + "v1.58_검토완료_판정유지_수정안내.md")
+        zf.write(ROOT / "docs" / "release-v1.58.1.md", ("이전버전_참고기록/" if version.startswith(("1.88.", "1.89.", "1.90.")) else "") + "v1.58.1_완료판정_재확인_수정안내.md")
+        zf.write(ROOT / "docs" / "release-v1.58.2.md", ("이전버전_참고기록/" if version.startswith(("1.88.", "1.89.", "1.90.")) else "") + "v1.58.2_체크제외_평가셋준비.md")
+        zf.write(ROOT / "docs" / "release-v1.59.md", ("이전버전_참고기록/" if version.startswith(("1.88.", "1.89.", "1.90.")) else "") + "v1.59_적재이력_평가후보_안내.md")
+        zf.write(ROOT / "docs" / "release-v1.60.md", ("이전버전_참고기록/" if version.startswith(("1.88.", "1.89.", "1.90.")) else "") + "v1.60_평가자료준비_초안확인_안내.md")
+        zf.write(ROOT / "docs" / "release-v1.61.md", ("이전버전_참고기록/" if version.startswith(("1.88.", "1.89.", "1.90.")) else "") + "v1.61_독립검수_매핑비교_안내.md")
+        zf.write(ROOT / "docs" / "release-v1.62.md", ("이전버전_참고기록/" if version.startswith(("1.88.", "1.89.", "1.90.")) else "") + "v1.62_자동판정후보_운영안전_안내.md")
+        zf.write(ROOT / "docs" / "release-v1.63.md", ("이전버전_참고기록/" if version.startswith(("1.88.", "1.89.", "1.90.")) else "") + "v1.63_다계약_자료기여도_안내.md")
+        zf.write(ROOT / "docs" / "release-v1.64.md", ("이전버전_참고기록/" if version.startswith(("1.88.", "1.89.", "1.90.")) else "") + "v1.64_실사용연결_오판재검수_안내.md")
+        current_guide = ROOT / "docs" / f"release-v{version.rsplit('.', 1)[0]}.md"
+        patch_guide = ROOT / "docs" / f"release-v{version}.md"
+        if patch_guide.exists():
+            current_guide = patch_guide
+        if current_guide.exists():
+            zf.write(current_guide, "먼저읽기_자동판정_사용안내.md" if version.startswith(("1.88.", "1.89.", "1.90.")) else "먼저읽기_누적판정_자동태깅_사용안내.md")
+        if version.startswith("1.68."):
+            for name in ("2026-09-16-checklist-consolidation-review.md",
+                         "2026-09-16-checklist-consolidation-inventory.md"):
+                zf.write(ROOT / "docs" / name, name)
+        if version.startswith("1.69."):
+            zf.write(ROOT / "docs" / "2026-09-16-checklist-consolidation-inventory.md", "통합체크리스트_전수대응표.md")
+        if version.startswith("1.70."):
+            zf.write(ROOT / "knowledge" / "checklist_revisions.json", "체크리스트_질문개정_대응표.json")
+        if version.startswith(("1.76.", "1.77.", "1.78.", "1.79.", "1.80.", "1.81.", "1.82.", "1.83.", "1.84.", "1.85.", "1.86.", "1.87.", "1.88.", "1.89.", "1.90.")):
+            zf.write(ROOT / "knowledge" / "judgment_policies.json", "체크리스트_판정수준_206개.json")
+        if version.startswith("1.88."):
+            zf.write(ROOT / "knowledge" / "checklist_inventory_v188.json", "체크리스트_206개_개정기준표.json")
+            zf.write(ROOT / "docs" / "v1.88-checklist-inventory.md", "체크리스트_개정내역.md")
+            zf.write(ROOT / "docs" / "v1.88-evaluation-inputs.md", "검증범위와_데이터한계.md")
+            zf.write(ROOT / "docs" / "v1.88-source-ablation.json", "검증_자료기여도.json")
+            benchmark = ROOT / "docs" / "v1.88-runtime-benchmark.json"
+            if benchmark.exists():
+                zf.write(benchmark, "검증_성능측정.json")
+            validation = ROOT / "docs" / "v1.88-validation.md"
+            if validation.exists():
+                zf.write(validation, "v1.88_최종검증기록.md")
+        if version.startswith("1.89."):
+            zf.write(ROOT / "knowledge" / "checklist_inventory_v188.json", "체크리스트_206개_개정기준표.json")
+            zf.write(ROOT / "docs" / "v1.88-checklist-inventory.md", "체크리스트_개정내역.md")
+            for name in ("v1.89-validation.md", "v1.89-runtime-benchmark.json", "v1.89-performance-acceptance.json", "v1.89-performance-evaluation.md"):
+                path = ROOT / "docs" / name
+                if path.exists():
+                    zf.write(path, name)
+        if version.startswith("1.90."):
+            zf.write(ROOT / "knowledge" / "checklist_inventory_v188.json", "체크리스트_206개_개정기준표.json")
+            zf.write(ROOT / "docs" / "v1.88-checklist-inventory.md", "체크리스트_개정내역.md")
+            for name in ("v1.90-validation.md", "v1.90-performance-acceptance.json", "v1.90-performance-acceptance.md"):
+                path = ROOT / "docs" / name
+                if path.exists():
+                    zf.write(path, name)
+            patch_validation = ROOT / "docs" / f"v{version}-validation.md"
+            if patch_validation.exists():
+                zf.write(patch_validation, patch_validation.name)
     print(f"배포 zip: {zpath.name} ({zpath.stat().st_size // 1024}KB)")
     return out
 

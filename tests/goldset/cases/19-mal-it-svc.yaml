@@ -8,8 +8,8 @@ detect_expected: procurement
 # 실질적 SLA성 대응조항이 있으나, 체크 트리거(SLA·서비스수준·가동률)와 어휘 중복도가 낮아
 # 매처가 confirmed로 못 묶은 것으로 추정 — knowledge 게이트로는 해결 불가(matcher 클로즈매칭
 # 한계). 알람 유지, 매처 튜닝 백로그로 이관.
-# SP-DEL-09는 absence_precondition 신설로 오탐 해소 — 재발 방지 고정.
-consider_must_exclude: [SP-DEL-09]
+# CNS-SALEDEFECT는 absence_precondition 신설로 오탐 해소 — 재발 방지 고정.
+consider_must_exclude: [CNS-SALEDEFECT]
 text: "\n\n\n\n\nOOOO 프로젝트 용역 위탁 계약서\n\n 계약서\n\nOOOO 프로젝트 용역 위탁 계약서\n\n 계약서\n\n\n\n\
   \n\n\n\n\n\n\n\n\n\n\n\n\n2016. 00. 00.\n\n\n\n\n\n\n미래에셋생명보험 주식회사\nOOOO 주식회사\n\f\
   \n미래에셋생명보험 주식회사(이하 “갑”이라 한다.)와 OOOO 주식회사(이하 “을”이라 한다)는 “OOOOO OOO 프로젝트”(이하 “프로젝트”\

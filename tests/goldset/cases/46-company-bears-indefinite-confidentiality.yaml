@@ -7,5 +7,5 @@ text: |
 
   제8조(비밀유지)
   "을"은 업무 중 알게 된 비밀정보를 제3자에게 누설하여서는 아니 되며, 계약 종료 후에도 계속하여 그 의무가 존속한다.
-matched_must_include: [CMN-16]
-auto_pass_must_exclude: [CMN-16]
+matched_must_include: [CNS-SECRET]
+auto_pass_must_exclude: [CNS-SECRET]

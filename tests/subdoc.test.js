@@ -47,6 +47,8 @@ test("subDocCoverage: 부속서류가 consider 필수항목을 커버하면 반�
   assert.ok(cov["PRIV-01"]);
   assert.strictEqual(cov["PRIV-01"].docName, "보안관리약정서.pdf");
   assert.ok(cov["PRIV-01"].score > 0);
+  assert.strictEqual(cov["PRIV-01"].heading, SUBDOC_CLAUSES[0].heading);
+  assert.strictEqual(cov["PRIV-01"].quote, SUBDOC_CLAUSES[0].body);
 });
 
 test("subDocCoverage: 부속서류에 없는 항목은 커버 안 됨", () => {

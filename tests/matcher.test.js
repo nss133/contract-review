@@ -1261,6 +1261,50 @@ test("detectPartyContext: 미래에셋생명의 갑·을 호칭과 상대방을 
   assert.strictEqual(a.confidence, "explicit_alias");
 });
 
+test("detectPartyContext: 당사자 표기의 줄·순서·구분자를 넘어 상대 호칭을 상속하지 않는다",()=>{
+  const name='미래에셋생명보험',other='합성서비스회사';
+  const fixtures=[
+    ['갑: '+name+'\n을: '+other,'갑'],
+    ['을: '+other+'\n갑: '+name,'갑'],
+    ['갑: '+other+'\n을: '+name,'을'],
+    ['을: '+name+'\n갑: '+other,'을'],
+    ['갑: '+name+' / 을: '+other,'갑'],
+    ['갑: '+other+'; 을: '+name,'을'],
+    ['“갑”(위탁자)： 주식회사 '+name+'\n“을”(수탁자)： '+other,'갑'],
+    [name+' 주식회사(이하 “갑”이라 한다)와 '+other+'(이하 “을”이라 한다)는 계약한다.','갑'],
+    [other+'(이하 “갑”)와 '+name+' 주식회사(이하 “을”)은 계약한다.','을'],
+    ['갑:\n'+name+'\n을:\n'+other,'갑'],
+    [name+'\n(이하 “갑”이라 한다)\n'+other+'(이하 “을”이라 한다)','갑'],
+    ['“갑”이라 함은 '+name+'을 말한다. “을”이라 함은 '+other+'를 말한다.','갑'],
+    ['갑은 '+name+'이고 을은 '+other+'이다.','갑'],
+    [name+' (“병”)\n갑: 합성회사A\n을: 합성회사B','병']
+  ];
+  for(const [text,alias] of fixtures){const ctx=detectPartyContext(text+'\n을은 고의 또는 중과실로 인한 모든 손해에 대해서도 배상책임을 지지 않는다.');assert.deepStrictEqual(ctx.ourAliases,[alias],text);assert(!ctx.counterpartyAliases.includes(alias),text);}
+});
+
+test("detectPartyContext: 상호 주변의 목적격·의무 문구는 당사자 정의로 만들지 않는다",()=>{
+  for(const text of [
+    '미래에셋생명보험\n을은 고의 또는 중과실로 인한 손해에 대해서도 책임을 지지 않는다.',
+    '갑은 미래에셋생명보험에 자료를 제공한다. 을은 계약을 수행한다.',
+    '갑은 합성서비스회사와 미래에셋생명보험에게 통지한다.',
+    '갑: 미래에셋생명보험서비스 주식회사\n을: 합성회사',
+    '미래에셋생명보험에 대하여 을은 책임을 지지 않는다.'
+  ])assert.deepStrictEqual(detectPartyContext(text).ourAliases,[],text);
+});
+
+test("detectPartyContext: 상대방 고의·중과실 면책을 우리 회사 면책으로 뒤집지 않는다",()=>{
+  const S=require('../src/standard_auto'),policy=require('../knowledge/judgment_policies.json').checks.find(p=>p.id==='CNS-DAMAGE'),check={...policy,check:policy.question};
+  for(const [ours,counterparty] of [['갑','을'],['을','갑']]){
+    const prefix=ours+': 미래에셋생명보험\n'+counterparty+': 합성서비스회사\n제1조(손해배상)\n';
+    for(const [subject,expected] of [[counterparty,false],[ours,true]]){
+      const text=prefix+subject+'은 고의 또는 중과실로 인한 모든 손해에 대해서도 배상책임을 지지 않는다.',context=detectPartyContext(text);
+      assert.deepStrictEqual(context.ourAliases,[ours]);
+      const result=S.evaluate(check,{coverage:'addressed'},{confirmed:true,documents:[{name:'본문',text}],scope:{party:context}});
+      assert.strictEqual(result.eligible,expected,text);if(!expected)assert(result.blockers.some(b=>b.code==='B5'));
+    }
+  }
+});
+
 test("evaluatePerspective: 상대방만 무기한 비밀유지 의무를 지면 당사에 유리", () => {
   const cp = { perspective_rule: "confidentiality_duration" };
   const cl = { heading: "제8조(비밀유지)", body: '"을"은 비밀정보를 누설하지 않으며 계약 종료 후에도 계속하여 그 의무가 존속한다.' };

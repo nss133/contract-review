@@ -11,6 +11,10 @@
    구 '해당없음'은 독립 판정에서 폐기됨 — "우리 케이스와 해당사항이 없어서 이상없다"는
    경우를 '해당없음'으로 찍게 되어 곤란했음(체크 자체가 부적절하다는 뜻으로 오독).
    해당사항 없음은 **이상없음의 사유**로 격하. 기존 저장분은 로드 시 자동 이관. */
+var _VerdictSafety = typeof AutoSafety !== "undefined" ? AutoSafety :
+  (typeof require !== "undefined" ? require("./auto_safety") : null);
+var _VerdictWorkbench = typeof SafetyWorkbench !== "undefined" ? SafetyWorkbench :
+  (typeof require !== "undefined" ? require("./safety_workbench") : null);
 var Verdict = (function () {
   var VERDICTS = ["이상없음", "검토의견"];
   // 저장·교환 포맷은 기존 값을 유지하고 화면에서만 행동을 풀어 쓴다.
@@ -47,6 +51,11 @@ var Verdict = (function () {
   // 저장분·내보내기 파일 어디서 들어오든 이 함수를 거쳐 현행 체계로 정규화한다.
   function migrateItem(item) {
     if (!item) return null;
+    // 보류된 자동기록은 완료로 세지 않되 기존 문구·일자·출처를 그대로 보존한다.
+    if (item.verdict === "" && item.safety_hold && item.safety_hold.previous)
+      return { verdict: "", reason: "", comment: "", date: item.date || "", origin: item.origin || "auto",
+        action_disposition: "", safety_hold: item.safety_hold,
+        ...(item.previous_system_review?{previous_system_review:item.previous_system_review}:{}) };
     var v = item.verdict, reason = item.reason || "";
     if (v === LEGACY_NA) { v = "이상없음"; reason = reason || "해당사항 없음"; }
     if (VERDICTS.indexOf(v) === -1) return null;
@@ -59,8 +68,19 @@ var Verdict = (function () {
     // 과거 시스템이 자동 생성한 정확한 원문만 범위 변경에 맞춰 이관한다.
     // 검토자가 작성·수정한 일반 코멘트는 일절 치환하지 않는다.
     if (comment === LEGACY_SUBDOC_COMMENT) comment = CURRENT_SUBDOC_COMMENT;
-    return { verdict: v, reason: reason, comment: comment, date: item.date || "", origin: origin,
+    var normalized = { verdict: v, reason: reason, comment: comment, date: item.date || "", origin: origin,
       action_disposition: actionDisposition };
+    if (item.safety_hold) normalized.safety_hold = item.safety_hold;
+    if (item.manual_context) normalized.manual_context = item.manual_context;
+    if (item.manual_context_v2) normalized.manual_context_v2 = item.manual_context_v2;
+    if (item.manual_context_v3) normalized.manual_context_v3 = item.manual_context_v3;
+    if (item.concurrent_edits) normalized.concurrent_edits = item.concurrent_edits;
+    if (item.judgment_content_tags) normalized.judgment_content_tags = item.judgment_content_tags;
+    if (item.judgment_result_tags) normalized.judgment_result_tags = item.judgment_result_tags;
+    if (item.needs_reconfirmation) normalized.needs_reconfirmation = true;
+    var migrated=_VerdictSafety.hold(normalized);
+    if(item.previous_system_review)migrated.previous_system_review=item.previous_system_review;
+    return migrated;
   }
   // 저장소 전체 정규화(로드 직후 1회).
   function migrateStore(store) {
@@ -77,10 +97,17 @@ var Verdict = (function () {
   // reason은 이상없음일 때만 유효(그 외에는 무시).
   function setVerdict(store, cpId, verdict, comment, date, reason, origin) {
     var next = _clone(store || {});
-    if (!verdict) { delete next[cpId]; return next; }
+    if (!verdict) {
+      if (next[cpId] && next[cpId].safety_hold)
+        next[cpId] = migrateItem(Object.assign({}, next[cpId], { verdict: "" }));
+      else delete next[cpId];
+      return next;
+    }
     var previousAction = next[cpId] && next[cpId].action_disposition || "";
     var m = migrateItem({ verdict: verdict, reason: reason, comment: comment, date: date,
-      origin: origin || "manual", action_disposition: previousAction });
+      origin: origin || "manual", action_disposition: previousAction,
+      safety_hold: next[cpId] && next[cpId].safety_hold,
+      previous_system_review: next[cpId] && next[cpId].previous_system_review });
     if (!m) return store || {};
     next[cpId] = m;
     return next;
@@ -105,6 +132,13 @@ var Verdict = (function () {
       comment: cur.comment || "", date: cur.date || "",
       origin: cur.origin === "auto" ? "manual" : (cur.origin || "legacy"),
       action_disposition: cur.action_disposition || "" };
+    if (cur.safety_hold) next[cpId].safety_hold = cur.safety_hold;
+    if (cur.manual_context) next[cpId].manual_context = cur.manual_context;
+    if (cur.manual_context_v2) next[cpId].manual_context_v2 = cur.manual_context_v2;
+    if (cur.manual_context_v3) next[cpId].manual_context_v3 = cur.manual_context_v3;
+    if (cur.concurrent_edits) next[cpId].concurrent_edits = cur.concurrent_edits;
+    if (cur.previous_system_review) next[cpId].previous_system_review = cur.previous_system_review;
+    if (cur.needs_reconfirmation) next[cpId].needs_reconfirmation = true;
     return next;
   }
 
@@ -118,24 +152,49 @@ var Verdict = (function () {
     var removed = 0;
     for (var k in next) {
       if (!Object.prototype.hasOwnProperty.call(next, k)) continue;
-      if (next[k].origin === "auto" && !keep[k]) { delete next[k]; removed++; }
+      if (next[k].origin === "auto" && !next[k].safety_hold && !keep[k]) { delete next[k]; removed++; }
     }
     return { store: next, removed: removed };
   }
 
-  // 자동 이상없음 자격 정책(12~13차): 증거 확정과 법적 무문제 판정을 분리한다.
-  // auto_verdict:false인 복합 체크는 문장 요건이 충족돼도 사람 판정을 남긴다.
+  // 자동 확정은 검증·승인 전 관찰 모드에서 불허. 이전 정책은 비교 측정에만 사용.
   function canAutoPass(check, result) {
-    if (!check || !result || result.coverage !== "addressed" || check.auto_verdict === false) return false;
-    // 당사 관점 규칙은 일반 문장요건과 별도의 보수적 통과 사유다. 현재는 참고 항목에서
-    // 상대방만 의무를 지고 당사 보호가 강화되는 경우처럼 방향이 명백할 때만 생성된다.
-    if (check.severity === "참고" && result.perspective && result.perspective.auto_pass) return true;
-    // 참고 항목도 auto_clear를 명시했다면 그 보수적 문장 요건을 우회하지 않는다.
-    // 미선언 참고 체크만 기존 정책(확정 매칭이면 자동 완료)을 유지한다.
-    if (check.severity === "참고") return !check.auto_clear || !!(result.autoClear && result.autoClear.ok);
-    return check.severity === "권장" && !!(result.autoClear && result.autoClear.ok);
+    return _VerdictSafety.evaluate(check, result).allowed;
   }
 
+  // 승인 관문에서 발급한 일회용 티켓만 허용한다. 가져온 파일의 proof를 신뢰하지 않는다.
+  function attachAutoProof(item,proof,previous){
+    item.origin='auto';item.auto_proof=proof;
+    // 현재 재검사를 통과한 뒤에는 과거 보류를 현재 상태로 남기지 않는다. 원래 기록은 별도 보존한다.
+    if(previous?.previous_system_review||previous?.safety_hold)item.previous_system_review=previous.previous_system_review||previous.safety_hold;
+    delete item.safety_hold;return item;
+  }
+  function applyApproved(store, cpId, date, ticket) {
+    var proof = _VerdictWorkbench.consume(ticket, cpId);
+    if (!proof) return store;
+    var cur = (store || {})[cpId];
+    if (cur && cur.verdict && cur.origin !== "auto") return store;
+    var next = setVerdict(store, cpId, "이상없음", "승인 규칙 " + proof.rule_id + "의 본건 요건 확인", date, "반영되어 있음", "manual");
+    attachAutoProof(next[cpId],proof,cur);
+    return next;
+  }
+  function applyStandard(store, cpId, date, ticket) {
+    var engine=typeof StandardAuto!=="undefined"?StandardAuto:require('./standard_auto');
+    var proof=engine.consume(ticket,cpId),cur=(store||{})[cpId];
+    if(!proof||cur&&cur.verdict&&cur.origin!=="auto")return store;
+    // 원문은 검증된 proof에만 보관한다. 표시용 메모에 전량 복제하지 않는다.
+    var next=setVerdict(store,cpId,"이상없음",(proof.kind==='reused'?'동일 문서의 사용자 충족 판정 재사용':proof.kind==='clause_reused'?'관련 조항·조건이 동등한 사용자 판단 재사용':'태그·문구의 질문별 요건 확인'),date,"반영되어 있음","manual");
+    attachAutoProof(next[cpId],proof,cur);return next;
+  }
+
+  function applyTemplate(store, cpId, date, ticket) {
+    var engine=typeof TemplateLibrary!=="undefined"?TemplateLibrary:require('./template_library');
+    var proof=engine.consume(ticket,cpId),cur=(store||{})[cpId];
+    if(!proof||cur&&cur.verdict&&cur.origin!=="auto")return store;
+    var matchLabel=proof.kind==='registered_clauses'?'관련 조항·조건·참조 문맥 일치':proof.kind==='registered_document'?'문서 전체 일치':proof.kind==='corpus_variant'?'승인된 누적 검토 표현':proof.kind==='exact'?'동일 문구':'동등 문구';
+    var next=setVerdict(store,cpId,"이상없음",'표준서식 '+proof.template_name+' ('+proof.revision+') '+matchLabel+' 충족',date,"반영되어 있음","manual");
+    attachAutoProof(next[cpId],proof,cur);return next;
+  }
   function verdictSummary(store) {
     var reasons = {};
     OK_REASONS.forEach(function (r) { reasons[r] = 0; });
@@ -171,7 +230,7 @@ var Verdict = (function () {
   // 3분할 작업열 결정. 이상없음을 방금 선택한 카드는 사유·메모 입력을 끝낼 때까지
   // ③ 작업열에 고정하고, 명시적으로 완료한 뒤에만 ② 확인 완료 열로 보낸다.
   function reviewColumn(item, editPinned) {
-    return item && item.verdict === "이상없음" && !editPinned ? "done" : "needs";
+    return item && item.verdict === "이상없음" && !item.needs_reconfirmation && (!editPinned||item.origin==='auto') ? "done" : "needs";
   }
 
   // 일괄 판정(코멘트 포함): cpIds 중 '미판정'인 것만 verdict+comment로 채움 — 이미 찍은 판정(예외 지정분)은 보존.
@@ -182,8 +241,9 @@ var Verdict = (function () {
     var applied = 0;
     (cpIds || []).forEach(function (id) {
       if (next[id] && next[id].verdict) return; // 기판정 보존
+      if (next[id] && next[id].safety_hold && ["auto", "subdoc", "prior_review", "llm_draft"].indexOf(origin) !== -1) return;
       var m = migrateItem({ verdict: verdict, reason: reason, comment: comment, date: date,
-        origin: origin || "bulk" });
+        origin: origin || "bulk", safety_hold: next[id] && next[id].safety_hold });
       if (!m) return;
       next[id] = m;
       applied++;
@@ -313,6 +373,8 @@ var Verdict = (function () {
   }
 
   return {
+    applyStandard: applyStandard,
+    applyTemplate: applyTemplate,
     VERDICTS: VERDICTS,
     ACTION_DISPOSITIONS: ACTION_DISPOSITIONS,
     ACTION_DISPOSITION_LABELS: ACTION_DISPOSITION_LABELS,
@@ -323,6 +385,7 @@ var Verdict = (function () {
     setActionDisposition: setActionDisposition,
     revertAutoVerdicts: revertAutoVerdicts,
     canAutoPass: canAutoPass,
+    applyApproved: applyApproved,
     reviewColumn: reviewColumn,
     verdictKey: verdictKey,
     opinionKey: opinionKey,

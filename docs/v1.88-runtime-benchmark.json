@@ -1,0 +1,442 @@
+{
+  "artifact": "v1.88-isolated-runtime-benchmark",
+  "created_at": "2026-09-18T02:42:22.481Z",
+  "synthetic_only": true,
+  "fixture_sha256": "f408395115b5dac7fa731c70e597369756a3845f8e3edb20f42d7cb55ee4a945",
+  "scale": {
+    "contract_characters": 739,
+    "contract_utf8_bytes": 1718,
+    "authored_clauses": 14,
+    "tag_documents": 300,
+    "legal_tag_documents": 150,
+    "contract_tag_documents": 150,
+    "tag_definitions": 14,
+    "corpus_contracts": 100,
+    "corpus_judgments": 400,
+    "corpus_original_documents": 0,
+    "registered_standards": 0,
+    "input_json_bytes": 574879
+  },
+  "environment": {
+    "browser": "Chrome/153.0.8010.48",
+    "node": "v24.14.0",
+    "platform": "darwin",
+    "architecture": "arm64",
+    "logical_cpus": 10
+  },
+  "method": {
+    "initial": "one fresh-context analysis: segmentation + input/type setup + runAnalysis + synchronous layout; no P50/P95",
+    "reanalysis": "real runAnalysis + synchronous layout",
+    "render": "real renderClauses + renderReport + synchronous layout",
+    "warmups_per_mode": 2,
+    "repetitions": 12,
+    "percentile": "nearest rank",
+    "animation": "reduced in both versions",
+    "archival": "disabled in both versions",
+    "measurement_order": "initial previous/current, subsequent rounds alternate previous/current order",
+    "excluded": [
+      "file conversion",
+      "data import",
+      "browser startup",
+      "asynchronous evaluation archival",
+      "GPU paint completion"
+    ]
+  },
+  "comparison": {
+    "active_catalog_delta": -15,
+    "analysis_question_delta": -1,
+    "automatic_verdict_delta": 9
+  },
+  "results": [
+    {
+      "release": "previous",
+      "html_sha256": "28203c2bd4257b4a58cfa14a19f46af91a07adfbb28f1161bfdc162ebcb0cb65",
+      "identity": {
+        "app": "1.87.0",
+        "auto": "standard-auto-v12",
+        "recognition": null
+      },
+      "initial_profile": null,
+      "catalog_rows": 206,
+      "active_catalog_questions": 199,
+      "selected_type": "outsourcing",
+      "active_modules": [
+        "X-PII"
+      ],
+      "parsed_clauses": 15,
+      "analysis_questions": 29,
+      "mapped_rows": 29,
+      "automatic_verdicts": 4,
+      "loaded_tag_documents": 300,
+      "loaded_corpus_contracts": 100,
+      "loaded_corpus_judgments": 400,
+      "registered_standards": 0,
+      "archival_enabled": false,
+      "initial_analysis": {
+        "n": 1,
+        "elapsed_ms": 132.7
+      },
+      "reanalysis": {
+        "n": 12,
+        "p50_ms": 81.4,
+        "p95_ms": 86.1,
+        "min_ms": 79.8,
+        "max_ms": 86.1,
+        "samples_ms": [
+          81.4,
+          81.8,
+          80.3,
+          82.3,
+          86.1,
+          82,
+          80.4,
+          84,
+          82.8,
+          81,
+          79.8,
+          80.9
+        ]
+      },
+      "render": {
+        "n": 12,
+        "p50_ms": 5.4,
+        "p95_ms": 6,
+        "min_ms": 4.9,
+        "max_ms": 6,
+        "samples_ms": [
+          5.2,
+          6,
+          5.6,
+          5.5,
+          6,
+          5.7,
+          4.9,
+          5.2,
+          5.3,
+          5.4,
+          5.1,
+          5.4
+        ]
+      },
+      "external_requests": 0
+    },
+    {
+      "release": "current",
+      "html_sha256": "d4961a36f7adc83ac670a574db504e02a41e1376310bf12daeb3b7fd31e1e1f9",
+      "identity": {
+        "app": "1.88.0",
+        "auto": "standard-auto-v13",
+        "recognition": "agreement-judgment-v2"
+      },
+      "initial_profile": null,
+      "catalog_rows": 184,
+      "active_catalog_questions": 184,
+      "selected_type": "outsourcing",
+      "active_modules": [
+        "X-PII"
+      ],
+      "parsed_clauses": 15,
+      "analysis_questions": 28,
+      "mapped_rows": 28,
+      "automatic_verdicts": 13,
+      "loaded_tag_documents": 300,
+      "loaded_corpus_contracts": 100,
+      "loaded_corpus_judgments": 400,
+      "registered_standards": 0,
+      "archival_enabled": false,
+      "initial_analysis": {
+        "n": 1,
+        "elapsed_ms": 178.9
+      },
+      "reanalysis": {
+        "n": 12,
+        "p50_ms": 73.9,
+        "p95_ms": 79.9,
+        "min_ms": 72.4,
+        "max_ms": 79.9,
+        "samples_ms": [
+          74.7,
+          73.3,
+          73.9,
+          75.3,
+          74.1,
+          79.9,
+          78.2,
+          73.7,
+          74,
+          72.6,
+          73.9,
+          72.4
+        ]
+      },
+      "render": {
+        "n": 12,
+        "p50_ms": 5.9,
+        "p95_ms": 6.6,
+        "min_ms": 5.6,
+        "max_ms": 6.6,
+        "samples_ms": [
+          6.3,
+          6.2,
+          6.6,
+          6.2,
+          6.1,
+          5.6,
+          6.1,
+          5.8,
+          5.9,
+          5.9,
+          5.9,
+          5.8
+        ]
+      },
+      "external_requests": 0
+    }
+  ],
+  "limitations": [
+    "합성 자료 1종·동일 장비의 관측값이며 폐쇄망 실자료 성능/정확도가 아님.",
+    "질문 통합·제외와 자동 완료 건수로 렌더할 항목 수가 달라지므로 동일 작업량의 엔진 미세벤치마크가 아님.",
+    "초기 분석은 각 버전 1회뿐이며 OS/JIT/캐시·열상태·다른 프로세스 영향이 있음. 반복 구간은 캐시가 유지된 재분석/렌더임.",
+    "개선률이나 처리시간을 약속하지 않으며 수치가 느려져도 기대값을 조정해 숨기지 않음."
+  ],
+  "initial_diagnostic": {
+    "separate_instrumented_run": true,
+    "do_not_mix_with_primary_statistics": true,
+    "result": {
+      "artifact": "v1.88-isolated-runtime-benchmark",
+      "created_at": "2026-09-18T02:42:25.952Z",
+      "synthetic_only": true,
+      "fixture_sha256": "f408395115b5dac7fa731c70e597369756a3845f8e3edb20f42d7cb55ee4a945",
+      "scale": {
+        "contract_characters": 739,
+        "contract_utf8_bytes": 1718,
+        "authored_clauses": 14,
+        "tag_documents": 300,
+        "legal_tag_documents": 150,
+        "contract_tag_documents": 150,
+        "tag_definitions": 14,
+        "corpus_contracts": 100,
+        "corpus_judgments": 400,
+        "corpus_original_documents": 0,
+        "registered_standards": 0,
+        "input_json_bytes": 574879
+      },
+      "environment": {
+        "browser": "Chrome/153.0.8010.48",
+        "node": "v24.14.0",
+        "platform": "darwin",
+        "architecture": "arm64",
+        "logical_cpus": 10
+      },
+      "method": {
+        "initial": "one fresh-context analysis: segmentation + input/type setup + runAnalysis + synchronous layout; no P50/P95",
+        "reanalysis": "real runAnalysis + synchronous layout",
+        "render": "real renderClauses + renderReport + synchronous layout",
+        "warmups_per_mode": 2,
+        "repetitions": 12,
+        "percentile": "nearest rank",
+        "animation": "reduced in both versions",
+        "archival": "disabled in both versions",
+        "measurement_order": "initial previous/current, subsequent rounds alternate previous/current order",
+        "excluded": [
+          "file conversion",
+          "data import",
+          "browser startup",
+          "asynchronous evaluation archival",
+          "GPU paint completion"
+        ]
+      },
+      "comparison": {
+        "active_catalog_delta": -15,
+        "analysis_question_delta": -1,
+        "automatic_verdict_delta": 9
+      },
+      "results": [
+        {
+          "release": "previous",
+          "html_sha256": "28203c2bd4257b4a58cfa14a19f46af91a07adfbb28f1161bfdc162ebcb0cb65",
+          "identity": {
+            "app": "1.87.0",
+            "auto": "standard-auto-v12",
+            "recognition": null
+          },
+          "initial_profile": {
+            "StandardAuto.evaluate": {
+              "calls": 29,
+              "inclusive_ms": 14.4
+            },
+            "JudgmentSources.compile": {
+              "calls": 1,
+              "inclusive_ms": 0.3
+            },
+            "HumanPrecedent.prepare": {
+              "calls": 1,
+              "inclusive_ms": 0.4
+            }
+          },
+          "catalog_rows": 206,
+          "active_catalog_questions": 199,
+          "selected_type": "outsourcing",
+          "active_modules": [
+            "X-PII"
+          ],
+          "parsed_clauses": 15,
+          "analysis_questions": 29,
+          "mapped_rows": 29,
+          "automatic_verdicts": 4,
+          "loaded_tag_documents": 300,
+          "loaded_corpus_contracts": 100,
+          "loaded_corpus_judgments": 400,
+          "registered_standards": 0,
+          "archival_enabled": false,
+          "initial_analysis": {
+            "n": 1,
+            "elapsed_ms": 134.7
+          },
+          "reanalysis": {
+            "n": 12,
+            "p50_ms": 82.1,
+            "p95_ms": 106.8,
+            "min_ms": 79.4,
+            "max_ms": 106.8,
+            "samples_ms": [
+              83.7,
+              82.3,
+              82.1,
+              82.3,
+              106.8,
+              82.9,
+              82,
+              82.2,
+              81,
+              80.4,
+              79.4,
+              81.7
+            ]
+          },
+          "render": {
+            "n": 12,
+            "p50_ms": 5.6,
+            "p95_ms": 6.7,
+            "min_ms": 5.4,
+            "max_ms": 6.7,
+            "samples_ms": [
+              5.6,
+              6.7,
+              5.5,
+              5.6,
+              5.6,
+              5.5,
+              5.4,
+              5.6,
+              5.6,
+              5.9,
+              5.5,
+              5.7
+            ]
+          },
+          "external_requests": 0
+        },
+        {
+          "release": "current",
+          "html_sha256": "d4961a36f7adc83ac670a574db504e02a41e1376310bf12daeb3b7fd31e1e1f9",
+          "identity": {
+            "app": "1.88.0",
+            "auto": "standard-auto-v13",
+            "recognition": "agreement-judgment-v2"
+          },
+          "initial_profile": {
+            "StandardAuto.evaluate": {
+              "calls": 28,
+              "inclusive_ms": 12.9
+            },
+            "JudgmentHints.index": {
+              "calls": 1,
+              "inclusive_ms": 35.4
+            },
+            "JudgmentHints.retrieve": {
+              "calls": 53,
+              "inclusive_ms": 40.9
+            },
+            "JudgmentSources.compile": {
+              "calls": 1,
+              "inclusive_ms": 0.3
+            },
+            "HumanPrecedent.prepare": {
+              "calls": 0,
+              "inclusive_ms": 0
+            }
+          },
+          "catalog_rows": 184,
+          "active_catalog_questions": 184,
+          "selected_type": "outsourcing",
+          "active_modules": [
+            "X-PII"
+          ],
+          "parsed_clauses": 15,
+          "analysis_questions": 28,
+          "mapped_rows": 28,
+          "automatic_verdicts": 13,
+          "loaded_tag_documents": 300,
+          "loaded_corpus_contracts": 100,
+          "loaded_corpus_judgments": 400,
+          "registered_standards": 0,
+          "archival_enabled": false,
+          "initial_analysis": {
+            "n": 1,
+            "elapsed_ms": 181.4
+          },
+          "reanalysis": {
+            "n": 12,
+            "p50_ms": 75,
+            "p95_ms": 80.7,
+            "min_ms": 73.5,
+            "max_ms": 80.7,
+            "samples_ms": [
+              74.9,
+              75,
+              75.1,
+              75.7,
+              76.1,
+              80.7,
+              79.2,
+              74.1,
+              75.2,
+              73.9,
+              74.5,
+              73.5
+            ]
+          },
+          "render": {
+            "n": 12,
+            "p50_ms": 6,
+            "p95_ms": 6.6,
+            "min_ms": 5.7,
+            "max_ms": 6.6,
+            "samples_ms": [
+              6.2,
+              6.4,
+              6.6,
+              6.2,
+              6,
+              5.7,
+              5.9,
+              5.9,
+              6.1,
+              6,
+              5.9,
+              6.1
+            ]
+          },
+          "external_requests": 0
+        }
+      ],
+      "limitations": [
+        "합성 자료 1종·동일 장비의 관측값이며 폐쇄망 실자료 성능/정확도가 아님.",
+        "질문 통합·제외와 자동 완료 건수로 렌더할 항목 수가 달라지므로 동일 작업량의 엔진 미세벤치마크가 아님.",
+        "초기 분석은 각 버전 1회뿐이며 OS/JIT/캐시·열상태·다른 프로세스 영향이 있음. 반복 구간은 캐시가 유지된 재분석/렌더임.",
+        "개선률이나 처리시간을 약속하지 않으며 수치가 느려져도 기대값을 조정해 숨기지 않음."
+      ]
+    }
+  }
+}

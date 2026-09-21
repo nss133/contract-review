@@ -7,7 +7,9 @@ import { createBatchWorkbook } from "../../legal-opinion-tagger/lib/export-xlsx.
 const ROOT = new URL("../", import.meta.url).pathname;
 const APP_VERSION = (await fs.readFile(ROOT + "VERSION", "utf8")).trim();
 const UPDATE = ROOT + "dist/contract-review-v" + APP_VERSION + ".crupdate";
-const UPDATE_NEXT = "/private/tmp/contract-review-next-test.crupdate";
+const TEMP = await fs.mkdtemp('/private/tmp/cr-launcher-verification.');
+const UPDATE_NEXT = TEMP + "/contract-review-next-test.crupdate";
+const ENDPOINT = process.env.CR_TEST_ENDPOINT || 'http://127.0.0.1:9223';
 const LAUNCHER_URL = process.env.CR_LAUNCHER_URL || new URL("../dist/contract-review-launcher.html", import.meta.url).href;
 const nextPackage = JSON.parse(await fs.readFile(UPDATE, "utf8"));
 nextPackage.version = APP_VERSION + "-next-test";
@@ -45,7 +47,8 @@ const historyTemplateBase64 = historyTemplatePath
   ? Buffer.from(await fs.readFile(historyTemplatePath)).toString("base64")
   : "";
 
-const target = await fetch("http://127.0.0.1:9223/json/new?" + encodeURIComponent(LAUNCHER_URL), { method: "PUT" }).then(r => r.json());
+// Use only a dedicated test browser profile. Never point this harness at a user profile.
+const target = await fetch(ENDPOINT+"/json/new?" + encodeURIComponent(LAUNCHER_URL), { method: "PUT" }).then(r => r.json());
 const ws = new WebSocket(target.webSocketDebuggerUrl);
 await new Promise((resolve, reject) => { ws.onopen = resolve; ws.onerror = reject; });
 let seq = 0;
@@ -89,9 +92,43 @@ const importResult = await evaluate(`(async()=>{
   const dt=new w.DataTransfer();dt.items.add(file);
   const input=w.document.getElementById("knowledge-xlsx");input.files=dt.files;
   input.dispatchEvent(new w.Event("change",{bubbles:true}));
-  for(let i=0;i<60;i++){await new Promise(r=>setTimeout(r,100));if(w.legalOpinionKnowledge&&w.legalOpinionKnowledge.meta.document_count===1)return w.legalOpinionKnowledge.meta;}
+  for(let i=0;i<60;i++){await new Promise(r=>setTimeout(r,100));if(w.legalOpinionKnowledge&&w.legalOpinionKnowledge.meta.document_count===1&&w.reviewHistory&&w.reviewHistory.latest["OP-TEST-1"])return w.legalOpinionKnowledge.meta;}
   throw new Error(w.document.getElementById("knowledge-action-msg").textContent||"XLSX 적재 시간초과");
 })()`, true);
+
+const taggedHistoryValidation = await evaluate(`(async()=>{
+  const w=document.getElementById("frame").contentWindow;
+  const bytes=Uint8Array.from(atob(${JSON.stringify(xlsxBase64)}),c=>c.charCodeAt(0));
+  const file=new w.File([bytes],"legal-opinion-test.xlsx",{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
+  const parsed=await w.ReviewHistory.workbookRows(file);
+  const dataset=w.ReviewHistory.datasetFromRows(parsed.rows,parsed.source);
+  return {sheet:dataset.source.sheet_name,layout:dataset.diagnostics.source_layout,
+    records:dataset.records.length,stable:dataset.diagnostics.stable_id_available};
+})()`, true);
+if (taggedHistoryValidation.sheet !== "문서대장" || taggedHistoryValidation.layout !== "document_ledger" ||
+    taggedHistoryValidation.records !== 1 || !taggedHistoryValidation.stable)
+  throw new Error("태거 XLSX를 계약검토 이력으로 인식하지 못함: " + JSON.stringify(taggedHistoryValidation));
+
+const historyUiValidation = await evaluate(`(()=>{
+  const w=document.getElementById("frame").contentWindow;
+  const record=w.ReviewHistory.latestRecord(w.reviewHistory,"OP-TEST-1");
+  const type=w.CR.types[0].meta.type_id, other=w.CR.types[1].meta.type_id;
+  w.reviewHistory=w.ReviewHistory.setTypeMapping(w.reviewHistory,w.historyRecordDbType(record),other);
+  w.state.typeId=type;
+  w.applyHistoryReference("OP-TEST-1");
+  const unchanged=w.state.typeId===type;
+  w.document.getElementById("contract-text").value="임대차계약서\\n제1조 사무실 임대차 목적물을 임대한다.";
+  w.document.getElementById("input-department").value="정보보호";
+  w.refreshInputSetup();
+  const withDepartment=w.state.detectRanked[0].typeId;
+  w.document.getElementById("input-department").value="영업부";
+  w.refreshInputSetup();
+  return {unchanged,departmentStable:withDepartment===w.state.detectRanked[0].typeId,
+    manualMappingHidden:w.getComputedStyle(w.document.getElementById("history-type-map-fold")).display==="none",
+    historyCollapsed:!w.document.querySelector("details.history-search-box").open};
+})()`);
+if (Object.values(historyUiValidation).some(value=>value!==true))
+  throw new Error("유형·이력 UI 보호 검증 실패: " + JSON.stringify(historyUiValidation));
 
 const historyImportResult = await evaluate(`(async()=>{
   const w=document.getElementById("frame").contentWindow;
@@ -124,7 +161,7 @@ const historyImportResult = await evaluate(`(async()=>{
   const dt=new w.DataTransfer();dt.items.add(file);
   const input=w.document.getElementById("history-xlsx");input.files=dt.files;
   input.dispatchEvent(new w.Event("change",{bubbles:true}));
-  for(let i=0;i<60;i++){await new Promise(r=>setTimeout(r,100));if(w.reviewHistory&&w.reviewHistory.meta.review_count===1)return w.reviewHistory.meta;}
+  for(let i=0;i<60;i++){await new Promise(r=>setTimeout(r,100));if(w.reviewHistory&&w.reviewHistory.meta.review_count===2)return w.reviewHistory.meta;}
   throw new Error(w.document.getElementById("history-action-msg").textContent||"이력 XLSX 적재 시간초과");
 })()`, true);
 
@@ -148,7 +185,7 @@ const retained = await evaluate(`(async()=>{
   for(let i=0;i<50;i++){await new Promise(r=>setTimeout(r,100));if(w.legalOpinionKnowledge&&w.reviewHistory)return {count:w.legalOpinionKnowledge.meta.document_count,historyCount:w.reviewHistory.meta.review_count,state:w.document.getElementById("knowledge-store-state").textContent};}
   return {count:-1,historyCount:-1,state:"load timeout"};
 })()`, true);
-if (retained.count !== 1 || retained.historyCount !== 1) throw new Error("앱 재로딩 후 내부 자료가 유지되지 않음: " + JSON.stringify(retained));
+if (retained.count !== 1 || retained.historyCount !== 2) throw new Error("앱 재로딩 후 내부 자료가 유지되지 않음: " + JSON.stringify(retained));
 
 const document2 = await cdp("DOM.getDocument", { depth: -1, pierce: true });
 const inputNode2 = await cdp("DOM.querySelector", { nodeId: document2.root.nodeId, selector: "#update-file" });
@@ -159,8 +196,29 @@ const afterUpdate = await evaluate(`(async()=>{
   for(let i=0;i<50;i++){await new Promise(r=>setTimeout(r,100));if(w.legalOpinionKnowledge&&w.reviewHistory)return {version:document.getElementById("version").textContent,count:w.legalOpinionKnowledge.meta.document_count,historyCount:w.reviewHistory.meta.review_count};}
   return {version:document.getElementById("version").textContent,count:-1,historyCount:-1};
 })()`, true);
-if (afterUpdate.version !== "v" + APP_VERSION + "-next-test" || afterUpdate.count !== 1 || afterUpdate.historyCount !== 1)
+if (afterUpdate.version !== "v" + APP_VERSION + "-next-test" || afterUpdate.count !== 1 || afterUpdate.historyCount !== 2)
   throw new Error("버전 업데이트 후 내부 자료가 유지되지 않음: " + JSON.stringify(afterUpdate));
 
-console.log(JSON.stringify({ installed, importResult, historyImportResult, historyTemplateValidation, retained, afterUpdate }, null, 2));
+// The worker is embedded in a srcdoc app under a persistent file:// launcher.
+// A standalone HTML pass is not sufficient evidence that this origin works.
+const launcherAnalysis = await evaluate(`(async()=>{
+  const w=document.getElementById("frame").contentWindow;
+  const body='합성 용역계약서\\n제1조(관할)\\n분쟁에 관한 소송은 서울중앙지방법원을 관할법원으로 한다.\\n제2조(부가세)\\n계약대금 1000000원(부가세 별도)';
+  w.document.getElementById('contract-text').value=body;
+  w.document.getElementById('btn-analyze').click();
+  for(let i=0;i<300;i++){
+    await new Promise(r=>setTimeout(r,50));
+    if(!w.document.getElementById('btn-analyze').disabled){
+      if(!w.state.result||w.state.analyzedText!==body)throw Error('실행기 분석 미완료: '+w.document.getElementById('input-error').textContent);
+      for(const id of ['CMN-19','CMN-05'])if(w.verdictStore[id]?.origin!=='auto'||w.verdictStore[id]?.verdict!=='이상없음')throw Error('실행기 자동판정 미완료 '+id);
+      const count=w.legalOpinionKnowledge.meta.document_count,historyCount=w.reviewHistory.meta.review_count;
+      if(count!==1||historyCount!==2)throw Error('분석 후 내부 자료 변경');
+      return {srcdoc_worker_analysis:true,automatic:['CMN-19','CMN-05'],count,historyCount};
+    }
+  }
+  throw Error('실행기 분석 시간초과');
+})()`,true);
+
+console.log(JSON.stringify({ installed, importResult, historyUiValidation, historyImportResult, historyTemplateValidation, retained, afterUpdate, launcherAnalysis }, null, 2));
+await fetch(ENDPOINT+'/json/close/'+target.id);
 ws.close();

@@ -3,7 +3,7 @@
 id: outsourcing-pii-ref
 desc: 위탁 본계약 + 약정서 별첨 참조 — X-PII 알람의 별첨 참조 전환
 detect_expected: outsourcing
-refcover_must_include: [PRIV-05, PRIV-06, PRIV-08]
+refcover_must_include: [CNS-PRIVSUB, PRIV-06, PRIV-08]
 text: |
   업무위탁계약서
 

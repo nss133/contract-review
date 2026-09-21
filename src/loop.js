@@ -121,7 +121,7 @@ var Loop = (function () {
 
   // 검토의견 내보내기 객체({meta,verdicts})를 코퍼스에 병합(불변 반환).
   // 같은 contract_hash 재적재는 중복 카운트하지 않음(멱등).
-  function mergeIntoCorpus(corpus, exportObj) {
+  function accumulateExport(corpus, exportObj) {
     var next = _normalizeCorpus(corpus);
     if (!exportObj || typeof exportObj !== "object") return next;
     var meta = exportObj.meta || {};
@@ -619,6 +619,131 @@ var Loop = (function () {
       if (!current.date || String(incoming.date || "") >= String(current.date || ""))
         next.tag_proposal_decisions[key] = JSON.parse(JSON.stringify(incoming));
     });
+    if (next.judgment_ledger || backup.judgment_ledger) {
+      var left = next.judgment_ledger, right = backup.judgment_ledger;
+      next.judgment_ledger = { version: 1,
+        baseline: mergeCorpusBackup(withoutLedger(left ? left.baseline : corpus),
+          withoutLedger(right ? right.baseline : backup)),
+        records: Object.assign({}, left && left.records || {},
+          JSON.parse(JSON.stringify(right && right.records || {}))) };
+    }
+    return next;
+  }
+
+  // 사건 단위의 원자료가 있는 신규 판정만 수정 가능한 집계로 관리한다.
+  // 구 집계의 계약별 기여분은 역산하지 않는다. 별도 기록은 중복 합산하지 않는다.
+  function judgmentTags(v) {
+    v = v || {};
+    var quote = String(v.comment || "").trim(), reason = String(v.reason || "").trim();
+    var text = reason + " " + quote, kind = "unknown";
+    if (v.verdict === "검토의견") kind = "issue";
+    else if (reason === NA_REASON || v.verdict === "해당없음") kind = "not_applicable";
+    else if (reason === "수용 가능한 위험" ||
+      (!/않|아니|없|불가|어려|곤란|경우|다면|여부|예정|검토/.test(text) && /위험.{0,12}수용|수용.{0,12}위험/.test(text))) kind = "risk_accepted";
+    else if (v.verdict === "이상없음" && reason === "반영되어 있음") kind = "satisfied";
+    var uncertain = /경우|다면|여부|다만|필요|않|아니|미흡|없/.test(quote.replace(/이상\s*없음/g, ""));
+    var route = "unknown";
+    if (!uncertain && /별첨|부속|약정서/.test(quote) && /반영|규정|충족/.test(quote)) route = "annex";
+    var topics = [];
+    [["privacy", /개인정보|개인\(신용\)정보|개인신용정보/], ["security", /보안/],
+      ["termination", /해지|해제/], ["damages", /손해|배상/], ["payment", /대금|지급|정산/],
+      ["term", /계약기간|유효기간/], ["jurisdiction", /관할|중재/]].forEach(function (x) {
+      if (x[1].test(text)) topics.push(x[0]);
+    });
+    var tagger=typeof ContractTags!=='undefined'?ContractTags:(typeof require!=='undefined'?require('./contract_tags'):null);
+    var facets=tagger?tagger.values(tagger.analyzeClause({heading:'',body:quote},'')):{};
+    return { version: "judgment-tags-v2", verdict: v.verdict || "", reason_kind: kind, facets:facets,
+      route: route, topics: topics, quote: quote, explicit_reason: reason,
+      origin: v.origin || "legacy", human_confirmed: v.origin === "manual",
+      // 결과 선택은 근거 조항 확인이나 자동승인으로 승격되지 않는다.
+      mapping_confirmed: false, auto_approval: false };
+  }
+
+  function recordSnapshot(obj) {
+    var out = {};
+    ["meta", "verdicts", "history_reference", "comparison_context", "matching_observations", "system_assessments", "llm_assistance",
+      "type_classification", "subdoc_confirmation", "manual_findings", "finding_decisions",
+      "contract_requirement_outcomes", "standard_patterns", "group_reviews", "group_metrics", "checklist_revision", "template_matches"].forEach(function (k) {
+      if (obj[k] !== undefined) out[k] = JSON.parse(JSON.stringify(obj[k]));
+    });
+    // 문서 본문을 별도로 복제하지 않고 기존 내보내기의 근거 정보를 보존한다.
+    return out;
+  }
+  function withoutLedger(corpus) {
+    var out = _normalizeCorpus(corpus); delete out.judgment_ledger; return out;
+  }
+  function mergeIntoCorpus(corpus, obj, opts) {
+    var next = _normalizeCorpus(corpus);
+    if (!obj || !obj.meta || !obj.meta.contract_hash) return accumulateExport(next, obj);
+    var hash = obj.meta.contract_hash, snapshot = recordSnapshot(obj);
+    var ledger = next.judgment_ledger || { version: 1, baseline: withoutLedger(next), records: {} };
+    var old = ledger.records[hash];
+    if (old && JSON.stringify(old.snapshot) === JSON.stringify(snapshot)) return next;
+    if (old && !(opts && opts.replaceCurrent)) {
+      var before = String(old.snapshot.meta.date || ""), after = String(snapshot.meta.date || "");
+      // 날짜만 같은 다른 파일은 순서를 확정할 수 없다. 현재 화면 저장만 명시적 교체로 취급.
+      if (!after || !before || after <= before) {
+        old.pending = snapshot; next.judgment_ledger = ledger; return next;
+      }
+    }
+    var tags = {};
+    Object.keys(snapshot.verdicts || {}).forEach(function (id) { tags[id] = judgmentTags(snapshot.verdicts[id]); });
+    ledger.records[hash] = { snapshot: snapshot, tags: tags,
+      aggregate_status: ledger.baseline.meta.hashes.indexOf(hash) === -1 ? "active" : "legacy_overlap",
+      revisions: old ? (old.revisions || []).concat([old.snapshot]) : [] };
+    // 구 집계 중복인 경우 기록만 보존한다. 계약별 과거 기여분 미상 상태에서 빼거나 더하지 않는다.
+    var rebuilt;
+    if (!old) {
+      // 최초 적재는 기존 전건을 재계산하지 않는다.
+      rebuilt = ledger.records[hash].aggregate_status === "active" ? accumulateExport(withoutLedger(next), snapshot) : withoutLedger(next);
+    } else {
+      rebuilt = withoutLedger(ledger.baseline);
+      Object.keys(ledger.records).forEach(function (id) {
+        if (ledger.records[id].aggregate_status === "active")
+          rebuilt = accumulateExport(rebuilt, ledger.records[id].snapshot);
+      });
+    }
+    rebuilt.tag_proposal_decisions = next.tag_proposal_decisions;
+    rebuilt.judgment_ledger = ledger;
+    return rebuilt;
+  }
+
+  function judgmentSummary(corpus) {
+    var records = corpus && corpus.judgment_ledger && corpus.judgment_ledger.records || {};
+    var out = { contracts: 0, judgments: 0, human: 0, legacy_overlap: 0, pending: 0, reasons: {}, patterns: [] };
+    Object.keys(records).forEach(function (hash) {
+      var record = records[hash]; out.contracts++;
+      if (record.aggregate_status === "legacy_overlap") out.legacy_overlap++;
+      if (record.pending) out.pending++;
+      Object.keys(record.tags || {}).forEach(function (id) {
+        var tag = record.tags[id]; out.judgments++;
+        if (tag.human_confirmed) out.human++;
+        out.reasons[tag.reason_kind] = (out.reasons[tag.reason_kind] || 0) + 1;
+      });
+    });
+    // 집계 의견의 태그는 사건별 시험 정답이 아닌 검색용 패턴으로 제공한다.
+    Object.keys(corpus && corpus.byCheck || {}).forEach(function (id) {
+      (corpus.byCheck[id].comments || []).forEach(function (cm) {
+        out.patterns.push({ check_id: id, source_kind: "aggregate_comment", count: cm.count || 0,
+          tags: judgmentTags({ verdict: cm.verdict, comment: cm.text }), evaluable: false });
+      });
+    });
+    return out;
+  }
+
+  function bindJudgmentSource(corpus, input) {
+    var next=_normalizeCorpus(corpus),ledger=next.judgment_ledger,record=ledger&&ledger.records[input.contract_hash];
+    if(!record||record.pending)throw Error('개별 판정파일이 없거나 상충 파일이 남아 있습니다. 먼저 해당 판정파일을 연결하세요.');
+    if(!input.source_confirmed||!String(input.reviewer||'').trim()||!String(input.note||'').trim())
+      throw Error('검토자와 동일 문서·확정판정 확인이 필요합니다.');
+    var ctx=input.comparison_context,s=record.snapshot;
+    if(!ctx||ctx.version!==1||!ctx.documents||!ctx.context||!ctx.clauses||!ctx.checks)throw Error('현재 계약을 먼저 분석하세요.');
+    if(s.comparison_context)throw Error('이미 원문이 연결된 기록입니다. 다른 버전의 판정을 덮어 연결하지 않습니다.');
+    if(s.meta.contract_hash!==input.contract_hash)throw Error('계약 식별자가 일치하지 않습니다.');
+    record.revisions=(record.revisions||[]).concat([JSON.parse(JSON.stringify(s))]);
+    s.comparison_context=JSON.parse(JSON.stringify(ctx));
+    s.source_binding={reviewer:input.reviewer.trim(),note:input.note.trim(),date:input.date||'',
+      kind:'human_confirmed_legacy_binding',mapping_confirmed:false};
     return next;
   }
 
@@ -627,6 +752,9 @@ var Loop = (function () {
     emptyCorpus: emptyCorpus,
     normalizeCorpus: _normalizeCorpus,
     mergeIntoCorpus: mergeIntoCorpus,
+    judgmentTags: judgmentTags,
+    judgmentSummary: judgmentSummary,
+    bindJudgmentSource: bindJudgmentSource,
     checkStats: checkStats,
     automationStats: automationStats,
     reviewRoute: reviewRoute,

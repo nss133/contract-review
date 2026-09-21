@@ -31,6 +31,22 @@ function tables(version, score) {
   };
 }
 
+test("행 기반 태거 ID는 파일별 분리하고 태그와 근거 연결을 보존한다", () => {
+  const input = tables("0.6.3", 95);
+  Object.values(input).forEach(table => table.rows.forEach(row => {
+    row.forEach((value, index) => { if (value === "OP-1") row[index] = "ROW-2"; });
+  }));
+  const a = Knowledge.datasetFromTables(input, { fingerprint: "file-a" });
+  const b = Knowledge.datasetFromTables(input, { fingerprint: "file-b" });
+  assert.notEqual(a.documents[0].source_id, b.documents[0].source_id);
+  assert.equal(a.documents[0].tags.length, 2);
+  assert.equal(a.documents[0].evidence.length, 2);
+  const first = Knowledge.mergeDataset(null, a);
+  const merged = Knowledge.mergeDataset(first.knowledge, b);
+  assert.equal(merged.knowledge.meta.document_count, 2);
+  assert.equal(Knowledge.mergeDataset(merged.knowledge, a).result.skipped, 1);
+});
+
 test("태거 5개 구조화 시트를 지식 데이터셋으로 변환한다", () => {
   const dataset = Knowledge.datasetFromTables(tables("0.6.3", 95), { file_name: "tags.xlsx", fingerprint: "f1" });
   assert.equal(dataset.documents.length, 1);
@@ -38,6 +54,20 @@ test("태거 5개 구조화 시트를 지식 데이터셋으로 변환한다", (
   assert.equal(dataset.documents[0].evidence.length, 2);
   assert.equal(dataset.documents[0].relations[0].relation, "결론");
   assert.equal(dataset.tags["legal_relation-위탁"].aliases[0], "업무위탁");
+});
+
+test("원본은 행과 제목을 함께 검증해 보존하며 충돌행은 잘못 연결하지 않는다", () => {
+  const input = tables("0.6.3", 95);
+  const base = Knowledge.datasetFromTables(input, {}).documents[0];
+  const history = { diagnostics: { source_layout: "tagged_export" }, records: [{
+    source_row: base.source_row, review_id: "LOCAL-example", conflicts: [],
+    request: { contract_name: base.title, context: "본건 고객지원 업무", applicant: "신청자" },
+    result: { contract_name: "결과 계약명" } }] };
+  const doc = Knowledge.datasetFromTables(input, {}, history).documents[0];
+  assert.equal(doc.original.request.applicant, "신청자");
+  assert.equal(doc.request_context, "본건 고객지원 업무");
+  history.records[0].request.contract_name = "다른 계약";
+  assert.equal(Knowledge.datasetFromTables(input, {}, history).documents[0].original, undefined);
 });
 
 test("태거 최신 문서대장의 신청·결과 분리 열을 그대로 읽는다", () => {

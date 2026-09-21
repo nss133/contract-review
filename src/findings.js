@@ -43,6 +43,7 @@ var Findings = (function () {
       if (DECISIONS.indexOf(d.decision) === -1) return;
       out.decisions[id] = { decision: d.decision, comment: String(d.comment || ""),
         reviewer: String(d.reviewer || ""), date: String(d.date || "") };
+      if (d.context && typeof d.context === "object") out.decisions[id].context = clone(d.context);
     });
     return out;
   }
@@ -98,6 +99,35 @@ var Findings = (function () {
     });
     return out;
   }
+  // Retired checks must not erase the reviewer's old decision or memo. Store only
+  // context for decisions that actually exist; never turn old warnings into work.
+  function preserveDecisionContext(store, integrityItems) {
+    var next = normalizeStore(store);
+    (integrityItems || []).forEach(function (item) {
+      if (item && next.decisions[item.id] && !next.decisions[item.id].context)
+        next.decisions[item.id].context = clone(item);
+    });
+    return next;
+  }
+  function reviewedProject(store, integrityItems) {
+    var normalized = preserveDecisionContext(store, integrityItems);
+    var out = project(normalized, []);
+    Object.keys(normalized.decisions).forEach(function (id) {
+      var d = normalized.decisions[id], f = clone(d.context || {});
+      f.id = id;
+      f.title = f.title || "기존 검토의견·메모";
+      f.severity = f.severity || "일반";
+      f.finding_source = "retained_review";
+      f.decision = d.decision;
+      f.decision_comment = d.comment;
+      f.reviewer = d.reviewer;
+      f.date = d.date;
+      if (!f.anchors && Number.isInteger(f.clause_index) && f.clause_index >= 0)
+        f.anchors = [{ document: "main", clause_index: f.clause_index, heading: f.heading || "" }];
+      out.push(f);
+    });
+    return out;
+  }
   function summary(store, integrityItems) {
     var projected = project(store, integrityItems);
     var out = { manual: 0, integrity: 0, pending: 0, opinions: 0, no_issue: 0, dismissed: 0 };
@@ -112,6 +142,7 @@ var Findings = (function () {
   }
   return { SCOPES: SCOPES, SEVERITIES: SEVERITIES, CATEGORIES: CATEGORIES,
     emptyStore: emptyStore, normalizeStore: normalizeStore, nextId: nextId, upsert: upsert,
-    remove: remove, decide: decide, manualList: manualList, project: project, summary: summary };
+    remove: remove, decide: decide, manualList: manualList, project: project, summary: summary,
+    preserveDecisionContext: preserveDecisionContext, reviewedProject: reviewedProject };
 })();
 if (typeof module !== "undefined") module.exports = Findings;

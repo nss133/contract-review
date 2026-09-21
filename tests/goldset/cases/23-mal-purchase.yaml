@@ -7,8 +7,8 @@ detect_expected: procurement
 # 이 표준서식은 발주번호·품목·수량·단가·계약금액·납품일자 등을 채우는 표 형식 발주서(1,079자)로
 # 서술형 계약서가 아님 — 하자보수 관련 문구 자체가 원문에 없음. 민법 임의규정(제667조)이
 # 명시조항 없이도 자동 적용되는 것을 전제로 한 최소 양식으로 추정.
-# SP-DEL-09는 absence_precondition 신설로 오탐 해소 — 재발 방지 고정.
-consider_must_exclude: [SP-DEL-09]
+# CNS-SALEDEFECT는 absence_precondition 신설로 오탐 해소 — 재발 방지 고정.
+consider_must_exclude: [CNS-SALEDEFECT]
 text: "물품(용역) 구매 약정서\n발 주 번 호\n제2024-   호\n요 청 부 서\nOOOOOO팀\n처  리  부  서\nOOOOOO팀\n\
   담  당  자\n김 O O(인)\n사업자등록번호\n305-81-08605\n대  표  자\n김 재 식 부회장\n주          소\n서울시\
   \ 영등포구 국제금융로 56(여의도동, 미래에셋증권빌딩)\n납  품  업  체\n상호(법인) 명\n㈜ OO\n사업자등록번호\n211-88-\n\

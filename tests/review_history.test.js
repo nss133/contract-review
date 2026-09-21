@@ -23,6 +23,38 @@ function row(overrides = {}) {
   return values;
 }
 
+test("계약검토 단독 적재도 태그 열을 보존하고 태그 수정은 새 리비전이 된다",()=>{
+  const headers=HEADERS.concat(['태그 1','태그 52','표시용 해시태그','엄격 태그']);
+  const a=History.datasetFromRows([headers,row().concat(['보안 관리','개인정보','#보안 관리 #개인정보','위탁'])],{fingerprint:'f'});
+  assert.deepEqual(a.records[0].tags.map(t=>t.label),['보안 관리','개인정보','위탁']);
+  assert.equal(a.records[0].tag_fields['태그 52'],'개인정보');
+  const b=History.datasetFromRows([headers,row().concat(['보안 관리','개인정보','#보안 관리 #개인정보','제공'])],{fingerprint:'f'});
+  assert.equal(a.records[0].review_id,b.records[0].review_id);
+  assert.notEqual(a.records[0].fingerprint,b.records[0].fingerprint);
+  const merged=History.mergeDataset(History.mergeDataset(History.emptyHistory(),a).history,b).history;
+  assert.equal(merged.meta.review_count,1);assert.equal(merged.meta.revision_count,2);
+});
+
+test("임시 이력 ID는 파일 간 자동 병합하지 않고 같은 파일은 중복 제외한다", () => {
+  const input = [HEADERS.concat(["문서 ID"]), row().concat(["ROW-2"])];
+  const a = History.datasetFromRows(input, { fingerprint: "file-a" });
+  const b = History.datasetFromRows(input, { fingerprint: "file-b" });
+  assert.equal(a.diagnostics.stable_id_available, false);
+  assert.notEqual(a.records[0].review_id, b.records[0].review_id);
+  const first = History.mergeDataset(null, a);
+  const merged = History.mergeDataset(first.history, b);
+  assert.equal(merged.history.meta.review_count, 2);
+  assert.equal(History.mergeDataset(merged.history, a).result.skipped, 1);
+});
+
+test("통합적재는 유효한 원본 시트를 우선하고 불완전하면 다음 시트로 이동한다", () => {
+  const valid = { rows: [HEADERS, row()] };
+  const dataset = History.datasetFromTables({ "원본+태깅결과": valid, "문서대장": valid }, {});
+  assert.equal(dataset.source.sheet_name, "원본+태깅결과");
+  const fallback = History.datasetFromTables({ "원본+태깅결과": { rows: [["제목"]] }, "문서대장": valid }, {});
+  assert.equal(fallback.source.sheet_name, "문서대장");
+});
+
 function rows(dataRows, extraHeader, extraValues) {
   const group = new Array(33).fill("");
   group[0] = "화면"; group[1] = "현황 탭"; group[2] = "계약서 검토 신청 탭"; group[18] = "(검토결과 탭)";
@@ -36,6 +68,28 @@ function rows(dataRows, extraHeader, extraValues) {
   }));
 }
 
+function taggedExportRows() {
+  const headers = [
+    "진행상태", "작성자", "작성일자", "신청부서", "신청자", "보안등급", "제목",
+    "개인정보_제공_및_위탁_여부", "업무위탁_관련_확인_여부", "계약기간_시작", "계약기간_종료",
+    "계약금액", "유형A", "유형B", "계약상대방", "신규변경연장", "계약배경_및_요청내용",
+    "검토대상_계약서", "관련자료", "계약검토_작성자", "계약검토_작성일", "계약검토_신청부서",
+    "계약검토_신청자", "계약검토_보안등급", "계약검토_계약명",
+    "계약검토_개인정보_제공_및_위탁_여부", "계약검토_업무위탁_관련_확인_여부",
+    "계약검토_계약기간", "계약검토_유형", "난이도", "검토유형", "계약검토_신규변경연장",
+    "검토결과", "첨부파일", "ROW_NUMBERS", "표시용 해시태그", "태그 1", "엄격 태그",
+    "신청·결과 충돌", "처리 상태", "오류·검토 사유", "태그 엔진 버전"
+  ];
+  const data = [
+    "완료", "신청작성자", "2026-07-01", "총무팀", "신청자", "일반", "시설관리 계약", "N", "N",
+    "2026-08-01", "2027-07-31", "1000000", "계약", "용역", "관리업체", "신규", "시설 관리를 위탁함",
+    "계약서.docx", "제안서.pdf", "검토자", "2026-07-03", "총무팀", "신청자", "일반", "시설관리 계약",
+    "N", "N", "2026-08-01~2027-07-31", "일반용역", "중", "일반검토", "신규", "수정의견 없음",
+    "검토본.docx", "2", "#용역", "#용역", "#용역", "일치", "처리 성공", "", "0.8.2"
+  ];
+  return [headers, data];
+}
+
 test("33열 한 시트에서 신청·결과를 분리하고 범위행을 제외한다", () => {
   const dataset = History.datasetFromRows(rows([row()]), { file_name: "history.xlsx", fingerprint: "f1" });
   assert.equal(dataset.records.length, 1);
@@ -44,6 +98,49 @@ test("33열 한 시트에서 신청·결과를 분리하고 범위행을 제외�
   assert.equal(dataset.records[0].request.type, "용역");
   assert.equal(dataset.records[0].result.type, "조달");
   assert.equal(dataset.records[0].request.contract_name, "행사대행 계약");
+});
+
+test("태거 원본+태깅결과의 실제 열 이름과 분할 필드를 읽는다", () => {
+  const dataset = History.datasetFromRows(taggedExportRows(), {
+    file_name: "tagged.xlsx", sheet_name: "원본+태깅결과", fingerprint: "tagged-1"
+  });
+  assert.equal(dataset.records.length, 1);
+  assert.equal(dataset.diagnostics.source_layout, "tagged_export");
+  assert.equal(dataset.diagnostics.header_score, 32);
+  assert.equal(dataset.diagnostics.header_expected, 32);
+  assert.equal(dataset.records[0].request.contract_name, "시설관리 계약");
+  assert.equal(dataset.records[0].request.contract_period, "2026-08-01 ~ 2027-07-31");
+  assert.equal(dataset.records[0].request.type, "계약");
+  assert.equal(dataset.records[0].request.type_a, "계약");
+  assert.equal(dataset.records[0].request.type_b, "용역");
+  assert.equal(dataset.records[0].request.type_detail, "용역");
+  assert.equal(dataset.records[0].result.type, "일반용역");
+  assert.equal(dataset.records[0].result.review_text, "수정의견 없음");
+});
+
+test("문서대장의 행 ID는 원천 ID가 아니며 신청·결과 제목을 구별한다", () => {
+  const headers = [
+    "문서 ID", "원본 행", "대표 계약명", "신청 계약명", "결과 계약명", "계약배경 및 요청내용", "신청부서의견", "검토결과",
+    "신청 작성일", "결과 작성일", "신청부서", "결과 신청부서", "신청 유형", "결과 유형", "유형2", "난이도", "검토유형",
+    "신청 보안등급", "결과 보안등급", "신청 신규/변경/연장", "결과 신규/변경/연장", "신청 개인정보 제공·(재)위탁",
+    "결과 개인정보 제공·(재)위탁", "신청 업무위탁", "결과 업무위탁", "신청 계약기간", "결과 계약기간", "계약금액",
+    "계약상대방", "검토대상 계약서", "관련 자료", "첨부자료", "원본 상태", "신청·결과 충돌", "처리 상태", "검토 사유", "엔진 버전"
+  ];
+  const data = [
+    "ROW-2", 2, "대표 계약", "신청 계약", "결과 계약", "시설 관리를 위탁함", "", "수정의견 없음",
+    "2026-07-01", "2026-07-03", "총무팀", "총무팀", "계약", "일반용역", "용역", "중", "일반검토",
+    "일반", "일반", "신규", "신규", "N", "N", "N", "N", "2026-08-01~2027-07-31", "2026-08-01~2027-07-31",
+    "1000000", "관리업체", "계약서.docx", "제안서.pdf", "검토본.docx", "완료", "일치", "처리 성공", "", "0.8.2"
+  ];
+  const dataset = History.datasetFromRows([headers, data], { sheet_name: "문서대장", fingerprint: "ledger-1" });
+  assert.equal(dataset.diagnostics.source_layout, "document_ledger");
+  assert.equal(dataset.diagnostics.header_score, dataset.diagnostics.header_expected);
+  assert.match(dataset.records[0].review_id, /^LOCAL-/);
+  assert.equal(dataset.records[0].id_quality, "provisional");
+  assert.equal(dataset.records[0].request.contract_name, "신청 계약");
+  assert.equal(dataset.records[0].result.contract_name, "결과 계약");
+  assert.equal(dataset.records[0].request.type_detail, "용역");
+  assert.equal(dataset.records[0].result.attachments, "검토본.docx");
 });
 
 test("원천 ID가 없으면 로컬 임시 ID와 진단코드를 남긴다", () => {

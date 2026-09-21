@@ -11,6 +11,8 @@ var ReviewHistory = (function () {
   var STORE_NAME = "history";
   var RECORD_KEY = "review-history-corpus";
   var SHEET_NAME = "계약서 검토";
+  var TAGGED_EXPORT_SHEET_NAME = "원본+태깅결과";
+  var DOCUMENT_LEDGER_SHEET_NAME = "문서대장";
 
   var COLUMNS = [
     { index: 0, key: "screen.column_name", header: "칼럼명" },
@@ -48,6 +50,69 @@ var ReviewHistory = (function () {
     { index: 32, key: "result.attachments", header: "첨부자료" }
   ];
   var STABLE_ID_HEADERS = ["계약검토id", "계약검토번호", "검토id", "검토번호", "접수번호", "문서id", "reviewid"];
+  var TAGGED_EXPORT_COLUMNS = [
+    { key: "status", headers: ["진행상태"] },
+    { key: "request.author", headers: ["작성자"] },
+    { key: "request.created_at", headers: ["작성일자", "작성일"] },
+    { key: "request.department", headers: ["신청부서"] },
+    { key: "request.applicant", headers: ["신청자"] },
+    { key: "request.security_level", headers: ["보안등급"] },
+    { key: "request.contract_name", headers: ["제목", "계약명"] },
+    { key: "request.pii_outsourcing", headers: ["개인정보_제공_및_위탁_여부", "개인(신용)정보 제공 및 (재)위탁 여부"] },
+    { key: "request.financial_outsourcing", headers: ["업무위탁_관련_확인_여부", "업무위탁 관련 확인 여부"] },
+    { key: "request.amount", headers: ["계약금액"] },
+    { key: "request.counterparty", headers: ["계약상대방"] },
+    { key: "request.change_kind", headers: ["신규변경연장", "신규/변경/연장"] },
+    { key: "request.context", headers: ["계약배경_및_요청내용", "계약배경 및 요청내용"] },
+    { key: "request.contract_attachment", headers: ["검토대상_계약서", "검토대상 계약서"] },
+    { key: "request.related_attachments", headers: ["관련자료", "관련 자료"] },
+    { key: "result.author", headers: ["계약검토_작성자"] },
+    { key: "result.created_at", headers: ["계약검토_작성일", "계약검토_작성일자"] },
+    { key: "result.department", headers: ["계약검토_신청부서"] },
+    { key: "result.applicant", headers: ["계약검토_신청자"] },
+    { key: "result.security_level", headers: ["계약검토_보안등급"] },
+    { key: "result.contract_name", headers: ["계약검토_계약명", "계약검토_제목"] },
+    { key: "result.pii_outsourcing", headers: ["계약검토_개인정보_제공_및_위탁_여부"] },
+    { key: "result.financial_outsourcing", headers: ["계약검토_업무위탁_관련_확인_여부"] },
+    { key: "result.contract_period", headers: ["계약검토_계약기간"] },
+    { key: "result.type", headers: ["계약검토_유형"] },
+    { key: "result.difficulty", headers: ["난이도", "계약검토_난이도"] },
+    { key: "result.review_type", headers: ["검토유형", "계약검토_검토유형"] },
+    { key: "result.change_kind", headers: ["계약검토_신규변경연장", "계약검토_신규/변경/연장"] },
+    { key: "result.review_text", headers: ["검토결과", "계약검토_검토결과"] },
+    { key: "result.attachments", headers: ["첨부파일", "계약검토_첨부파일", "계약검토_첨부자료"] }
+  ];
+  var DOCUMENT_LEDGER_COLUMNS = [
+    { key: "status", headers: ["원본 상태", "처리 상태"] },
+    { key: "request.created_at", headers: ["신청 작성일"] },
+    { key: "request.department", headers: ["신청부서"] },
+    { key: "request.security_level", headers: ["신청 보안등급"] },
+    { key: "request.contract_name", headers: ["신청 계약명", "대표 계약명"] },
+    { key: "request.pii_outsourcing", headers: ["신청 개인정보 제공·(재)위탁"] },
+    { key: "request.financial_outsourcing", headers: ["신청 업무위탁"] },
+    { key: "request.contract_period", headers: ["신청 계약기간"] },
+    { key: "request.amount", headers: ["계약금액"] },
+    { key: "request.type", headers: ["신청 유형"] },
+    { key: "request.type_detail", headers: ["유형2"] },
+    { key: "request.counterparty", headers: ["계약상대방"] },
+    { key: "request.change_kind", headers: ["신청 신규/변경/연장"] },
+    { key: "request.context", headers: ["계약배경 및 요청내용"] },
+    { key: "request.contract_attachment", headers: ["검토대상 계약서"] },
+    { key: "request.related_attachments", headers: ["관련 자료"] },
+    { key: "result.created_at", headers: ["결과 작성일"] },
+    { key: "result.department", headers: ["결과 신청부서"] },
+    { key: "result.security_level", headers: ["결과 보안등급"] },
+    { key: "result.contract_name", headers: ["결과 계약명", "대표 계약명"] },
+    { key: "result.pii_outsourcing", headers: ["결과 개인정보 제공·(재)위탁"] },
+    { key: "result.financial_outsourcing", headers: ["결과 업무위탁"] },
+    { key: "result.contract_period", headers: ["결과 계약기간"] },
+    { key: "result.type", headers: ["결과 유형"] },
+    { key: "result.difficulty", headers: ["난이도"] },
+    { key: "result.review_type", headers: ["검토유형"] },
+    { key: "result.change_kind", headers: ["결과 신규/변경/연장"] },
+    { key: "result.review_text", headers: ["검토결과"] },
+    { key: "result.attachments", headers: ["첨부자료"] }
+  ];
   var CONFLICT_FIELDS = ["department", "applicant", "security_level", "contract_name",
     "pii_outsourcing", "financial_outsourcing", "contract_period", "type", "change_kind"];
 
@@ -156,13 +221,59 @@ var ReviewHistory = (function () {
     });
     return score;
   }
+  function headerIndex(row, aliases) {
+    var normalizedHeaders = (row || []).map(compact);
+    for (var i = 0; i < (aliases || []).length; i++) {
+      var index = normalizedHeaders.indexOf(compact(aliases[i]));
+      if (index !== -1) return index;
+    }
+    return -1;
+  }
+  function taggedExportHeader(row) {
+    var markers = (row || []).map(compact);
+    var looksTagged = markers.indexOf(compact("표시용 해시태그")) !== -1 ||
+      markers.indexOf(compact("태그 엔진 버전")) !== -1 ||
+      markers.filter(function (value) { return value.indexOf("계약검토") === 0; }).length >= 5;
+    if (!looksTagged) return { score: 0, expected: 32, indexes: {}, special: {} };
+    var indexes = {}, score = 0;
+    TAGGED_EXPORT_COLUMNS.forEach(function (column) {
+      var index = headerIndex(row, column.headers);
+      if (index >= 0) { indexes[column.key] = index; score++; }
+    });
+    var special = {
+      period_start: headerIndex(row, ["계약기간_시작", "계약기간 시작"]),
+      period_end: headerIndex(row, ["계약기간_종료", "계약기간 종료"]),
+      type_a: headerIndex(row, ["유형A", "유형 A"]),
+      type_b: headerIndex(row, ["유형B", "유형 B"])
+    };
+    if (special.period_start >= 0 || special.period_end >= 0) score++;
+    if (special.type_a >= 0 || special.type_b >= 0) score++;
+    return { score: score, expected: 32, indexes: indexes, special: special };
+  }
+  function mappedHeader(row, columns, expected, markerHeaders) {
+    var markersPresent = (markerHeaders || []).every(function (marker) { return headerIndex(row, [marker]) >= 0; });
+    if (!markersPresent) return { score: 0, expected: expected, indexes: {} };
+    var indexes = {}, score = 0;
+    columns.forEach(function (column) {
+      var index = headerIndex(row, column.headers);
+      if (index >= 0) { indexes[column.key] = index; score++; }
+    });
+    return { score: score, expected: expected, indexes: indexes };
+  }
   function findHeaderRow(rows) {
-    var best = { index: -1, score: -1 };
+    var best = { index: -1, score: -1, expected: 33, layout: "legacy33" };
     (rows || []).slice(0, 15).forEach(function (row, index) {
       var score = headerScore(row || []);
-      if (score > best.score) best = { index: index, score: score };
+      if (score > best.score) best = { index: index, score: score, expected: 33, layout: "legacy33" };
+      var tagged = taggedExportHeader(row || []);
+      if (tagged.score > best.score) best = { index: index, score: tagged.score, expected: tagged.expected,
+        layout: "tagged_export", indexes: tagged.indexes, special: tagged.special };
+      var ledger = mappedHeader(row || [], DOCUMENT_LEDGER_COLUMNS, DOCUMENT_LEDGER_COLUMNS.length,
+        ["문서 ID", "원본 행", "엔진 버전"]);
+      if (ledger.score > best.score) best = { index: index, score: ledger.score, expected: ledger.expected,
+        layout: "document_ledger", indexes: ledger.indexes };
     });
-    if (best.score < 24) throw new Error("SCHEMA_HEADER_MISMATCH: 계약검토 33열 머리글을 찾지 못했습니다");
+    if (best.score < 24) throw new Error("SCHEMA_HEADER_MISMATCH: 계약검토 33열 또는 원본+태깅결과 머리글을 찾지 못했습니다");
     return best;
   }
   function isScopeRow(row) {
@@ -198,31 +309,65 @@ var ReviewHistory = (function () {
     });
     return out;
   }
-  function rowToRecord(row, rowNumber, stableIdIndex, sourceMeta) {
+  function joinedValues(values, separator) {
+    return values.map(text).filter(Boolean).filter(function (value, index, all) { return all.indexOf(value) === index; }).join(separator);
+  }
+  function rowToRecord(row, rowNumber, stableIdIndex, sourceMeta, header) {
     var record = { status: "", request: {}, result: {}, screen: {}, source_row: rowNumber,
       source_sheet: text(sourceMeta && sourceMeta.sheet_name) || SHEET_NAME, conflicts: [], diagnostic_codes: [] };
-    COLUMNS.forEach(function (column) { setPath(record, column.key, row[column.index]); });
+    if (header && (header.layout === "tagged_export" || header.layout === "document_ledger")) {
+      var mappedColumns = header.layout === "tagged_export" ? TAGGED_EXPORT_COLUMNS : DOCUMENT_LEDGER_COLUMNS;
+      mappedColumns.forEach(function (column) {
+        var index = header.indexes[column.key];
+        setPath(record, column.key, index >= 0 ? row[index] : "");
+      });
+      if (header.layout === "tagged_export") {
+        var special = header.special || {};
+        record.request.contract_period_start = special.period_start >= 0 ? text(row[special.period_start]) : "";
+        record.request.contract_period_end = special.period_end >= 0 ? text(row[special.period_end]) : "";
+        record.request.contract_period = joinedValues([record.request.contract_period_start,
+          record.request.contract_period_end], " ~ ");
+        record.request.type_a = special.type_a >= 0 ? text(row[special.type_a]) : "";
+        record.request.type_b = special.type_b >= 0 ? text(row[special.type_b]) : "";
+        record.request.type = record.request.type_a || record.request.type_b;
+        record.request.type_detail = record.request.type_b;
+      }
+    } else {
+      COLUMNS.forEach(function (column) { setPath(record, column.key, row[column.index]); });
+    }
+    record.tag_fields = {};
+    record.tags = [];
+    ((header && header.tagColumns) || []).forEach(function(column){
+      var value=text(row[column.index]);if(!value)return;
+      record.tag_fields[column.name]=value;
+      value.split(/[#\n,;|]+/).map(text).filter(Boolean).forEach(function(label){
+        if(!record.tags.some(function(t){return t.label===label;}))record.tags.push({label:label,type:"imported_tag",source_column:column.name});
+      });
+    });
     record.conflicts = conflictsFor(record);
     if (!dateLike(record.request.created_at)) record.diagnostic_codes.push("REQUEST_DATE_PARSE_FAIL");
     if (!dateLike(record.result.created_at)) record.diagnostic_codes.push("RESULT_DATE_PARSE_FAIL");
     if (!record.request.contract_name && !record.result.contract_name) record.diagnostic_codes.push("CONTRACT_NAME_MISSING");
     if (record.conflicts.length) record.diagnostic_codes.push("REQUEST_RESULT_CONFLICT");
     var stableId = stableIdIndex >= 0 ? text(row[stableIdIndex]) : "";
-    if (stableId) {
+    if (stableId && !/^ROW-\d+$/i.test(stableId)) {
       record.review_id = stableId;
       record.id_quality = "source";
     } else {
-      record.review_id = "LOCAL-" + hashString(identityParts(record).join("|"));
+      if (stableId) record.tagger_document_id = stableId;
+      record.review_id = "LOCAL-" + hashString(String(sourceMeta.fingerprint || sourceMeta.file_name || "") + "|" + identityParts(record).join("|"));
       record.id_quality = "provisional";
       record.diagnostic_codes.push("STABLE_ID_MISSING");
     }
-    record.fingerprint = hashString(JSON.stringify([record.status, record.request, record.result]));
+    record.fingerprint = hashString(JSON.stringify([record.status, record.request, record.result, record.tag_fields]));
     return record;
   }
 
   function datasetFromRows(rows, sourceMeta) {
     rows = rows || [];
     var header = findHeaderRow(rows), headers = rows[header.index] || [];
+    header.tagColumns=[];
+    headers.forEach(function(value,index){var name=normalized(value);if(/^(?:태그\s*\d+|표시용\s*해시태그|엄격\s*태그)$/.test(name))header.tagColumns.push({index:index,name:name});});
     var stableIdIndex = findStableIdIndex(headers), records = [], rowIssues = [], idCounts = {};
     var errorCounts = {}, skippedEmpty = 0, skippedScope = 0;
     function issue(row, code) {
@@ -232,7 +377,7 @@ var ReviewHistory = (function () {
       var rowNumber = header.index + offset + 2;
       if (isEmptyRow(row)) { skippedEmpty++; return; }
       if (isScopeRow(row)) { skippedScope++; return; }
-      var record = rowToRecord(row, rowNumber, stableIdIndex, sourceMeta || {});
+      var record = rowToRecord(row, rowNumber, stableIdIndex, sourceMeta || {}, header);
       idCounts[record.review_id] = (idCounts[record.review_id] || 0) + 1;
       if (idCounts[record.review_id] > 1 && record.id_quality === "provisional") {
         record.review_id += "-R" + rowNumber;
@@ -246,9 +391,10 @@ var ReviewHistory = (function () {
     source.header_row = header.index + 1;
     source.header_score = header.score;
     return { source: source, records: records, diagnostics: {
-      schema_version: SCHEMA_VERSION, header_row: header.index + 1, header_score: header.score,
+      schema_version: SCHEMA_VERSION, source_layout: header.layout, header_row: header.index + 1,
+      header_score: header.score, header_expected: header.expected,
       stable_id_column: stableIdIndex >= 0 ? text(headers[stableIdIndex]) : "",
-      stable_id_available: stableIdIndex >= 0,
+      stable_id_available: records.length > 0 && records.every(function (r) { return r.id_quality === "source"; }),
       processed_rows: records.length, skipped_empty_rows: skippedEmpty, skipped_scope_rows: skippedScope,
       error_counts: errorCounts, row_issues: rowIssues
     } };
@@ -461,10 +607,22 @@ var ReviewHistory = (function () {
       var rid = sheet.getAttribute("r:id") || sheet.getAttributeNS("http://schemas.openxmlformats.org/officeDocument/2006/relationships", "id");
       return { name: sheet.getAttribute("name"), path: targets[rid] };
     });
-    var selected = defs.filter(function (def) { return normalized(def.name) === SHEET_NAME; })[0] || defs[0];
+    var sheetAliases = [SHEET_NAME, TAGGED_EXPORT_SHEET_NAME, DOCUMENT_LEDGER_SHEET_NAME].map(compact);
+    var selected = null;
+    for (var sheetIndex = 0; sheetIndex < sheetAliases.length && !selected; sheetIndex++) {
+      selected = defs.filter(function (def) { return compact(def.name) === sheetAliases[sheetIndex]; })[0] || null;
+    }
+    selected = selected || defs[0];
     if (!selected) throw new Error("XLSX에 워크시트가 없습니다");
     if (onProgress) onProgress({ completed: 1, total: 3, step: selected.name + " 읽기" });
     var rows = sheetRows(await entry(selected.path, true), shared);
+    try { findHeaderRow(rows); } catch (error) {
+      var ledger = defs.filter(function (def) { return compact(def.name) === compact(DOCUMENT_LEDGER_SHEET_NAME); })[0];
+      if (!ledger || ledger === selected) throw error;
+      selected = ledger;
+      rows = sheetRows(await entry(selected.path, true), shared);
+      findHeaderRow(rows);
+    }
     if (onProgress) onProgress({ completed: 3, total: 3, step: "구조 확인 완료" });
     return { rows: rows, source: { file_name: file.name, file_size: file.size,
       last_modified: file.lastModified, fingerprint: fingerprint, sheet_name: selected.name } };
@@ -509,7 +667,20 @@ var ReviewHistory = (function () {
   function packJson(history) { return JSON.stringify(normalizeHistory(history), null, 2); }
   function fromPack(value) { return normalizeHistory(typeof value === "string" ? JSON.parse(value) : value); }
 
+  function datasetFromTables(tables, source) {
+    var names = [SHEET_NAME, TAGGED_EXPORT_SHEET_NAME, DOCUMENT_LEDGER_SHEET_NAME], error;
+    for (var i = 0; i < names.length; i++) {
+      if (!tables[names[i]]) continue;
+      try {
+        return datasetFromRows(tables[names[i]].rows,
+          Object.assign({}, source || {}, { sheet_name: names[i] }));
+      } catch (e) { error = e; }
+    }
+    throw error || new Error("계약검토 이력 시트가 없습니다");
+  }
+
   return { FORMAT: FORMAT, SCHEMA_VERSION: SCHEMA_VERSION, COLUMNS: COLUMNS,
+    datasetFromTables: datasetFromTables,
     emptyHistory: emptyHistory, normalizeHistory: normalizeHistory, datasetFromRows: datasetFromRows,
     mergeDataset: mergeDataset, mergeHistory: mergeHistory, summary: summary, search: search,
     latestRecord: latestRecord, setTypeMapping: setTypeMapping,

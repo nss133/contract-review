@@ -42,6 +42,11 @@ checks:
         quote: '원사업자는 수급사업자의 이익을 부당하게 침해하거나 제한하는 계약조건'
         verified: true
     note: 하도급법 적용대상 해당 시
+    active: true
+    disposition: keep
+    meaning_revision: 1.87.0
+    judgment_level: appropriateness
+    judgment_scope: module
   - id: SP-UNF-02
     module: M-UNFAIR
     check: 서면 미기재·입찰내역 외 사항 요구 또는 원사업자 부담 비용(민원·산재 등)을 수급사업자에게 전가하는 약정이 없는가
@@ -72,6 +77,11 @@ checks:
         verified: true
     note: 하도급법 적용대상 해당 시. 제3조의4 제2항 각 호는 부당한 특약으로 간주되며 해당 부분에 한하여 무효(제3항). SP-UNF-03·SP-UNF-04 통합(2026-07-29 지식 다이어트) — 비용전가 3유형(서면 미기재·민원 산재·입찰내역 외)은 계약서 1회 스캔으로 한 번에 판정, 각 호 근거는 sources 병기
   # SP-UNF-03·SP-UNF-04 통합 제거(2026-07-29 지식 다이어트) — 하도급법 §3조의4 ②의 비용전가 각 호를 SP-UNF-02로 통합(sources·keywords 병기, triage §3 G1 참조)
+    active: true
+    disposition: keep
+    meaning_revision: 1.87.0
+    judgment_level: appropriateness
+    judgment_scope: module
   - id: SP-UNF-05
     module: M-UNFAIR
     check: 신의성실 원칙을 위반하여 공정성을 잃은 약관 조항(무효 사유)이 계약에 포함되어 있지 않은가
@@ -90,6 +100,11 @@ checks:
         quote: '신의성실의 원칙을 위반하여 공정성을 잃은 약관 조항은 무효이다'
         verified: true
     note: 약관(정형화된 계약조건)에 해당하는 경우 적용 — 개별 교섭 조항에는 부적용
+    active: true
+    disposition: keep
+    meaning_revision: 1.87.0
+    judgment_level: appropriateness
+    judgment_scope: module
   - id: SP-UNF-06
     module: M-UNFAIR
     check: 고객에게 부당하게 불리하거나 예상하기 어렵거나 본질적 권리를 제한하는 조항이 없는가(공정성 상실 추정 사유)
@@ -108,6 +123,11 @@ checks:
         quote: '약관의 내용 중 다음 각 호의 어느 하나에 해당하는 내용을 정하고 있는 조항은 공정성을 잃은 것으로 추정된다'
         verified: true
     note: 약관에 해당하는 경우 적용. 추정규정이므로 사업자가 공정성을 반증하면 유효
+    active: true
+    disposition: keep
+    meaning_revision: 1.87.0
+    judgment_level: appropriateness
+    judgment_scope: module
   - id: SP-UNF-07
     module: M-UNFAIR
     check: 사업자·이행보조자의 고의·중과실 책임을 배제하는 등 무효인 면책조항이 없는가
@@ -126,6 +146,11 @@ checks:
         quote: '사업자, 이행 보조자 또는 피고용자의 고의 또는 중대한 과실로 인한 법률상의 책임을 배제하는 조항'
         verified: true
     note: 약관에 해당하는 경우 적용
+    active: true
+    disposition: keep
+    meaning_revision: 1.87.0
+    judgment_level: appropriateness
+    judgment_scope: module
   - id: SP-UNF-08
     module: M-UNFAIR
     check: 고객에게 부당하게 과중한 지연손해금 등 손해배상 의무를 부담시키는 약관 조항이 없는가
@@ -143,6 +168,11 @@ checks:
         quote: '고객에게 부당하게 과중한 지연 손해금 등의 손해배상 의무를 부담시키는 약관 조항은 무효로 한다'
         verified: true
     note: 약관에 해당하는 경우 적용
+    active: true
+    disposition: keep
+    meaning_revision: 1.87.0
+    judgment_level: appropriateness
+    judgment_scope: module
   - id: SP-UNF-09
     module: M-UNFAIR
     check: 고객의 법정 해제·해지권을 배제·제한하거나 사업자에게 부당한 해지권을 부여하는 무효 조항이 없는가
@@ -160,6 +190,11 @@ checks:
         quote: '계약의 해제ㆍ해지에 관하여 정하고 있는 약관의 내용 중 다음 각 호의 어느 하나에 해당되는 내용을 정하고 있는 조항은 무효로 한다'
         verified: true
     note: 약관에 해당하는 경우 적용
+    active: true
+    disposition: keep
+    meaning_revision: 1.87.0
+    judgment_level: appropriateness
+    judgment_scope: module
   - id: SP-UNF-10
     module: M-UNFAIR
     check: 상당한 이유 없이 급부의 내용을 사업자가 일방적으로 결정·변경하거나 급부를 중지할 수 있게 하는 무효 조항이 없는가
@@ -178,6 +213,11 @@ checks:
         quote: '상당한 이유 없이 급부(給付)의 내용을 사업자가 일방적으로 결정하거나 변경할 수 있도록 권한을 부여하는 조항'
         verified: true
     note: 약관에 해당하는 경우 적용
+    active: true
+    disposition: keep
+    meaning_revision: 1.87.0
+    judgment_level: appropriateness
+    judgment_scope: module
   - id: SP-UNF-11
     module: M-UNFAIR
     check: 고객의 항변권·상계권 등 권리를 상당한 이유 없이 배제·제한하거나 기한의 이익을 박탈하는 무효 조항이 없는가
@@ -196,6 +236,11 @@ checks:
         quote: '법률에 따른 고객의 항변권(抗辯權), 상계권(相計權) 등의 권리를 상당한 이유 없이 배제하거나 제한하는 조항'
         verified: true
     note: 약관에 해당하는 경우 적용
+    active: true
+    disposition: keep
+    meaning_revision: 1.87.0
+    judgment_level: appropriateness
+    judgment_scope: module
   - id: SP-UNF-12
     module: M-UNFAIR
     check: 고객의 작위·부작위를 의사표시로 의제하거나 의사표시 형식에 부당한 제한을 두는 무효 조항이 없는가
@@ -213,6 +258,11 @@ checks:
         quote: '의사표시에 관하여 정하고 있는 약관의 내용 중 다음 각 호의 어느 하나에 해당하는 내용을 정하고 있는 조항은 무효로 한다'
         verified: true
     note: 약관에 해당하는 경우 적용
+    active: true
+    disposition: keep
+    meaning_revision: 1.87.0
+    judgment_level: appropriateness
+    judgment_scope: module
   - id: SP-UNF-13
     module: M-UNFAIR
     check: 고객에게 부당하게 불리한 재판관할 합의 또는 입증책임을 전가하는 무효 조항이 없는가
@@ -231,6 +281,12 @@ checks:
         quote: '고객에게 부당하게 불리한 소송 제기 금지 조항 또는 재판관할의 합의 조항'
         verified: true
     note: 약관에 해당하는 경우 적용. 공통 CMN-19(관할 지정)와 달리 부당 관할합의의 무효 여부를 점검
+    active: true
+    disposition: keep
+    meaning_revision: 1.87.0
+    judgment_level: appropriateness
+    judgment_scope: module
+
   # ── M-DELIVERY: 검수 + 민법 제398조·제537조·제538조·제667조~제670조·제580조~제582조 ──
   - id: SP-DEL-01
     module: M-DELIVERY
@@ -248,24 +304,11 @@ checks:
     absence_check: true
     sources: []
     note: ITDL-03(검수·인수 기준) 통합(2026-07-29 지식 다이어트) — 같은 모듈(M-DELIVERY) 내 완전 동취지 쌍, 코퍼스 판정 이력은 SP-DEL-01로 이관
-  - id: SP-DEL-02
-    module: M-DELIVERY
-    check: 납품·용역 이행지체에 대한 지체상금(손해배상액의 예정) 약정이 있는가
-    label: "지체상금 예정"
-    severity: 권장
-    severity_basis: "근거 조문이 임의규정임 — 민법 제398조"
-    norm_type: 임의
-    basis: statute
-    triggers:
-      keywords: [지체상금, 손해배상액의 예정, 위약금, 지연배상]
-    absence_check: true
-    sources:
-      - law: 민법
-        article: 제398조
-        clause: 제1항
-        quote: '당사자는 채무불이행에 관한 손해배상액을 예정할 수 있다'
-        verified: true
-    note: 임의규정 — 예정액이 부당히 과다하면 법원이 감액 가능(제398조 제2항)
+    active: true
+    disposition: keep
+    meaning_revision: 1.87.0
+    judgment_level: clarity
+    judgment_scope: module
   - id: SP-DEL-03
     module: M-DELIVERY
     check: 목적물 인도 전 당사자 쌍방 무책 멸실·훼손 시 위험부담(대금청구 가부) 처리 조항이 있는가
@@ -284,6 +327,11 @@ checks:
         quote: '쌍무계약의 당사자 일방의 채무가 당사자쌍방의 책임없는 사유로 이행할 수 없게 된 때에는 채무자는 상대방의 이행을 청구하지 못한다'
         verified: true
     note: 채무자위험부담주의는 임의규정 — 특약으로 위험이전 시기를 달리 정할 수 있음
+    active: true
+    disposition: keep
+    meaning_revision: 1.87.0
+    judgment_level: clarity
+    judgment_scope: module
   - id: SP-DEL-03-2
     module: M-DELIVERY
     check: 불가항력 조항이 계약이행 책임 면제뿐 아니라 대금정산·해지권·복구비용 분담 등 사후처리까지 규정하고 있는가
@@ -297,6 +345,11 @@ checks:
     absence_check: true
     sources: []
     note: "실사례 검토의견(2026-07-28 큐레이션 리포트 SP-DEL-03 표본) — 불가항력 조항이 '계약이행 책임 없음'만 정하고 대금정산·해지·복구비용 분담 등 사후처리는 규정하지 않은 사례 확인. SP-DEL-03(민법§537 위험부담·basis=statute)과 근거·쟁점이 달라 원자 분리 — SP-DEL-03은 '위험부담 조항 존재 자체', 본 체크는 '불가항력 조항의 사후처리 완비 여부'. 사후처리 방식은 법령이 특정하지 않아 basis=practice."
+    active: true
+    disposition: keep
+    meaning_revision: 1.87.0
+    judgment_level: clarity
+    judgment_scope: module
   - id: SP-DEL-04
     module: M-DELIVERY
     check: 발주자(채권자) 귀책 또는 수령지체 중 이행불능 시 수급인의 대금청구권 유지 조항이 있는가
@@ -317,9 +370,14 @@ checks:
         quote: '쌍무계약의 당사자 일방의 채무가 채권자의 책임있는 사유로 이행할 수 없게 된 때에는 채무자는 상대방의 이행을 청구할 수 있다'
         verified: true
     note: 임의규정 — 채무자는 자기 채무를 면함으로써 얻은 이익을 상환(제538조 제2항)
+    active: false
+    disposition: retire
+    meaning_revision: 1.88.1
+    judgment_level: presence
+    judgment_scope: module
   - id: SP-DEL-05
     module: M-DELIVERY
-    check: 용역(도급) 완성물에 하자가 있는 경우 상당한 기간을 정한 하자보수 청구권 조항이 있는가
+    check: 하자보수·보수 청구 또는 보수 의무 약정이 있는가
     label: "하자보수 청구권"
     severity: 권장
     severity_basis: "근거 조문이 임의규정임 — 민법 제667조"
@@ -343,7 +401,16 @@ checks:
         clause: 제1항
         quote: '완성된 목적물 또는 완성전의 성취된 부분에 하자가 있는 때에는 도급인은 수급인에 대하여 상당한 기간을 정하여 그 하자의 보수를 청구할 수 있다'
         verified: true
-    note: 하자담보책임은 임의규정 — 특약으로 조정 가능(단 제672조 면책특약 제한 유의)
+    note: 하자보수 의무·청구권·무상보수 약정 중 하나를 확인한다. 하자보증 존속기간과 보수 요청 후 시정기한은 다른 값이며 고정 일수나 청구권이라는 어휘를 필수로 하지 않는다.
+    active: true
+    disposition: reword
+    meaning_revision: 1.88.1
+    judgment_level: presence
+    judgment_scope: module
+    decision_question: 하자보수·보수 청구 또는 보수 의무 약정이 있는가?
+    pass_guidance: 이 질문의 약정 내용이 확인되고 구체적인 반대 내용이 없는 경우
+    opinion_guidance: 본건에서 확인된 구체적인 문제와 근거를 작성
+    checklist_revision: content-v3
   - id: SP-DEL-06
     module: M-DELIVERY
     check: 하자보수에 갈음하거나 보수와 함께 손해배상을 청구할 수 있는 조항이 있는가
@@ -363,6 +430,12 @@ checks:
         clause: 제2항
         quote: '도급인은 하자의 보수에 갈음하여 또는 보수와 함께 손해배상을 청구할 수 있다'
         verified: true
+    active: false
+    disposition: merge
+    meaning_revision: 1.88.1
+    judgment_level: presence
+    judgment_scope: module
+    successor: CNS-DAMAGE
   - id: SP-DEL-07
     module: M-DELIVERY
     check: 완성물의 하자로 계약 목적을 달성할 수 없는 경우의 해제권 조항이 있는가
@@ -390,6 +463,11 @@ checks:
         quote: 도급인이 완성된 목적물의 하자로 인하여 계약의 목적을 달성할 수 없는 때에는 계약을 해제할 수 있다. 그러나 건물 기타 토지의 공작물에 대하여는 그러하지 아니하다.
         verified: true
     note: 임의규정 — 건물 기타 토지의 공작물에 대하여는 해제권 제한(제668조 단서)
+    active: false
+    disposition: retire
+    meaning_revision: 1.88.1
+    judgment_level: presence
+    judgment_scope: module
   - id: SP-DEL-08
     module: M-DELIVERY
     check: 도급(용역) 하자담보책임의 존속기간(인도·검수완료 기산, 1년 등)과 하자 대응 절차가 규정되어 있고, 유지보수(유상)의 범위·대가가 무상 하자보수와 구분되어 있는가
@@ -416,6 +494,11 @@ checks:
         quote: '전3조의 규정에 의한 하자의 보수, 손해배상의 청구 및 계약의 해제는 목적물의 인도를 받은 날로부터 1년내에 하여야 한다'
         verified: true
     note: 하자담보 제척기간은 임의규정 — 특약으로 연장·단축 가능. 유지보수(유상) 범위·대가·별도계약 여부와 무상 하자보수의 구분은 ITDL-05 병기 강등분, ITDL-04(하자담보 기간·절차)는 동일 모듈 내 중복으로 통합·코퍼스 이력 병합(2026-07-29 지식 다이어트)
+    active: true
+    disposition: keep
+    meaning_revision: 1.87.0
+    judgment_level: clarity
+    judgment_scope: module
   - id: SP-DEL-12
     module: M-DELIVERY
     check: 사무처리형(위임형) 용역에서 수임인의 선관주의 의무와 불완전이행 시 구제(시정·재수행 요구, 손해배상, 해지)가 규정되어 있는가
@@ -442,95 +525,70 @@ checks:
         quote: '위임계약은 각 당사자가 언제든지 해지할 수 있다'
         verified: true
     note: "korean-law MCP 현행 원문 대조(민법 MST 284415, 시행 2026-03-17) — §681·§689 스냅샷 seed 전문 적재. 하자담보책임과 채무불이행책임은 별개 권원으로 경합(대법원 2020다201156 — 판례 전문 재대조는 미결)."
-  - id: SP-DEL-08-2
+  # SP-DEL-08-2 제외(2026-09-14): 보증보험 확보는 계약별 선택사항이며 독립 체크를 요구하지 않음.
+    active: true
+    disposition: keep
+    meaning_revision: 1.87.0
+    judgment_level: clarity
+    judgment_scope: module
+  - id: CNS-SALEDEFECT
     module: M-DELIVERY
-    check: 지체상금·하자보수와 함께 이행(하자)보증보험 증권 징구 여부가 확인되어 있는가
-    decision_question: 이행·하자보증보험의 징구 여부와 조건이 명확하여 추가 확인이 불필요한가?
-    pass_guidance: 징구 여부와 금액·기간이 거래 위험에 맞게 정해졌으면 선택
-    opinion_guidance: 징구 필요성이 남거나 보험 조건이 불명확하면 선택
-    label: "이행(하자)보증보험 확인"
-    severity: 참고
-    severity_basis: "실무 관행 항목(법령 강제 아님)"
-    norm_type: 실무
-    basis: practice
+    check: 매매 목적물의 하자에 대한 구제수단과 권리행사기간이 거래 성격에 맞게 정해져 있는가
+    label: 매매 목적물의 하자 구제
+    severity: 권장
+    severity_basis: 근거 조문이 임의규정임 — 민법 제580조
+    norm_type: 임의
+    basis: statute
     triggers:
-      keywords: [이행보증보험, 하자보증보험, 보증보험증권, 이행보증]
-    # 지체상금 조항이 보증수단 체크에 붙던 실계약 오탐 4건 억제.
-    evidence_required_groups: [[보증보험, 이행보증, 하자보증, 보증보험증권]]
+      keywords:
+      - 매도인
+      - 하자담보
+      - 물품 하자
+      - 담보책임
+      - 종류
+      - 완전물
+      - 하자없는 물건
+      - 대체물
+      - 안 날로부터
+      - 권리행사기간
+      - 6월내
+      - 담보책임 기간
     absence_check: true
-    # 조건부 부재체크: 보증보험 어휘가 본문에 있을 때만 부재알람(ITDL-06 SLA 체크와 동일 패턴).
-    # 회사 표준계약서 자체가 이행보증보험 '有/無' 두 버전으로 병존(조달 규모·리스크에 따라
-    # 보험 미징구도 정상 운영) — 문언에 제도 채택이 드러나는 항목이므로 tier: conditional이
-    # 아니라 absence_precondition이 맞음(픽스 라운드 1 정정, schema.md 오탐 억제 게이트 3층 기준).
-    absence_precondition: [보증보험, 이행보증, 하자보증, 보증보험증권]
-    sources: []
-    note: "it-svc 실계약 샘플 '이행보증보험有' 버전 제5조(이행보증보험증권의 제출) 원문 확인 — '이행보증보험증권'. 지체상금(SP-DEL-02)·하자보수(SP-DEL-05)와 별개로 담보수단(보험) 존재 자체를 다루는 원자 체크."
-  - id: SP-DEL-09
-    module: M-DELIVERY
-    check: 구매(매매) 목적물의 하자에 대한 매도인의 하자담보책임 조항이 있는가
-    label: "매도인 하자담보책임"
-    severity: 권장
-    severity_basis: "근거 조문이 임의규정임 — 민법 제580조"
-    norm_type: 임의
-    basis: statute
-    triggers:
-      keywords: [매도인, 하자담보, 물품 하자, 담보책임]
-    absence_check: true
-    # 조건부 부재체크: 매매(소유권이전형 구매) 성격일 때만 부재알람.
-    # 2026-07-28 사내표준층 트리아지: 종전 전제 없음 상태에서 M-DELIVERY 활성(구매·용역·공급
-    # 등 광범위 procurement 키워드로 즉시 on)만으로 무조건 발동 — 용역/광고/임대차 등 "매도인"
-    # 당사자 구도 자체가 없는 계약(케이스19·21·23·27)까지 오탐. 매매 전제어 co-occurrence 요구.
-    absence_precondition: [매도인, 매수인, 물품의 소유권, 소유권 이전]
+    absence_precondition:
+    - 매도인
+    - 매수인
+    - 물품의 소유권
+    - 소유권 이전
     sources:
-      - law: 민법
-        article: 제580조
-        clause: 제1항
-        quote: '매매의 목적물에 하자가 있는 때에는 제575조제1항의 규정을 준용한다'
-        verified: true
-    note: 임의규정 — 매수인이 하자를 알았거나 과실로 알지 못한 때에는 담보책임 배제(제580조 제1항 단서)
-  - id: SP-DEL-10
-    module: M-DELIVERY
-    check: 종류물(불특정물) 구매의 경우 하자 있는 물건 대신 완전물 급부를 청구할 수 있는 조항이 있는가
-    label: "완전물 급부청구"
-    severity: 권장
-    severity_basis: "근거 조문이 임의규정임 — 민법 제581조"
-    norm_type: 임의
-    basis: statute
-    triggers:
-      keywords: [종류, 완전물, 하자없는 물건, 대체물]
-    evidence_required_groups: [[완전물, 하자없는 물건, 대체물, 교환, 재납품]]
-    absence_check: false
-    sources:
-      - law: 민법
-        article: 제581조
-        clause: 제2항
-        quote: '매수인은 계약의 해제 또는 손해배상의 청구를 하지 아니하고 하자없는 물건을 청구할 수 있다'
-        verified: true
-    note: "완전물급부청구권(§581②)은 종류매매에서 '하자'를 요건으로 하는 구제이지 불가항력 구제가 아님(2026-08-18 개념 위치 교정). 용역에서 불가항력 이행불능은 위험부담(§537 — SP-DEL-03)·불가항력 사후처리(SP-DEL-03-2)·대금청구(SP-DEL-04) 축이 담당."
-  - id: SP-DEL-11
-    module: M-DELIVERY
-    check: 구매(매매) 하자담보에 따른 권리행사기간(하자를 안 날부터 6월 등)이 규정되어 있는가
-    label: "매매 하자 행사기간"
-    severity: 권장
-    severity_basis: "하자담보 권리행사기간 임의규정(특약으로 조정 가능) — 민법 제582조"
-    norm_type: 임의
-    basis: statute
-    triggers:
-      keywords: [안 날로부터, 권리행사기간, 6월내, 담보책임 기간]
-    auto_clear:
-      any_groups: [[하자, 담보책임], [안 날, 권리행사, 행사]]
-      require: [period]
-    absence_check: false
-    sources:
-      - law: 민법
-        article: 제582조
-        quote: '전2조에 의한 권리는 매수인이 그 사실을 안 날로부터 6월내에 행사하여야 한다'
-        verified: true
-    note: 제척기간은 임의규정 — 특약으로 조정 가능
-  # ── (구 it-outsourcing 잔여 편입 — 검수·하자·유지보수·SLA) ──
-  # ITDL-03 통합 제거(2026-07-29 지식 다이어트) — 같은 파일 같은 모듈(M-DELIVERY)의 완전 동취지 쌍인 SP-DEL-01(검사·검수 절차)로 통합, 코퍼스 이력(n=1) 이관(triage §3 G8 참조)
-  # ITDL-04 통합 제거(2026-07-29 지식 다이어트) — 동일 모듈 내 하자담보 기간 중복인 SP-DEL-08(하자담보 존속기간)로 통합, 코퍼스 이력(n=2) 병합(triage §3 G9 참조)
-  # ITDL-05 병기 강등(2026-07-29 지식 다이어트) — 3신호(골드셋 발화·코퍼스·체크리스트) 모두 음성이나 유지보수↔하자보수 구분은 IT 용역 실무 쟁점이라 삭제 대신 SP-DEL-08 문안에 병기(triage §2 참조)
+    - law: 민법
+      article: 제580조
+      clause: 제1항
+      quote: 매매의 목적물에 하자가 있는 때에는 제575조제1항의 규정을 준용한다
+      verified: true
+    - law: 민법
+      article: 제581조
+      clause: 제2항
+      quote: 매수인은 계약의 해제 또는 손해배상의 청구를 하지 아니하고 하자없는 물건을 청구할 수 있다
+      verified: true
+    - law: 민법
+      article: 제582조
+      quote: 전2조에 의한 권리는 매수인이 그 사실을 안 날로부터 6월내에 행사하여야 한다
+      verified: true
+    note: 하자담보책임, 필요한 경우 교환·완전물 급부 및 권리행사기간을 함께 검토한다. 특정물·종류물의 차이를 고려하고 모든 매매에 동일한 교환 약정을 요구하지 않는다. 도급·위임의 하자·불완전이행과 구별한다.
+    decision_question: 매매 목적물의 하자에 대한 구제수단과 권리행사기간이 거래 성격에 맞게 정해져 있는가?
+    pass_guidance: 위 설명의 검토 관점에 비추어 본건에서 수정이 불필요하면 선택
+    opinion_guidance: 본건에서 수정·추가 확인이 필요한 내용을 의견으로 작성
+    auto_verdict: false
+    checklist_revision: content-v2
+    legacy_check_ids:
+    - SP-DEL-09
+    - SP-DEL-10
+    - SP-DEL-11
+    active: true
+    disposition: keep
+    meaning_revision: 1.87.0
+    judgment_level: appropriateness
+    judgment_scope: module
   - id: ITDL-06
     module: M-DELIVERY
     check: 서비스수준(SLA)·가동률 기준과 장애 발생 시 대응·보상·손해배상 조항이 있는가
@@ -554,3 +612,8 @@ checks:
     absence_precondition: [SLA, 서비스수준, 서비스 수준, 장애]
     sources: []
     note: 전자금융감독규정 제60조 제1항 제11호는 품질수준 연1회 평가 의무만 규정 — SLA 배상 수준은 계약 재량
+    active: true
+    disposition: keep
+    meaning_revision: 1.87.0
+    judgment_level: clarity
+    judgment_scope: module
