@@ -1,0 +1,728 @@
+{
+  "formats": [
+    {
+      "file": "src/app.js",
+      "format": "cr-motion-preference-v1",
+      "line": 27
+    },
+    {
+      "file": "src/app.js",
+      "format": "cr-type-classification-v1",
+      "line": 607
+    },
+    {
+      "file": "src/app.js",
+      "format": "cr-tag-proposals-v1",
+      "line": 2088
+    },
+    {
+      "file": "src/app.js",
+      "format": "cr-goldset-case-v1",
+      "line": 2475
+    },
+    {
+      "file": "src/app.js",
+      "format": "cr-matching-observations-v2",
+      "line": 2780
+    },
+    {
+      "file": "src/app.js",
+      "format": "cr-llm-assistance-v1",
+      "line": 2813
+    },
+    {
+      "file": "src/app.js",
+      "format": "cr-review-history-reference-v1",
+      "line": 2824
+    },
+    {
+      "file": "src/app.js",
+      "format": "cr-subdoc-confirmation-v1",
+      "line": 2832
+    },
+    {
+      "file": "src/app.js",
+      "format": "cr-document-integrity-v1",
+      "line": 2840
+    },
+    {
+      "file": "src/app.js",
+      "format": "cr-contract-requirement-v1",
+      "line": 2845
+    },
+    {
+      "file": "src/assessment.js",
+      "format": "cr-system-assessment-v1",
+      "line": 7
+    },
+    {
+      "file": "src/auto_pilot.js",
+      "format": "cr-auto-candidate-observation-v1",
+      "line": 25
+    },
+    {
+      "file": "src/document_structure.js",
+      "format": "cr-document-structure-v1",
+      "line": 46
+    },
+    {
+      "file": "src/document_structure.js",
+      "format": "cr-document-structure-v1",
+      "line": 49
+    },
+    {
+      "file": "src/document_structure.js",
+      "format": "cr-document-map-v1",
+      "line": 79
+    },
+    {
+      "file": "src/eval_operational_ui.js",
+      "format": "cr-safety-dataset-v1",
+      "line": 28
+    },
+    {
+      "file": "src/eval_prepare.js",
+      "format": "cr-evaluation-preparation-v1",
+      "line": 4
+    },
+    {
+      "file": "src/eval_prepare.js",
+      "format": "cr-safety-dataset-v1",
+      "line": 96
+    },
+    {
+      "file": "src/experiment.js",
+      "format": "cr-matching-predictions-v1",
+      "line": 5
+    },
+    {
+      "file": "src/experiment.js",
+      "format": "cr-matching-gold-v1",
+      "line": 6
+    },
+    {
+      "file": "src/goldset.js",
+      "format": "cr-goldset-case-v1",
+      "line": 18
+    },
+    {
+      "file": "src/history_eval_ui.js",
+      "format": "cr-history-eval-drafts-v1",
+      "line": 3
+    },
+    {
+      "file": "src/history_eval_ui.js",
+      "format": "cr-history-eval-trace-v1",
+      "line": 39
+    },
+    {
+      "file": "src/integrity.js",
+      "format": "cr-document-integrity-v1",
+      "line": 307
+    },
+    {
+      "file": "src/launcher.html",
+      "format": "contract-review-update-v1",
+      "line": 38
+    },
+    {
+      "file": "src/legal_opinion_knowledge.js",
+      "format": "cr-legal-opinion-knowledge-v1",
+      "line": 6
+    },
+    {
+      "file": "src/loop.js",
+      "format": "cr-loop-corpus-v2",
+      "line": 17
+    },
+    {
+      "file": "src/loop.js",
+      "format": "cr-loop-corpus-v2",
+      "line": 35
+    },
+    {
+      "file": "src/loop.js",
+      "format": "cr-type-classification-v1",
+      "line": 532
+    },
+    {
+      "file": "src/review_history.js",
+      "format": "cr-review-history-pack-v1",
+      "line": 7
+    },
+    {
+      "file": "src/safety_eval.js",
+      "format": "cr-safety-observation-v1",
+      "line": 12
+    },
+    {
+      "file": "src/safety_eval.js",
+      "format": "cr-safety-gold-v1",
+      "line": 32
+    },
+    {
+      "file": "src/safety_eval.js",
+      "format": "cr-safety-observation-v1",
+      "line": 44
+    },
+    {
+      "file": "src/safety_eval.js",
+      "format": "cr-safety-gold-v1",
+      "line": 44
+    },
+    {
+      "file": "src/safety_eval_ui.js",
+      "format": "cr-safety-observation-v1",
+      "line": 70
+    },
+    {
+      "file": "src/safety_eval_ui.js",
+      "format": "cr-safety-gold-v1",
+      "line": 70
+    },
+    {
+      "file": "src/safety_runtime.js",
+      "format": "cr-safety-workbench-v1",
+      "line": 4
+    },
+    {
+      "file": "src/safety_runtime.js",
+      "format": "cr-standard-auto-v1",
+      "line": 7
+    },
+    {
+      "file": "src/safety_runtime.js",
+      "format": "cr-standard-auto-v1",
+      "line": 172
+    },
+    {
+      "file": "src/safety_runtime.js",
+      "format": "cr-standard-auto-v1",
+      "line": 177
+    },
+    {
+      "file": "src/safety_runtime.js",
+      "format": "cr-standard-auto-v1",
+      "line": 286
+    },
+    {
+      "file": "src/safety_workbench.js",
+      "format": "cr-safety-workbench-v1",
+      "line": 15
+    },
+    {
+      "file": "src/safety_workbench.js",
+      "format": "cr-safety-dataset-v1",
+      "line": 51
+    },
+    {
+      "file": "src/safety_workbench.js",
+      "format": "cr-safety-workbench-v1",
+      "line": 176
+    },
+    {
+      "file": "src/safety_workbench_ui.js",
+      "format": "cr-safety-dataset-v1",
+      "line": 36
+    },
+    {
+      "file": "src/safety_workbench_ui.js",
+      "format": "cr-safety-gold-v1",
+      "line": 52
+    },
+    {
+      "file": "src/safety_workbench_ui.js",
+      "format": "cr-safety-observation-v1",
+      "line": 63
+    },
+    {
+      "file": "src/safety_workbench_ui.js",
+      "format": "cr-safety-gold-v1",
+      "line": 66
+    },
+    {
+      "file": "src/safety_workbench_ui.js",
+      "format": "cr-safety-dataset-v1",
+      "line": 69
+    },
+    {
+      "file": "src/standard_auto_archive.js",
+      "format": "cr-standard-evaluation-backup-v1",
+      "line": 54
+    },
+    {
+      "file": "src/standard_auto_archive.js",
+      "format": "cr-standard-evaluation-backup-v1",
+      "line": 57
+    },
+    {
+      "file": "src/structure_review.js",
+      "format": "cr-structure-review-v1",
+      "line": 36
+    },
+    {
+      "file": "src/structure_review.js",
+      "format": "cr-structure-review-v1",
+      "line": 40
+    },
+    {
+      "file": "src/template_library_ui.js",
+      "format": "cr-template-library-v1",
+      "line": 3
+    }
+  ],
+  "method": "static source references; dynamic keys require S0 browser coverage",
+  "migration_gap": "Existing knowledge/history packs do not include every localStorage/IndexedDB store",
+  "references": [
+    {
+      "code": "var LOCAL_LLM_KEY = \"cr-local-llm-enabled\";",
+      "file": "src/app.js",
+      "line": 25
+    },
+    {
+      "code": "var LOCAL_LLM_MODEL_KEY = \"cr-local-llm-model\";",
+      "file": "src/app.js",
+      "line": 26
+    },
+    {
+      "code": "var MOTION_PREFERENCE_KEY = \"cr-motion-preference-v1\";",
+      "file": "src/app.js",
+      "line": 27
+    },
+    {
+      "code": "try { localStorage.setItem(MOTION_PREFERENCE_KEY, _motionPreference); } catch (e) {}",
+      "file": "src/app.js",
+      "line": 263
+    },
+    {
+      "code": "try { stored = localStorage.getItem(MOTION_PREFERENCE_KEY) || \"auto\"; } catch (e) {}",
+      "file": "src/app.js",
+      "line": 269
+    },
+    {
+      "code": "var SUBDOC_USE_KEY_PREFIX = \"cr-subdoc-confirm-v1-\";",
+      "file": "src/app.js",
+      "line": 805
+    },
+    {
+      "code": "var saved = JSON.parse(localStorage.getItem(SUBDOC_USE_KEY_PREFIX + hash) || \"{}\");",
+      "file": "src/app.js",
+      "line": 811
+    },
+    {
+      "code": "try { localStorage.setItem(SUBDOC_USE_KEY_PREFIX + hash, JSON.stringify(state.subdocUse || {})); } catch (e) {}",
+      "file": "src/app.js",
+      "line": 818
+    },
+    {
+      "code": "return localStorage.getItem(_analysisBoundaryCache.key)||'';",
+      "file": "src/app.js",
+      "line": 925
+    },
+    {
+      "code": "cb.checked = localStorage.getItem(LOCAL_LLM_KEY) === \"1\";",
+      "file": "src/app.js",
+      "line": 1566
+    },
+    {
+      "code": "if (modelSelect) modelSelect.value = LocalLLM.setModel(localStorage.getItem(LOCAL_LLM_MODEL_KEY) || LocalLLM.MODEL);",
+      "file": "src/app.js",
+      "line": 1567
+    },
+    {
+      "code": "try { localStorage.setItem(LOCAL_LLM_MODEL_KEY, modelSelect.value); } catch (e) {}",
+      "file": "src/app.js",
+      "line": 1571
+    },
+    {
+      "code": "try { localStorage.setItem(LOCAL_LLM_KEY, cb.checked ? \"1\" : \"0\"); } catch (e) {}",
+      "file": "src/app.js",
+      "line": 1575
+    },
+    {
+      "code": "try { return JSON.parse(localStorage.getItem(Verdict.opinionKey(verdictHash)) || \"null\"); }",
+      "file": "src/app.js",
+      "line": 1633
+    },
+    {
+      "code": "localStorage.setItem(Verdict.opinionKey(verdictHash),",
+      "file": "src/app.js",
+      "line": 1637
+    },
+    {
+      "code": "try { localStorage.removeItem(Verdict.opinionKey(verdictHash)); } catch (e) {}",
+      "file": "src/app.js",
+      "line": 1641
+    },
+    {
+      "code": "var LOOP_KEY = \"cr-loop-corpus\";",
+      "file": "src/app.js",
+      "line": 1673
+    },
+    {
+      "code": "var LOOP_RESET_KEY = \"cr-loop-corpus-reset\";",
+      "file": "src/app.js",
+      "line": 1674
+    },
+    {
+      "code": "if (localStorage.getItem(LOOP_RESET_KEY) !== LOOP_RESET_VERSION) {",
+      "file": "src/app.js",
+      "line": 1679
+    },
+    {
+      "code": "localStorage.removeItem(LOOP_KEY);",
+      "file": "src/app.js",
+      "line": 1680
+    },
+    {
+      "code": "localStorage.setItem(LOOP_RESET_KEY, LOOP_RESET_VERSION);",
+      "file": "src/app.js",
+      "line": 1681
+    },
+    {
+      "code": "loopCorpus = Loop.normalizeCorpus(JSON.parse(localStorage.getItem(LOOP_KEY)) || Loop.emptyCorpus());",
+      "file": "src/app.js",
+      "line": 1683
+    },
+    {
+      "code": "function saveCorpus() { localStorage.setItem(LOOP_KEY, JSON.stringify(loopCorpus)); }",
+      "file": "src/app.js",
+      "line": 1685
+    },
+    {
+      "code": "var REVIEWER_KEY = \"cr-reviewer\";",
+      "file": "src/app.js",
+      "line": 1698
+    },
+    {
+      "code": "try { return localStorage.getItem(REVIEWER_KEY) || \"\"; } catch (e) { return \"\"; }",
+      "file": "src/app.js",
+      "line": 1700
+    },
+    {
+      "code": "try { localStorage.setItem(REVIEWER_KEY, String(name || \"\").trim()); } catch (e) {}",
+      "file": "src/app.js",
+      "line": 1703
+    },
+    {
+      "code": "try { verdictStore = JSON.parse(localStorage.getItem(Verdict.verdictKey(verdictHash)) || \"{}\"); }",
+      "file": "src/app.js",
+      "line": 1785
+    },
+    {
+      "code": "try { groupReviewStore = ReviewGroups.normalize(JSON.parse(localStorage.getItem('cr-groups-'+verdictHash)||'null')); }",
+      "file": "src/app.js",
+      "line": 1790
+    },
+    {
+      "code": "try{stored=JSON.parse(localStorage.getItem(Verdict.verdictKey(verdictHash))||'{}');}catch(e){stored=null;}",
+      "file": "src/app.js",
+      "line": 1797
+    },
+    {
+      "code": "var serialized=JSON.stringify(verdictStore),changed=serialized!==localStorage.getItem(Verdict.verdictKey(verdictHash));",
+      "file": "src/app.js",
+      "line": 1817
+    },
+    {
+      "code": "if(changed)localStorage.setItem(Verdict.verdictKey(verdictHash),serialized);",
+      "file": "src/app.js",
+      "line": 1818
+    },
+    {
+      "code": "try { state.findingStore = Findings.normalizeStore(JSON.parse(localStorage.getItem(findingKey(verdictHash)) || \"{}\")); }",
+      "file": "src/app.js",
+      "line": 1826
+    },
+    {
+      "code": "localStorage.setItem(findingKey(verdictHash), JSON.stringify(Findings.normalizeStore(state.findingStore)));",
+      "file": "src/app.js",
+      "line": 1830
+    },
+    {
+      "code": "var ARCHIVE_NOTICE_KEY = \"cr-archive-notice\";",
+      "file": "src/app.js",
+      "line": 2996
+    },
+    {
+      "code": "if (!localStorage.getItem(ARCHIVE_NOTICE_KEY)) {",
+      "file": "src/app.js",
+      "line": 3009
+    },
+    {
+      "code": "localStorage.setItem(ARCHIVE_NOTICE_KEY, \"1\");",
+      "file": "src/app.js",
+      "line": 3011
+    },
+    {
+      "code": "var ARCHIVE_REG_KEY = \"cr-archive-registry\";",
+      "file": "src/app.js",
+      "line": 3078
+    },
+    {
+      "code": "var ARCHIVE_DISMISS_KEY = \"cr-archive-dismiss\"; // { <현재 계약 해시>: [무시한 후보 해시...] }",
+      "file": "src/app.js",
+      "line": 3079
+    },
+    {
+      "code": "try { return JSON.parse(localStorage.getItem(ARCHIVE_REG_KEY)) || []; } catch (e) { return []; }",
+      "file": "src/app.js",
+      "line": 3081
+    },
+    {
+      "code": "try { localStorage.setItem(ARCHIVE_REG_KEY, JSON.stringify(reg)); return {ok:true,mode:\"full\"}; } catch (e) {}",
+      "file": "src/app.js",
+      "line": 3085
+    },
+    {
+      "code": "try { localStorage.setItem(ARCHIVE_REG_KEY, JSON.stringify(slim)); return {ok:true,mode:\"slim\"}; } catch (e2) {}",
+      "file": "src/app.js",
+      "line": 3091
+    },
+    {
+      "code": "try { localStorage.setItem(ARCHIVE_REG_KEY, JSON.stringify(slim.slice(-Math.ceil(slim.length / 2)))); return {ok:true,mode:\"partial\"}; } catch (e3) {}",
+      "file": "src/app.js",
+      "line": 3092
+    },
+    {
+      "code": "try { return JSON.parse(localStorage.getItem(ARCHIVE_DISMISS_KEY)) || {}; } catch (e) { return {}; }",
+      "file": "src/app.js",
+      "line": 3096
+    },
+    {
+      "code": "try { localStorage.setItem(ARCHIVE_DISMISS_KEY, JSON.stringify(d)); } catch (e) {}",
+      "file": "src/app.js",
+      "line": 3102
+    },
+    {
+      "code": "try { verdicts = JSON.parse(localStorage.getItem(Verdict.verdictKey(entry.contract_hash)) || \"{}\"); } catch (e) {}",
+      "file": "src/app.js",
+      "line": 3108
+    },
+    {
+      "code": "var op = JSON.parse(localStorage.getItem(Verdict.opinionKey(entry.contract_hash)) || \"null\");",
+      "file": "src/app.js",
+      "line": 3111
+    },
+    {
+      "code": "localStorage.setItem('cr-groups-'+verdictHash,JSON.stringify(ReviewGroups.pack(groupReviewStore)));",
+      "file": "src/app.js",
+      "line": 3575
+    },
+    {
+      "code": "try { state.reassign = normalizeReassignMap(JSON.parse(localStorage.getItem(reassignKey(verdictHash)) || \"{}\")); }",
+      "file": "src/app.js",
+      "line": 4061
+    },
+    {
+      "code": "try { localStorage.setItem(reassignKey(verdictHash), JSON.stringify(state.reassign || {})); } catch (e) {}",
+      "file": "src/app.js",
+      "line": 4065
+    },
+    {
+      "code": "try { state.matchConfirm = normalizeMatchConfirmMap(JSON.parse(localStorage.getItem(matchConfirmKey(verdictHash)) || \"{}\")); }",
+      "file": "src/app.js",
+      "line": 4074
+    },
+    {
+      "code": "try { localStorage.setItem(matchConfirmKey(verdictHash), JSON.stringify(state.matchConfirm || {})); } catch (e) {}",
+      "file": "src/app.js",
+      "line": 4078
+    },
+    {
+      "code": "var VERIFY_KEY = \"cr-verify-decisions\";",
+      "file": "src/app.js",
+      "line": 4988
+    },
+    {
+      "code": "try { verifyDecisions = JSON.parse(localStorage.getItem(VERIFY_KEY) || \"{}\"); } catch (e) {}",
+      "file": "src/app.js",
+      "line": 4990
+    },
+    {
+      "code": "function saveVerify() { localStorage.setItem(VERIFY_KEY, JSON.stringify(verifyDecisions)); }",
+      "file": "src/app.js",
+      "line": 4993
+    },
+    {
+      "code": "localStorage.setItem(LOOP_KEY,JSON.stringify(next));loopCorpus=next;",
+      "file": "src/eval_prepare_ui.js",
+      "line": 10
+    },
+    {
+      "code": "function open(){return new Promise(function(resolve,reject){var r=indexedDB.open(\"cr-evaluation-preparation\",1);",
+      "file": "src/eval_prepare_ui.js",
+      "line": 67
+    },
+    {
+      "code": "r.onupgradeneeded=function(){r.result.createObjectStore(\"work\");};r.onsuccess=function(){db=r.result;resolve();};r.onerror=function(){reject(r.error);};});}",
+      "file": "src/eval_prepare_ui.js",
+      "line": 68
+    },
+    {
+      "code": "var ADDR_KEY = /만리재로24(?![\\d-])/;",
+      "file": "src/formal.js",
+      "line": 22
+    },
+    {
+      "code": "var rows=[], current=null, confirmation=\"\", KEY=\"cr-history-eval-drafts-v1\";",
+      "file": "src/history_eval_ui.js",
+      "line": 3
+    },
+    {
+      "code": "function drafts(){return JSON.parse(localStorage.getItem(KEY)||\"{}\");}",
+      "file": "src/history_eval_ui.js",
+      "line": 7
+    },
+    {
+      "code": "function saveDraft(){if(!current)return;var data=drafts();data[current.id]={revision:current.revision,draft:Object.assign(draft(),{confirmed:false})};localStorage.setItem(KEY,JSON.stringify(data));}",
+      "file": "src/history_eval_ui.js",
+      "line": 8
+    },
+    {
+      "code": "var DB=\"contract-review-launcher\",VER=1,STORE=\"app\",KEY=\"current\",FORMAT=\"contract-review-update-v1\";",
+      "file": "src/launcher.html",
+      "line": 38
+    },
+    {
+      "code": "function openDb(){return new Promise(function(resolve,reject){var r=indexedDB.open(DB,VER);r.onupgradeneeded=function(){if(!r.result.objectStoreNames.contains(STORE))r.result.createObjectStore(STORE)};r.onsuccess=function(){resolve(r.result)};r.onerror=function(){reject(r.error)}})}",
+      "file": "src/launcher.html",
+      "line": 41
+    },
+    {
+      "code": "var DB_NAME = \"contract-review-workspace\";",
+      "file": "src/legal_opinion_knowledge.js",
+      "line": 8
+    },
+    {
+      "code": "var STORE_NAME = \"knowledge\";",
+      "file": "src/legal_opinion_knowledge.js",
+      "line": 10
+    },
+    {
+      "code": "var RECORD_KEY = \"legal-opinion-corpus\";",
+      "file": "src/legal_opinion_knowledge.js",
+      "line": 11
+    },
+    {
+      "code": "var request = indexedDB.open(DB_NAME, DB_VERSION);",
+      "file": "src/legal_opinion_knowledge.js",
+      "line": 458
+    },
+    {
+      "code": "if (!db.objectStoreNames.contains(STORE_NAME)) db.createObjectStore(STORE_NAME);",
+      "file": "src/legal_opinion_knowledge.js",
+      "line": 461
+    },
+    {
+      "code": "var DB_NAME = \"contract-review-history\";",
+      "file": "src/review_history.js",
+      "line": 9
+    },
+    {
+      "code": "var STORE_NAME = \"history\";",
+      "file": "src/review_history.js",
+      "line": 11
+    },
+    {
+      "code": "var RECORD_KEY = \"review-history-corpus\";",
+      "file": "src/review_history.js",
+      "line": 12
+    },
+    {
+      "code": "var request = indexedDB.open(DB_NAME, DB_VERSION);",
+      "file": "src/review_history.js",
+      "line": 634
+    },
+    {
+      "code": "if (!db.objectStoreNames.contains(STORE_NAME)) db.createObjectStore(STORE_NAME);",
+      "file": "src/review_history.js",
+      "line": 637
+    },
+    {
+      "code": "var KEY=\"cr-safety-workbench-v1\", store=SafetyWorkbench.empty(), attestation=\"\", loadError=\"\";",
+      "file": "src/safety_runtime.js",
+      "line": 4
+    },
+    {
+      "code": "try {var standardSettings=JSON.parse(localStorage.getItem('cr-standard-auto-v1')||'{}');standardEnabled=standardSettings.enabled!==false;vatFactEnabled=standardSettings.vat_fact!==false;standardStopped=standardSettings.stopped||{};}catch(e){loadError='자동판정 설정 파일을 읽지 못해 기본 실행 설정을 사용합니다.';}",
+      "file": "src/safety_runtime.js",
+      "line": 7
+    },
+    {
+      "code": "var raw=JSON.parse(localStorage.getItem(KEY)||\"null\");",
+      "file": "src/safety_runtime.js",
+      "line": 9
+    },
+    {
+      "code": "var sealed=SafetyWorkbench.seal(next);localStorage.setItem(KEY,JSON.stringify(sealed));store=sealed;",
+      "file": "src/safety_runtime.js",
+      "line": 102
+    },
+    {
+      "code": "localStorage.setItem('cr-standard-auto-v1',JSON.stringify({enabled:!!on,vat_fact:!!on,stopped:standardStopped}));standardEnabled=!!on;vatFactEnabled=!!on;",
+      "file": "src/safety_runtime.js",
+      "line": 172
+    },
+    {
+      "code": "localStorage.setItem('cr-standard-auto-v1',JSON.stringify({enabled:standardEnabled,vat_fact:vatFactEnabled,stopped:next}));standardStopped=next;",
+      "file": "src/safety_runtime.js",
+      "line": 177
+    },
+    {
+      "code": "try{enabled=localStorage.getItem('cr-standard-archive-enabled')==='true';}catch(e){}",
+      "file": "src/standard_auto_archive.js",
+      "line": 5
+    },
+    {
+      "code": "function open(){if(!dbPromise)dbPromise=new Promise(function(resolve,reject){var r=indexedDB.open('cr-standard-auto-evaluation',1);",
+      "file": "src/standard_auto_archive.js",
+      "line": 7
+    },
+    {
+      "code": "r.onupgradeneeded=function(){r.result.createObjectStore('packets',{keyPath:'id'});};r.onsuccess=function(){resolve(r.result);};r.onerror=function(){dbPromise=null;reject(r.error);};});return dbPromise;}",
+      "file": "src/standard_auto_archive.js",
+      "line": 8
+    },
+    {
+      "code": "try{localStorage.setItem('cr-template-sources-changed',JSON.stringify(detail));}catch(e){}",
+      "file": "src/standard_auto_archive.js",
+      "line": 23
+    },
+    {
+      "code": "function setEnabled(on){localStorage.setItem('cr-standard-archive-enabled',String(!!on));enabled=!!on;if(on)schedule();else clearTimeout(timer);}",
+      "file": "src/standard_auto_archive.js",
+      "line": 29
+    },
+    {
+      "code": "function boundaries(){try{var raw=JSON.parse(localStorage.getItem(key())||'null');return raw&&raw.fingerprint===fingerprint()&&Array.isArray(raw.items)?raw.items:[];}catch(e){return [];}}",
+      "file": "src/structure_review.js",
+      "line": 6
+    },
+    {
+      "code": "function save(items){localStorage.setItem(key(),JSON.stringify({fingerprint:fingerprint(),items:items}));refreshDocumentIntegrity();renderClauses();renderReport();}",
+      "file": "src/structure_review.js",
+      "line": 7
+    },
+    {
+      "code": "var KEY='cr-template-library-v1',lib=TemplateLibrary.empty(),draft=null,error='',lastRows=[],proposalRows=[],variantRows=[],packetCache=[],proposalKey='',variantKey='';",
+      "file": "src/template_library_ui.js",
+      "line": 3
+    },
+    {
+      "code": "try{var raw=JSON.parse(localStorage.getItem(KEY)||'null');if(raw)lib=TemplateLibrary.validate(raw);}catch(e){error=e.message;}",
+      "file": "src/template_library_ui.js",
+      "line": 7
+    },
+    {
+      "code": "});if(upgraded){TemplateLibrary.validate(next);localStorage.setItem(KEY,JSON.stringify(next));lib=next;}}catch(e){error='자동 연결 갱신 실패: '+e.message;}",
+      "file": "src/template_library_ui.js",
+      "line": 13
+    },
+    {
+      "code": "function save(next){TemplateLibrary.validate(next);localStorage.setItem(KEY,JSON.stringify(next));lib=next;refresh();render();}",
+      "file": "src/template_library_ui.js",
+      "line": 15
+    }
+  ]
+}

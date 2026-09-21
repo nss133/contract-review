@@ -1,0 +1,37 @@
+{
+  "source": "src/app.js hashText",
+  "normalization": "none",
+  "offset_unit": "utf16",
+  "cases": [
+    {
+      "text": "",
+      "hash": "cr-45h",
+      "length": 0
+    },
+    {
+      "text": "가나다",
+      "hash": "cr-40lg81",
+      "length": 3
+    },
+    {
+      "text": "😀계약",
+      "hash": "cr-1wge8o3",
+      "length": 4
+    },
+    {
+      "text": "가",
+      "hash": "cr-3krs6",
+      "length": 2
+    },
+    {
+      "text": "가\r\n나",
+      "hash": "cr-1oodi2c",
+      "length": 4
+    },
+    {
+      "text": "𐐀",
+      "hash": "cr-4lx0m",
+      "length": 2
+    }
+  ]
+}

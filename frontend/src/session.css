@@ -1,0 +1,7 @@
+.server-session {margin: 12px 0; padding: 16px; border: 1px solid #d8dde3; border-radius: 8px; background: #fff;}
+.server-session h2 {font-size: 16px; margin: 0 0 8px;}
+.server-session form:not([hidden]), #session-tools:not([hidden]) {display: flex; gap: 12px; align-items: center; flex-wrap: wrap;}
+.server-session [hidden] {display: none !important;}
+.server-session label {display: flex; gap: 6px; align-items: center; flex-wrap: wrap;}
+#service-status {overflow-wrap: anywhere;}
+@media print {.server-session {display: none;}}

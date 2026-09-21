@@ -9,3 +9,13 @@ data/private/
 verifications/*.json
 dist/contract-review-v*/
 dist/contract-review 2.html
+.runtime/
+.venv/
+backend/.venv/
+backend/.pytest_cache/
+backend/*.egg-info/
+backend/build/
+backend/dist/
+frontend/dist/
+.env
+packaging/wheelhouse/

@@ -1,0 +1,95 @@
+{
+  "baseline": "1.90.8",
+  "synthetic_only": true,
+  "images": [
+    {
+      "file": "input-1440.png",
+      "sha256": "ac5cfd14aaebd7e77521e52ec6af5d767877976bd6604acf2281db929de02ddd"
+    },
+    {
+      "file": "input-1100.png",
+      "sha256": "938e918b09b9d53cbcdecdcf97994fe7e7dd957f7acd8c497f09a386a47a38ea"
+    },
+    {
+      "file": "input-800.png",
+      "sha256": "70e76ed4f14e5fea59f81c4bfe4953b28f263964458b99b5a2ac50e4c29d610e"
+    },
+    {
+      "file": "clauses-1440.png",
+      "sha256": "aace97b8689f99b1ac08925eba6280d59648dd50bba3871828245f4252d81097"
+    },
+    {
+      "file": "report-1440.png",
+      "sha256": "b8c8b0fa21014227f2e27cc8c49029dbe3761ca0ea52ee5b1db14c13e0e2f6fd"
+    },
+    {
+      "file": "knowledge-1440.png",
+      "sha256": "0fb9bae783d6f897579b744085ac33d11c5b6689851e76b92a06878b055b7b9b"
+    },
+    {
+      "file": "evaluation-1440.png",
+      "sha256": "73fc047be589449b54ca02f5dafbea8c7a3d73998558227a0ed51fca51ba5b1a"
+    },
+    {
+      "file": "checklist-1440.png",
+      "sha256": "2ed747305079451e0e02513269d16e17b6c8c903cf4a08e145b6e3419dce90ce"
+    },
+    {
+      "file": "verify-1440.png",
+      "sha256": "64837466cf18920e516c56f06c60dfad59a7d14ee5baca82a6f92d3d933d8afb"
+    },
+    {
+      "file": "clauses-1100.png",
+      "sha256": "c5107826a3acda201ac3c835e9ebbf666bdabf4fe6a33dbde1b49af4c64680f7"
+    },
+    {
+      "file": "report-1100.png",
+      "sha256": "a5f3adba88c88acc582f913b039972994383f52dfaed16e6f9ecfd24534b998e"
+    },
+    {
+      "file": "knowledge-1100.png",
+      "sha256": "385ef9c1b4df2036324e51072cc1765eab507af459388b0bd4ac785cdf45c978"
+    },
+    {
+      "file": "evaluation-1100.png",
+      "sha256": "a527bab870c7a966580759574157da9708fbf7f7641454a22b1bfbb732bf6219"
+    },
+    {
+      "file": "checklist-1100.png",
+      "sha256": "cf488246e33e8e85f0d32908ffd416c696cda0dfda4389e926c7ec8a864bcad9"
+    },
+    {
+      "file": "verify-1100.png",
+      "sha256": "b8e2ee91b7a5da7079474c4ccaac3402f6a96f96aa0b4ece8d6f075b29c5461c"
+    },
+    {
+      "file": "clauses-800.png",
+      "sha256": "76b10b94fc0274f2a665f06b0f46c316775ecb523d8ba9c11bd55ee3185a7221"
+    },
+    {
+      "file": "report-800.png",
+      "sha256": "98ff50d575144bc1f7dd8e93b25c69a0ab5ef83981a9e731131ddf3914e19581"
+    },
+    {
+      "file": "knowledge-800.png",
+      "sha256": "36546f0aa55a6b5cc5776fbc6aaa2d3ac2cdcc175be77dadf8842c1621d60413"
+    },
+    {
+      "file": "evaluation-800.png",
+      "sha256": "7ad0984f50743487287e72bd22152203f675f7e9606118ea56405904a967aaa6"
+    },
+    {
+      "file": "checklist-800.png",
+      "sha256": "3f75e729b260c39b492d5ef56a06ac3ecfc808c423fc0bddb83a159ad3281648"
+    },
+    {
+      "file": "verify-800.png",
+      "sha256": "6f1c117d8862b7e7e55bba0ed5bfaebaeb2ca2d364b99bfd5e395465763c8e4d"
+    },
+    {
+      "file": "report-print.png",
+      "sha256": "7de722cecf3ca985ef44d8441216b111415e02d8a00392244eb6b8e77607f08c"
+    }
+  ],
+  "browser_errors": []
+}

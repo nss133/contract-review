@@ -1,0 +1,1233 @@
+{
+  "controls": [
+    {
+      "class": "tab active",
+      "data-tab": "input",
+      "tag": "button"
+    },
+    {
+      "class": "tab",
+      "data-tab": "clauses",
+      "tag": "button"
+    },
+    {
+      "class": "tab",
+      "data-tab": "report",
+      "tag": "button"
+    },
+    {
+      "class": "tab",
+      "data-tab": "checklist",
+      "tag": "button"
+    },
+    {
+      "class": "tab",
+      "data-tab": "evaluation",
+      "tag": "button"
+    },
+    {
+      "class": "tab tab-admin",
+      "data-tab": "knowledge",
+      "tag": "button"
+    },
+    {
+      "class": "tab tab-admin",
+      "data-tab": "verify",
+      "tag": "button"
+    },
+    {
+      "class": "tab tab-admin tab-goldset",
+      "data-tab": "goldset",
+      "tag": "button"
+    },
+    {
+      "aria-label": "계약서 텍스트 입력",
+      "id": "contract-text",
+      "placeholder": "계약서 텍스트를 붙여넣거나, 파일(PDF·DOCX·DOC·HWP·HWPX)을 여기로 끌어다 놓으세요",
+      "tag": "textarea"
+    },
+    {
+      "accept": ".docx,.pdf,.doc,.hwp,.hwpx",
+      "hidden": null,
+      "id": "docx-file",
+      "tag": "input",
+      "type": "file"
+    },
+    {
+      "class": "primary",
+      "id": "btn-analyze",
+      "tag": "button"
+    },
+    {
+      "class": "ghost",
+      "hidden": null,
+      "id": "btn-analysis-cancel",
+      "tag": "button"
+    },
+    {
+      "id": "input-department",
+      "placeholder": "내용이 유사한 과거 사례를 찾을 때 참고",
+      "tag": "input",
+      "type": "text"
+    },
+    {
+      "checked": null,
+      "name": "stance",
+      "tag": "input",
+      "type": "radio",
+      "value": "party"
+    },
+    {
+      "name": "stance",
+      "tag": "input",
+      "type": "radio",
+      "value": "beneficiary"
+    },
+    {
+      "aria-label": "계약 유형 선택",
+      "id": "input-type",
+      "tag": "select"
+    },
+    {
+      "id": "local-llm-enabled",
+      "tag": "input",
+      "type": "checkbox"
+    },
+    {
+      "aria-label": "로컬 AI 모델",
+      "id": "local-llm-model",
+      "tag": "select"
+    },
+    {
+      "aria-label": "화면 효과 설정",
+      "id": "motion-preference",
+      "tag": "select"
+    },
+    {
+      "accept": ".docx,.pdf,.doc,.hwp,.hwpx,.txt",
+      "hidden": null,
+      "id": "base-file",
+      "tag": "input",
+      "type": "file"
+    },
+    {
+      "class": "ghost",
+      "hidden": null,
+      "id": "base-clear",
+      "tag": "button"
+    },
+    {
+      "accept": ".docx,.pdf,.doc,.hwp,.hwpx,.txt",
+      "hidden": null,
+      "id": "subdoc-file",
+      "multiple": null,
+      "tag": "input",
+      "type": "file"
+    },
+    {
+      "accept": ".json",
+      "hidden": null,
+      "id": "compare-file",
+      "tag": "input",
+      "type": "file"
+    },
+    {
+      "class": "ghost",
+      "id": "btn-reanalyze",
+      "tag": "button"
+    },
+    {
+      "accept": ".json",
+      "hidden": null,
+      "id": "compare-file-bar",
+      "tag": "input",
+      "type": "file"
+    },
+    {
+      "id": "checklist-type",
+      "tag": "select"
+    },
+    {
+      "class": "ghost consider-anchor",
+      "hidden": null,
+      "id": "consider-anchor",
+      "tag": "button"
+    },
+    {
+      "class": "ghost verify-anchor",
+      "hidden": null,
+      "id": "verify-anchor",
+      "tag": "button",
+      "title": "클릭하면 확인할 문구가 있는 조항으로 차례로 이동"
+    },
+    {
+      "class": "ghost formal-flag",
+      "hidden": null,
+      "id": "formal-flag",
+      "tag": "button",
+      "title": "당사 고유명사(상호·대표자·주소) 근사 오기 — 클릭하면 리포트 형식 점검으로 이동"
+    },
+    {
+      "class": "ghost local-ai-rerun",
+      "hidden": null,
+      "id": "local-llm-rerun",
+      "tag": "button"
+    },
+    {
+      "class": "quick-review-btn",
+      "hidden": null,
+      "id": "quick-review-ok",
+      "tag": "button"
+    },
+    {
+      "class": "ghost",
+      "id": "bulk-consider-na",
+      "tag": "button"
+    },
+    {
+      "class": "ghost",
+      "id": "bulk-consider-ok",
+      "tag": "button"
+    },
+    {
+      "class": "ghost",
+      "id": "bulk-matched-ok",
+      "tag": "button"
+    },
+    {
+      "class": "ghost",
+      "id": "verdict-export",
+      "tag": "button"
+    },
+    {
+      "accept": ".json",
+      "hidden": null,
+      "id": "verdict-import",
+      "tag": "input",
+      "type": "file"
+    },
+    {
+      "class": "primary review-done-cta",
+      "hidden": null,
+      "id": "review-done-cta",
+      "tag": "button"
+    },
+    {
+      "class": "primary",
+      "id": "standard-auto-start",
+      "tag": "button"
+    },
+    {
+      "class": "ghost",
+      "id": "standard-auto-stop",
+      "tag": "button"
+    },
+    {
+      "class": "ghost",
+      "id": "standard-auto-inspect",
+      "tag": "button"
+    },
+    {
+      "id": "standard-auto-archive",
+      "tag": "input",
+      "type": "checkbox"
+    },
+    {
+      "class": "ghost",
+      "id": "standard-auto-evaluate",
+      "tag": "button"
+    },
+    {
+      "class": "ghost",
+      "id": "standard-auto-cancel",
+      "tag": "button"
+    },
+    {
+      "class": "ghost",
+      "id": "standard-auto-backup",
+      "tag": "button"
+    },
+    {
+      "accept": ".json",
+      "hidden": null,
+      "id": "standard-auto-restore",
+      "tag": "input",
+      "type": "file"
+    },
+    {
+      "id": "filter-module",
+      "tag": "select"
+    },
+    {
+      "id": "filter-severity",
+      "tag": "select"
+    },
+    {
+      "id": "filter-match",
+      "tag": "select"
+    },
+    {
+      "aria-label": "확인사항·법령 검색",
+      "id": "filter-search",
+      "placeholder": "확인사항·법령 검색",
+      "tag": "input",
+      "type": "search"
+    },
+    {
+      "accept": ".hwp,.hwpx,.doc,.docx,.pdf",
+      "hidden": null,
+      "id": "template-file",
+      "multiple": null,
+      "tag": "input",
+      "type": "file"
+    },
+    {
+      "id": "template-name",
+      "tag": "input"
+    },
+    {
+      "id": "template-revision",
+      "tag": "input"
+    },
+    {
+      "id": "template-type",
+      "multiple": null,
+      "size": "4",
+      "tag": "select"
+    },
+    {
+      "id": "template-role",
+      "tag": "select"
+    },
+    {
+      "id": "template-stance",
+      "tag": "select"
+    },
+    {
+      "id": "template-text",
+      "placeholder": "파일을 넣거나 표준서식 전문을 붙여넣으세요.",
+      "rows": "8",
+      "tag": "textarea"
+    },
+    {
+      "id": "template-split",
+      "tag": "button"
+    },
+    {
+      "id": "template-propose",
+      "tag": "button"
+    },
+    {
+      "id": "template-accept-proposals",
+      "tag": "button"
+    },
+    {
+      "id": "template-check",
+      "tag": "select"
+    },
+    {
+      "id": "template-bind",
+      "tag": "button"
+    },
+    {
+      "id": "template-find-variants",
+      "tag": "button"
+    },
+    {
+      "id": "template-variant-confirm",
+      "tag": "input",
+      "type": "checkbox"
+    },
+    {
+      "id": "template-accept-variants",
+      "tag": "button"
+    },
+    {
+      "id": "template-approve",
+      "tag": "input",
+      "type": "checkbox"
+    },
+    {
+      "class": "primary",
+      "id": "template-save",
+      "tag": "button"
+    },
+    {
+      "id": "template-backup",
+      "tag": "button"
+    },
+    {
+      "accept": ".json",
+      "hidden": null,
+      "id": "template-restore",
+      "tag": "input",
+      "type": "file"
+    },
+    {
+      "id": "template-evaluate",
+      "tag": "button"
+    },
+    {
+      "accept": ".xlsx",
+      "hidden": null,
+      "id": "knowledge-xlsx",
+      "tag": "input",
+      "type": "file"
+    },
+    {
+      "class": "ghost",
+      "disabled": null,
+      "id": "knowledge-backup",
+      "tag": "button"
+    },
+    {
+      "accept": ".json,.crknowledge",
+      "hidden": null,
+      "id": "knowledge-restore",
+      "tag": "input",
+      "type": "file"
+    },
+    {
+      "accept": ".xlsx",
+      "hidden": null,
+      "id": "history-xlsx",
+      "tag": "input",
+      "type": "file"
+    },
+    {
+      "class": "ghost",
+      "disabled": null,
+      "id": "history-backup",
+      "tag": "button"
+    },
+    {
+      "accept": ".json,.crhistory",
+      "hidden": null,
+      "id": "history-restore",
+      "tag": "input",
+      "type": "file"
+    },
+    {
+      "aria-label": "과거 계약검토 검색",
+      "id": "history-search",
+      "placeholder": "계약명·상대방·부서·유형 검색",
+      "tag": "input",
+      "type": "search"
+    },
+    {
+      "aria-label": "DB 유형 필터",
+      "id": "history-filter-type",
+      "tag": "select"
+    },
+    {
+      "class": "primary",
+      "id": "ep-corpus-scan",
+      "tag": "button"
+    },
+    {
+      "class": "ghost",
+      "id": "ep-corpus-compare",
+      "tag": "button"
+    },
+    {
+      "accept": ".json",
+      "hidden": null,
+      "id": "ep-legacy-file",
+      "tag": "input",
+      "type": "file"
+    },
+    {
+      "id": "ep-legacy-reviewer",
+      "tag": "input"
+    },
+    {
+      "id": "ep-legacy-confirm",
+      "tag": "input",
+      "type": "checkbox"
+    },
+    {
+      "class": "ghost",
+      "id": "ep-legacy-bind",
+      "tag": "button"
+    },
+    {
+      "class": "primary",
+      "id": "ep-prepare",
+      "tag": "button"
+    },
+    {
+      "class": "ghost",
+      "id": "ep-backup",
+      "tag": "button"
+    },
+    {
+      "accept": ".json",
+      "hidden": null,
+      "id": "ep-restore",
+      "tag": "input",
+      "type": "file"
+    },
+    {
+      "id": "ep-search",
+      "tag": "input"
+    },
+    {
+      "id": "ep-cases",
+      "tag": "select"
+    },
+    {
+      "accept": ".hwp,.hwpx,.docx,.doc,.pdf",
+      "hidden": null,
+      "id": "ep-files",
+      "multiple": null,
+      "tag": "input",
+      "type": "file"
+    },
+    {
+      "id": "ep-version",
+      "tag": "select"
+    },
+    {
+      "id": "ep-source-confirmed",
+      "tag": "input",
+      "type": "checkbox"
+    },
+    {
+      "id": "ep-items",
+      "tag": "select"
+    },
+    {
+      "id": "ep-mapping",
+      "tag": "select"
+    },
+    {
+      "id": "ep-truth",
+      "tag": "select"
+    },
+    {
+      "id": "ep-evidence",
+      "rows": "2",
+      "tag": "textarea"
+    },
+    {
+      "id": "ep-reason",
+      "rows": "3",
+      "tag": "textarea"
+    },
+    {
+      "id": "ep-reviewer",
+      "tag": "input"
+    },
+    {
+      "class": "primary",
+      "id": "ep-confirm",
+      "tag": "button"
+    },
+    {
+      "id": "ep-new",
+      "rows": "2",
+      "tag": "textarea"
+    },
+    {
+      "class": "ghost",
+      "id": "ep-add",
+      "tag": "button"
+    },
+    {
+      "class": "primary",
+      "id": "et-freeze",
+      "tag": "button"
+    },
+    {
+      "class": "ghost",
+      "id": "et-load",
+      "tag": "button"
+    },
+    {
+      "id": "et-saved",
+      "tag": "select"
+    },
+    {
+      "class": "primary",
+      "id": "et-start",
+      "tag": "button"
+    },
+    {
+      "class": "ghost",
+      "id": "et-score",
+      "tag": "button"
+    },
+    {
+      "id": "eo-actor",
+      "tag": "input"
+    },
+    {
+      "id": "eo-confirm",
+      "tag": "input",
+      "type": "checkbox"
+    },
+    {
+      "class": "primary",
+      "id": "eo-bind",
+      "tag": "button"
+    },
+    {
+      "class": "ghost",
+      "id": "eo-refresh",
+      "tag": "button"
+    },
+    {
+      "id": "eo-batch",
+      "tag": "select"
+    },
+    {
+      "class": "primary",
+      "id": "eo-build",
+      "tag": "button"
+    },
+    {
+      "id": "eo-dataset",
+      "tag": "select"
+    },
+    {
+      "class": "ghost",
+      "id": "eo-transfer",
+      "tag": "button"
+    },
+    {
+      "id": "eo-incident",
+      "tag": "select"
+    },
+    {
+      "class": "ghost",
+      "id": "eo-retry",
+      "tag": "button"
+    },
+    {
+      "class": "ghost",
+      "id": "er-refresh",
+      "tag": "button"
+    },
+    {
+      "aria-label": "조정할 질문",
+      "id": "er-question",
+      "tag": "select"
+    },
+    {
+      "id": "er-reviewer",
+      "tag": "input"
+    },
+    {
+      "id": "er-truth",
+      "tag": "select"
+    },
+    {
+      "id": "er-direct",
+      "multiple": null,
+      "size": "4",
+      "tag": "select"
+    },
+    {
+      "id": "er-evidence",
+      "rows": "2",
+      "tag": "textarea"
+    },
+    {
+      "id": "er-reason",
+      "rows": "2",
+      "tag": "textarea"
+    },
+    {
+      "id": "er-confirm",
+      "tag": "input",
+      "type": "checkbox"
+    },
+    {
+      "class": "primary",
+      "id": "er-save",
+      "tag": "button"
+    },
+    {
+      "class": "ghost",
+      "id": "eb-refresh",
+      "tag": "button"
+    },
+    {
+      "id": "eb-owner",
+      "tag": "input"
+    },
+    {
+      "class": "ghost",
+      "id": "eb-save",
+      "tag": "button"
+    },
+    {
+      "class": "primary",
+      "id": "eb-freeze",
+      "tag": "button"
+    },
+    {
+      "aria-label": "저장된 다계약 평가묶음",
+      "id": "eb-saved",
+      "tag": "select"
+    },
+    {
+      "class": "ghost",
+      "id": "eb-load",
+      "tag": "button"
+    },
+    {
+      "class": "primary",
+      "id": "eb-run",
+      "tag": "button"
+    },
+    {
+      "class": "ghost",
+      "id": "ap-prepare",
+      "tag": "button"
+    },
+    {
+      "id": "ap-check",
+      "tag": "select"
+    },
+    {
+      "id": "ap-type",
+      "tag": "select"
+    },
+    {
+      "id": "ap-role",
+      "tag": "select"
+    },
+    {
+      "id": "ap-actor",
+      "placeholder": "예: 수탁자",
+      "tag": "input"
+    },
+    {
+      "id": "ap-action",
+      "placeholder": "예: 통지",
+      "tag": "input"
+    },
+    {
+      "id": "ap-object",
+      "placeholder": "예: 해지",
+      "tag": "input"
+    },
+    {
+      "id": "ap-conditions",
+      "placeholder": "예: 서면",
+      "rows": "2",
+      "tag": "textarea"
+    },
+    {
+      "id": "ap-polarity",
+      "tag": "select"
+    },
+    {
+      "id": "ap-basis",
+      "rows": "2",
+      "tag": "textarea"
+    },
+    {
+      "id": "ap-confirm",
+      "tag": "input",
+      "type": "checkbox"
+    },
+    {
+      "class": "ghost",
+      "id": "ap-save",
+      "tag": "button"
+    },
+    {
+      "class": "primary",
+      "id": "ap-run",
+      "tag": "button"
+    },
+    {
+      "class": "ghost",
+      "id": "ap-refresh",
+      "tag": "button"
+    },
+    {
+      "id": "ap-rule",
+      "tag": "select"
+    },
+    {
+      "id": "ap-reporter",
+      "tag": "input"
+    },
+    {
+      "id": "ap-incident",
+      "rows": "2",
+      "tag": "textarea"
+    },
+    {
+      "class": "ghost",
+      "id": "ap-stop",
+      "tag": "button"
+    },
+    {
+      "class": "ghost",
+      "id": "ap-stop-all",
+      "tag": "button"
+    },
+    {
+      "id": "et-reviewer",
+      "tag": "input"
+    },
+    {
+      "id": "et-independent",
+      "tag": "input",
+      "type": "checkbox"
+    },
+    {
+      "id": "et-sources",
+      "tag": "input",
+      "type": "checkbox"
+    },
+    {
+      "id": "et-question",
+      "tag": "select"
+    },
+    {
+      "id": "et-truth",
+      "tag": "select"
+    },
+    {
+      "id": "et-direct",
+      "multiple": null,
+      "size": "5",
+      "tag": "select"
+    },
+    {
+      "id": "et-evidence",
+      "rows": "2",
+      "tag": "textarea"
+    },
+    {
+      "id": "et-reason",
+      "rows": "3",
+      "tag": "textarea"
+    },
+    {
+      "class": "ghost",
+      "id": "et-next",
+      "tag": "button"
+    },
+    {
+      "class": "ghost",
+      "id": "et-draft",
+      "tag": "button"
+    },
+    {
+      "class": "primary",
+      "id": "et-submit",
+      "tag": "button"
+    },
+    {
+      "class": "ghost",
+      "id": "et-cancel",
+      "tag": "button"
+    },
+    {
+      "class": "primary",
+      "id": "he-refresh",
+      "tag": "button"
+    },
+    {
+      "id": "he-search",
+      "tag": "input"
+    },
+    {
+      "id": "he-candidate",
+      "tag": "select"
+    },
+    {
+      "id": "he-family",
+      "tag": "input"
+    },
+    {
+      "id": "he-date",
+      "tag": "input",
+      "type": "date"
+    },
+    {
+      "id": "he-version",
+      "tag": "select"
+    },
+    {
+      "id": "he-confirm",
+      "tag": "input",
+      "type": "checkbox"
+    },
+    {
+      "class": "ghost",
+      "id": "he-save",
+      "tag": "button"
+    },
+    {
+      "class": "primary",
+      "id": "he-generate",
+      "tag": "button"
+    },
+    {
+      "aria-label": "계약 계열 ID",
+      "id": "safety-family",
+      "placeholder": "동일 원계약·갱신·서식은 같은 계열",
+      "tag": "input"
+    },
+    {
+      "id": "safety-case-date",
+      "tag": "input",
+      "type": "date"
+    },
+    {
+      "class": "ghost",
+      "id": "safety-confirm-inputs",
+      "tag": "button"
+    },
+    {
+      "class": "primary",
+      "id": "safety-snapshot",
+      "tag": "button"
+    },
+    {
+      "class": "ghost",
+      "disabled": null,
+      "id": "safety-gold",
+      "tag": "button"
+    },
+    {
+      "class": "ghost",
+      "disabled": null,
+      "id": "safety-observation",
+      "tag": "button"
+    },
+    {
+      "accept": ".json",
+      "hidden": null,
+      "id": "safety-pred-file",
+      "tag": "input",
+      "type": "file"
+    },
+    {
+      "accept": ".json",
+      "hidden": null,
+      "id": "safety-gold-file",
+      "tag": "input",
+      "type": "file"
+    },
+    {
+      "class": "primary",
+      "disabled": null,
+      "id": "safety-score",
+      "tag": "button"
+    },
+    {
+      "class": "ghost",
+      "id": "goldset-goto-report",
+      "tag": "button"
+    },
+    {
+      "accept": ".json",
+      "hidden": null,
+      "id": "goldset-files",
+      "multiple": null,
+      "tag": "input",
+      "type": "file"
+    },
+    {
+      "class": "primary",
+      "disabled": null,
+      "id": "goldset-run",
+      "tag": "button"
+    },
+    {
+      "class": "ghost",
+      "disabled": null,
+      "id": "goldset-export",
+      "tag": "button"
+    },
+    {
+      "accept": ".json",
+      "hidden": null,
+      "id": "wb-review-file",
+      "tag": "input",
+      "type": "file"
+    },
+    {
+      "id": "wb-reviewer",
+      "tag": "input"
+    },
+    {
+      "id": "wb-source-reviewed",
+      "tag": "input",
+      "type": "checkbox"
+    },
+    {
+      "id": "wb-independent",
+      "tag": "input",
+      "type": "checkbox"
+    },
+    {
+      "id": "wb-review-check",
+      "tag": "select"
+    },
+    {
+      "id": "wb-truth",
+      "tag": "select"
+    },
+    {
+      "id": "wb-direct",
+      "tag": "input"
+    },
+    {
+      "id": "wb-evidence",
+      "tag": "input"
+    },
+    {
+      "id": "wb-note",
+      "rows": "3",
+      "tag": "textarea"
+    },
+    {
+      "class": "primary",
+      "id": "wb-label-save",
+      "tag": "button"
+    },
+    {
+      "class": "ghost",
+      "id": "wb-review-save",
+      "tag": "button"
+    },
+    {
+      "accept": ".json",
+      "hidden": null,
+      "id": "wb-case-files",
+      "multiple": null,
+      "tag": "input",
+      "type": "file"
+    },
+    {
+      "id": "wb-dataset-id",
+      "placeholder": "예: 2026Q3-고정시험-1",
+      "tag": "input"
+    },
+    {
+      "id": "wb-owner",
+      "tag": "input"
+    },
+    {
+      "class": "ghost",
+      "id": "wb-replay",
+      "tag": "button"
+    },
+    {
+      "class": "primary",
+      "id": "wb-freeze",
+      "tag": "button"
+    },
+    {
+      "class": "ghost",
+      "disabled": null,
+      "id": "wb-dataset-save",
+      "tag": "button"
+    },
+    {
+      "id": "wb-resolve-case",
+      "tag": "select"
+    },
+    {
+      "id": "wb-resolve-check",
+      "tag": "input"
+    },
+    {
+      "class": "ghost",
+      "id": "wb-conflict-show",
+      "tag": "button"
+    },
+    {
+      "id": "wb-resolver",
+      "tag": "input"
+    },
+    {
+      "id": "wb-resolution",
+      "tag": "select"
+    },
+    {
+      "id": "wb-resolution-direct",
+      "tag": "input"
+    },
+    {
+      "id": "wb-resolution-evidence",
+      "tag": "input"
+    },
+    {
+      "id": "wb-resolution-note",
+      "rows": "2",
+      "tag": "textarea"
+    },
+    {
+      "class": "ghost",
+      "id": "wb-resolution-save",
+      "tag": "button"
+    },
+    {
+      "id": "wb-actor",
+      "tag": "input"
+    },
+    {
+      "id": "wb-rule",
+      "rows": "12",
+      "spellcheck": "false",
+      "tag": "textarea"
+    },
+    {
+      "class": "ghost",
+      "id": "wb-rule-template",
+      "tag": "button"
+    },
+    {
+      "class": "primary",
+      "id": "wb-rule-register",
+      "tag": "button"
+    },
+    {
+      "id": "wb-rule-select",
+      "tag": "select"
+    },
+    {
+      "class": "ghost",
+      "id": "wb-evaluate",
+      "tag": "button"
+    },
+    {
+      "id": "wb-scopes",
+      "multiple": null,
+      "size": "4",
+      "tag": "select"
+    },
+    {
+      "id": "wb-basis",
+      "rows": "2",
+      "tag": "textarea"
+    },
+    {
+      "id": "wb-risk",
+      "max": "5",
+      "min": "0.01",
+      "step": "0.01",
+      "tag": "input",
+      "type": "number",
+      "value": "1"
+    },
+    {
+      "id": "wb-expires",
+      "tag": "input",
+      "type": "date"
+    },
+    {
+      "id": "wb-representative",
+      "tag": "input",
+      "type": "checkbox"
+    },
+    {
+      "class": "primary",
+      "id": "wb-approve",
+      "tag": "button"
+    },
+    {
+      "class": "ghost",
+      "id": "wb-enable",
+      "tag": "button"
+    },
+    {
+      "class": "ghost",
+      "id": "wb-stop-rule",
+      "tag": "button"
+    },
+    {
+      "class": "ghost",
+      "id": "wb-stop-all",
+      "tag": "button"
+    },
+    {
+      "aria-label": "검색 계열 메타데이터",
+      "id": "wb-history-map",
+      "rows": "5",
+      "spellcheck": "false",
+      "tag": "textarea"
+    },
+    {
+      "class": "ghost",
+      "id": "wb-history-save",
+      "tag": "button"
+    },
+    {
+      "class": "ghost",
+      "id": "wb-backup",
+      "tag": "button"
+    },
+    {
+      "accept": ".json",
+      "hidden": null,
+      "id": "wb-restore",
+      "tag": "input",
+      "type": "file"
+    },
+    {
+      "class": "primary",
+      "id": "llm-contrib-current",
+      "tag": "button"
+    },
+    {
+      "accept": ".json",
+      "hidden": null,
+      "id": "llm-contrib-predictions",
+      "multiple": null,
+      "tag": "input",
+      "type": "file"
+    },
+    {
+      "accept": ".json",
+      "hidden": null,
+      "id": "llm-contrib-golds",
+      "multiple": null,
+      "tag": "input",
+      "type": "file"
+    },
+    {
+      "class": "primary",
+      "disabled": null,
+      "id": "llm-contrib-run",
+      "tag": "button"
+    },
+    {
+      "id": "verify-type",
+      "tag": "select"
+    },
+    {
+      "id": "verify-filter",
+      "tag": "select"
+    },
+    {
+      "class": "primary",
+      "id": "verify-export",
+      "tag": "button"
+    },
+    {
+      "class": "ghost",
+      "tag": "button"
+    }
+  ],
+  "tabs": [
+    "input",
+    "clauses",
+    "report",
+    "checklist",
+    "evaluation",
+    "knowledge",
+    "verify",
+    "goldset"
+  ]
+}

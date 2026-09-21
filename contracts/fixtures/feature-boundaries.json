@@ -1,0 +1,97 @@
+{
+  "app_functions": [
+    {
+      "file": "src/app.js",
+      "function": "analysisSources",
+      "line": 918,
+      "target": "source IDs and version snapshots"
+    },
+    {
+      "file": "src/app.js",
+      "function": "runAnalysis",
+      "line": 1358,
+      "target": "analysis API"
+    },
+    {
+      "file": "src/app.js",
+      "function": "opinionStoreLoad",
+      "line": 1632,
+      "target": "draft repository"
+    },
+    {
+      "file": "src/app.js",
+      "function": "saveEditedOpinion",
+      "line": 1643,
+      "target": "draft/review API"
+    },
+    {
+      "file": "src/app.js",
+      "function": "saveCorpus",
+      "line": 1685,
+      "target": "corpus repository"
+    },
+    {
+      "file": "src/app.js",
+      "function": "applyVerdict",
+      "line": 1835,
+      "target": "manual verdict API"
+    },
+    {
+      "file": "src/app.js",
+      "function": "applyAutoVerdictsBody",
+      "line": 1875,
+      "target": "Python judgment service"
+    },
+    {
+      "file": "src/app.js",
+      "function": "finishReview",
+      "line": 2884,
+      "target": "completion transaction"
+    },
+    {
+      "file": "src/app.js",
+      "function": "bindReassign",
+      "line": 4169,
+      "target": "partial reevaluation API"
+    }
+  ],
+  "features": [
+    {
+      "status": "legacy baseline; Python migration pending",
+      "tab": "input"
+    },
+    {
+      "status": "legacy baseline; Python migration pending",
+      "tab": "clauses"
+    },
+    {
+      "status": "legacy baseline; Python migration pending",
+      "tab": "report"
+    },
+    {
+      "status": "legacy baseline; Python migration pending",
+      "tab": "checklist"
+    },
+    {
+      "status": "legacy baseline; Python migration pending",
+      "tab": "evaluation"
+    },
+    {
+      "status": "legacy baseline; Python migration pending",
+      "tab": "knowledge"
+    },
+    {
+      "status": "legacy baseline; Python migration pending",
+      "tab": "verify"
+    },
+    {
+      "status": "legacy baseline; Python migration pending",
+      "tab": "goldset"
+    }
+  ],
+  "worker": {
+    "frontend_transport": "src/analysis_runtime.js",
+    "source": "src/analysis_worker.js",
+    "warning": "Worker output alone does not include app.js final auto-verdict/storage lifecycle"
+  }
+}
